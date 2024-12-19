@@ -21,11 +21,13 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -80,7 +82,10 @@ public class TeamHistoryDAO
             )
         ),
         COUNT_REGION("region_team_count", "team_state.region_team_count"),
-        COUNT_LEAGUE("league_team_count", "league_team_count", COUNT_GLOBAL.joins);
+        COUNT_LEAGUE("league_team_count", "league_team_count", COUNT_GLOBAL.joins),
+
+        ID("id", true),
+        SEASON("season", true);
 
         private final String name, columName, columnAliasedName, aggregationFunction;
         private final List<String> joins;
@@ -260,7 +265,7 @@ public class TeamHistoryDAO
         data_group AS
         (
             SELECT
-            team_id,
+            team_id
             %1$s
             FROM
             (
@@ -437,13 +442,9 @@ public class TeamHistoryDAO
         };
     }
 
-    private static String generateFindColumnsQuery
-    (
-        Set<StaticColumn> staticColumns,
-        Set<HistoryColumn> historyColumns
-    )
+    private static String generateFindColumnsQuery(HistoryParameters parameters)
     {
-        List<HistoryColumn> directHistoryColumns = historyColumns.stream()
+        List<HistoryColumn> directHistoryColumns = parameters.historyColumns().stream()
             .filter(historyColumn ->!historyColumn.isExpanded())
             .toList();
         List<HistoryColumn> dynamicHistoryColumns = directHistoryColumns.stream()
@@ -452,7 +453,7 @@ public class TeamHistoryDAO
         String dynamicPrefix = dynamicHistoryColumns.isEmpty() ? "" : ",";
         return FIND_COLUMNS_TEMPLATE.formatted
         (
-            directHistoryColumns.stream()
+            directHistoryColumns.isEmpty() ? "" : "," + directHistoryColumns.stream()
                 .map(HistoryColumn::getAggregationFunction)
                 .collect(Collectors.joining(",\n")),
 
@@ -467,10 +468,10 @@ public class TeamHistoryDAO
             Stream.concat
             (
                 directHistoryColumns.stream().map(FINAL_HISTORY_FQDN_NAMES::get),
-                staticColumns.stream().map(StaticColumn::getAliasedName)
+                parameters.staticColumns().stream().map(StaticColumn::getAliasedName)
             )
                 .collect(Collectors.joining(",\n")),
-            staticColumns.stream()
+            parameters.staticColumns().stream()
                 .map(StaticColumn::getJoins)
                 .flatMap(Collection::stream)
                 .distinct()
@@ -491,35 +492,133 @@ public class TeamHistoryDAO
         if(from != null && to != null && !from.isBefore(to))
             throw new IllegalArgumentException("'from' parameter must be before 'to' parameter");
 
-        String query = generateFindColumnsQuery(staticColumns, expand(historyColumns));
+        HistoryParameters parameters = new HistoryParameters(staticColumns, historyColumns);
+        String query = generateFindColumnsQuery(createExpandedParameters(parameters));
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("teamIds", teamIds)
             .addValue("from", from, Types.TIMESTAMP_WITH_TIMEZONE)
             .addValue("to", to, Types.TIMESTAMP_WITH_TIMEZONE);
         List<TeamHistory> history = template.query(query, params, COLUMN_TEAM_HISTORY_EXTRACTOR);
-        expand(history, historyColumns);
+        expandAll(history, parameters);
         return history;
     }
 
-    private static Set<HistoryColumn> expand(Set<HistoryColumn> historyColumns)
+    private HistoryParameters createExpandedParameters(HistoryParameters parameters)
     {
-        if(!shouldExpand(historyColumns)) return historyColumns;
+        if(parameters.historyColumns().stream().noneMatch(HistoryColumn::isExpanded))
+            return parameters;
 
-        Set<HistoryColumn> expandedHistoryColumns = EnumSet.copyOf(historyColumns);
-        expandedHistoryColumns.add(HistoryColumn.DIVISION_ID);
-        return expandedHistoryColumns;
+        HistoryParameters expanded = HistoryParameters.copyOf(parameters);
+        expandParameters(expanded);
+        return expanded;
     }
 
-    private static boolean shouldExpand(Set<HistoryColumn> historyColumns)
+    private void expandParameters(HistoryParameters parameters)
     {
-        return historyColumns.contains(HistoryColumn.TIER)
-            || historyColumns.contains(HistoryColumn.LEAGUE);
+        expandDivisionParameters(parameters);
+        expandStaticHistoryParameters(parameters);
+    }
+
+    private static void expandStaticHistoryParameters(HistoryParameters parameters)
+    {
+        if(parameters.historyColumns().contains(HistoryColumn.ID))
+            parameters.staticColumns().add(StaticColumn.ID);
+        if(parameters.historyColumns().contains(HistoryColumn.SEASON))
+            parameters.staticColumns().add(StaticColumn.SEASON);
+        if(
+            (
+                parameters.historyColumns().contains(HistoryColumn.ID)
+                    || parameters.historyColumns().contains(HistoryColumn.SEASON)
+            )
+                && parameters.historyColumns().stream().allMatch(HistoryColumn::isExpanded)
+        )
+            parameters.historyColumns().add(HistoryColumn.TIMESTAMP);
+    }
+
+    private void expandAll
+    (
+        List<TeamHistory> history,
+        HistoryParameters parameters
+    )
+    {
+        expandDivisions(history, parameters);
+        expandStaticHistory(history, parameters);
+    }
+
+    private static boolean shouldExpandStaticHistory(HistoryParameters parameters)
+    {
+        return parameters.historyColumns().contains(HistoryColumn.ID)
+            || parameters.historyColumns().contains(HistoryColumn.SEASON);
+    }
+
+    private static void expandStaticHistory
+    (
+        List<TeamHistory> history,
+        HistoryParameters parameters
+    )
+    {
+        if(!shouldExpandStaticHistory(parameters)) return;
+
+        boolean wantedTimestamps = parameters.historyColumns().contains(HistoryColumn.TIMESTAMP);
+        List<BiConsumer<TeamHistory, Integer>> expanders
+            = createStaticHistoryExpanders(parameters);
+        history.forEach(h->{
+            int size = h.history().values().iterator().next().size();
+            expanders.forEach(expander->expander.accept(h, size));
+            if(!wantedTimestamps) h.history().remove(HistoryColumn.TIMESTAMP);
+        });
+    }
+
+    private static List<BiConsumer<TeamHistory, Integer>> createStaticHistoryExpanders
+    (
+        HistoryParameters parameters
+    )
+    {
+        List<BiConsumer<TeamHistory, Integer>> expanders = new ArrayList<>(2);
+        if(parameters.historyColumns().contains(HistoryColumn.ID))
+            expanders.add((h, size)->expandStaticHistory(
+                h, StaticColumn.ID, HistoryColumn.ID, size,
+                !parameters.staticColumns().contains(StaticColumn.ID)));
+        if(parameters.historyColumns().contains(HistoryColumn.SEASON))
+            expanders.add((h, size)->expandStaticHistory(
+                h, StaticColumn.SEASON, HistoryColumn.SEASON, size,
+                !parameters.staticColumns().contains(StaticColumn.SEASON)));
+        return expanders;
+    }
+
+    private static void expandStaticHistory
+    (
+        TeamHistory history,
+        StaticColumn staticColumn,
+        HistoryColumn historyColumn,
+        int size,
+        boolean clear
+    )
+    {
+        history.history().put
+        (
+            historyColumn,
+            Collections.nCopies(size, history.staticData().get(staticColumn))
+        );
+        if(clear) history.staticData().remove(staticColumn);
+    }
+
+    private static void expandDivisionParameters(HistoryParameters parameters)
+    {
+        if(shouldExpandDivisions(parameters))
+            parameters.historyColumns().add(HistoryColumn.DIVISION_ID);
+    }
+
+    private static boolean shouldExpandDivisions(HistoryParameters parameters)
+    {
+        return parameters.historyColumns().contains(HistoryColumn.TIER)
+            || parameters.historyColumns().contains(HistoryColumn.LEAGUE);
     }
 
     @SuppressWarnings("unchecked")
-    private void expand(List<TeamHistory> history, Set<HistoryColumn> historyColumns)
+    private void expandDivisions(List<TeamHistory> history, HistoryParameters parameters)
     {
-        if(!shouldExpand(historyColumns)) return;
+        if(!shouldExpandDivisions(parameters)) return;
 
         Map<Integer, Division> divisions = divisionDAO.findByIds
         (
@@ -540,9 +639,9 @@ public class TeamHistoryDAO
         )
             .stream()
             .collect(Collectors.toMap(LeagueTier::getId, Function.identity()));
-        boolean expandTiers = historyColumns.contains(HistoryColumn.TIER);
-        boolean expandLeagues = historyColumns.contains(HistoryColumn.LEAGUE);
-        boolean wantedDivisionIds = historyColumns.contains(HistoryColumn.DIVISION_ID);
+        boolean expandTiers = parameters.historyColumns().contains(HistoryColumn.TIER);
+        boolean expandLeagues = parameters.historyColumns().contains(HistoryColumn.LEAGUE);
+        boolean wantedDivisionIds = parameters.historyColumns().contains(HistoryColumn.DIVISION_ID);
 
         Map<Integer, League> leagues = expandLeagues
             ? leagueDAO.find
@@ -581,6 +680,28 @@ public class TeamHistoryDAO
             if(expandLeagues) h.history().put(HistoryColumn.LEAGUE, historyLeagues);
             if(!wantedDivisionIds) h.history().remove(HistoryColumn.DIVISION_ID);
         });
+    }
+
+    private record HistoryParameters
+    (
+        @NotNull Set<StaticColumn> staticColumns,
+        @NotNull Set<HistoryColumn> historyColumns
+    )
+    {
+
+        public static HistoryParameters copyOf(HistoryParameters parameters)
+        {
+            return new HistoryParameters
+            (
+                parameters.staticColumns.isEmpty()
+                    ? EnumSet.noneOf(StaticColumn.class)
+                    : EnumSet.copyOf(parameters.staticColumns()),
+                parameters.historyColumns.isEmpty()
+                    ? EnumSet.noneOf(HistoryColumn.class)
+                    : EnumSet.copyOf(parameters.historyColumns())
+            );
+        }
+
     }
 
 

@@ -320,7 +320,10 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.RANK_REGION, Stream.of(null, 6, 6).toList()),
                     entry(HistoryColumn.COUNT_REGION, Stream.of(null, 6, 6).toList()),
                     entry(HistoryColumn.RANK_LEAGUE, Stream.of(null, 3, 3).toList()),
-                    entry(HistoryColumn.COUNT_LEAGUE, Stream.of(null, 3, 3).toList())
+                    entry(HistoryColumn.COUNT_LEAGUE, Stream.of(null, 3, 3).toList()),
+
+                    entry(HistoryColumn.ID, List.of(1L, 1L, 1L)),
+                    entry(HistoryColumn.SEASON, List.of(1, 1, 1))
                 )
             ),
             new TeamHistory
@@ -360,7 +363,10 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.RANK_REGION, Stream.of(null, 1, 2).toList()),
                     entry(HistoryColumn.COUNT_REGION, Stream.of(null, 6, 7).toList()),
                     entry(HistoryColumn.RANK_LEAGUE, Stream.of(null, 1, 2).toList()),
-                    entry(HistoryColumn.COUNT_LEAGUE, Stream.of(null, 1, 4).toList())
+                    entry(HistoryColumn.COUNT_LEAGUE, Stream.of(null, 1, 4).toList()),
+
+                    entry(HistoryColumn.ID, List.of(13L, 13L, 13L)),
+                    entry(HistoryColumn.SEASON, List.of(2, 2, 2))
                 )
             ),
             new TeamHistory
@@ -400,7 +406,10 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.RANK_REGION, Stream.of(null, 6).toList()),
                     entry(HistoryColumn.COUNT_REGION, Stream.of(null, 6).toList()),
                     entry(HistoryColumn.RANK_LEAGUE, Stream.of(null, 3).toList()),
-                    entry(HistoryColumn.COUNT_LEAGUE, Stream.of(null, 3).toList())
+                    entry(HistoryColumn.COUNT_LEAGUE, Stream.of(null, 3).toList()),
+
+                    entry(HistoryColumn.ID, List.of(25L, 25L)),
+                    entry(HistoryColumn.SEASON, List.of(3, 3))
                 )
             )
         );
@@ -450,6 +459,7 @@ public class TeamGroupHistoryIT
         Assertions.assertThat(found)
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.ID")
             .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
             .isEqualTo(FULL_HISTORY);
     }
@@ -595,6 +605,7 @@ public class TeamGroupHistoryIT
         Assertions.assertThat(found)
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.ID")
             .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
             .isEqualTo(expected);
     }
@@ -640,6 +651,7 @@ public class TeamGroupHistoryIT
         Assertions.assertThat(found)
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.ID")
             .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
             .isEqualTo(FULL_HISTORY.stream()
                 .map(h->new TeamHistory(
