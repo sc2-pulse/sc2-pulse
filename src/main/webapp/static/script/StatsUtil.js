@@ -596,7 +596,7 @@ class StatsUtil
             const season = Session.currentSeasons.filter(s=>s.battlenetId == seasonId)[0];
             for(const [key, val] of Object.entries(seasonStats))
             {
-                dailyStats[seasonId][key] = val == null ? null : val / season.days;
+                dailyStats[seasonId][key] = val == null ? null : val / season.daysProgress;
             }
         }
         return dailyStats;

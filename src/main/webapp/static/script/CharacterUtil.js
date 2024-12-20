@@ -601,11 +601,11 @@ class CharacterUtil
     static convertTeamToTeamSnapshot(t, lastSeasonTeamSnapshotDates, seasonLastOnly)
     {
         const season = Session.currentSeasonsMap.get(t.region).get(t.season)[0];
-        if(seasonLastOnly) return CharacterUtil.createTeamSnapshot(t, season.end);
+        if(seasonLastOnly) return CharacterUtil.createTeamSnapshot(t, season.nowOrEnd);
 
         const date = (lastSeasonTeamSnapshotDates.get(t.season + 1) || Session.currentSeasonsMap.get(t.region).get(t.season + 1))
             ? ((lastSeasonTeamSnapshotDates.get(t.season) ? new Date(lastSeasonTeamSnapshotDates.get(t.season).getTime() + 1000)  : null)
-                || new Date(season.end.getTime() - CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS))
+                || new Date(season.nowOrEnd.getTime() - CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS))
             : new Date();
         return CharacterUtil.createTeamSnapshot(t, date);
     }
@@ -796,7 +796,7 @@ class CharacterUtil
         const teamsFiltered = teams.filter(t=>
             t.league.queueType == queueFilter
             && t.league.teamType == teamTypeFilter
-            && Session.currentSeasonsMap.get(t.season)[0].end.getTime() > firstDate.getTime()
+            && Session.currentSeasonsMap.get(t.season)[0].nowOrEnd.getTime() > firstDate.getTime()
         );
         if(teamsFiltered.length == 0) return;
 
@@ -867,7 +867,7 @@ class CharacterUtil
         CharacterUtil.injectMmrPoints(history, curInjected, history[history.length - 1],
             Math.floor((now.getTime() - history[history.length - 1].teamState.dateTime.getTime()) / Util.DAY_MILLIS));
         const lastPoint = curInjected.length > 0 ? curInjected[curInjected.length - 1] : history[history.length - 1];
-        const lastPointMaxDateTime = Session.currentSeasonsMap.get(lastPoint.season)[0].end;
+        const lastPointMaxDateTime = Session.currentSeasonsMap.get(lastPoint.season)[0].nowOrEnd;
         if(lastPoint.teamState.dateTime.getTime() < lastPointMaxDateTime.getTime())
              curInjected.push(CharacterUtil.cloneMmrPoint(lastPoint, lastPointMaxDateTime));
         Array.prototype.push.apply(injected, curInjected);
@@ -876,7 +876,7 @@ class CharacterUtil
 
     static injectMmrPoints(history, injectArray, refPoint, toInject)
     {
-        const maxDate = Session.currentSeasonsMap.get(refPoint.season)[0].end;
+        const maxDate = Session.currentSeasonsMap.get(refPoint.season)[0].nowOrEnd;
         for(let ii = 0; ii < toInject; ii++)
         {
             let date = new Date(refPoint.teamState.dateTime.getTime() + (Util.DAY_MILLIS * (ii + 1)) );

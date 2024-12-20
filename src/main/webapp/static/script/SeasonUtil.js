@@ -57,7 +57,7 @@ class SeasonUtil
 
     static updateSeasonDuration(season)
     {
-        season["days"] = (season.end - season.start) / (1000 * 60 * 60 * 24);
+        season["daysProgress"] = (season.nowOrEnd - season.start) / (1000 * 60 * 60 * 24);
     }
 
     static updateSeasonDescription(season)
@@ -67,12 +67,10 @@ class SeasonUtil
 
     static updateSeasonDates(season)
     {
-        const startDate = Util.parseIsoDate(season.start);
-        let endDate = Util.parseIsoDate(season.end);
+        season.start = Util.parseIsoDate(season.start);
+        season.end = Util.parseIsoDate(season.end);
         const now = new Date();
-        if(now - endDate < 0) endDate = now;
-        season.start = startDate;
-        season.end = endDate;
+        season.nowOrEnd = now - season.end < 0 ? now : season.end;
     }
 
     static updateSeasonMeta(season)
