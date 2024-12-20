@@ -181,4 +181,22 @@ class SeasonUtil
         return season == SeasonUtil.maxSeason;
     }
 
+    static calculateAbnormalSeasons(seasons)
+    {
+        if(!seasons) seasons = Array.from(Session.currentSeasonsIdMap.values()).map(v=>v[0]);
+        const seasonDurations = seasons.map(s=>s.durationProgress);
+        const meanDuration = seasonDurations.reduce((p, c)=>p + c, 0) / seasonDurations.length;
+        //calculate only short seasons, ignore long
+        const stDev = Util.stDev(seasonDurations, true) * -1;
+        return new Set(seasons
+            .filter(season=>season.durationProgress - meanDuration < stDev)
+            .map(season=>season.battlenetId));
+    }
+
+    static isAbnormalSeason(season)
+    {
+        if(!SeasonUtil.abnormalSeasons) SeasonUtil.abnormalSeasons = SeasonUtil.calculateAbnormalSeasons();
+        return SeasonUtil.abnormalSeasons.has(parseInt(season));
+    }
+
 }
