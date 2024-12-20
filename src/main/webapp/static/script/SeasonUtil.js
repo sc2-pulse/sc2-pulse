@@ -174,4 +174,11 @@ class SeasonUtil
         });
     }
 
+    static isCurrentSeason(season)
+    {
+        if(SeasonUtil.maxSeason == null) SeasonUtil.maxSeason
+            = Math.max.apply(Math, Array.from(Session.currentSeasonsIdMap.keys()));
+        return season == SeasonUtil.maxSeason;
+    }
+
 }

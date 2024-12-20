@@ -30,20 +30,13 @@ class StatsUtil
             = localStorage.getItem("stats-global-remove-current-season") !== "false";
 
         const filters = [];
-        if(removeCurrentSeason) filters.push(StatsUtil.isCurrentSeason);
+        if(removeCurrentSeason) filters.push(SeasonUtil.isCurrentSeason);
 
         if(filters.length == 0) return;
 
         Object.entries(stats)
             .filter(entry=>filters.some(filter=>filter(entry[0])))
             .forEach(entry=>nullify(entry[1]));
-    }
-
-    static isCurrentSeason(season)
-    {
-        if(!StatsUtil.maxSeason) StatsUtil.maxSeason
-            = Math.max.apply(Math, Array.from(Session.currentSeasonsIdMap.keys()));
-        return season == StatsUtil.maxSeason;
     }
 
     static updateQueueStatsModel(formParams)
