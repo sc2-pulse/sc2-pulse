@@ -122,6 +122,15 @@ class Util
         return (Math.abs(val - min) / Math.abs(max - min)) * 100;
     }
 
+    static stDev(arr, usePopulation = false)
+    {
+        const mean = arr.reduce((acc, val) => acc + val, 0) / arr.length;
+        return Math.sqrt(
+            arr.reduce((acc, val) => acc.concat((val - mean) ** 2), []).reduce((acc, val) => acc + val, 0)
+            / (arr.length - (usePopulation ? 0 : 1))
+        );
+    };
+
     static hasNonZeroValues(values)
     {
         for (let i = 0; i < values.length; i++)
