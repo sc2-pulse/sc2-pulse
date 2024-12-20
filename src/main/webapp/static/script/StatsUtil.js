@@ -24,13 +24,16 @@ class StatsUtil
         StatsUtil.updateGlobalStatsMode();
     }
 
-    static filterStats(stats, nullify, removeCurrentSeason)
+    static filterStats(stats, nullify, removeCurrentSeason, removeAbnormalSeasons)
     {
         if(removeCurrentSeason == null) removeCurrentSeason
             = localStorage.getItem("stats-global-remove-current-season") !== "false";
+        if(removeAbnormalSeasons == null) removeAbnormalSeasons
+            = localStorage.getItem("stats-global-remove-abnormal-seasons") !== "false";
 
         const filters = [];
         if(removeCurrentSeason) filters.push(SeasonUtil.isCurrentSeason);
+        if(removeAbnormalSeasons) filters.push(SeasonUtil.isAbnormalSeason);
 
         if(filters.length == 0) return;
 
