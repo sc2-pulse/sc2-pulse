@@ -28,15 +28,22 @@ class StatsUtil
     {
         if(removeCurrentSeason == null) removeCurrentSeason
             = localStorage.getItem("stats-global-remove-current-season") !== "false";
-        if(removeCurrentSeason) StatsUtil.removeCurrentSeason(stats, nullify);
+
+        const filters = [];
+        if(removeCurrentSeason) filters.push(StatsUtil.isCurrentSeason);
+
+        if(filters.length == 0) return;
+
+        Object.entries(stats)
+            .filter(entry=>filters.some(filter=>filter(entry[0])))
+            .forEach(entry=>nullify(entry[1]));
     }
 
-    static removeCurrentSeason(stats, nullify)
+    static isCurrentSeason(season)
     {
-        const maxSeason = Math.max.apply(Math, Array.from(Session.currentSeasonsIdMap.keys()));
-        Object.entries(stats)
-            .filter(entry=>entry[0] == maxSeason)
-            .forEach(entry=>nullify(entry[1]));
+        if(!StatsUtil.maxSeason) StatsUtil.maxSeason
+            = Math.max.apply(Math, Array.from(Session.currentSeasonsIdMap.keys()));
+        return season == StatsUtil.maxSeason;
     }
 
     static updateQueueStatsModel(formParams)
