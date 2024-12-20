@@ -57,7 +57,8 @@ class SeasonUtil
 
     static updateSeasonDuration(season)
     {
-        season["daysProgress"] = (season.nowOrEnd - season.start) / (1000 * 60 * 60 * 24);
+        season.durationProgress = season.nowOrEnd - season.start;
+        season["daysProgress"] = season.durationProgress / (1000 * 60 * 60 * 24);
     }
 
     static updateSeasonDescription(season)
