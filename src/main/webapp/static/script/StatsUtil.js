@@ -237,6 +237,7 @@ class StatsUtil
             }
         }
         StatsUtil.filterStats(globalResult.teamCount, s=>s.global = null);
+        StatsUtil.filterStats(globalResult.gamesPlayed, s=>s.global = null);
         StatsUtil.applyUserSettings(globalResult);
         TableUtil.updateColRowTable
             (document.getElementById("games-played-global-table"), globalResult.gamesPlayed, null, null, SeasonUtil.seasonIdTranslator);
