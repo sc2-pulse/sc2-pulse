@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.inner;
@@ -500,6 +500,7 @@ public class TeamHistoryDAO
             .addValue("to", to, Types.TIMESTAMP_WITH_TIMEZONE);
         List<TeamHistory> history = template.query(query, params, COLUMN_TEAM_HISTORY_EXTRACTOR);
         expandAll(history, parameters);
+        prune(history, parameters);
         return history;
     }
 
@@ -535,6 +536,15 @@ public class TeamHistoryDAO
             parameters.historyColumns().add(HistoryColumn.TIMESTAMP);
     }
 
+    private static void prune(List<TeamHistory> history, HistoryParameters parameters)
+    {
+        for(TeamHistory curHistory : history)
+        {
+            curHistory.staticData().keySet().retainAll(parameters.staticColumns());
+            curHistory.history().keySet().retainAll(parameters.historyColumns());
+        }
+    }
+
     private void expandAll
     (
         List<TeamHistory> history,
@@ -559,13 +569,11 @@ public class TeamHistoryDAO
     {
         if(!shouldExpandStaticHistory(parameters)) return;
 
-        boolean wantedTimestamps = parameters.historyColumns().contains(HistoryColumn.TIMESTAMP);
         List<BiConsumer<TeamHistory, Integer>> expanders
             = createStaticHistoryExpanders(parameters);
         history.forEach(h->{
             int size = h.history().values().iterator().next().size();
             expanders.forEach(expander->expander.accept(h, size));
-            if(!wantedTimestamps) h.history().remove(HistoryColumn.TIMESTAMP);
         });
     }
 
@@ -577,12 +585,10 @@ public class TeamHistoryDAO
         List<BiConsumer<TeamHistory, Integer>> expanders = new ArrayList<>(2);
         if(parameters.historyColumns().contains(HistoryColumn.ID))
             expanders.add((h, size)->expandStaticHistory(
-                h, StaticColumn.ID, HistoryColumn.ID, size,
-                !parameters.staticColumns().contains(StaticColumn.ID)));
+                h, StaticColumn.ID, HistoryColumn.ID, size));
         if(parameters.historyColumns().contains(HistoryColumn.SEASON))
             expanders.add((h, size)->expandStaticHistory(
-                h, StaticColumn.SEASON, HistoryColumn.SEASON, size,
-                !parameters.staticColumns().contains(StaticColumn.SEASON)));
+                h, StaticColumn.SEASON, HistoryColumn.SEASON, size));
         return expanders;
     }
 
@@ -591,8 +597,7 @@ public class TeamHistoryDAO
         TeamHistory history,
         StaticColumn staticColumn,
         HistoryColumn historyColumn,
-        int size,
-        boolean clear
+        int size
     )
     {
         history.history().put
@@ -600,7 +605,6 @@ public class TeamHistoryDAO
             historyColumn,
             Collections.nCopies(size, history.staticData().get(staticColumn))
         );
-        if(clear) history.staticData().remove(staticColumn);
     }
 
     private static void expandDivisionParameters(HistoryParameters parameters)
@@ -641,7 +645,6 @@ public class TeamHistoryDAO
             .collect(Collectors.toMap(LeagueTier::getId, Function.identity()));
         boolean expandTiers = parameters.historyColumns().contains(HistoryColumn.TIER);
         boolean expandLeagues = parameters.historyColumns().contains(HistoryColumn.LEAGUE);
-        boolean wantedDivisionIds = parameters.historyColumns().contains(HistoryColumn.DIVISION_ID);
 
         Map<Integer, League> leagues = expandLeagues
             ? leagueDAO.find
@@ -678,7 +681,6 @@ public class TeamHistoryDAO
             }
             if(expandTiers) h.history().put(HistoryColumn.TIER, historyTiers);
             if(expandLeagues) h.history().put(HistoryColumn.LEAGUE, historyLeagues);
-            if(!wantedDivisionIds) h.history().remove(HistoryColumn.DIVISION_ID);
         });
     }
 
