@@ -5,6 +5,8 @@ package com.nephest.battlenet.sc2.model.local.inner;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
@@ -12,6 +14,7 @@ import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -22,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
@@ -259,6 +263,63 @@ public class TeamHistoryDAO
 
     }
 
+    public enum GroupMode
+    {
+
+        TEAM(EnumSet.allOf(StaticColumn.class), EnumSet.noneOf(StaticColumn.class)),
+        LEGACY_UID
+        (
+            EnumSet.of(StaticColumn.REGION, StaticColumn.QUEUE, StaticColumn.LEGACY_ID),
+            EnumSet.of
+            (
+                StaticColumn.REGION,
+                StaticColumn.QUEUE,
+                StaticColumn.LEGACY_ID,
+                StaticColumn.SEASON
+            )
+        );
+
+        private final Set<StaticColumn> supportedStaticColumns;
+        private final Set<StaticColumn> requiredStaticParameters;
+
+        GroupMode
+        (
+            EnumSet<StaticColumn> supportedStaticColumns,
+            EnumSet<StaticColumn> requiredStaticParameters
+        )
+        {
+            this.supportedStaticColumns = Collections.unmodifiableSet(supportedStaticColumns);
+            this.requiredStaticParameters = Collections.unmodifiableSet(requiredStaticParameters);
+        }
+
+        public Set<StaticColumn> getSupportedStaticColumns()
+        {
+            return supportedStaticColumns;
+        }
+
+        public boolean isSupported(StaticColumn staticColumn)
+        {
+            return supportedStaticColumns.contains(staticColumn);
+        }
+
+        public Set<StaticColumn> getRequiredStaticParameters()
+        {
+            return requiredStaticParameters;
+        }
+
+        public boolean injectsParameters()
+        {
+            return !requiredStaticParameters.isEmpty();
+        }
+
+        public static final class NAMES
+        {
+            public static final String TEAM = "TEAM";
+            public static final String LEGACY_UID = "LEGACY_UID";
+        }
+
+    }
+
     private static final String FIND_COLUMNS_TEMPLATE =
         """
         WITH
@@ -302,6 +363,7 @@ public class TeamHistoryDAO
     private final LeagueTierDAO leagueTierDAO;
     private final LeagueDAO leagueDAO;
     private final NamedParameterJdbcTemplate template;
+    private final ConversionService sc2StatsConversionService;
 
     @Autowired
     public TeamHistoryDAO
@@ -318,6 +380,7 @@ public class TeamHistoryDAO
         this.leagueTierDAO = leagueTierDAO;
         this.leagueDAO = leagueDAO;
         this.template = template;
+        this.sc2StatsConversionService = sc2StatsConversionService;
         initMappers(sc2StatsConversionService, minConversionService);
     }
 
@@ -485,32 +548,45 @@ public class TeamHistoryDAO
         @Nullable OffsetDateTime from,
         @Nullable OffsetDateTime to,
         @NotNull Set<StaticColumn> staticColumns,
-        @NotNull Set<HistoryColumn> historyColumns
+        @NotNull Set<HistoryColumn> historyColumns,
+        @NotNull GroupMode groupMode
     )
     {
         if(teamIds.isEmpty() || (historyColumns.isEmpty() && staticColumns.isEmpty())) return List.of();
         if(from != null && to != null && !from.isBefore(to))
             throw new IllegalArgumentException("'from' parameter must be before 'to' parameter");
+        if(staticColumns.stream().anyMatch(c->!groupMode.isSupported(c)))
+            throw new IllegalArgumentException
+            (
+                "Some static columns in " + Arrays.toString(staticColumns.toArray())
+                    + " are not supported by the group mode " + groupMode
+            );
 
         HistoryParameters parameters = new HistoryParameters(staticColumns, historyColumns);
-        String query = generateFindColumnsQuery(createExpandedParameters(parameters));
+        String query = generateFindColumnsQuery(createExpandedParameters(parameters, groupMode));
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("teamIds", teamIds)
             .addValue("from", from, Types.TIMESTAMP_WITH_TIMEZONE)
             .addValue("to", to, Types.TIMESTAMP_WITH_TIMEZONE);
         List<TeamHistory> history = template.query(query, params, COLUMN_TEAM_HISTORY_EXTRACTOR);
         expandAll(history, parameters);
+        history = group(history, parameters, groupMode);
         prune(history, parameters);
         return history;
     }
 
-    private HistoryParameters createExpandedParameters(HistoryParameters parameters)
+    private HistoryParameters createExpandedParameters
+    (
+        HistoryParameters parameters, GroupMode groupMode
+    )
     {
-        if(parameters.historyColumns().stream().noneMatch(HistoryColumn::isExpanded))
-            return parameters;
+        boolean shouldExpand = parameters.historyColumns().stream()
+            .anyMatch(HistoryColumn::isExpanded);
+        if(!shouldExpand && !groupMode.injectsParameters()) return parameters;
 
         HistoryParameters expanded = HistoryParameters.copyOf(parameters);
-        expandParameters(expanded);
+        if(shouldExpand) expandParameters(expanded);
+        if(groupMode.injectsParameters()) injectGroupModeParameters(expanded, groupMode);
         return expanded;
     }
 
@@ -536,6 +612,11 @@ public class TeamHistoryDAO
             parameters.historyColumns().add(HistoryColumn.TIMESTAMP);
     }
 
+    private static void injectGroupModeParameters(HistoryParameters parameters, GroupMode groupMode)
+    {
+        parameters.staticColumns().addAll(groupMode.getRequiredStaticParameters());
+    }
+
     private static void prune(List<TeamHistory> history, HistoryParameters parameters)
     {
         for(TeamHistory curHistory : history)
@@ -543,6 +624,85 @@ public class TeamHistoryDAO
             curHistory.staticData().keySet().retainAll(parameters.staticColumns());
             curHistory.history().keySet().retainAll(parameters.historyColumns());
         }
+    }
+
+    private List<TeamHistory> group
+    (
+        List<TeamHistory> history,
+        HistoryParameters parameters,
+        GroupMode groupMode
+    )
+    {
+        return switch (groupMode)
+        {
+            case TEAM->history;
+            case LEGACY_UID->groupByLegacyUid(history, parameters);
+            default->throw new IllegalArgumentException("Unsupported group mode: " + groupMode);
+        };
+    }
+
+    private List<TeamHistory> groupByLegacyUid
+    (
+        List<TeamHistory> history,
+        HistoryParameters parameters
+    )
+    {
+        return history.stream()
+            .map(this::toLegacyUidGroup)
+            .collect(Collectors.groupingBy(HistoryLegacyUidGroup::legacyUid))
+                .values().stream()
+            .map(group->group.stream().map(HistoryLegacyUidGroup::history).collect(Collectors.toList()))
+            .map(historyGroup->concatGroup(historyGroup, parameters))
+            .toList();
+    }
+
+    private TeamLegacyUid toLegacyUid(TeamHistory teamHistory)
+    {
+        return new TeamLegacyUid
+        (
+            sc2StatsConversionService.convert
+            (
+                teamHistory.staticData().get(StaticColumn.QUEUE),
+                QueueType.class
+            ),
+            sc2StatsConversionService.convert
+            (
+                teamHistory.staticData().get(StaticColumn.REGION),
+                Region.class
+            ),
+            ((BigDecimal) teamHistory.staticData().get(StaticColumn.LEGACY_ID)).toBigInteger()
+        );
+    }
+
+    private HistoryLegacyUidGroup toLegacyUidGroup(TeamHistory teamHistory)
+    {
+        return new HistoryLegacyUidGroup(teamHistory, toLegacyUid(teamHistory));
+    }
+
+    private static TeamHistory concatGroup(List<TeamHistory> history, HistoryParameters parameters)
+    {
+        if(history.isEmpty()) return new TeamHistory(Map.of(), Map.of());
+
+        history.sort(Comparator.comparing(h->(int) h.staticData().get(StaticColumn.SEASON)));
+        return new TeamHistory
+        (
+            parameters.staticColumns.stream()
+                .collect(Collectors.toMap(
+                    Function.identity(),
+                    col->history.get(0).staticData().get(col),
+                    (l, r)->{throw new IllegalStateException("Unexpected merge");},
+                    ()->new EnumMap<StaticColumn, Object>(StaticColumn.class)
+                )),
+            parameters.historyColumns.stream()
+                .collect(Collectors.toMap(
+                    Function.identity(),
+                    col->history.stream()
+                        .flatMap(h->h.history().get(col).stream())
+                        .toList(),
+                    (l, r)->{throw new IllegalStateException("Unexpected merge");},
+                    ()->new EnumMap<>(HistoryColumn.class)
+                ))
+        );
     }
 
     private void expandAll
@@ -705,6 +865,13 @@ public class TeamHistoryDAO
         }
 
     }
+
+    private record HistoryLegacyUidGroup
+    (
+        @NotNull TeamHistory history,
+        @NotNull TeamLegacyUid legacyUid
+    )
+    {}
 
 
 }

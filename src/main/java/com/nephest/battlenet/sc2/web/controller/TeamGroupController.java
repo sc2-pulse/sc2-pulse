@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -50,6 +50,8 @@ public class TeamGroupController
         @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
         @RequestParam("history") Set<TeamHistoryDAO.HistoryColumn> historyColumns,
         @RequestParam(value = "static", defaultValue = "") Set<TeamHistoryDAO.StaticColumn> staticColumns,
+        @RequestParam(value = "groupBy", defaultValue = TeamHistoryDAO.GroupMode.NAMES.TEAM)
+        TeamHistoryDAO.GroupMode groupMode,
         @RequestParam(value = "from", required = false) OffsetDateTime from,
         @RequestParam(value = "to", required = false) OffsetDateTime to
     )
@@ -59,9 +61,14 @@ public class TeamGroupController
                 HttpStatus.BAD_REQUEST,
                 "'from' parameter must be before 'to' parameter"))
                     .build();
+        if(staticColumns.stream().anyMatch(c->!groupMode.isSupported(c)))
+            return ResponseEntity.of(ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Some static columns are not supported by the group mode"))
+                .build();
 
         return WebServiceUtil.notFoundIfEmpty(
-            teamHistoryDAO.find(teamIds, from, to, staticColumns, historyColumns));
+            teamHistoryDAO.find(teamIds, from, to, staticColumns, historyColumns, groupMode));
     }
 
 }

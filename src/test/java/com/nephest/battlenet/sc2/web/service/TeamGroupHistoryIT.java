@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistory;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO.GroupMode;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO.HistoryColumn;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO.StaticColumn;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
@@ -42,6 +43,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
@@ -49,7 +52,6 @@ import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -106,6 +108,8 @@ public class TeamGroupHistoryIT
 
     private static List<Season> seasons;
     private static List<TeamHistory> FULL_HISTORY;
+    private static List<TeamHistory> FULL_HISTORY_LEGACY_UID_GROUP;
+    private static Map<GroupMode, List<TeamHistory>> REFERENCE_GROUPS;
 
     @BeforeAll
     public static void beforeAll
@@ -277,6 +281,30 @@ public class TeamGroupHistoryIT
             }
         }
         FULL_HISTORY = getFullTeamHistory();
+        FULL_HISTORY_LEGACY_UID_GROUP = List.of(new TeamHistory
+        (
+            Stream.of(StaticColumn.QUEUE, StaticColumn.REGION, StaticColumn.LEGACY_ID)
+                .collect(Collectors.toMap(
+                    Function.identity(),
+                    col->FULL_HISTORY.get(0).staticData().get(col),
+                    (l, r)->{throw new IllegalStateException("Unexpected merge");},
+                    ()->new EnumMap<StaticColumn, Object>(StaticColumn.class)
+                )),
+            Arrays.stream(HistoryColumn.values())
+                .collect(Collectors.toMap(
+                    Function.identity(),
+                    col->FULL_HISTORY.stream()
+                        .flatMap(h->h.history().get(col).stream())
+                        .toList(),
+                    (l, r)->{throw new IllegalStateException("Unexpected merge");},
+                    ()->new EnumMap<>(HistoryColumn.class)
+                ))
+        ));
+        REFERENCE_GROUPS = Map.of
+        (
+            GroupMode.TEAM, FULL_HISTORY,
+            GroupMode.LEGACY_UID, FULL_HISTORY_LEGACY_UID_GROUP
+        );
     }
 
     private static List<TeamHistory> getFullTeamHistory()
@@ -415,8 +443,9 @@ public class TeamGroupHistoryIT
         );
     }
 
-    @Test
-    public void testDefaultFullHistory()
+    @EnumSource(GroupMode.class)
+    @ParameterizedTest
+    public void testDefaultFullHistory(GroupMode groupMode)
     throws Exception
     {
         List<TeamHistory> found = objectMapper.readValue(mvc.perform
@@ -446,22 +475,27 @@ public class TeamGroupHistoryIT
                 .queryParam
                 (
                     "static",
-                    Arrays.stream(StaticColumn.values())
+                    groupMode.getSupportedStaticColumns().stream()
                         .map(c->mvcConversionService.convert(c, String.class))
                         .toArray(String[]::new)
+                )
+                .queryParam
+                (
+                    "groupBy",
+                    mvcConversionService.convert(groupMode, String.class)
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        found.sort(ID_COMPARATOR);
+        found.sort(TIMESTAMP_COMPARATOR);
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.ID")
             .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
-            .isEqualTo(FULL_HISTORY);
+            .isEqualTo(REFERENCE_GROUPS.get(groupMode));
     }
 
     public static Stream<Arguments> testToAndFromFilters()
@@ -610,11 +644,18 @@ public class TeamGroupHistoryIT
             .isEqualTo(expected);
     }
 
-    @EnumSource(HistoryColumn.class)
+    public static Stream<Arguments> testSingleHistoryColumn()
+    {
+        return Arrays.stream(GroupMode.values())
+            .flatMap(groupMode->Arrays.stream(HistoryColumn.values()).map(c->Arguments.of(c, groupMode)));
+    }
+
+    @MethodSource
     @ParameterizedTest
-    public void testSingleHistoryColumn(HistoryColumn column)
+    public void testSingleHistoryColumn(HistoryColumn column, GroupMode groupMode)
     throws Exception
     {
+        boolean idSupported = groupMode.isSupported(StaticColumn.ID);
         List<TeamHistory> found = objectMapper.readValue(mvc.perform
         (
             get("/api/team/group/history")
@@ -635,35 +676,52 @@ public class TeamGroupHistoryIT
                 .queryParam
                 (
                     "static",
-                    mvcConversionService.convert(StaticColumn.ID, String.class)
+                    idSupported
+                        ? mvcConversionService.convert(StaticColumn.ID, String.class)
+                        : null
                 )
                 .queryParam
                 (
                     "history",
                     mvcConversionService.convert(column, String.class)
                 )
+                .queryParam
+                (
+                    "groupBy",
+                    mvcConversionService.convert(groupMode, String.class)
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        found.sort(ID_COMPARATOR);
+        if(idSupported) found.sort(ID_COMPARATOR);
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.ID")
             .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
-            .isEqualTo(FULL_HISTORY.stream()
+            .isEqualTo(REFERENCE_GROUPS.get(groupMode).stream()
                 .map(h->new TeamHistory(
-                    Map.of(StaticColumn.ID, h.staticData().get(StaticColumn.ID)),
+                    idSupported
+                        ? Map.of(StaticColumn.ID, h.staticData().get(StaticColumn.ID))
+                        : Map.of(),
                     Map.of(column, h.history().get(column))))
                 .toList()
             );
     }
 
-    @EnumSource(StaticColumn.class)
+    public static Stream<Arguments> testSingleStaticColumn()
+    {
+        return Arrays.stream(GroupMode.values())
+            .flatMap(groupMode->Arrays.stream(StaticColumn.values())
+                .filter(groupMode::isSupported)
+                .map(c->Arguments.of(c, groupMode)));
+    }
+
+    @MethodSource
     @ParameterizedTest
-    public void testSingleStaticColumn(StaticColumn column)
+    public void testSingleStaticColumn(StaticColumn column, GroupMode groupMode)
     throws Exception
     {
         List<TeamHistory> found = objectMapper.readValue(mvc.perform
@@ -693,6 +751,11 @@ public class TeamGroupHistoryIT
                     "static",
                     mvcConversionService.convert(column, String.class)
                 )
+                .queryParam
+                (
+                    "groupBy",
+                    mvcConversionService.convert(groupMode, String.class)
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
@@ -703,7 +766,7 @@ public class TeamGroupHistoryIT
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
             .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
-            .isEqualTo(FULL_HISTORY.stream()
+            .isEqualTo(REFERENCE_GROUPS.get(groupMode).stream()
                 .map(h->new TeamHistory(
                     Map.of(column, h.staticData().get(column)),
                     Map.of(HistoryColumn.TIMESTAMP, h.history().get(HistoryColumn.TIMESTAMP))))
@@ -755,6 +818,28 @@ public class TeamGroupHistoryIT
                     "history", HistoryColumn.TIMESTAMP,
                     "from", now,
                     "to", now
+                )
+            ),
+            Arguments.of
+            (
+                "Some static columns are not supported by the group mode",
+                Map.of
+                (
+                    "teamId", 1L,
+                    "history", HistoryColumn.TIMESTAMP,
+                    "static", StaticColumn.ID,
+                    "groupBy", GroupMode.LEGACY_UID
+                )
+            ),
+            Arguments.of
+            (
+                "Some static columns are not supported by the group mode",
+                Map.of
+                (
+                    "teamId", 1L,
+                    "history", HistoryColumn.TIMESTAMP,
+                    "static", StaticColumn.SEASON,
+                    "groupBy", GroupMode.LEGACY_UID
                 )
             )
         );
