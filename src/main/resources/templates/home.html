@@ -141,20 +141,8 @@
                         role="tab"
                         aria-controls="stats-global"
                         aria-selected="false"
-                    >
-                        Global
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a
-                        id="stats-day-tab"
-                        class="nav-link"
-                        data-toggle="pill"
-                        data-target="#stats-day"
-                        href="#stats-day"
-                        role="tab"
-                        aria-controls="stats-day"
-                        aria-selected="false"
+                        data-feature-timestamp="1734690418000"
+                        data-feature-timestamp-class="new-content"
                     >
                         Activity
                     </a>
@@ -183,8 +171,6 @@
                             role="tab"
                             aria-controls="stats-match-up"
                             aria-selected="false"
-                            data-feature-timestamp="1716913706000"
-                            data-feature-timestamp-class="new-content"
                     >
                         Match-up
                     </a>
@@ -245,22 +231,79 @@
                 </nav>
             </section>
             <section id="stats-global" class="tab-pane fade c-height-linked" data-view-title="Global statistics">
-                <h3>Global stats</h3>
+                <h3>Population activity</h3>
+                <form id="stats-global-form"
+                      class="form-inline d-flex form-flex form-group-column flex-wrap-gap row-gap-1-5 justify-content-center mb-3"
+                >
+                        <fieldset class="form-group d-flex flex-wrap-gap-05">
+                            <label for="stats-global-mode"
+                                   data-feature-timestamp="1734690418000"
+                                   data-feature-timestamp-class="new-content"
+                            >
+                                Mode
+                            </label>
+                            <select id="stats-global-mode" class="form-control serializable" required="required">
+                            </select>
+                        </fieldset>
+                        <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
+                            <input id="stats-global-remove-abnormal-seasons"
+                                   class="stats-global-reload serializable"
+                                   type="checkbox"
+                                   name="remove-abnormal-seasons"
+                                   checked="checked"
+                            />
+                            <label class="form-check-label d-flex gap-tiny"
+                                   for="stats-global-remove-abnormal-seasons"
+                                   data-feature-timestamp="1734690418000"
+                                   data-feature-timestamp-class="new-content"
+                            >
+                                Remove short seasons
+                            </label>
+                        </div>
+                        <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
+                            <input id="stats-global-remove-current-season"
+                                   class="stats-global-reload serializable"
+                                   type="checkbox"
+                                   name="remove-current-season"
+                                   checked="checked"
+                            />
+                            <label class="form-check-label d-flex gap-tiny"
+                                   for="stats-global-remove-current-season"
+                                   data-feature-timestamp="1734690418000"
+                                   data-feature-timestamp-class="new-content"
+                            >
+                                Remove current season
+                            </label>
+                        </div>
+                </form>
                 <div class="row no-gutters">
+                    <section
+                            id="games-played-day" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('games-played-day', ~{::#games-played-day/h4}, 'Games/day', 'line')}"
+                    >
+                        <h4>Games played per day</h4>
+                    </section>
                     <section id="games-played-global" class="col-lg-6 mb-3"
                              th:replace="~{fragments/section :: stats('games-played-global', ~{::#games-played-global/h4}, 'Games', 'line')}"
                     >
                         <h4>Games played</h4>
+                    </section>
+                    <section
+                            id="team-count-day" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('team-count-day', ~{::#team-count-day/h4}, 'New teams/day', 'line')}"
+                    >
+                        <h4>New teams per day</h4>
                     </section>
                     <section id="team-count-global" class="col-lg-6 mb-3"
                              th:replace="~{fragments/section :: stats('team-count-global', ~{::#team-count-global/h4}, 'Teams', 'line')}"
                     >
                         <h4>Team count</h4>
                     </section>
-                    <section id="player-count-global" class="col-lg-6 mb-3"
-                             th:replace="~{fragments/section :: stats('player-count-global', ~{::#player-count-global/h4}, 'Players', 'line')}"
+                    <section
+                            id="player-count-day" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('player-count-day', ~{::#player-count-day/h4}, 'New players/day', 'line')}"
                     >
-                        <h4>Player count
+                        <h4>New players per day
                             (<img
                                     th:src="@{/static/icon/misc/filter.svg}"
                                     alt="Some filters are not applicable: region, league"
@@ -269,48 +312,10 @@
                             />)
                         </h4>
                     </section>
-                    <section id="player-count-daily-activity-tier" class="col-lg-6 mb-3"
-                             th:replace="~{fragments/section :: stats('player-count-daily-activity-tier', ~{::#player-count-daily-activity-tier/h4}, 'Players', 'line')}"
+                    <section id="player-count-global" class="col-lg-6 mb-3"
+                             th:replace="~{fragments/section :: stats('player-count-global', ~{::#player-count-global/h4}, 'Players', 'line')}"
                     >
-                        <h4>Player count by activity tier
-                            (
-                            <img
-                                    th:src="@{/static/icon/misc/filter.svg}"
-                                    alt="Some filters are not applicable: region, league"
-                                    title="Some filters are not applicable: region, league"
-                                    data-toggle="tooltip"
-                            />
-                            <img
-                                    th:src="@{/static/icon/misc/info.svg}"
-                                    alt="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
-                                    title="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
-                                    data-toggle="tooltip"
-                            />
-                            )
-                        </h4>
-                    </section>
-                </div>
-            </section>
-            <section id="stats-day" class="tab-pane fade c-height-linked" data-view-title="Daily activity statistics">
-                <h3>Daily activity stats</h3>
-                <div class="row no-gutters">
-                    <section
-                            id="games-played-day" class="col-lg-6 mb-3"
-                            th:replace="~{fragments/section :: stats('games-played-day', ~{::#games-played-day/h4}, 'Games/day', 'line')}"
-                    >
-                        <h4>Games played per day</h4>
-                    </section>
-                    <section
-                            id="team-count-day" class="col-lg-6 mb-3"
-                            th:replace="~{fragments/section :: stats('team-count-day', ~{::#team-count-day/h4}, 'New teams/day', 'line')}"
-                    >
-                        <h4>New teams per day</h4>
-                    </section>
-                    <section
-                            id="player-count-day" class="col-lg-6 mb-3"
-                            th:replace="~{fragments/section :: stats('player-count-day', ~{::#player-count-day/h4}, 'New players/day', 'line')}"
-                    >
-                        <h4>New players per day
+                        <h4>Player count
                             (<img
                                     th:src="@{/static/icon/misc/filter.svg}"
                                     alt="Some filters are not applicable: region, league"
@@ -340,15 +345,27 @@
                             )
                         </h4>
                     </section>
+                    <section id="player-count-daily-activity-tier" class="col-lg-6 mb-3"
+                             th:replace="~{fragments/section :: stats('player-count-daily-activity-tier', ~{::#player-count-daily-activity-tier/h4}, 'Players', 'line')}"
+                    >
+                        <h4>Player count by activity tier
+                            (
+                            <img
+                                    th:src="@{/static/icon/misc/filter.svg}"
+                                    alt="Some filters are not applicable: region, league"
+                                    title="Some filters are not applicable: region, league"
+                                    data-toggle="tooltip"
+                            />
+                            <img
+                                    th:src="@{/static/icon/misc/info.svg}"
+                                    alt="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
+                                    title="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
+                                    data-toggle="tooltip"
+                            />
+                            )
+                        </h4>
+                    </section>
                 </div>
-                <p>
-                    This sections contains normalized global stats. These are the stats as if all seasons have the same duration.
-                    The main idea here is to highlight the dynamics
-                    rather then absolute numbers. Seasons have a different length, so longer seasons will inevitably have
-                    higher numbers, creating misleading positive bumps in the charts. This stats section normalizes
-                    the stats by dividing global numbers by season duration(in days), which results in smoother
-                    graphs.
-                </p>
             </section>
             <section id="stats-race" class="tab-pane fade c-height-linked" data-view-title="Race distribution">
                 <h3>Race distribution</h3>
@@ -501,7 +518,7 @@
                                 />
                             </label>
                             <input id="stats-match-up-group-duration" class="form-control serializable"
-                                   type="number" min="1" max="10"
+                                   type="number" min="2" max="10"
                                    required="required"/>
                         </fieldset>
                     </div>

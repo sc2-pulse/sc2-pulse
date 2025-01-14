@@ -12,6 +12,8 @@ import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.SupporterService;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -260,6 +262,25 @@ public class AdminController
     public void removeRequestsPerHourCap(@PathVariable("region") Region region)
     {
         sc2API.setRequestsPerHourCap(region, null);
+    }
+
+    @PostMapping("/blizzard/api/ladder/profile/retries/{region}/{retries}")
+    public void setProfileLadderRetryCount
+    (
+        @PathVariable("region") Region region,
+        @PathVariable("retries")
+        @Min(BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT_MIN)
+        @Max(BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT_MAX)
+        int retries
+    )
+    {
+        sc2API.setProfileLadderRetryCount(region, retries);
+    }
+
+    @DeleteMapping("/blizzard/api/ladder/profile/retries/{region}")
+    public void removeProfileLadderRetryCount(@PathVariable("region") Region region)
+    {
+        sc2API.setProfileLadderRetryCount(region, BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT);
     }
 
 }

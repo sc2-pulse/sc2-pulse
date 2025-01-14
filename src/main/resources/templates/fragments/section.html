@@ -40,7 +40,7 @@
          th:replace="~{fragments/section :: stats-league-region(${region}, 'Games played by race', 'games-played-race-league', 'true', 'true', 1, null)}">
 </section>
 <section th:id="${id}"
-         th:class="|col-lg-${autoHeight == 'true' ? '6' : '12'} mb-3|"
+         th:class="|col-lg-${autoHeight == 'true' ? '6' : '12'} mb-3 stats-section|"
          th:fragment="statsFull (id, title, titleY, type, legendDisplay, autoHeight, tableCount)">
     <h4 th:replace="${title}"></h4>
     <table

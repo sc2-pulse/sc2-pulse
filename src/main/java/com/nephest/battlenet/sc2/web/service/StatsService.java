@@ -330,7 +330,7 @@ public class StatsService
         )))
     );
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
-    public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofDays(7);
+    public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofHours(3);
 
     @Autowired @Lazy
     private StatsService statsService;
@@ -1062,7 +1062,24 @@ public class StatsService
     public void checkStaleDataByTeamStateCount(Region region)
     {
         LOG.trace("checkStaleDataByTeamStateCount({})", region);
+        boolean alternativeStates = isAlternativeTeamStates(region);
         removeForcedAlternativeRegionIfExpired(region);
+        /*
+            No reason to check if snapshot stats use alternative route.
+            Furthermore, such a check may block attempts to bounce back to legacy API when
+            alternative API is broken:
+            * the API is broken
+            * there are no fresh team states
+            * redirect to alternative route(which it already uses)
+            In such case the service is locked to alternative update route if corresponding
+            endpoints are broken.
+         */
+        if (alternativeStates)
+        {
+            LOG.trace("Skipped stale data check because alternative update is already active");
+            return;
+        }
+
         if(teamStateDAO.getCount(region, SC2Pulse.offsetDateTime().minus(STALE_DATA_TEAM_STATES_DEPTH)) == 0)
         {
             if(addForcedAlternativeRegion(region))
@@ -1072,6 +1089,12 @@ public class StatsService
             }
         }
         LOG.trace("end checkStaleDataByTeamStateCount({})", region);
+    }
+
+    private boolean isAlternativeTeamStates(Region region)
+    {
+         return isAlternativeUpdate(region, true)
+             || forcedAlternativeUpdateInstants.get(region).getValue() != null;
     }
 
     public void removeForcedAlternativeRegionIfExpired(Region region)

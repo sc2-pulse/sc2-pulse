@@ -57,7 +57,8 @@ class SeasonUtil
 
     static updateSeasonDuration(season)
     {
-        season["days"] = (season.end - season.start) / (1000 * 60 * 60 * 24);
+        season.durationProgress = season.nowOrEnd - season.start;
+        season["daysProgress"] = season.durationProgress / (1000 * 60 * 60 * 24);
     }
 
     static updateSeasonDescription(season)
@@ -67,12 +68,10 @@ class SeasonUtil
 
     static updateSeasonDates(season)
     {
-        const startDate = Util.parseIsoDateOrDateTime(season.start);
-        let endDate = Util.parseIsoDateOrDateTime(season.end);
+        season.start = Util.parseIsoDateOrDateTime(season.start);
+        season.end = Util.parseIsoDateOrDateTime(season.end);
         const now = new Date();
-        if(now - endDate < 0) endDate = now;
-        season.start = startDate;
-        season.end = endDate;
+        season.nowOrEnd = now - season.end < 0 ? now : season.end;
     }
 
     static updateSeasonMeta(season)
@@ -173,6 +172,31 @@ class SeasonUtil
             fd.set("to", date.getTime());
             SeasonUtil.updateSeasonState(new URLSearchParams(Util.urlencodeFormData(fd)));
         });
+    }
+
+    static isCurrentSeason(season)
+    {
+        if(SeasonUtil.maxSeason == null) SeasonUtil.maxSeason
+            = Math.max.apply(Math, Array.from(Session.currentSeasonsIdMap.keys()));
+        return season == SeasonUtil.maxSeason;
+    }
+
+    static calculateAbnormalSeasons(seasons)
+    {
+        if(!seasons) seasons = Array.from(Session.currentSeasonsIdMap.values()).map(v=>v[0]);
+        const seasonDurations = seasons.map(s=>s.durationProgress);
+        const meanDuration = seasonDurations.reduce((p, c)=>p + c, 0) / seasonDurations.length;
+        //calculate only short seasons, ignore long
+        const stDev = Util.stDev(seasonDurations, true) * -1;
+        return new Set(seasons
+            .filter(season=>season.durationProgress - meanDuration < stDev)
+            .map(season=>season.battlenetId));
+    }
+
+    static isAbnormalSeason(season)
+    {
+        if(!SeasonUtil.abnormalSeasons) SeasonUtil.abnormalSeasons = SeasonUtil.calculateAbnormalSeasons();
+        return SeasonUtil.abnormalSeasons.has(parseInt(season));
     }
 
 }

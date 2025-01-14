@@ -252,7 +252,6 @@ public class PlayerCharacterReportIT
             + "**Reporter:** BattleTag: refaccount#123\n"
             + "**Accused player:** [character#0](http://127.0.1.1:0/?type=character&id=1&m=1#player-stats-player)\n"
             + "**Accusations:** CHEATER\n"
-            + "**Evidence:** evidence text\n"
             + "\n"
             + "*You received this notification because you are a moderator, accused player, or original reporter*\n",
             account.getId(), //reporter
@@ -279,7 +278,6 @@ public class PlayerCharacterReportIT
             + "**Accused player:** [character#0](http://127.0.1.1:0/?type=character&id=1&m=1#player-stats-player)\n"
             + "**Accused player2:** [character#10](http://127.0.1.1:0/?type=character&id=2&m=1#player-stats-player)\n"
             + "**Accusations:** LINK\n"
-            + "**Evidence:** evidence text link\n"
             + "\n"
             + "*You received this notification because you are a moderator, accused player, or original reporter*\n",
             account.getId(), //reporter

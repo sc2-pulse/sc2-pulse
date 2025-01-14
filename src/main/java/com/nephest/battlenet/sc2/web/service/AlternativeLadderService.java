@@ -332,7 +332,11 @@ public class AlternativeLadderService
                 new Region[]{season.getRegion()},
                 new QueueType[]{e.getKey()},
                 e.getValue().toArray(BaseLeague.LeagueType[]::new),
-                BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT
+                api.getProfileLadderRetryCount
+                (
+                    season.getRegion(),
+                    isProfileLadderWebRegion(season.getRegion())
+                )
             ).stream())
             .collect(Collectors.toList());
     }

@@ -25,6 +25,14 @@ class EnumUtil
         throw new Error("Invalid full name");
     }
 
+    static enumOfStoredFullName(itemName, enumObj, defaultValue)
+    {
+        const fullName = localStorage.getItem(itemName);
+        if(fullName == null) return defaultValue;
+
+        return EnumUtil.enumOfFullName(fullName, enumObj);
+    }
+
     static enumOfNamePrefix(prefix, enumObj)
     {
         prefix = prefix.toLowerCase();

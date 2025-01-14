@@ -4,6 +4,44 @@
 class StatsUtil
 {
 
+    static init()
+    {
+        if(StatsUtil.initialized) return;
+
+        StatsUtil.initGlobalStats();
+        StatsUtil.initialized = true;
+    }
+
+    static initGlobalStats()
+    {
+        const modeSelect = document.querySelector("#stats-global-mode");
+        for(const enumVal of Object.values(LADDER_STATS_GLOBAL_VIEW_MODE))
+            modeSelect.appendChild(ElementUtil.createElement("option", null, null, enumVal.name, [["value", enumVal.fullName]]));
+        modeSelect.value = EnumUtil.enumOfStoredFullName(
+            "stats-global-mode", LADDER_STATS_GLOBAL_VIEW_MODE, LADDER_STATS_GLOBAL_VIEW_MODE.MIXED)
+                .fullName;
+
+        StatsUtil.updateGlobalStatsMode();
+    }
+
+    static filterStats(stats, nullify, removeCurrentSeason, removeAbnormalSeasons)
+    {
+        if(removeCurrentSeason == null) removeCurrentSeason
+            = localStorage.getItem("stats-global-remove-current-season") !== "false";
+        if(removeAbnormalSeasons == null) removeAbnormalSeasons
+            = localStorage.getItem("stats-global-remove-abnormal-seasons") !== "false";
+
+        const filters = [];
+        if(removeCurrentSeason) filters.push(SeasonUtil.isCurrentSeason);
+        if(removeAbnormalSeasons) filters.push(SeasonUtil.isAbnormalSeason);
+
+        if(filters.length == 0) return;
+
+        Object.entries(stats)
+            .filter(entry=>filters.some(filter=>filter(entry[0])))
+            .forEach(entry=>nullify(entry[1]));
+    }
+
     static updateQueueStatsModel(formParams)
     {
         const params = new URLSearchParams(formParams);
@@ -21,6 +59,7 @@ class StatsUtil
 
     static updateQueueStatsView()
     {
+        StatsUtil.init();
         const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.QUEUE_STATS);
         StatsUtil.updateQueueStatsPlayerCount(searchResult);
         StatsUtil.updateQueueStatsActivity(searchResult);
@@ -44,6 +83,11 @@ class StatsUtil
             playerCount[seasonStats.season]["old"] = seasonStats.playerCount - playerCount[seasonStats.season]["new"];
             playerCount[seasonStats.season]["global"] = seasonStats.playerCount;
         }
+        StatsUtil.filterStats(playerCount, s=>{
+            s.global = null;
+            s.new = null;
+            s.old = null;
+        });
         TableUtil.updateColRowTable
         (
             document.getElementById("player-count-global-table"),
@@ -73,6 +117,11 @@ class StatsUtil
             activity[seasonStats.season]["medium"] = seasonStats.mediumActivityPlayerCount;
             activity[seasonStats.season]["high"] = seasonStats.highActivityPlayerCount;
         }
+        StatsUtil.filterStats(activity, s=>{
+            s.low = null;
+            s.medium = null;
+            s.high = null;
+        });
         TableUtil.updateColRowTable
         (
             document.getElementById("player-count-daily-activity-tier-table"),
@@ -100,6 +149,35 @@ class StatsUtil
                 Util.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
+    }
+
+    static updateGlobalStatsView()
+    {
+        StatsUtil.updateLadderStatsView();
+        StatsUtil.updateQueueStatsView();
+    }
+
+    static enhanceGlobalStatsCtl()
+    {
+        const modeCtl = document.querySelector("#stats-global-mode");
+        if(modeCtl) modeCtl.addEventListener("change", e=>window.setTimeout(t=>StatsUtil.updateGlobalStatsMode(), 0));
+
+        document.querySelectorAll(".stats-global-reload")
+            .forEach(ctl=>ctl.addEventListener("change", e=>window.setTimeout(t=>StatsUtil.updateGlobalStatsView(), 0)));
+    }
+
+    static updateGlobalStatsMode(mode)
+    {
+        if(mode == null) mode = EnumUtil.enumOfStoredFullName(
+            "stats-global-mode", LADDER_STATS_GLOBAL_VIEW_MODE, LADDER_STATS_GLOBAL_VIEW_MODE.MIXED);
+        document.querySelectorAll("#stats-global .stats-section")
+            .forEach(section=>{
+                if(mode.sectionIds.has(section.id)) {
+                    section.classList.remove("d-none");
+                } else {
+                    section.classList.add("d-none");
+                }
+            });
     }
 
     static updateLadderStatsModel(formParams)
@@ -158,6 +236,8 @@ class StatsUtil
                     percentageResult[param][seasonId][header] = Util.calculatePercentage(value, sum);
             }
         }
+        StatsUtil.filterStats(globalResult.teamCount, s=>s.global = null);
+        StatsUtil.filterStats(globalResult.gamesPlayed, s=>s.global = null);
         StatsUtil.applyUserSettings(globalResult);
         TableUtil.updateColRowTable
             (document.getElementById("games-played-global-table"), globalResult.gamesPlayed, null, null, SeasonUtil.seasonIdTranslator);
@@ -258,7 +338,9 @@ class StatsUtil
         if(!gamesOption || gamesOption == "match") {
             const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
             const matchParticipants = EnumUtil.enumOfFullName(searchResult.urlParams.get("queue"), TEAM_FORMAT).memberCount * 2;
-            Object.values(globalResult.gamesPlayed).forEach(g=>g.global = Math.round(g.global / matchParticipants));
+            Object.values(globalResult.gamesPlayed)
+                .filter(g=>g.global != null)
+                .forEach(g=>g.global = Math.round(g.global / matchParticipants));
         }
     }
 
@@ -410,6 +492,7 @@ class StatsUtil
     static updateLadderStats(formParams)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
+        StatsUtil.init();
         return StatsUtil.updateLadderStatsModel(formParams)
             .then(json => {
                 StatsUtil.updateLadderStatsView();
@@ -517,7 +600,7 @@ class StatsUtil
             const season = Session.currentSeasons.filter(s=>s.battlenetId == seasonId)[0];
             for(const [key, val] of Object.entries(seasonStats))
             {
-                dailyStats[seasonId][key] = val / season.days;
+                dailyStats[seasonId][key] = val == null ? null : val / season.daysProgress;
             }
         }
         return dailyStats;
@@ -1040,7 +1123,7 @@ class StatsUtil
 
 StatsUtil.MAP_STATS_FILM_MAX_FRAME = 29;
 StatsUtil.MAP_STATS_FILM_MAIN_FRAME = 8;
-StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION = 2;
+StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION = 3;
 StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD = 5;
 StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_DURATION_FOV = 15;
 StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_DURATION_FOV_OFFSET = 2;

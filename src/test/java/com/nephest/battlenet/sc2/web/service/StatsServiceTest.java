@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -206,8 +207,12 @@ public class StatsServiceTest
         assertTrue(ss.isAlternativeUpdate(Region.EU, true));
         assertTrue(ss.getForcedAlternativeUpdateInstants().get(Region.EU).getValue().isAfter(before));
 
-        //alternative, there are matches, but time has not passed yet
-        when(teamStateDAO.getCount(eq(Region.EU), any())).thenReturn(100);
+        /*
+            alternative, there are matches, but time has not passed yet
+            lenient because the actual check *may* be skipped, but that's not what this test is
+            about
+         */
+        lenient().when(teamStateDAO.getCount(eq(Region.EU), any())).thenReturn(100);
         ss.checkStaleDataByTeamStateCount(Region.EU);
         assertTrue(ss.isAlternativeUpdate(Region.EU, true));
         assertTrue(ss.getForcedAlternativeUpdateInstants().get(Region.EU).getValue().isAfter(before));
@@ -219,6 +224,49 @@ public class StatsServiceTest
         ss.checkStaleDataByTeamStateCount(Region.EU);
         assertFalse(ss.isAlternativeUpdate(Region.EU, true));
         assertNull(ss.getForcedAlternativeUpdateInstants().get(Region.EU).getValue());
+    }
+
+    @Test
+    public void whenAlternativeUpdateIsActive_thenSkipStaleDataDetectionByTeamStateCount()
+    {
+        //switch to alternative due to no team states
+        ss.init();
+        when(teamStateDAO.getCount(eq(Region.EU), any())).thenReturn(0);
+        ss.checkStaleDataByTeamStateCount(Region.EU);
+        assertTrue(ss.isAlternativeUpdate(Region.EU, true));
+
+        /*
+            Alternative redirect has expired, still no team states. Redirect back to legacy because
+            team state stats were alternative.
+         */
+        ss.getForcedAlternativeUpdateInstants().get(Region.EU).setValue(SC2Pulse.instant()
+            .minus(StatsService.FORCED_ALTERNATIVE_UPDATE_DURATION)
+            .minusSeconds(1));
+        ss.checkStaleDataByTeamStateCount(Region.EU);
+        assertFalse(ss.isAlternativeUpdate(Region.EU, true));
+    }
+
+    @Test
+    public void whenLegacyUpdateIsActive_butTeamStatesAreAlternative_thenSkipStaleDataDetectionByTeamStateCount()
+    {
+        //switch to alternative due to no team states
+        ss.init();
+        when(teamStateDAO.getCount(eq(Region.EU), any())).thenReturn(0);
+        ss.checkStaleDataByTeamStateCount(Region.EU);
+        assertTrue(ss.isAlternativeUpdate(Region.EU, true));
+
+        //switch to legacy
+        ss.removeForcedAlternativeRegion(Region.EU);
+
+        /*
+            Alternative redirect has expired, still no team states. Redirect back to legacy because
+            team state stats were alternative based on saved timestamps
+         */
+        ss.getForcedAlternativeUpdateInstants().get(Region.EU).setValue(SC2Pulse.instant()
+            .minus(StatsService.FORCED_ALTERNATIVE_UPDATE_DURATION)
+            .minusSeconds(1));
+        ss.checkStaleDataByTeamStateCount(Region.EU);
+        assertFalse(ss.isAlternativeUpdate(Region.EU, true));
     }
 
 /*

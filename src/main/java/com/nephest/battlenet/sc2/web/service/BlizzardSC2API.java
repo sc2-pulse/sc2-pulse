@@ -101,10 +101,13 @@ extends BaseAPI
     public static final float REQUESTS_PER_SECOND_CAP_WEB = 10f;
     public static final int DELAY = 1000;
     public static final int FIRST_SEASON = 28;
+    public static final int PROFILE_LADDER_RETRY_COUNT_MIN = 1;
     public static final int PROFILE_LADDER_RETRY_COUNT = 3;
+    public static final int PROFILE_LADDER_RETRY_COUNT_MAX = 5;
     public static final Duration ERROR_RATE_FRAME = Duration.ofMinutes(60);
     public static final Duration HEALTH_SAVE_FRAME = Duration.ofMinutes(3);
     public static final double RETRY_ERROR_RATE_THRESHOLD = 40.0;
+    public static final double MATCH_RETRY_ERROR_RATE_THRESHOLD = 50.0;
     public static final double FORCE_REGION_ERROR_RATE_THRESHOLD = 40.0;
     public static final Duration AUTO_FORCE_REGION_MAX_DURATION = Duration.ofDays(7);
     public static final Duration IO_TIMEOUT = Duration.ofSeconds(50);
@@ -141,6 +144,7 @@ extends BaseAPI
     private WebClient unauthorizedClient;
     private final Map<Region, LongVar> ignoreClientSslErrors = new EnumMap<>(Region.class);
     private final Map<Region, DurationVar> clientTimeouts = new EnumMap<>(Region.class);
+    private final Map<Region, Var<Long>> profileLadderRetries = new EnumMap<>(Region.class);
     private final Map<Region, DoubleVar> requestsPerSecondCaps = new EnumMap<>(Region.class);
     private final Map<Region, DoubleVar> requestsPerHourCaps = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
@@ -150,6 +154,7 @@ extends BaseAPI
     private final Map<Region, APIHealthMonitor> healthMonitors = new EnumMap<>(Region.class);
     private final ReactorRateLimiter webRateLimiter = new ReactorRateLimiter();
     private final Map<Region, APIHealthMonitor> webHealthMonitors = new EnumMap<>(Region.class);
+    private final Map<Region, APIHealthMonitor> matchHealthMonitors = new EnumMap<>(Region.class);
     private final VarDAO varDAO;
     private final GlobalContext globalContext;
 
@@ -204,13 +209,16 @@ extends BaseAPI
             requestsPerSecondCaps.put(r, new DoubleVar(varDAO, r.getId() + ".blizzard.api.rps", false));
             ignoreClientSslErrors.put(r, new LongVar(varDAO, r.getId() + ".blizzard.api.ssl.error.ignore", false));
             clientTimeouts.put(r, new DurationVar(varDAO, r.getId() + ".blizzard.api.timeout", false));
+            profileLadderRetries.put(r, new LongVar(varDAO,
+                r.getId() + ".blizzard.api.ladder.profile.retry.count", false));
         }
         Stream.of
         (
             requestsPerHourCaps.values().stream(),
             requestsPerSecondCaps.values().stream(),
             ignoreClientSslErrors.values().stream(),
-            clientTimeouts.values().stream()
+            clientTimeouts.values().stream(),
+            profileLadderRetries.values().stream()
         )
             .flatMap(Function.identity())
             .map(v->(Var<?>) v)
@@ -218,6 +226,9 @@ extends BaseAPI
         clientTimeouts.values().stream()
             .filter(v->v.getValue() == null)
             .forEach(v->v.setValue(IO_TIMEOUT));
+        profileLadderRetries.values().stream()
+            .filter(v->v.getValue() == null)
+            .forEach(v->v.setValue((long) PROFILE_LADDER_RETRY_COUNT));
     }
 
     private void initErrorRates(VarDAO varDAO, Set<Region> activeRegions)
@@ -226,6 +237,7 @@ extends BaseAPI
         {
             healthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api"));
             webHealthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api.web"));
+            matchHealthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api.match"));
         }
     }
 
@@ -396,6 +408,11 @@ extends BaseAPI
         return web
             ? webHealthMonitors.get(getRegion(region)).getErrorRate()
             : healthMonitors.get(getRegion(region)).getErrorRate();
+    }
+
+    protected APIHealthMonitor getMatchHealthMonitor(Region region)
+    {
+        return matchHealthMonitors.get(region);
     }
 
     public boolean isSeparateRequestLimits()
@@ -662,12 +679,14 @@ extends BaseAPI
     {
         healthMonitors.forEach((region, monitor)->LOG.debug("{} error rate: {}%", region, monitor.update()));
         webHealthMonitors.forEach((region, monitor)->LOG.debug("{} web error rate: {}%", region, monitor.update()));
+        matchHealthMonitors.forEach((region, monitor)->LOG.debug("{} match error rate: {}%", region, monitor.update()));
     }
 
     private void saveHealth()
     {
         healthMonitors.values().forEach(APIHealthMonitor::save);
         webHealthMonitors.values().forEach(APIHealthMonitor::save);
+        matchHealthMonitors.values().forEach(APIHealthMonitor::save);
     }
 
     private void autoTimeout()
@@ -726,6 +745,22 @@ extends BaseAPI
     public Duration getTimeout(Region region)
     {
         return clientTimeouts.get(region).getValue();
+    }
+
+    public int getProfileLadderRetryCount(Region region, boolean web)
+    {
+        return getErrorRate(region, web) > RETRY_ERROR_RATE_THRESHOLD
+            ? PROFILE_LADDER_RETRY_COUNT_MIN
+            : profileLadderRetries.get(region).getValue().intValue();
+    }
+
+    public void setProfileLadderRetryCount(Region region, int retries)
+    {
+        if(retries < PROFILE_LADDER_RETRY_COUNT_MIN || retries > PROFILE_LADDER_RETRY_COUNT_MAX)
+            throw new IllegalArgumentException("Invalid retry count");
+
+        profileLadderRetries.get(region).setValueAndSave((long) retries);
+        LOG.info("Profile ladder retries {}: {}", region, retries);
     }
     
     private RetrySpec getRetry(Region region, RetrySpec wanted, boolean web)
@@ -1043,6 +1078,7 @@ extends BaseAPI
             profile id discovery is a very important task, add retry spec if there is a chance of getting
             the correct data
          */
+        int profileRetries = getProfileLadderRetryCount(region, web);
         if(retry == WebServiceUtil.RETRY_NEVER && getErrorRate(region, web) < 100) retry = WebServiceUtil.RETRY;
         return getWebClient(region)
             .get()
@@ -1060,15 +1096,15 @@ extends BaseAPI
                 {
                     JsonNode members = objectMapper.readTree(s).at("/ladderMembers");
                     BlizzardPlayerCharacter[] characters;
-                    if(members.size() < PROFILE_LADDER_RETRY_COUNT)
+                    if(members.size() < profileRetries)
                     {
                         characters = new BlizzardPlayerCharacter[1];
                         characters[0] = objectMapper
                             .treeToValue(members.get(members.size() - 1).get("character"), BlizzardPlayerCharacter.class);
                     } else {
-                        characters = new BlizzardPlayerCharacter[PROFILE_LADDER_RETRY_COUNT];
-                        int offset = members.size() / PROFILE_LADDER_RETRY_COUNT;
-                        for(int i = 0; i < PROFILE_LADDER_RETRY_COUNT; i++)
+                        characters = new BlizzardPlayerCharacter[profileRetries];
+                        int offset = members.size() / profileRetries;
+                        for(int i = 0; i < profileRetries; i++)
                             characters[i] = objectMapper
                                 .treeToValue(members.get(offset * i).get("character"), BlizzardPlayerCharacter.class);
                     }
@@ -1301,6 +1337,13 @@ extends BaseAPI
         return getProfileLadders(ids, queueTypes, false);
     }
 
+    protected RetrySpec getMatchRetry(Region region, boolean web)
+    {
+        return web || matchHealthMonitors.get(region).getErrorRate() > MATCH_RETRY_ERROR_RATE_THRESHOLD
+            ? WebServiceUtil.RETRY_NEVER
+            : getRetry(WebServiceUtil.RETRY);
+    }
+
     public Mono<Tuple2<BlizzardMatches, PlayerCharacterNaturalId>> getMatches
     (
         PlayerCharacterNaturalId playerCharacter,
@@ -1326,10 +1369,16 @@ extends BaseAPI
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
             .retryWhen(ReactorRateLimiter.retryWhen(
-                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY, web), priorityName))
+                context.getRateLimiters(), getMatchRetry(region, web), priorityName))
             .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters(), priorityName))
-            .doOnRequest(s->context.getHealthMonitor().addRequest())
-            .doOnError(t->context.getHealthMonitor().addError());
+            .doOnRequest(s->{
+                matchHealthMonitors.get(region).addRequest();
+                context.getHealthMonitor().addRequest();
+            })
+            .doOnError(t->{
+                matchHealthMonitors.get(region).addError();
+                context.getHealthMonitor().addError();
+            });
     }
 
     public Mono<Tuple2<BlizzardMatches, PlayerCharacterNaturalId>> getMatches

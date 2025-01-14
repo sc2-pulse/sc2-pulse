@@ -16,7 +16,7 @@ implements java.io.Serializable
     implements Identifiable
     {
         CHEATER(1, "Cheater", true),
-        LINK(2, "Wintrader account pool", true),
+        LINK(2, "Wintrader account pool", false),
         GRIEFER(3, "Stream sniper/team killer", true),
         ACQUITTAL(4, "Acquittal", false);
 

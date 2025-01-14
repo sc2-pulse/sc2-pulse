@@ -25,6 +25,8 @@ public class LadderUpdateDAO
 extends StandardDAO
 {
 
+    public static final Duration TTL = Duration.ofDays(30);
+
     public static final String STD_SELECT =
         "ladder_update.region AS \"ladder_update.region\", "
         + "ladder_update.queue_type AS \"ladder_update.queue_type\", "
@@ -50,7 +52,7 @@ extends StandardDAO
         @Qualifier("sc2StatsConversionService") ConversionService conversionService
     )
     {
-        super(template, "ladder_update", "created", "30 DAYS");
+        super(template, "ladder_update", "created", TTL.toHours() + " hours");
         this.conversionService = conversionService;
         if(ROW_MAPPER == null) ROW_MAPPER = (rs, i)->new LadderUpdate
         (
