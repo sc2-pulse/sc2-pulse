@@ -266,7 +266,12 @@ public class TeamHistoryDAO
     public enum GroupMode
     {
 
-        TEAM(EnumSet.allOf(StaticColumn.class), EnumSet.noneOf(StaticColumn.class)),
+        TEAM
+        (
+            EnumSet.of(StaticColumn.ID),
+            EnumSet.allOf(StaticColumn.class),
+            EnumSet.noneOf(StaticColumn.class)
+        ),
         LEGACY_UID
         (
             EnumSet.of(StaticColumn.REGION, StaticColumn.QUEUE, StaticColumn.LEGACY_ID),
@@ -279,8 +284,21 @@ public class TeamHistoryDAO
             )
         );
 
+        private final Set<StaticColumn> groupStaticColumns;
         private final Set<StaticColumn> supportedStaticColumns;
         private final Set<StaticColumn> requiredStaticParameters;
+
+        GroupMode
+        (
+            EnumSet<StaticColumn> groupStaticColumns,
+            EnumSet<StaticColumn> supportedStaticColumns,
+            EnumSet<StaticColumn> requiredStaticParameters
+        )
+        {
+            this.groupStaticColumns = Collections.unmodifiableSet(groupStaticColumns);
+            this.supportedStaticColumns = Collections.unmodifiableSet(supportedStaticColumns);
+            this.requiredStaticParameters = Collections.unmodifiableSet(requiredStaticParameters);
+        }
 
         GroupMode
         (
@@ -290,6 +308,12 @@ public class TeamHistoryDAO
         {
             this.supportedStaticColumns = Collections.unmodifiableSet(supportedStaticColumns);
             this.requiredStaticParameters = Collections.unmodifiableSet(requiredStaticParameters);
+            this.groupStaticColumns = supportedStaticColumns;
+        }
+
+        public Set<StaticColumn> getGroupStaticColumns()
+        {
+            return groupStaticColumns;
         }
 
         public Set<StaticColumn> getSupportedStaticColumns()
