@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -107,7 +107,7 @@ public class GroupController
     }
 
     @GetMapping("/character/full") @CharacterGroup
-    public ResponseEntity<List<LadderDistinctCharacter>> getFullPlayerCharacters(@CharacterGroup Set<Long> characterIds)
+    public ResponseEntity<Object> getFullPlayerCharacters(@CharacterGroup Set<Long> characterIds)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
             .findDistinctCharactersByCharacterIds(characterIds));
@@ -203,7 +203,7 @@ public class GroupController
     }
 
     @GetMapping("/flat") @CharacterGroup
-    public ResponseEntity<Set<Long>> getCharacterIds(@CharacterGroup Set<Long> characterIds)
+    public ResponseEntity<Object> getCharacterIds(@CharacterGroup Set<Long> characterIds)
     {
         return WebServiceUtil.notFoundIfEmpty(characterIds);
     }

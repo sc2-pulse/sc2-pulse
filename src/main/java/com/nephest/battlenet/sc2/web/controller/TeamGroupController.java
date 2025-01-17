@@ -33,7 +33,7 @@ public class TeamGroupController
     private TeamHistoryDAO teamHistoryDAO;
 
     @GetMapping("/flat") @TeamGroup
-    public ResponseEntity<Set<Long>> getCharacterIds(@TeamGroup Set<Long> teamIds)
+    public ResponseEntity<Object> getCharacterIds(@TeamGroup Set<Long> teamIds)
     {
         return WebServiceUtil.notFoundIfEmpty(teamIds);
     }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -459,14 +459,14 @@ public class WebServiceUtil
             );
     }
 
-    public static <T extends Collection<?>> ResponseEntity<T> notFoundIfEmpty(T collection)
+    public static <T extends Collection<?>> ResponseEntity<Object> notFoundIfEmpty(T collection)
     {
         return collection.isEmpty()
             ? ResponseEntity.notFound().build()
             : ResponseEntity.ok(collection);
     }
 
-    public static <T extends Map<?, ?>> ResponseEntity<T> notFoundIfEmpty(T map)
+    public static <T extends Map<?, ?>> ResponseEntity<Object> notFoundIfEmpty(T map)
     {
         return map.isEmpty()
             ? ResponseEntity.notFound().build()

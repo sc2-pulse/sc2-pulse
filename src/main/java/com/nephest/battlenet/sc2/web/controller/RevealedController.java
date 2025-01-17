@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -10,7 +10,6 @@ import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
@@ -52,7 +51,7 @@ public class RevealedController
     }
 
     @GetMapping("/player/{ids}/full")
-    public ResponseEntity<List<LadderProPlayer>> getLadderProPlayers(@PathVariable("ids") Set<Long> ids)
+    public ResponseEntity<Object> getLadderProPlayers(@PathVariable("ids") Set<Long> ids)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderProPlayerDAO.findByIds(ids));
     }
