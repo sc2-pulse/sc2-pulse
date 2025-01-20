@@ -226,6 +226,7 @@ public class TeamHistoryDAO
         private final String name;
         private final String alias;
         private final String aliasedName;
+        private final String aggregationAliasedName;
         private final List<String> joins;
 
         StaticColumn(String name, List<String> joins)
@@ -233,6 +234,7 @@ public class TeamHistoryDAO
             this.name = name;
             this.alias = COLUMN_NAME_PREFIX + name;
             this.aliasedName = name + " AS \"" + this.alias + "\"";
+            this.aggregationAliasedName = "MAX(" + name + ") AS \"" + this.alias + "\"";
             this.joins = joins;
         }
 
@@ -257,6 +259,11 @@ public class TeamHistoryDAO
         public String getAliasedName()
         {
             return aliasedName;
+        }
+
+        public String getAggregationAliasedName()
+        {
+            return aggregationAliasedName;
         }
 
         public List<String> getJoins()
