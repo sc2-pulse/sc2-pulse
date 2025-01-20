@@ -62,6 +62,9 @@ public class TeamHistoryDAO
                 ()->new EnumMap<>(HistoryColumn.class)
             ));
 
+    public static final String PARAMETER_JOIN_DELIMITER = ",\n";
+    public static final String JOIN_JOIN_DELIMITER = "\n";
+
     public enum HistoryColumn
     {
         TIMESTAMP("timestamp", "team_state.timestamp"),
@@ -542,27 +545,27 @@ public class TeamHistoryDAO
         (
             directHistoryColumns.isEmpty() ? "" : "," + directHistoryColumns.stream()
                 .map(HistoryColumn::getAggregationFunction)
-                .collect(Collectors.joining(",\n")),
+                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
 
             dynamicPrefix + dynamicHistoryColumns.stream()
                     .map(HistoryColumn::getColumnAliasedName)
-                    .collect(Collectors.joining(",\n")),
+                    .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
             dynamicHistoryColumns.stream()
                 .flatMap(historyColumn -> historyColumn.getJoins().stream())
                 .distinct()
-                .collect(Collectors.joining("\n")),
+                .collect(Collectors.joining(JOIN_JOIN_DELIMITER)),
 
             Stream.concat
             (
                 directHistoryColumns.stream().map(FINAL_HISTORY_FQDN_NAMES::get),
                 parameters.staticColumns().stream().map(StaticColumn::getAliasedName)
             )
-                .collect(Collectors.joining(",\n")),
+                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
             parameters.staticColumns().stream()
                 .map(StaticColumn::getJoins)
                 .flatMap(Collection::stream)
                 .distinct()
-                .collect(Collectors.joining(",\n"))
+                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER))
         );
     }
 
