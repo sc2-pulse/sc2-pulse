@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,8 +45,32 @@ public class TeamGroupController
         return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findTeamsByIds(teamIds));
     }
 
+    private static Optional<ResponseEntity<Object>> getHistoryParametersError
+    (
+        Set<TeamHistoryDAO.StaticColumn> staticColumns,
+        TeamHistoryDAO.GroupMode groupMode,
+        OffsetDateTime from,
+        OffsetDateTime to
+    )
+    {
+        ResponseEntity<Object> result = null;
+        if(from != null && to != null && !from.isBefore(to))
+            result = ResponseEntity.of(ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "'from' parameter must be before 'to' parameter"))
+                        .build();
+        if(staticColumns.stream().anyMatch(c->!groupMode.isSupported(c)))
+            result = ResponseEntity.of(ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Some static columns are not supported by the group mode"))
+                        .build();
+
+        return Optional.ofNullable(result);
+    }
+
+
     @GetMapping("/history") @TeamGroup
-    public ResponseEntity<?> getHistory
+    public ResponseEntity<Object> getHistory
     (
         @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
         @RequestParam("history") Set<TeamHistoryDAO.HistoryColumn> historyColumns,
@@ -56,19 +81,27 @@ public class TeamGroupController
         @RequestParam(value = "to", required = false) OffsetDateTime to
     )
     {
-        if(from != null && to != null && !from.isBefore(to))
-            return ResponseEntity.of(ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_REQUEST,
-                "'from' parameter must be before 'to' parameter"))
-                    .build();
-        if(staticColumns.stream().anyMatch(c->!groupMode.isSupported(c)))
-            return ResponseEntity.of(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST,
-                    "Some static columns are not supported by the group mode"))
-                .build();
 
-        return WebServiceUtil.notFoundIfEmpty(
-            teamHistoryDAO.find(teamIds, from, to, staticColumns, historyColumns, groupMode));
+        return getHistoryParametersError(staticColumns, groupMode, from , to)
+            .orElseGet(()->WebServiceUtil.notFoundIfEmpty(
+                teamHistoryDAO.find(teamIds, from, to, staticColumns, historyColumns, groupMode)));
+    }
+
+    @GetMapping("/history/summary") @TeamGroup
+    public ResponseEntity<Object> getHistorySummary
+    (
+        @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
+        @RequestParam("summary") Set<TeamHistoryDAO.SummaryColumn> summaryColumns,
+        @RequestParam(value = "static", defaultValue = "") Set<TeamHistoryDAO.StaticColumn> staticColumns,
+        @RequestParam(value = "groupBy", defaultValue = TeamHistoryDAO.GroupMode.NAMES.TEAM)
+        TeamHistoryDAO.GroupMode groupMode,
+        @RequestParam(value = "from", required = false) OffsetDateTime from,
+        @RequestParam(value = "to", required = false) OffsetDateTime to
+    )
+    {
+        return getHistoryParametersError(staticColumns, groupMode, from , to)
+            .orElseGet(()->WebServiceUtil.notFoundIfEmpty(
+                teamHistoryDAO.findSummary(teamIds, from, to, staticColumns, summaryColumns, groupMode)));
     }
 
 }

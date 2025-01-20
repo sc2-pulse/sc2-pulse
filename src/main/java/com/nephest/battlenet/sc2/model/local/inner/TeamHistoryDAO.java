@@ -354,6 +354,110 @@ public class TeamHistoryDAO
 
     }
 
+    public enum SummaryColumn
+    {
+        GAMES
+        (
+            "games_diff",
+            """
+                CASE
+                    WHEN LAG(games) OVER w IS NULL THEN 1
+                    WHEN games - LAG(games) OVER w < 0
+                        OR team_id != LAG(team_id) OVER w
+                        OR
+                        (
+                            games = LAG(games) OVER w
+                            AND team_state.rating != LAG(team_state.rating) OVER w
+                        )
+                    THEN games
+                    ELSE games - LAG(games) OVER w
+                END
+            """,
+            "games",
+            "SUM"
+        ),
+
+        RATING_MIN
+        (
+            "rating", "team_state.rating",
+            "rating_min", "MIN"
+        ),
+        RATING_AVG
+        (
+            "rating", "team_state.rating",
+            "rating_avg", "AVG"
+        ),
+        RATING_MAX
+        (
+            "rating", "team_state.rating",
+            "rating_max", "MAX"
+        ),
+        RATING_LAST
+        (
+            "rating_last", "LAST_VALUE(team_state.rating) OVER w",
+            "rating_last", "MAX"
+        );
+
+
+        private final String dataName, dataColumn, dataAliasedColumn,
+            aggregationName,  aggregationFunction, aggregationAliasedFunction;
+
+        SummaryColumn
+        (
+            String dataName,
+            String dataColumn,
+            String aggregationName,
+            String aggregationFunctionName
+        )
+        {
+            this.dataName = dataName;
+            this.dataColumn = dataColumn;
+            this.dataAliasedColumn = dataColumn + " AS " + dataName;
+            this.aggregationName = aggregationName;
+            this.aggregationFunction = aggregationFunctionName + "(" + dataName + ")";
+            this.aggregationAliasedFunction = aggregationFunction + " AS " + aggregationName;
+        }
+
+        public static SummaryColumn fromAggregationName(String name)
+        {
+            return Arrays.stream(SummaryColumn.values())
+                .filter(c->c.getAggregationName().equals(name))
+                .findFirst()
+                .orElseThrow();
+        }
+
+        public String getDataName()
+        {
+            return dataName;
+        }
+
+        public String getDataColumn()
+        {
+            return dataColumn;
+        }
+
+        public String getDataAliasedColumn()
+        {
+            return dataAliasedColumn;
+        }
+
+        public String getAggregationName()
+        {
+            return aggregationName;
+        }
+
+        public String getAggregationFunction()
+        {
+            return aggregationFunction;
+        }
+
+        public String getAggregationAliasedFunction()
+        {
+            return aggregationAliasedFunction;
+        }
+
+    }
+
     private static final String FIND_COLUMNS_TEMPLATE =
         """
         WITH
@@ -391,7 +495,44 @@ public class TeamHistoryDAO
             %5$s
         """;
 
+    private static final String FIND_SUMMARY_TEMPLATE =
+        """
+        WITH
+        data_group AS
+        (
+            SELECT
+            CASE
+                WHEN games IS DISTINCT FROM LAG(games) OVER w
+                    OR team_state.rating IS DISTINCT FROM LAG(team_state.rating) OVER w
+                    OR team_id IS DISTINCT FROM LAG(team_id) OVER w
+                THEN true
+                ELSE false
+            END AS is_player_action,
+            %1$s
+            FROM team_state
+            %2$s
+            WHERE team_id IN(:teamIds)
+            AND
+            (
+                :from::timestamp with time zone IS NULL
+                OR timestamp >= :from::timestamp with time zone
+            )
+            AND
+            (
+                :to::timestamp with time zone IS NULL
+                OR timestamp < :to::timestamp with time zone
+            )
+            WINDOW w AS (PARTITION BY %4$s ORDER BY timestamp ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+        )
+            SELECT
+            %3$s
+            FROM data_group
+            WHERE is_player_action
+            GROUP BY %4$s
+        """;
+
     private static ResultSetExtractor<List<TeamHistory>> COLUMN_TEAM_HISTORY_EXTRACTOR;
+    private static ResultSetExtractor<List<TeamHistorySummary>> TEAM_HISTORY_SUMMARY_EXTRACTOR;
 
     private final DivisionDAO divisionDAO;
     private final LeagueTierDAO leagueTierDAO;
@@ -418,6 +559,35 @@ public class TeamHistoryDAO
         initMappers(sc2StatsConversionService, minConversionService);
     }
 
+    private static <T extends Enum<T>> Map<T, ?>  mapGenericColumns
+    (
+        ResultSet rs,
+        List<T> columns,
+        ConversionService minConversionService,
+        Function<T, String> columnNameMapper,
+        Class<T> clazz
+    )
+    {
+        return columns.stream()
+            .collect(Collectors.toMap(
+                Function.identity(),
+                column->
+                {
+                    try
+                    {
+                        return minConversionService
+                            .convert(rs.getObject(columnNameMapper.apply(column)), Object.class);
+                    }
+                    catch (SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                },
+                (l, r)->{throw new IllegalStateException("Unexpected merge");},
+                ()->new EnumMap<>(clazz)
+            ));
+    }
+
     private static Map<StaticColumn, ?> mapTeamColumns
     (
         ResultSet rs,
@@ -425,21 +595,14 @@ public class TeamHistoryDAO
         ConversionService minConversionService
     )
     {
-        return staticColumns.stream()
-            .collect(Collectors.toMap(
-                Function.identity(),
-                column->
-                {
-                    try
-                    {
-                        return minConversionService.convert(rs.getObject(column.alias), Object.class);
-                    }
-                    catch (SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                }
-            ));
+        return mapGenericColumns
+        (
+            rs,
+            staticColumns,
+            minConversionService,
+            StaticColumn::getAlias,
+            StaticColumn.class
+        );
     }
 
     private static Map<HistoryColumn, List<?>> mapColumns
@@ -494,6 +657,28 @@ public class TeamHistoryDAO
         );
     }
 
+    private static TeamHistorySummary mapSummary
+    (
+        ResultSet rs,
+        List<StaticColumn> staticColumns,
+        List<SummaryColumn> summaryColumns,
+        ConversionService minConversionService
+    )
+    {
+        return new TeamHistorySummary
+        (
+            mapTeamColumns(rs, staticColumns, minConversionService),
+            mapGenericColumns
+            (
+                rs,
+                summaryColumns,
+                minConversionService,
+                SummaryColumn::getAggregationName,
+                SummaryColumn.class
+            )
+        );
+    }
+
     private static void initMappers
     (
         ConversionService sc2StatsConversionService,
@@ -537,6 +722,52 @@ public class TeamHistoryDAO
 
             return result;
         };
+
+        if(TEAM_HISTORY_SUMMARY_EXTRACTOR == null) TEAM_HISTORY_SUMMARY_EXTRACTOR
+            = createTeamHistorySummaryExtractor(minConversionService);
+    }
+
+    private static ResultSetExtractor<List<TeamHistorySummary>> createTeamHistorySummaryExtractor
+    (
+        ConversionService minConversionService
+    )
+    {
+        return rs->{
+            if(!rs.isBeforeFirst()) return List.of();
+
+            ResultSetMetaData meta  = rs.getMetaData();
+            int columnCount = meta.getColumnCount();
+            List<StaticColumn> staticColumns = new ArrayList<>(columnCount);
+            List<SummaryColumn> summaryColumns = new ArrayList<>(columnCount);
+            IntStream.rangeClosed(1, columnCount)
+                .boxed()
+                .map(i->
+                {
+                    try
+                    {
+                        return meta.getColumnLabel(i);
+                    }
+                    catch (SQLException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .forEach(columnName->{
+                    if(columnName.startsWith(StaticColumn.COLUMN_NAME_PREFIX))
+                    {
+                        staticColumns.add(StaticColumn.fromAlias(columnName));
+                    }
+                    else
+                    {
+                        summaryColumns.add(SummaryColumn.fromAggregationName(columnName));
+                    }
+                });
+
+            List<TeamHistorySummary> result = new ArrayList<>();
+            while(rs.next())
+                result.add(mapSummary(rs, staticColumns, summaryColumns, minConversionService));
+            return result;
+        };
     }
 
     private static String generateFindColumnsQuery(HistoryParameters parameters)
@@ -576,6 +807,24 @@ public class TeamHistoryDAO
         );
     }
 
+    private static void checkParameters
+    (
+        @Nullable OffsetDateTime from,
+        @Nullable OffsetDateTime to,
+        @NotNull Set<StaticColumn> staticColumns,
+        @NotNull GroupMode groupMode
+    )
+    {
+        if(from != null && to != null && !from.isBefore(to))
+            throw new IllegalArgumentException("'from' parameter must be before 'to' parameter");
+        if(staticColumns.stream().anyMatch(c->!groupMode.isSupported(c)))
+            throw new IllegalArgumentException
+            (
+                "Some static columns in " + Arrays.toString(staticColumns.toArray())
+                    + " are not supported by the group mode " + groupMode
+            );
+    }
+
     public List<TeamHistory> find
     (
         @NotNull Set<Long> teamIds,
@@ -587,14 +836,7 @@ public class TeamHistoryDAO
     )
     {
         if(teamIds.isEmpty() || (historyColumns.isEmpty() && staticColumns.isEmpty())) return List.of();
-        if(from != null && to != null && !from.isBefore(to))
-            throw new IllegalArgumentException("'from' parameter must be before 'to' parameter");
-        if(staticColumns.stream().anyMatch(c->!groupMode.isSupported(c)))
-            throw new IllegalArgumentException
-            (
-                "Some static columns in " + Arrays.toString(staticColumns.toArray())
-                    + " are not supported by the group mode " + groupMode
-            );
+        checkParameters(from, to, staticColumns, groupMode);
 
         HistoryParameters parameters = new HistoryParameters(staticColumns, historyColumns);
         String query = generateFindColumnsQuery(createExpandedParameters(parameters, groupMode));
@@ -878,6 +1120,73 @@ public class TeamHistoryDAO
         });
     }
 
+    private static String generateFindSummaryQuery
+    (
+        HistorySummaryParameters parameters,
+        GroupMode groupMode
+    )
+    {
+        return FIND_SUMMARY_TEMPLATE.formatted
+        (
+            Stream.concat
+            (
+                Stream.of(groupMode.getGroupStaticColumns(), parameters.staticColumns())
+                    .flatMap(Collection::stream)
+                    .distinct()
+                    .map(StaticColumn::getName),
+                parameters.summaryColumns().stream()
+                    .map(SummaryColumn::getDataAliasedColumn)
+                    .distinct()
+            )
+                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
+            Stream.of(groupMode.getGroupStaticColumns(), parameters.staticColumns())
+                .flatMap(Collection::stream)
+                .distinct()
+                .map(StaticColumn::getJoins)
+                .flatMap(Collection::stream)
+                .distinct()
+                .collect(Collectors.joining(JOIN_JOIN_DELIMITER)),
+
+            Stream.concat
+            (
+                parameters.staticColumns().stream()
+                    .map(StaticColumn::getAggregationAliasedName),
+                parameters.summaryColumns().stream()
+                    .map(SummaryColumn::getAggregationAliasedFunction)
+            )
+                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
+
+            groupMode.getGroupStaticColumns().stream()
+                .map(StaticColumn::getName)
+                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER))
+        );
+    }
+
+    public List<TeamHistorySummary> findSummary
+    (
+        @NotNull Set<Long> teamIds,
+        @Nullable OffsetDateTime from,
+        @Nullable OffsetDateTime to,
+        @NotNull Set<StaticColumn> staticColumns,
+        @NotNull Set<SummaryColumn> summaryColumns,
+        @NotNull GroupMode groupMode
+    )
+    {
+        if(teamIds.isEmpty() || (summaryColumns.isEmpty() && staticColumns.isEmpty())) return List.of();
+        checkParameters(from, to, staticColumns, groupMode);
+
+        String query = generateFindSummaryQuery
+        (
+            new HistorySummaryParameters(staticColumns, summaryColumns),
+            groupMode
+        );
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("teamIds", teamIds)
+            .addValue("from", from)
+            .addValue("to", to);
+        return template.query(query, params, TEAM_HISTORY_SUMMARY_EXTRACTOR);
+    }
+
     private record HistoryParameters
     (
         @NotNull Set<StaticColumn> staticColumns,
@@ -899,6 +1208,13 @@ public class TeamHistoryDAO
         }
 
     }
+
+    private record HistorySummaryParameters
+    (
+        @NotNull Set<StaticColumn> staticColumns,
+        @NotNull Set<SummaryColumn> summaryColumns
+    )
+    {}
 
     private record HistoryLegacyUidGroup
     (
