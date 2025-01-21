@@ -221,7 +221,7 @@ public class TeamHistoryDAO
         SEASON("season", REGION.joins);
 
         public static final String COLUMN_NAME_PREFIX = "team.";
-        public static final String TEAM_JOIN = "INNER JOIN team ON data_group.team_id = team.id";
+        public static final String TEAM_JOIN = "INNER JOIN team ON team_id = team.id";
 
         private final String name;
         private final String alias;
