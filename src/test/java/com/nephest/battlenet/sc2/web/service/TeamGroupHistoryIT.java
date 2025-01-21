@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -774,6 +775,21 @@ public class TeamGroupHistoryIT
             );
     }
 
+    @SuppressWarnings("unchecked")
+    public static Stream<Arguments> verifyHistoryParameterValidation()
+    {
+        return Stream.concat
+        (
+            Stream.of(Arguments.of(
+                "Required parameter 'history' is not present",
+                Map.of("teamId", 1L)
+            )),
+            verifyParameterValidation()
+                .peek(args->((Map<String, Object>) args.get()[1])
+                    .put("history", HistoryColumn.TIMESTAMP))
+        );
+    }
+
     public static Stream<Arguments> verifyParameterValidation()
     {
         OffsetDateTime now = SC2Pulse.offsetDateTime();
@@ -782,72 +798,57 @@ public class TeamGroupHistoryIT
             Arguments.of
             (
                 "Validation failure",
-                Map.of
-                (
-                    "teamId", LongStream.range(0, HISTORY_TEAM_COUNT_MAX + 1).toArray(),
-                    "history", HistoryColumn.TIMESTAMP
-                )
+                new HashMap<String, Object>(Map.of(
+                    "teamId", LongStream.range(0, HISTORY_TEAM_COUNT_MAX + 1).toArray()
+                ))
             ),
             Arguments.of
             (
                 "At least one group id is required",
-                Map.of("history", HistoryColumn.TIMESTAMP)
-            ),
-            Arguments.of
-            (
-                "Required parameter 'history' is not present",
-                Map.of("teamId", 1L)
+                new HashMap<String, Object>()
             ),
             Arguments.of
             (
                 "'from' parameter must be before 'to' parameter",
-                Map.of
-                (
+                new HashMap<String, Object>(Map.of(
                     "teamId", 1L,
-                    "history", HistoryColumn.TIMESTAMP,
                     "from", now,
                     "to", now.minusSeconds(1)
-                )
+                ))
             ),
             Arguments.of
             (
                 "'from' parameter must be before 'to' parameter",
-                Map.of
-                (
+                new HashMap<String, Object>(Map.of(
                     "teamId", 1L,
-                    "history", HistoryColumn.TIMESTAMP,
                     "from", now,
                     "to", now
-                )
+                ))
             ),
             Arguments.of
             (
                 "Some static columns are not supported by the group mode",
-                Map.of
-                (
+                new HashMap<String, Object>(Map.of(
                     "teamId", 1L,
-                    "history", HistoryColumn.TIMESTAMP,
                     "static", StaticColumn.ID,
                     "groupBy", GroupMode.LEGACY_UID
-                )
+                ))
             ),
             Arguments.of
             (
                 "Some static columns are not supported by the group mode",
-                Map.of
-                (
+                new HashMap<String, Object>(Map.of(
                     "teamId", 1L,
-                    "history", HistoryColumn.TIMESTAMP,
                     "static", StaticColumn.SEASON,
                     "groupBy", GroupMode.LEGACY_UID
-                )
+                ))
             )
         );
     }
 
     @ParameterizedTest
     @MethodSource
-    public void verifyParameterValidation(String errorFragment, Map<String, Object> parameters)
+    public void verifyHistoryParameterValidation(String errorFragment, Map<String, Object> parameters)
     throws Exception
     {
         MockHttpServletRequestBuilder req = get("/api/team/group/history")
