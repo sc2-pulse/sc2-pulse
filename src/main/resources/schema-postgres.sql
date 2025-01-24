@@ -728,7 +728,7 @@ CREATE TABLE "team_state"
     "region_team_count" INTEGER,
     "secondary" BOOLEAN,
 
-    PRIMARY KEY ("team_id", "timestamp"),
+    PRIMARY KEY ("team_id", "timestamp") INCLUDE(rating, games, division_id, region_rank, region_team_count),
 
     CONSTRAINT "fk_team_state_team_id"
         FOREIGN KEY ("team_id")

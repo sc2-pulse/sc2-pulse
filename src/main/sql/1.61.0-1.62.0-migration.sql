@@ -288,3 +288,20 @@ END LOOP;
 END
 $do$
 LANGUAGE plpgsql;
+
+
+CREATE UNIQUE INDEX CONCURRENTLY team_state_pkey2 ON team_state(team_id, timestamp)
+    INCLUDE(rating, games, division_id, region_rank, region_team_count);
+ALTER TABLE team_state
+    DROP CONSTRAINT team_state_pkey CASCADE,
+    ADD CONSTRAINT team_state_pkey PRIMARY KEY USING INDEX team_state_pkey2;
+ALTER TABLE match_participant
+    ADD CONSTRAINT "fk_match_participant_team_state_uid"
+    FOREIGN KEY ("team_id", "team_state_timestamp")
+    REFERENCES "team_state"("team_id", "timestamp")
+    ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE team_state_archive
+    ADD CONSTRAINT "fk_team_state_archive_team_id_timestamp"
+    FOREIGN KEY ("team_id", "timestamp")
+    REFERENCES "team_state"("team_id", "timestamp")
+    ON DELETE CASCADE ON UPDATE CASCADE;
