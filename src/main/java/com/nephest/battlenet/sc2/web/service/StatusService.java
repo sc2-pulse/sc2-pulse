@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -57,9 +57,7 @@ public class StatusService
     public void update()
     {
         players = postgreSQLUtils.getApproximateCount("account");
-        Long teams = postgreSQLUtils.getApproximateCount("team");
-        Long teamStates = postgreSQLUtils.getApproximateCount("team_state");
-        teamSnapshots = teams == null ? 0 : teams + teamStates;
+        teamSnapshots = postgreSQLUtils.getApproximateCount("team_state");
         matches = postgreSQLUtils.getApproximateCount("match");
         for(Map.Entry<Region, Status> entry : statusMap.entrySet())
         {
