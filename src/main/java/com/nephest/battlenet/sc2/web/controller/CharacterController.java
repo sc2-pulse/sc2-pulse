@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -199,8 +199,9 @@ public class CharacterController
         ));
     }
 
+    @Hidden
     @GetMapping("/{id}/common")
-    public ResponseEntity<CommonCharacter> getCommonCharacter
+    public ResponseEntity<CommonCharacter> getCommonCharacterLegacy
     (
         @PathVariable("id") long id,
         @RequestParam(name = "matchType", required = false) BaseMatch.MatchType[] types,
@@ -299,6 +300,7 @@ public class CharacterController
         return WebServiceUtil.notFoundIfEmpty(ladderPlayerCharacterStatsDAO.findGlobalList(id));
     }
 
+    @Hidden
     @Operation
     (
         description = "Max depth is " + SUMMARY_DEPTH_MAX + ", unlimited for single character"
@@ -308,7 +310,7 @@ public class CharacterController
         "/{ids}/summary/1v1/{depthDays}",
         "/{ids}/summary/1v1/{depthDays}/{races}"
     })
-    public List<PlayerCharacterSummary> getCharacterSummary
+    public List<PlayerCharacterSummary> getCharacterSummaryLegacy
     (
         @PathVariable("ids") @Valid @Size(max = SUMMARY_IDS_MAX) Long[] ids,
         @PathVariable("depthDays") int depth,

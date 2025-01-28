@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -60,8 +61,9 @@ public class TeamController
     @Autowired @Qualifier("mvcConversionService")
     private ConversionService mvcConversionService;
 
+    @Hidden
     @GetMapping("/history/common")
-    public Map<String, CommonTeamHistory> getCommonHistory
+    public Map<String, CommonTeamHistory> getCommonHistoryLegacy
     (@RequestParam("legacyUid") @TeamLegacyUids Set<TeamLegacyUid> ids)
     {
         if(ids == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "legacyUid parameter not found");
