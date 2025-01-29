@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="https://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _, true)}">
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, ~{::script}, true)}">
 <head>
     <title>Donate - SC2 Pulse</title>
     <meta name="description" content="Ways to support the project and a quick rundown of where the money will go"/>
@@ -15,6 +15,7 @@
         <h2>Donate</h2>
         <div th:utext="${@environment.getProperty('donate')}"></div>
     </section>
+    <script>ElementUtil.enhanceCopyToClipboard();</script>
 </div>
 </body>
 </html>
