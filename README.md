@@ -173,6 +173,7 @@ by default.
 * `contacts.discord.server.name`
 * `contacts.twitter`
 * `contacts.github`
+* `donate` HTML text for the "donate" page
 * `security.remember-me.token.key` key for signing remember-me tokens
 * `security.remember-me.token.max-age` Max age(duration) of the cookie, P3650D(~10 years) by default
 ## Contributing
