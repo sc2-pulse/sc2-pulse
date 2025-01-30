@@ -213,6 +213,31 @@ h4, h5, h6
     font-size: 1.0rem;
 }
 
+.text-content
+{
+    text-align: left !important;
+}
+
+.text-content h2
+{
+    font-size: 2rem;
+}
+
+.text-content h3
+{
+    font-size: 1.75rem;
+}
+
+.text-content h4
+{
+    font-size: 1.5rem;
+}
+
+.text-content h5
+{
+    font-size: 1.25rem;
+}
+
 .text-content h1,
 .text-content h2,
 .text-content h3,
@@ -221,12 +246,18 @@ h4, h5, h6
 .text-content h6
 {
     font-weight: bold;
-    margin: 1em 0;
+    margin: 0.7rem 0;
 }
 
 .text-content section
 {
-    margin-bottom: 3em;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+dl.text-content dd
+{
+    margin-bottom: 1.5rem;
 }
 
 #stats h4
