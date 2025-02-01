@@ -346,6 +346,83 @@ public class TeamIT
         );
     }
 
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousJoinedIsAfterCurrentJoined_thenSkip(BasicEntityOperations<Team> operations)
+    {
+        testMerge
+        (
+            operations,
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+                team.setJoined(team.getJoined().minusSeconds(1));
+            },
+            false
+        );
+    }
+
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousJoinedEqualsCurrentJoined_thenUpdate(BasicEntityOperations<Team> operations)
+    {
+        testMerge
+        (
+            operations,
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+            },
+            true
+        );
+    }
+
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousJoinedIsBeforeCurrentJoined_thenUpdate(BasicEntityOperations<Team> operations)
+    {
+        testMerge
+        (
+            operations,
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+                team.setJoined(team.getJoined().plusSeconds(1));
+            },
+            true
+        );
+    }
+
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousJoinedIsNull_thenUpdate(BasicEntityOperations<Team> operations)
+    {
+        testMerge
+        (
+            operations,
+            team->
+            {
+                if(!(operations instanceof FastTeamDAO))
+                {
+                    template.update("UPDATE team SET joined = null WHERE id = ?", team.getId());
+                }
+                else
+                {
+                    team.setJoined(null);
+                }
+            },
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+            },
+            true
+        );
+    }
+
     private void testMerge
     (
         BasicEntityOperations<Team> operations,

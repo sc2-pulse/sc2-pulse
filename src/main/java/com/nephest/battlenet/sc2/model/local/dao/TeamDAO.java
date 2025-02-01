@@ -185,6 +185,11 @@ implements BasicEntityOperations<Team>
                     + "EXTRACT(epoch FROM NOW() - previous_state.timestamp) /  "
                     + VALID_LADDER_RESET_DURATION.toSeconds()
             + ") "
+            + "AND "
+            + "( "
+                + "team.joined IS NULL "
+                + "OR team.joined <= v.joined "
+            + ") "
             + "RETURNING " + STD_SELECT
         + "), "
         + "missing AS "
