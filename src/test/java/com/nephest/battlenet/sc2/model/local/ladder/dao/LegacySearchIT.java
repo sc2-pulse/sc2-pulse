@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -133,7 +133,7 @@ public class LegacySearchIT
     {
         Division division1 = divisionDAO.findListByLadder(season, region,
             league, queueType, TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST).get(0);
-        Team team1 = new Team
+        Team team1 = Team.joined
         (
             null, season, region,
             new BaseLeague(league, queueType, TeamType.ARRANGED), BaseLeagueTier.LeagueTierType.FIRST,

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord.event;
@@ -279,7 +279,7 @@ public class RolesSlashCommandTest
             false,
             2, 1, 1, 1
         );
-        LadderTeam mainTeam = new LadderTeam
+        LadderTeam mainTeam = LadderTeam.joined
         (
             1L, 1, Region.EU,
             new BaseLeague

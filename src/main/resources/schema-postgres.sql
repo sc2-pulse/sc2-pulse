@@ -664,6 +664,7 @@ CREATE TABLE "team"
     "region_rank" INTEGER,
     "league_rank" INTEGER,
     "last_played" TIMESTAMP WITH TIME ZONE,
+    "joined" TIMESTAMP WITH TIME ZONE,
 
     PRIMARY KEY ("id"),
 

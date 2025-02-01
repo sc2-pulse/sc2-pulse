@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.connection;
@@ -40,7 +40,7 @@ public class ApplicationRoleConnectionTest
         when(conversionService.convert(BaseLeague.LeagueType.DIAMOND, Integer.class)).thenReturn(4);
         when(conversionService.convert(Race.PROTOSS, Integer.class)).thenReturn(2);
         String name = "name123";
-        Team team = new Team
+        Team team = Team.joined
         (
             1L,
             1,

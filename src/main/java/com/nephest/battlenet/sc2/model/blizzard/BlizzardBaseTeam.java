@@ -1,15 +1,21 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.nephest.battlenet.sc2.model.BaseTeam;
+import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
 
 public class BlizzardBaseTeam
 extends BaseTeam
 {
 
     public static final Long RATING_MAX = 20000L;
+
+    @NotNull
+    private Instant joined;
 
     /*
         blizzard normally returns zeros, not nulls.
@@ -72,6 +78,17 @@ extends BaseTeam
     {
         if(points == null) points = 0;
         super.setPoints(points);
+    }
+
+    public @NotNull Instant getJoined()
+    {
+        return joined;
+    }
+
+    @JsonAlias({"joinTimestamp", "join_time_stamp"})
+    public void setJoined(@NotNull Instant joined)
+    {
+        this.joined = joined;
     }
 
 }

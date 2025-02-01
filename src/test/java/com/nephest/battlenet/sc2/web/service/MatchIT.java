@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -275,7 +275,7 @@ public class MatchIT
             new ClanMember(charEu1.getId(), clan.getId()),
             new ClanMember(charEu2.getId(), clan.getId())
         ));
-        Team team4v4Win = teamDAO.merge(Set.of(new Team(
+        Team team4v4Win = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -288,7 +288,7 @@ public class MatchIT
             division4v4.getId(), 1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
-        Team team4v4Loss = teamDAO.merge(Set.of(new Team(
+        Team team4v4Loss = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_4V4, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -301,7 +301,7 @@ public class MatchIT
             division4v4_2.getId(), 2L, 2, 2, 2, 2,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
-        Team team2v2Win1 = teamDAO.merge(Set.of(new Team(
+        Team team2v2Win1 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -311,7 +311,7 @@ public class MatchIT
             division2v2.getId(), 1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
-        Team team2v2Win2 = teamDAO.merge(Set.of(new Team(
+        Team team2v2Win2 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -321,7 +321,7 @@ public class MatchIT
             division2v2.getId(), 1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
-        Team team2v2Loss1 = teamDAO.merge(Set.of(new Team(
+        Team team2v2Loss1 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -331,7 +331,7 @@ public class MatchIT
             division2v2.getId(), 2L, 2, 2, 2, 2,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
-        Team team2v2Loss2 = teamDAO.merge(Set.of(new Team(
+        Team team2v2Loss2 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -342,7 +342,7 @@ public class MatchIT
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
-        Team team1v1Win = teamDAO.merge(Set.of(new Team(
+        Team team1v1Win = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.KR,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -352,7 +352,7 @@ public class MatchIT
             division1v1.getId(), 1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
-        Team team1v1Loss = teamDAO.merge(Set.of(new Team(
+        Team team1v1Loss = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.KR,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -363,7 +363,7 @@ public class MatchIT
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
-        Team team1v1Win4 = teamDAO.merge(Set.of(new Team(
+        Team team1v1Win4 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -373,7 +373,7 @@ public class MatchIT
             division1v1_2.getId(), 1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
-        Team team1v1Loss4 = teamDAO.merge(Set.of(new Team(
+        Team team1v1Loss4 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -384,7 +384,7 @@ public class MatchIT
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
-        Team team1v1WinInvalidState = teamDAO.merge(Set.of(new Team(
+        Team team1v1WinInvalidState = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -394,7 +394,7 @@ public class MatchIT
             division1v1.getId(), 1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
-        Team team1v1LossInvalidState = teamDAO.merge(Set.of(new Team(
+        Team team1v1LossInvalidState = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,

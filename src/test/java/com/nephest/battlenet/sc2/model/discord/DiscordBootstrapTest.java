@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord;
@@ -149,7 +149,7 @@ public class DiscordBootstrapTest
             + DiscordBootstrap.SC2_REVEALED_TAG + "]"
             + "(<characterUrlTemplate#player-stats-mmr>)\n"
             + "\uD83C\uDDEA\uD83C\uDDFA bronze ` 123` 10";
-        LadderTeam team = new LadderTeam
+        LadderTeam team = LadderTeam.joined
         (
             1L, 1, Region.EU,
             new BaseLeague

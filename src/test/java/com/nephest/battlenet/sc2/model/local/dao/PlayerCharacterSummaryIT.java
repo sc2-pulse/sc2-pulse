@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -145,7 +145,7 @@ public class PlayerCharacterSummaryIT
         PlayerCharacter charEu1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
         PlayerCharacter charEu2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2"));
 
-        Team team1v1_p_s2 = teamDAO.merge(Set.of(new Team(
+        Team team1v1_p_s2 = teamDAO.merge(Set.of(Team.joined(
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -156,7 +156,7 @@ public class PlayerCharacterSummaryIT
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
-        Team team1v1_z_s3 = teamDAO.merge(Set.of(new Team(
+        Team team1v1_z_s3 = teamDAO.merge(Set.of(Team.joined(
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -167,7 +167,7 @@ public class PlayerCharacterSummaryIT
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
-        Team team1v1_t_s1 = teamDAO.merge(Set.of(new Team(
+        Team team1v1_t_s1 = teamDAO.merge(Set.of(Team.joined(
             null, 1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -178,7 +178,7 @@ public class PlayerCharacterSummaryIT
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
-        Team team1v1_t_s2 = teamDAO.merge(Set.of(new Team(
+        Team team1v1_t_s2 = teamDAO.merge(Set.of(Team.joined(
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -189,7 +189,7 @@ public class PlayerCharacterSummaryIT
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
-        Team team1v1_t_s3 = teamDAO.merge(Set.of(new Team(
+        Team team1v1_t_s3 = teamDAO.merge(Set.of(Team.joined(
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -200,7 +200,7 @@ public class PlayerCharacterSummaryIT
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
-        Team team1v1_2_z_s3 = teamDAO.merge(Set.of(new Team(
+        Team team1v1_2_z_s3 = teamDAO.merge(Set.of(Team.joined(
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.service;
@@ -154,7 +154,7 @@ public class AccountFollowingIT
         Account memberAccount = accountDAO.merge(new Account(null, Partition.GLOBAL, "memberacc#123"));
         PlayerCharacter memberCharacter = playerCharacterDAO
             .create(new PlayerCharacter(null, memberAccount.getId(), region, 9997L, 1, "memberchar#123"));
-        Team team1 = new Team
+        Team team1 = Team.joined
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
@@ -176,7 +176,7 @@ public class AccountFollowingIT
         );
         teamMemberDAO.create(member1_2);
 
-        Team team2 = new Team
+        Team team2 = Team.joined
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
@@ -192,7 +192,7 @@ public class AccountFollowingIT
         );
         teamMemberDAO.create(member2);
 
-        Team team3 = new Team
+        Team team3 = Team.joined
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,

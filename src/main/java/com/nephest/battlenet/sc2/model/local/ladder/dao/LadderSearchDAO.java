@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -342,6 +342,7 @@ public class LadderSearchDAO
                 rs.getInt("team.ties"),
                 null,
                 rs.getObject("team.last_played", OffsetDateTime.class),
+                rs.getObject("team.joined", OffsetDateTime.class),
                 new ArrayList<>(),
                 PopulationStateDAO.TEAM_DATA_ROW_MAPPER.mapRow(rs, 1)
             );

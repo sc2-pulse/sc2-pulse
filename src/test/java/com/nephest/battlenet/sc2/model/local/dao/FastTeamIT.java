@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -123,7 +123,7 @@ public class FastTeamIT
     @Test
     public void testMerge()
     {
-        Team team1 = new Team
+        Team team1 = Team.joined
         (
             null,
             1, Region.EU,
@@ -132,7 +132,7 @@ public class FastTeamIT
             1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         );
-        Team team2 = new Team
+        Team team2 = Team.joined
         (
             null,
             1, Region.EU,
@@ -149,7 +149,7 @@ public class FastTeamIT
         assertEquals(team1, merge1[0]);
         assertEquals(team2, merge1[1]);
 
-        Team team1_1 = new Team
+        Team team1_1 = Team.joined
         (
             null,
             1, Region.EU,

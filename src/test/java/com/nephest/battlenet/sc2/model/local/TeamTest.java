@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -26,9 +26,9 @@ public class TeamTest
         BaseLeague league = new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED);
         BaseLeague equalLeague = new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.RANDOM);
         BaseLeague notEqualLeague = new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED);
-        Team team = new Team(0L, 0, Region.EU, league, FIRST, BigInteger.ZERO, 0,
+        Team team = Team.joined(0L, 0, Region.EU, league, FIRST, BigInteger.ZERO, 0,
             0L, 0, 0, 0,0, SC2Pulse.offsetDateTime());
-        Team equalTeam = new Team(1L, 0, Region.EU, equalLeague, SECOND, BigInteger.ZERO, 1,
+        Team equalTeam = Team.joined(1L, 0, Region.EU, equalLeague, SECOND, BigInteger.ZERO, 1,
             1L, 1, 1, 1, 1, SC2Pulse.offsetDateTime());
         equalTeam.setGlobalRank(-1);
         equalTeam.setRegionRank(-1);
@@ -36,10 +36,10 @@ public class TeamTest
 
         Team[] notEqualTeams = new Team[]
         {
-            new Team(0L, 1, Region.EU, league, FIRST, BigInteger.ZERO, 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
-            new Team(0L, 0, Region.US, league, FIRST, BigInteger.ZERO, 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
-            new Team(0L, 0, Region.EU, notEqualLeague, FIRST, BigInteger.ZERO, 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
-            new Team(0L, 0, Region.EU, league, FIRST, BigInteger.ONE, 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime())
+            Team.joined(0L, 1, Region.EU, league, FIRST, BigInteger.ZERO, 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
+            Team.joined(0L, 0, Region.US, league, FIRST, BigInteger.ZERO, 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
+            Team.joined(0L, 0, Region.EU, notEqualLeague, FIRST, BigInteger.ZERO, 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
+            Team.joined(0L, 0, Region.EU, league, FIRST, BigInteger.ONE, 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime())
         };
 
         TestUtil.testUniqueness(team, equalTeam, (Object[]) notEqualTeams);

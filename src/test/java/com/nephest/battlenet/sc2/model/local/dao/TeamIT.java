@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.SerializationUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -105,7 +106,7 @@ public class TeamIT
             0
         );
         Team[] teams = teamDAO.merge(new LinkedHashSet<>(List.of(
-            new Team
+            Team.joined
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -113,7 +114,7 @@ public class TeamIT
                 1L, 1, 1, 1, 1,
                 SC2Pulse.offsetDateTime()
             ),
-            new Team
+            Team.joined
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
@@ -122,7 +123,7 @@ public class TeamIT
                 SC2Pulse.offsetDateTime()
             ),
             //different region, skip
-            new Team
+            Team.joined
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -131,7 +132,7 @@ public class TeamIT
                 SC2Pulse.offsetDateTime()
             ),
             //different season, skip
-            new Team
+            Team.joined
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID + 1, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -167,7 +168,7 @@ public class TeamIT
             0
         );
         Team team = teamDAO.merge(Set.of(
-            new Team
+            Team.joined
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -199,7 +200,7 @@ public class TeamIT
         (
             validReset ? 1 : 0,
             teamDAO.merge(Set.of(
-                new Team
+                Team.joined
                 (
                     null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
                     new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -381,7 +382,7 @@ public class TeamIT
             );
         }
         OffsetDateTime lastPlayed = SC2Pulse.offsetDateTime().minusDays(1);
-        Team team = new Team
+        Team team = Team.joined
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -395,7 +396,7 @@ public class TeamIT
 
         Team team1_2 = SerializationUtils.clone(team);
         updateModifier.accept(team1_2);
-        Team team2 = new Team
+        Team team2 = Team.joined
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -410,25 +411,9 @@ public class TeamIT
 
     public static void assertFullyEquals(Team team, Team team2)
     {
-        assertEquals(team.getId(), team2.getId());
-        assertEquals(team.getSeason(), team2.getSeason());
-        assertEquals(team.getRegion(), team2.getRegion());
-        assertEquals(team.getLeagueType(), team2.getLeagueType());
-        assertEquals(team.getQueueType(), team2.getQueueType());
-        assertEquals(team.getTeamType(), team2.getTeamType());
-        assertEquals(team.getTierType(), team2.getTierType());
-        assertEquals(team.getLegacyId(), team2.getLegacyId());
-        assertEquals(team.getDivisionId(), team2.getDivisionId());
-        assertEquals(team.getRating(), team2.getRating());
-        assertEquals(team.getWins(), team2.getWins());
-        assertEquals(team.getLosses(), team2.getLosses());
-        assertEquals(team.getTies(), team2.getTies());
-        assertEquals(team.getPoints(), team2.getPoints());
-        assertTrue
-        (
-            (team.getLastPlayed() == null && team2.getLastPlayed() == null)
-            || team.getLastPlayed().isEqual(team2.getLastPlayed())
-        );
+        Assertions.assertThat(team2)
+            .usingRecursiveComparison()
+            .isEqualTo(team);
     }
 
     public static void verifyTeam

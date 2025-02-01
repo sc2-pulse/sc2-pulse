@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -141,7 +141,7 @@ public class LadderSeasonStateDAOIT
             .create(new PlayerCharacter(null, account5.getId(), Region.US, 5L, 2, "name#5"));
         PlayerCharacter character6 = playerCharacterDAO
             .create(new PlayerCharacter(null, account1.getId(), Region.EU, 1L, 1, "name#1"));
-        Team team1 = new Team
+        Team team1 = Team.joined
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
@@ -150,7 +150,7 @@ public class LadderSeasonStateDAOIT
             SC2Pulse.offsetDateTime()
         );
         teamDAO.merge(Set.of(team1));
-        Team team2 = new Team
+        Team team2 = Team.joined
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
@@ -159,7 +159,7 @@ public class LadderSeasonStateDAOIT
             SC2Pulse.offsetDateTime()
         );
         teamDAO.merge(Set.of(team2));
-        Team team3 = new Team
+        Team team3 = Team.joined
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.PLATINUM, QueueType.LOTV_1V1, TeamType.ARRANGED),

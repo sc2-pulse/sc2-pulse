@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -711,7 +711,7 @@ public class PlayerCharacterReportIT
         assertTrue(endReports.stream().anyMatch(r->r.getId().equals(expiredConfirmedReport.getId())));
         assertTrue(endEvidences.stream().anyMatch(e->e.getId().equals(expiredConfirmedEvidence.getId())));
 
-        Team secondCheaterTeam = teamDAO.merge(Set.of(new Team
+        Team secondCheaterTeam = teamDAO.merge(Set.of(Team.joined
         (
             null,
             SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,

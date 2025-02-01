@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -277,7 +277,7 @@ public class VersusIT
 
     private static Team createTeam(TeamDAO teamDAO, PlayerCharacter character, Division division)
     {
-        return teamDAO.merge(Set.of(new Team(
+        return teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -200,6 +200,12 @@ public class BlizzardSC2APIIT
             .getProfileLadder(Tuples.of(ladderId.getT1(), ladderId.getT2(), ladderId.getT3()), queueTypes).block();
         BlizzardProfileTeam[] teams = ladder.getLadderTeams();
         assertTrue(teams.length > 0);
+        for(BlizzardProfileTeam team : teams)
+        {
+            assertNotNull(team.getJoined());
+            assertTrue(team.getJoined().isBefore(SC2Pulse.instant()));
+        }
+
         Errors teamErrors = new BeanPropertyBindingResult(teams, teams.toString());
         validator.validate(teams, teamErrors);
         assertFalse(teamErrors.hasErrors());

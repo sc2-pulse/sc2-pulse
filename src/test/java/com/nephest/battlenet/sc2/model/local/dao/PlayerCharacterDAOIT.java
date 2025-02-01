@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -169,13 +169,13 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
         PlayerCharacter char2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2"));
         PlayerCharacter char3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.EU, 3L, 3, "name#3"));
-        Team team1 = teamDAO.merge(Set.of(new Team(
+        Team team1 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("1"), division.getId(), 1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
-        Team team2 = teamDAO.merge(Set.of(new Team(
+        Team team2 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("2"), division.getId(), 2L, 2, 2, 2, 2,

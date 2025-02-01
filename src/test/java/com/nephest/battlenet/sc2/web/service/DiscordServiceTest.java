@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -328,7 +328,7 @@ public class DiscordServiceTest
         when(accountDiscordUserDAO.findAccountIds()).thenReturn(Set.of(1L));
         DiscordService spy = Mockito.spy(discordService);
         String tag = "tag#123";
-        LadderTeam team = new LadderTeam
+        LadderTeam team = LadderTeam.joined
         (
             1L,
             1,

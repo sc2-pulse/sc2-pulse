@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -266,7 +266,7 @@ public class SeasonGenerator
                     null
                 );
             }
-            Team newTeam = new Team
+            Team newTeam = Team.joined
             (
                 null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
                 teamDAO.legacyIdOf(league, bTeam), division.getId(),
@@ -325,7 +325,7 @@ public class SeasonGenerator
         PlayerCharacter... members
     )
     {
-        Team newTeam = new Team
+        Team newTeam = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league, tierType,
             legacyId, division.getId(),
@@ -345,7 +345,7 @@ public class SeasonGenerator
         List<Team> teams = new ArrayList<>();
         for(int i = 0; i < members.length; i++)
         {
-            Team team = new Team
+            Team team = Team.joined
             (
                 null, DEFAULT_SEASON_ID, members[i].getRegion(),
                 new BaseLeague
