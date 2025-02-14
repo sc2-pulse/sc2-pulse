@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -145,9 +145,12 @@ public class MatchParticipantDAO
             + "SELECT match.id AS match_id, "
             + "string_agg"
             + "("
-                + "player_character.realm::text || player_character.battlenet_id::text, "
-                + "'' ORDER BY player_character.realm, player_character.battlenet_id"
-            + ")::numeric AS legacy_id "
+                + "player_character.realm::text "
+                + "|| '.' || player_character.battlenet_id::text "
+                + "|| '.' "
+                + ", "
+                + "'~' ORDER BY player_character.realm, player_character.battlenet_id"
+            + ") AS legacy_id "
             + "FROM match_filter "
             + "INNER JOIN match USING(id) "
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "

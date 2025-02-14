@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -8,7 +8,6 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
@@ -21,17 +20,15 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.web.service.StatsService;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Types;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -67,6 +64,7 @@ implements BasicEntityOperations<Team>
     private  static final Logger LOG = LoggerFactory.getLogger(TeamDAO.class);
     public static final Duration VALID_LADDER_RESET_DURATION = Duration.ofMinutes(9);
     public static final Duration MIN_DURATION_BETWEEN_SEASONS = Duration.ofSeconds(2);
+    public static final String LEGACY_ID_SECTION_DELIMITER = "~";
 
     public static final String STD_SELECT =
         "team.id AS \"team.id\", "
@@ -391,52 +389,63 @@ implements BasicEntityOperations<Team>
         this.teamDAO = teamDAO;
     }
 
-    public BigInteger legacyIdOf(BlizzardPlayerCharacter[] characters, Race... races)
+    public String legacyIdOf(Set<? extends TeamLegacyIdEntry> entries)
     {
+        if(entries.isEmpty()) return null;
+
         StringBuilder sb = new StringBuilder();
-        Arrays.sort(characters, Comparator
-                .comparingInt(BlizzardPlayerCharacter::getRealm)
-                .thenComparingLong(BlizzardPlayerCharacter::getId));
-        Arrays.sort(races);
-        for(BlizzardPlayerCharacter c : characters) sb.append(c.getRealm()).append(c.getId());
-        for(Race r : races) sb.append(conversionService.convert(r, Integer.class));
-        return new BigInteger(sb.toString());
+        String delimiter = "";
+        List<? extends TeamLegacyIdEntry> sortedEntries = entries.stream()
+            .sorted()
+            .toList();
+        for(TeamLegacyIdEntry entry : sortedEntries)
+        {
+            sb.append(delimiter);
+            entry.appendLegacyIdSectionStringTo(sb);
+            delimiter = LEGACY_ID_SECTION_DELIMITER;
+        }
+        return sb.toString();
     }
 
-    public BigInteger legacyIdOf(BaseLeague league, BlizzardTeam bTeam)
-    {
-        BlizzardPlayerCharacter[] bChars = Arrays.stream(bTeam.getMembers())
-            .map(BlizzardTeamMember::getCharacter)
-            .toArray(BlizzardPlayerCharacter[]::new);
-        return legacyIdOf(bChars, extractLegacyIdRaces(league, bTeam));
-    }
-
-    public BigInteger legacyIdOf(BaseLeague league, BlizzardProfileTeam bTeam)
+    public String legacyIdOf(BaseLeague league, BlizzardTeam bTeam)
     {
         return legacyIdOf
         (
-            bTeam.getTeamMembers(),
             league.getQueueType() == QueueType.LOTV_1V1
-                ? new Race[]{bTeam.getTeamMembers()[0].getFavoriteRace()}
-                : Race.EMPTY_RACE_ARRAY
+                ? Arrays.stream(bTeam.getMembers())
+                    .map(m->new TeamLegacyIdEntry(
+                        m.getCharacter().getRealm(),
+                        m.getCharacter().getId(),
+                        getFavoriteRace(m)))
+                    .collect(Collectors.toSet())
+                : Arrays.stream(bTeam.getMembers())
+                    .map(m->new TeamLegacyIdEntry(
+                        m.getCharacter().getRealm(),
+                        m.getCharacter().getId()))
+                    .collect(Collectors.toSet())
         );
     }
 
-    private static Race[] extractLegacyIdRaces(BaseLeague league, BlizzardTeam bTeam)
+    public String legacyIdOf(BaseLeague league, BlizzardProfileTeam bTeam)
     {
-        Race[] races;
-        if(league.getQueueType() == QueueType.LOTV_1V1)
-        {
-            BaseLocalTeamMember member = new BaseLocalTeamMember();
-            for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
-                member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
-            races = new Race[]{member.getFavoriteRace()};
-        }
-        else
-        {
-            races = Race.EMPTY_RACE_ARRAY;
-        }
-        return races;
+        return legacyIdOf
+        (
+            league.getQueueType() == QueueType.LOTV_1V1
+                ? Arrays.stream(bTeam.getTeamMembers())
+                    .map(m->new TeamLegacyIdEntry(m.getRealm(), m.getId(), m.getFavoriteRace()))
+                    .collect(Collectors.toSet())
+                : Arrays.stream(bTeam.getTeamMembers())
+                    .map(m->new TeamLegacyIdEntry(m.getRealm(), m.getId()))
+                    .collect(Collectors.toSet())
+        );
+    }
+
+    private static Race getFavoriteRace(BlizzardTeamMember bMember)
+    {
+        BaseLocalTeamMember member = new BaseLocalTeamMember();
+        for(BlizzardTeamMemberRace race : bMember.getRaces())
+            member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
+        return member.getFavoriteRace();
     }
 
     private static void initMappers(ConversionService conversionService)
@@ -455,7 +464,7 @@ implements BasicEntityOperations<Team>
                         conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
                     ),
                 conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), LeagueTier.LeagueTierType.class),
-                ((BigDecimal) rs.getObject("team.legacy_id")).toBigInteger(),
+                rs.getString("team.legacy_id"),
                 rs.getInt("team.division_id"),
                 rs.getLong("team.rating"),
                 rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -40,7 +40,6 @@ import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import discord4j.common.util.Snowflake;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -172,13 +171,13 @@ public class PlayerCharacterDAOIT
         Team team1 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("1"), division.getId(), 1L, 1, 1, 1, 1,
+            BaseLeagueTier.LeagueTierType.FIRST, "1", division.getId(), 1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team2 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("2"), division.getId(), 2L, 2, 2, 2, 2,
+            BaseLeagueTier.LeagueTierType.FIRST, "2", division.getId(), 2L, 2, 2, 2, 2,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
         teamMemberDAO.merge(Set.of(

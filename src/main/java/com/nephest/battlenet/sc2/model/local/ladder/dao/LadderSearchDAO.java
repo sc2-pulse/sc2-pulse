@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -25,7 +25,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
-import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -342,7 +341,7 @@ public class LadderSearchDAO
                     conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
                 ),
                 conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), LeagueTier.LeagueTierType.class),
-                ((BigDecimal) rs.getObject("team.legacy_id")).toBigInteger(),
+                rs.getString("team.legacy_id"),
                 rs.getInt("team.division_id"),
                 rs.getLong("team.rating"),
                 rs.getInt("team.wins"),

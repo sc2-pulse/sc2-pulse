@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -26,7 +26,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -65,9 +64,9 @@ public class LegacySearchIT
     @Autowired @Qualifier("sc2StatsConversionService")
     private ConversionService conversionService;
 
-    public static final BigInteger LEGACY_ID_1 = new BigInteger("99999");
-    public static final BigInteger LEGACY_ID_2 = new BigInteger("999999");
-    public static final BigInteger LEGACY_ID_3 = new BigInteger("9999999");
+    public static final String LEGACY_ID_1 = "99999";
+    public static final String LEGACY_ID_2 = "999999";
+    public static final String LEGACY_ID_3 = "9999999";
     public static OffsetDateTime ODT;
 
     @BeforeAll
@@ -134,7 +133,7 @@ public class LegacySearchIT
 
     public static Team setupTeam
     (
-        QueueType queueType, Region region, int season, BigInteger legacyId, BaseLeague.LeagueType league, int wins,
+        QueueType queueType, Region region, int season, String legacyId, BaseLeague.LeagueType league, int wins,
         DivisionDAO divisionDAO, TeamDAO teamDAO, TeamMemberDAO teamMemberDAO, TeamStateDAO teamStateDAO
     )
     {
@@ -159,7 +158,7 @@ public class LegacySearchIT
         QueueType queueType,
         Region region,
         int season,
-        BigInteger legacyId,
+        String legacyId,
         BaseLeague.LeagueType league,
         int wins,
         OffsetDateTime lastPlayed,

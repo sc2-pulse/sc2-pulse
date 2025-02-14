@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -18,7 +18,6 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -28,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
@@ -150,9 +150,9 @@ public class PlayerCharacterSummaryIT
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
-                new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
-            }, Race.PROTOSS),
+            teamDAO.legacyIdOf(Set.of(
+                new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.PROTOSS)
+            )),
             division1v1_2.getId(), 9L, 3, 3, 3, 1,
             seasons.get(1).getStart()
         ))).iterator().next();
@@ -161,9 +161,9 @@ public class PlayerCharacterSummaryIT
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
-                new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
-            }, Race.ZERG),
+            teamDAO.legacyIdOf(Set.of(
+                new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.ZERG)
+            )),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
             seasons.get(0).getStart()
         ))).iterator().next();
@@ -172,9 +172,9 @@ public class PlayerCharacterSummaryIT
             null, 1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
-                new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
-            }, Race.TERRAN),
+            teamDAO.legacyIdOf(Set.of(
+                new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.TERRAN)
+            )),
             division1v1_1.getId(), 10L, 3, 3, 3, 1,
             seasons.get(2).getStart()
         ))).iterator().next();
@@ -183,9 +183,9 @@ public class PlayerCharacterSummaryIT
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
-                new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
-            }, Race.TERRAN),
+            teamDAO.legacyIdOf(Set.of(
+                new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.TERRAN)
+            )),
             division1v1_2.getId(), 10L, 3, 3, 3, 1,
             seasons.get(1).getStart()
         ))).iterator().next();
@@ -194,9 +194,9 @@ public class PlayerCharacterSummaryIT
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
-                new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
-            }, Race.TERRAN),
+            teamDAO.legacyIdOf(Set.of(
+                new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.TERRAN)
+            )),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
             seasons.get(0).getStart()
         ))).iterator().next();
@@ -205,9 +205,9 @@ public class PlayerCharacterSummaryIT
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
-                new BlizzardPlayerCharacter(charEu2.getBattlenetId(), charEu2.getRealm(), charEu2.getName())
-            }, Race.ZERG),
+            teamDAO.legacyIdOf(Set.of(
+                new TeamLegacyIdEntry(charEu2.getRealm(), charEu2.getBattlenetId(), Race.ZERG)
+            )),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
             seasons.get(0).getStart()
         ))).iterator().next();

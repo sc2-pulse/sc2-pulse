@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -7,7 +7,6 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.StatefulBasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.Team;
-import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -91,7 +90,7 @@ implements StatefulBasicEntityOperations<Team>
     (
             QueueType queueType,
             Region region,
-            BigInteger legacyId,
+            String legacyId,
             Integer season
     )
     {

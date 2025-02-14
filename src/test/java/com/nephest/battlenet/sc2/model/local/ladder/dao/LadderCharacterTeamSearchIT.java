@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -29,7 +29,6 @@ import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.GroupController;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -118,32 +117,32 @@ public class LadderCharacterTeamSearchIT
         team1 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, bronze1,
-            BigInteger.valueOf(10002L), 1L, 1, 2, 3, 4, characters
+            "10002", 1L, 1, 2, 3, 4, characters
         );
         team2 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, OTHER_TEAM_TYPE), TIER_TYPE, bronze1,
-            BigInteger.valueOf(10000L), 2L, 1, 2, 3, 4, characters
+            "10000", 2L, 1, 2, 3, 4, characters
         );
         team3 = seasonGenerator.createTeam
         (
             season2, new BaseLeague(BaseLeague.LeagueType.GOLD, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, gold2,
-            BigInteger.valueOf(10001L), 3L, 1, 2, 3, 4, characters
+            "10001", 3L, 1, 2, 3, 4, characters
         );
         team4 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1v1,
-            BigInteger.valueOf(10003L), 0L, 1, 2, 3, 4, characters[0]
+            "10003", 0L, 1, 2, 3, 4, characters[0]
         );
         team5 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1v1,
-            BigInteger.valueOf(10004L), 0L, 1, 2, 3, 4, characters[2]
+            "10004", 0L, 1, 2, 3, 4, characters[2]
         );
         team6 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, bronze1v1,
-            BigInteger.valueOf(10005L), 0L, 1, 2, 3, 4, characters[2]
+            "10005", 0L, 1, 2, 3, 4, characters[2]
         );
     }
 

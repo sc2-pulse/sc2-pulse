@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -35,7 +35,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -202,12 +201,12 @@ public class PlayerCharacterStatsIT
         Account acc = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount#123"));
         PlayerCharacter character = playerCharacterDAO
             .create(new PlayerCharacter(null, acc.getId(), region, 9999L, 1, "refchar#123"));
-        createTeam(season1, Race.TERRAN, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, BigInteger.valueOf(9999L), 1L, character);
-        createTeam(season1, Race.PROTOSS, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, BigInteger.valueOf(10000L), 1L, character);
-        createTeam(season1, Race.ZERG, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, BigInteger.valueOf(10001L), 1L, character);
-        createTeam(season1, Race.ZERG, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, BigInteger.valueOf(10002L), 3L, character);
-        createTeam(season2, Race.ZERG, region, BaseLeague.LeagueType.GOLD, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, gold2, BigInteger.valueOf(10003L), 2L, character);
-        createTeam(season2, null, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, BigInteger.valueOf(10004L), 2L, character);
+        createTeam(season1, Race.TERRAN, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, "9999", 1L, character);
+        createTeam(season1, Race.PROTOSS, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, "10000", 1L, character);
+        createTeam(season1, Race.ZERG, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, "10001", 1L, character);
+        createTeam(season1, Race.ZERG, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, "10002", 3L, character);
+        createTeam(season2, Race.ZERG, region, BaseLeague.LeagueType.GOLD, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, gold2, "10003", 2L, character);
+        createTeam(season2, null, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, "10004", 2L, character);
         Set<Long> teamIds = Stream.of(teamDAO.findIds(region, 1), teamDAO.findIds(region, 2))
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
@@ -243,7 +242,7 @@ public class PlayerCharacterStatsIT
         TeamType teamType,
         BaseLeagueTier.LeagueTierType tierType,
         Division division,
-        BigInteger legacyId,
+        String legacyId,
         long rating,
         PlayerCharacter character
     )

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -31,7 +31,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -160,14 +159,14 @@ public class TeamGroupIT
                 league,
                 BaseLeagueTier.LeagueTierType.FIRST,
                 i <= 1
-                    ? BigInteger.ZERO
+                    ? "0"
                     : i <= TeamGroupArgumentResolver.TEAMS_MAX + 1 - 4
-                        ? BigInteger.ONE
+                        ? "1"
                         : i == TeamGroupArgumentResolver.TEAMS_MAX + 1 - 3
-                            ? BigInteger.TWO
+                            ? "2"
                             : i == TeamGroupArgumentResolver.TEAMS_MAX + 1 - 2
-                                ? BigInteger.valueOf(3L)
-                                : BigInteger.valueOf(4L),
+                                ? "3"
+                                : "4",
                 i + 1,
                 1L, 1, 1, 1, 1,
                 null,
@@ -224,7 +223,7 @@ public class TeamGroupIT
                     (
                         QueueType.LOTV_1V1,
                         Region.EU,
-                        BigInteger.ZERO
+                        "0"
                     ),
                     String.class
                 ),
@@ -234,7 +233,7 @@ public class TeamGroupIT
                     (
                         QueueType.LOTV_1V1,
                         Region.EU,
-                        BigInteger.ONE
+                        "1"
                     ),
                     String.class
                 )
@@ -273,7 +272,7 @@ public class TeamGroupIT
                     (
                         QueueType.LOTV_1V1,
                         Region.EU,
-                        BigInteger.ZERO
+                        "0"
                     ),
                     String.class
                 )
@@ -323,7 +322,7 @@ public class TeamGroupIT
     {
         String[] longIdList = LongStream.range(0, TeamGroupArgumentResolver.LEGACY_UIDS_MAX + 1)
             .boxed()
-            .map(l->new TeamLegacyUid(QueueType.LOTV_1V1, Region.EU, BigInteger.valueOf(l)))
+            .map(l->new TeamLegacyUid(QueueType.LOTV_1V1, Region.EU, String.valueOf(l)))
             .map(uid->conversionService.convert(uid, String.class))
             .toArray(String[]::new);
         mvc.perform(get("/api/team/group/flat").queryParam("legacyUid", longIdList))
@@ -345,7 +344,7 @@ public class TeamGroupIT
                     (
                         QueueType.LOTV_1V1,
                         Region.EU,
-                        BigInteger.ZERO
+                        "0"
                     ),
                     String.class
                 ),
@@ -355,7 +354,7 @@ public class TeamGroupIT
                     (
                         QueueType.LOTV_1V1,
                         Region.EU,
-                        BigInteger.ONE
+                        "1"
                     ),
                     String.class
                 )

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -38,7 +38,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -196,7 +195,7 @@ public class TeamStateServiceIT
     (
         long id,
         QueueType queueType,
-        BigInteger legacyId,
+        String legacyId,
         long rating,
         int wins,
         OffsetDateTime odt
@@ -230,14 +229,14 @@ public class TeamStateServiceIT
                 QueueType.LOTV_1V1,
                 (Function<TeamStateService, Integer>) TeamStateService::getMainLengthDays,
                 10L,
-                BigInteger.valueOf(1904L)
+                "1.90.4"
             ),
             Arguments.of
             (
                 QueueType.LOTV_2V2,
                 (Function<TeamStateService, Integer>) TeamStateService::getSecondaryLengthDays,
                 10L,
-                BigInteger.valueOf(190191L)
+                "1.90.~1.91."
             )
         );
     }
@@ -249,7 +248,7 @@ public class TeamStateServiceIT
         QueueType queueType,
         Function<TeamStateService, Integer> depthSupplier,
         long teamId,
-        BigInteger legacyId
+        String legacyId
     )
     throws Exception
     {

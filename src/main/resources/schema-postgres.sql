@@ -645,7 +645,7 @@ CREATE TABLE "team"
 (
 
     "id" BIGSERIAL,
-    "legacy_id" NUMERIC NOT NULL,
+    "legacy_id" TEXT NOT NULL,
     "division_id" INTEGER NOT NULL,
     "population_state_id" INTEGER,
     "season" SMALLINT NOT NULL,
@@ -1369,8 +1369,7 @@ DECLARE
     cur_mmr SMALLINT[];
     cur_games INTEGER DEFAULT -1;
     prev_games INTEGER DEFAULT 0;
-    cur_legacy_id NUMERIC;
-    cur_legacy_id_text TEXT;
+    cur_legacy_id TEXT;
 BEGIN
 FOR table_record IN
 WITH team_filter AS
@@ -1389,7 +1388,7 @@ WITH team_filter AS
     INNER JOIN season ON team.region = season.region AND team.season = season.battlenet_id
     WHERE player_character_id = ANY(character_ids)
     AND team.queue_type = 201
-    AND substring(team.legacy_id::text, char_length(team.legacy_id::text))::smallint = ANY(races)
+    AND substring(team.legacy_id, char_length(team.legacy_id))::smallint = ANY(races)
     AND season.end >= from_timestamp
 ),
 team_state_filter AS
@@ -1408,7 +1407,7 @@ team_state_filter AS
     INNER JOIN team_member ON team.id = team_member.team_id
     WHERE player_character_id = ANY(character_ids)
     AND team.queue_type = 201
-    AND substring(team.legacy_id::text, char_length(team.legacy_id::text))::smallint = ANY(races)
+    AND substring(team.legacy_id, char_length(team.legacy_id))::smallint = ANY(races)
     AND team_state.timestamp >= from_timestamp
 )
 SELECT *
@@ -1428,11 +1427,10 @@ LOOP
     END IF;
 
     IF table_record.legacy_id <> cur_legacy_id THEN
-        cur_legacy_id_text = cur_legacy_id::text;
         result = array_append(result, row
         (
             cur_player_character_id,
-            substring(cur_legacy_id_text, char_length(cur_legacy_id_text))::smallint,
+            substring(cur_legacy_id, char_length(cur_legacy_id))::smallint,
             cur_games,
             (SELECT AVG(x) FROM unnest(cur_mmr) x),
             (SELECT MAX(x) FROM unnest(cur_mmr) x),
@@ -1461,11 +1459,10 @@ LOOP
 END LOOP;
 
 IF cur_games <> -1 THEN
-    cur_legacy_id_text = cur_legacy_id::text;
     result = array_append(result, row
     (
         cur_player_character_id,
-        substring(cur_legacy_id_text, char_length(cur_legacy_id_text))::smallint,
+        substring(cur_legacy_id, char_length(cur_legacy_id))::smallint,
         cur_games,
         (SELECT AVG(x) FROM unnest(cur_mmr) x),
         (SELECT MAX(x) FROM unnest(cur_mmr) x),

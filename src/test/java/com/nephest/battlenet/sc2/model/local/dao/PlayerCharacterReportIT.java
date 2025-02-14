@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -55,7 +55,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.Connection;
@@ -714,7 +713,7 @@ public class PlayerCharacterReportIT
             null,
             SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("12344"), 1, 10L, 10, 0, 0, 0,
+            BaseLeagueTier.LeagueTierType.FIRST, "12344", 1, 10L, 10, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
         template.update("UPDATE player_character_report SET restrictions = true");

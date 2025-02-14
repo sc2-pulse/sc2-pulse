@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -12,7 +12,6 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import jakarta.validation.constraints.NotNull;
-import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.Objects;
@@ -28,12 +27,12 @@ implements java.io.Serializable
             .thenComparing(Team::getLegacyId)
             .thenComparing(Team::getSeason);
 
-    private static final long serialVersionUID = 9L;
+    private static final long serialVersionUID = 10L;
 
     private Long id;
 
     @NotNull
-    private BigInteger legacyId;
+    private String legacyId;
 
     @NotNull
     private Integer divisionId;
@@ -65,7 +64,7 @@ implements java.io.Serializable
         Integer season, Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType tierType,
-        BigInteger legacyId,
+        String legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         OffsetDateTime lastPlayed
@@ -114,7 +113,7 @@ implements java.io.Serializable
     (
         QueueType queueType,
         Region region,
-        BigInteger legacyId,
+        String legacyId,
         Integer season
     )
     {
@@ -178,12 +177,12 @@ implements java.io.Serializable
         return id;
     }
 
-    public BigInteger getLegacyId()
+    public String getLegacyId()
     {
         return legacyId;
     }
 
-    public void setLegacyId(BigInteger legacyId)
+    public void setLegacyId(String legacyId)
     {
         this.legacyId = legacyId;
     }

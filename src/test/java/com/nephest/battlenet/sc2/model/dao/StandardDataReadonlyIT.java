@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.dao;
@@ -27,9 +27,9 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -187,20 +187,29 @@ public class StandardDataReadonlyIT
         BlizzardPlayerCharacter c1 = new BlizzardPlayerCharacter(1L, 1, "name1");
         BlizzardPlayerCharacter c2 = new BlizzardPlayerCharacter(2L, 1, "name2");
         assertEquals(
-            new BigInteger("123"),
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{c2}, Race.ZERG)
+            "1.2.3",
+            teamDAO.legacyIdOf(Set.of(new TeamLegacyIdEntry(c2.getRealm(), c2.getId(), Race.ZERG)))
         );
         assertEquals(
-            new BigInteger("1112"),
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{c1, c2})
+            "1.1.~1.2.",
+            teamDAO.legacyIdOf(Set.of(
+                new TeamLegacyIdEntry(c1.getRealm(), c1.getId()),
+                new TeamLegacyIdEntry(c2.getRealm(), c2.getId())
+            ))
         );
         assertEquals(
-            new BigInteger("1112"),
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{c2, c1})
+            "1.1.~1.2.",
+            teamDAO.legacyIdOf(Set.of(
+                new TeamLegacyIdEntry(c2.getRealm(), c2.getId()),
+                new TeamLegacyIdEntry(c1.getRealm(), c1.getId())
+            ))
         );
         assertEquals(
-            new BigInteger("111213"),
-            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{c1, c2}, Race.ZERG, Race.TERRAN)
+            "1.1.3~1.2.1",
+            teamDAO.legacyIdOf(Set.of(
+                new TeamLegacyIdEntry(c1.getRealm(), c1.getId(), Race.ZERG),
+                new TeamLegacyIdEntry(c2.getRealm(), c2.getId(), Race.TERRAN)
+            ))
         );
     }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -28,7 +28,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -317,7 +316,7 @@ public class SeasonGenerator
         BaseLeague league,
         BaseLeagueTier.LeagueTierType tierType,
         Division division,
-        BigInteger legacyId,
+        String legacyId,
         long rating, int wins, int losses, int ties, int points,
         PlayerCharacter... members
     )
@@ -352,7 +351,7 @@ public class SeasonGenerator
                     TeamType.ARRANGED
                 ),
                 BaseLeagueTier.LeagueTierType.FIRST,
-                BigInteger.valueOf(i), 1,
+                String.valueOf(i), 1,
                 (long) i, i, 0, 0, 0,
                 SC2Pulse.offsetDateTime()
             );

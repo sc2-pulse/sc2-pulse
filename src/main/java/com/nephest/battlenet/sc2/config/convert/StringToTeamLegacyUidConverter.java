@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.convert;
@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-
-import java.math.BigInteger;
 
 @Component
 public class StringToTeamLegacyUidConverter
@@ -32,7 +30,7 @@ implements Converter<String, TeamLegacyUid>
         (
             conversionService.convert(Integer.parseInt(split[0]), QueueType.class),
             conversionService.convert(Integer.parseInt(split[1]), Region.class),
-            new BigInteger(split[2])
+            split[2]
         );
     }
 

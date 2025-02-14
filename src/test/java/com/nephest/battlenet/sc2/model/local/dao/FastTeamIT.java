@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -16,7 +16,6 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
@@ -88,7 +87,7 @@ public class FastTeamIT
         assertFalse(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
             Region.EU,
-            BigInteger.valueOf(1204),
+            "1204",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
 
@@ -99,14 +98,14 @@ public class FastTeamIT
         assertTrue(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
             Region.EU,
-            BigInteger.valueOf(1204),
+            "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
         //US is not loaded
         assertFalse(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
             Region.US,
-            BigInteger.valueOf(1104),
+            "1.10.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
 
@@ -115,7 +114,7 @@ public class FastTeamIT
         assertFalse(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
             Region.EU,
-            BigInteger.valueOf(1204),
+            "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
     }
@@ -128,7 +127,7 @@ public class FastTeamIT
             null,
             1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+            BaseLeagueTier.LeagueTierType.FIRST, "1", 1,
             1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         );
@@ -137,7 +136,7 @@ public class FastTeamIT
             null,
             1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(2), 1,
+            BaseLeagueTier.LeagueTierType.FIRST, "2", 1,
             2L, 2, 2, 2, 2,
             SC2Pulse.offsetDateTime()
         );
@@ -154,7 +153,7 @@ public class FastTeamIT
             null,
             1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 3,
+            BaseLeagueTier.LeagueTierType.FIRST, "1", 3,
             3L, 4, 5, 6, 3,
             SC2Pulse.offsetDateTime()
         );
@@ -168,7 +167,7 @@ public class FastTeamIT
         (
             QueueType.LOTV_1V1,
             Region.EU,
-            BigInteger.valueOf(1),
+            "1",
             1
         ).orElseThrow();
         assertEquals(team1_1, foundTeam1);
@@ -181,7 +180,7 @@ public class FastTeamIT
         (
             QueueType.LOTV_1V1,
             Region.EU,
-            BigInteger.valueOf(2),
+            "2",
             1
         ).orElseThrow();
         assertEquals(team2, foundTeam2);
@@ -209,7 +208,7 @@ public class FastTeamIT
         assertTrue(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
             Region.EU,
-            BigInteger.valueOf(1204),
+            "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
 
@@ -218,7 +217,7 @@ public class FastTeamIT
         assertFalse(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
             Region.EU,
-            BigInteger.valueOf(1204),
+            "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
 
@@ -227,7 +226,7 @@ public class FastTeamIT
         assertTrue(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
             Region.EU,
-            BigInteger.valueOf(1204),
+            "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
     }

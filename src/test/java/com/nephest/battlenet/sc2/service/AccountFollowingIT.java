@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.service;
@@ -35,7 +35,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -159,7 +158,7 @@ public class AccountFollowingIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(11111L), bronze1.getId(),
+            "11111", bronze1.getId(),
             100L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -181,7 +180,7 @@ public class AccountFollowingIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(11112L), bronze1.getId(),
+            "11112", bronze1.getId(),
             101L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -197,7 +196,7 @@ public class AccountFollowingIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(11113L), bronze1.getId(),
+            "11113", bronze1.getId(),
             99L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );

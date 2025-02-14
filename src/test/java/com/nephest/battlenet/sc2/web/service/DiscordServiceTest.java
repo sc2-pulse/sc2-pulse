@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -56,7 +56,6 @@ import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Role;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
-import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -340,7 +339,7 @@ public class DiscordServiceTest
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            BigInteger.ONE,
+            "1",
             1,
             1234L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime(),

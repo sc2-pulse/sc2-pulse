@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.external;
@@ -44,7 +44,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeAPI;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -163,7 +162,7 @@ public class ExternalServiceIT
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE),
             TIER_TYPE, bronze1v1,
-            BigInteger.valueOf(10002L), 1L, 1, 2, 3, 4,
+            "10002", 1L, 1, 2, 3, 4,
             character
         );
         playerCharacterStatsDAO.mergeCalculate();

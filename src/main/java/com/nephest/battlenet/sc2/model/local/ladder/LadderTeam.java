@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -10,7 +10,6 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.Team;
-import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -34,7 +33,7 @@ implements java.io.Serializable
         Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType leagueTierType,
-        BigInteger legacyId,
+        String legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         OffsetDateTime lastPlayed,

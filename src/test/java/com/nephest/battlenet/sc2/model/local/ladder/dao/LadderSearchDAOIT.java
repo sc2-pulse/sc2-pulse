@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -38,7 +38,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -179,7 +178,7 @@ public class LadderSearchDAOIT
         Team newTeam = new Team
         (
             null, emptySeasons.get(0).getBattlenetId(), Region.EU, bronzeLeague, TIER_TYPE,
-            BigInteger.valueOf(9999L), bronzeDivision.getId(),
+            "9999", bronzeDivision.getId(),
             1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         );

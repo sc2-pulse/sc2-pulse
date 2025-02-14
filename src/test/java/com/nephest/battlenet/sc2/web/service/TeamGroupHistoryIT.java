@@ -34,7 +34,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -205,10 +204,10 @@ public class TeamGroupHistoryIT
         );
 
         jdbcTemplate.update("DELETE FROM team_state");
-        jdbcTemplate.update("UPDATE team SET legacy_id = 11 WHERE id IN(1, 13, 25)");
-        jdbcTemplate.update("UPDATE team SET legacy_id = 12 WHERE id IN(2, 14, 26)");
-        jdbcTemplate.update("UPDATE team SET legacy_id = 13 WHERE id IN(3, 15, 27)");
-        jdbcTemplate.update("UPDATE team SET last_played = null WHERE legacy_id = 11");
+        jdbcTemplate.update("UPDATE team SET legacy_id = '11' WHERE id IN(1, 13, 25)");
+        jdbcTemplate.update("UPDATE team SET legacy_id = '12' WHERE id IN(2, 14, 26)");
+        jdbcTemplate.update("UPDATE team SET legacy_id = '13' WHERE id IN(3, 15, 27)");
+        jdbcTemplate.update("UPDATE team SET last_played = null WHERE legacy_id = '11'");
 
         //take team snapshots
         for(int i = 0; i < seasons.size(); i++)
@@ -231,7 +230,7 @@ public class TeamGroupHistoryIT
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.SECOND,
-            BigInteger.valueOf(11L),
+            "11",
             15,
             112L, 13, 14, 15, 0,
             null
@@ -260,7 +259,7 @@ public class TeamGroupHistoryIT
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            BigInteger.valueOf(11L),
+            "11",
             7,
             113L, 14, 15, 16, 0,
             null
@@ -277,7 +276,7 @@ public class TeamGroupHistoryIT
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            BigInteger.valueOf(991L),
+            "991",
             7,
             114L, 14, 15, 16, 0,
             null
@@ -431,7 +430,7 @@ public class TeamGroupHistoryIT
                 (
                     StaticColumn.ID, 1L,
                     StaticColumn.SEASON, 1,
-                    StaticColumn.LEGACY_ID, 11,
+                    StaticColumn.LEGACY_ID, "11",
 
                     StaticColumn.REGION, 2,
 
@@ -474,7 +473,7 @@ public class TeamGroupHistoryIT
                 (
                     StaticColumn.ID, 13L,
                     StaticColumn.SEASON, 2,
-                    StaticColumn.LEGACY_ID, 11,
+                    StaticColumn.LEGACY_ID, "11",
 
                     StaticColumn.REGION, 2,
 
@@ -517,7 +516,7 @@ public class TeamGroupHistoryIT
                 (
                     StaticColumn.ID, 25L,
                     StaticColumn.SEASON, 3,
-                    StaticColumn.LEGACY_ID, 11,
+                    StaticColumn.LEGACY_ID, "11",
 
                     StaticColumn.REGION, 2,
 
@@ -574,7 +573,7 @@ public class TeamGroupHistoryIT
                         (
                             QueueType.LOTV_1V1,
                             Region.EU,
-                            BigInteger.valueOf(11L)
+                            "11"
                         ),
                         String.class
                     )
@@ -724,7 +723,7 @@ public class TeamGroupHistoryIT
                         (
                             QueueType.LOTV_1V1,
                             Region.EU,
-                            BigInteger.valueOf(11L)
+                            "11"
                         ),
                         String.class
                     )
@@ -782,7 +781,7 @@ public class TeamGroupHistoryIT
                         (
                             QueueType.LOTV_1V1,
                             Region.EU,
-                            BigInteger.valueOf(11L)
+                            "11"
                         ),
                         String.class
                     )
@@ -850,7 +849,7 @@ public class TeamGroupHistoryIT
                         (
                             QueueType.LOTV_1V1,
                             Region.EU,
-                            BigInteger.valueOf(11L)
+                            "11"
                         ),
                         String.class
                     )
@@ -995,7 +994,7 @@ public class TeamGroupHistoryIT
                         (
                             QueueType.LOTV_1V1,
                             Region.EU,
-                            BigInteger.valueOf(11L)
+                            "11"
                         ),
                         String.class
                     )
@@ -1066,7 +1065,7 @@ public class TeamGroupHistoryIT
                         (
                             QueueType.LOTV_1V1,
                             Region.EU,
-                            BigInteger.valueOf(11L)
+                            "11"
                         ),
                         String.class
                     )
@@ -1122,7 +1121,7 @@ public class TeamGroupHistoryIT
                         (
                             QueueType.LOTV_1V1,
                             Region.EU,
-                            BigInteger.valueOf(11L)
+                            "11"
                         ),
                         String.class
                     )
@@ -1180,7 +1179,7 @@ public class TeamGroupHistoryIT
                         (
                             QueueType.LOTV_1V1,
                             Region.EU,
-                            BigInteger.valueOf(11L)
+                            "11"
                         ),
                         String.class
                     )

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -32,7 +32,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderSeasonState;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -145,7 +144,7 @@ public class LadderSeasonStateDAOIT
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.ONE, division1.getId(),
+            BaseLeagueTier.LeagueTierType.FIRST, "1", division1.getId(),
             1L, 1, 1, 1, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -154,7 +153,7 @@ public class LadderSeasonStateDAOIT
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.TWO, division1.getId(),
+            BaseLeagueTier.LeagueTierType.FIRST, "2", division1.getId(),
             1L, 1, 1, 1, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -163,7 +162,7 @@ public class LadderSeasonStateDAOIT
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.PLATINUM, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.TEN, division2.getId(),
+            BaseLeagueTier.LeagueTierType.FIRST, "10", division2.getId(),
             1L, 1, 1, 1, 0,
             SC2Pulse.offsetDateTime()
         );

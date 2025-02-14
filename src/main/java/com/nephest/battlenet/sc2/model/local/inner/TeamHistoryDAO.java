@@ -14,7 +14,6 @@ import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
 import jakarta.validation.constraints.NotNull;
-import java.math.BigDecimal;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -946,7 +945,7 @@ public class TeamHistoryDAO
                 teamHistory.staticData().get(StaticColumn.REGION),
                 Region.class
             ),
-            ((BigDecimal) teamHistory.staticData().get(StaticColumn.LEGACY_ID)).toBigInteger()
+            (String) teamHistory.staticData().get(StaticColumn.LEGACY_ID)
         );
     }
 

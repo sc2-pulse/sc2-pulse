@@ -28,7 +28,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -229,7 +228,7 @@ public class TeamGroupHistoryCornerCaseIT
                         (
                             QueueType.LOTV_1V1,
                             Region.EU,
-                            BigInteger.valueOf(200L)
+                            "200"
                         ),
                         String.class
                     )

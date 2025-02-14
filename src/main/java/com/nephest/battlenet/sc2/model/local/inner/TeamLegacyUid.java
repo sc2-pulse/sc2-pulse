@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.inner;
@@ -6,8 +6,6 @@ package com.nephest.battlenet.sc2.model.local.inner;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Team;
-
-import java.math.BigInteger;
 import java.util.Objects;
 
 public class TeamLegacyUid
@@ -15,13 +13,13 @@ public class TeamLegacyUid
 
     private QueueType queueType;
     private Region region;
-    private BigInteger id;
+    private String id;
 
     public TeamLegacyUid()
     {
     }
 
-    public TeamLegacyUid(QueueType queueType, Region region, BigInteger id)
+    public TeamLegacyUid(QueueType queueType, Region region, String id)
     {
         this.queueType = queueType;
         this.region = region;
@@ -37,8 +35,7 @@ public class TeamLegacyUid
     public boolean equals(Object o)
     {
         if (this == o) return true;
-        if (!(o instanceof TeamLegacyUid)) return false;
-        TeamLegacyUid that = (TeamLegacyUid) o;
+        if (!(o instanceof TeamLegacyUid that)) return false;
         return getQueueType() == that.getQueueType() && getRegion() == that.getRegion() && getId().equals(that.getId());
     }
 
@@ -74,12 +71,12 @@ public class TeamLegacyUid
         this.region = region;
     }
 
-    public BigInteger getId()
+    public String getId()
     {
         return id;
     }
 
-    public void setId(BigInteger id)
+    public void setId(String id)
     {
         this.id = id;
     }

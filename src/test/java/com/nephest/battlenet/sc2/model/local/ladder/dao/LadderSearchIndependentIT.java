@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -47,7 +47,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -201,7 +200,7 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(11111L), bronze1.getId(),
+            "11111", bronze1.getId(),
             100L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -216,7 +215,7 @@ public class LadderSearchIndependentIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(11114L), bronze2.getId(),
+            "11114", bronze2.getId(),
             98L, 99, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -231,7 +230,7 @@ public class LadderSearchIndependentIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(11115L), bronze2.getId(),
+            "11115", bronze2.getId(),
             97L, 50, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -246,7 +245,7 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(11112L), bronze1.getId(),
+            "11112", bronze1.getId(),
             101L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -261,7 +260,7 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(11113L), bronze1.getId(),
+            "11113", bronze1.getId(),
             102L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -277,7 +276,7 @@ public class LadderSearchIndependentIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(11113L), bronze1.getId(),
+            "11113", bronze1.getId(),
             102L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -474,7 +473,7 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(10001L), d1.getId(),
+            "10001", d1.getId(),
             3L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -483,7 +482,7 @@ public class LadderSearchIndependentIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(10002L), d2.getId(),
+            "10002", d2.getId(),
             2L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -492,7 +491,7 @@ public class LadderSearchIndependentIT
         (
             null, season3.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE,
-            BigInteger.valueOf(10003L), d3.getId(),
+            "10003", d3.getId(),
             1L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );

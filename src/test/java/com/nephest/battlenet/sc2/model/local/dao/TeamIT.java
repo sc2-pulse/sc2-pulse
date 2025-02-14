@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -120,7 +120,7 @@ public class TeamIT
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+                BaseLeagueTier.LeagueTierType.FIRST, "1", 1,
                 1L, 1, 1, 1, 1,
                 SC2Pulse.offsetDateTime()
             ),
@@ -128,7 +128,7 @@ public class TeamIT
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
-                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(2), 1,
+                BaseLeagueTier.LeagueTierType.FIRST, "2", 1,
                 1L, 1, 1, 1, 1,
                 SC2Pulse.offsetDateTime()
             ),
@@ -137,7 +137,7 @@ public class TeamIT
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(3), 1,
+                BaseLeagueTier.LeagueTierType.FIRST, "3", 1,
                 1L, 1, 1, 1, 1,
                 SC2Pulse.offsetDateTime()
             ),
@@ -146,7 +146,7 @@ public class TeamIT
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID + 1, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(4), 1,
+                BaseLeagueTier.LeagueTierType.FIRST, "4", 1,
                 1L, 1, 1, 1, 1,
                 SC2Pulse.offsetDateTime()
             )
@@ -186,7 +186,7 @@ public class TeamIT
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+                BaseLeagueTier.LeagueTierType.FIRST, "1", 1,
                 1L, 10, 0, 0, 1,
                 SC2Pulse.offsetDateTime()
             )
@@ -218,7 +218,7 @@ public class TeamIT
                 (
                     null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
                     new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-                    BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+                    BaseLeagueTier.LeagueTierType.FIRST, "1", 1,
                     1L, 9, 0, 0, 1,
                     SC2Pulse.offsetDateTime()
                 )
@@ -249,7 +249,7 @@ public class TeamIT
             (
                 null, 1, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+                BaseLeagueTier.LeagueTierType.FIRST, "1", 1,
                 3L, 4, 5, 6, 7,
                 allSeasons.get(0).getStart()
             ),
@@ -258,7 +258,7 @@ public class TeamIT
             (
                 null, 1, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(2), 1,
+                BaseLeagueTier.LeagueTierType.FIRST, "2", 1,
                 3L, 4, 5, 6, 7,
                 allSeasons.get(0).getStart().plusSeconds(10)
             ),
@@ -267,7 +267,7 @@ public class TeamIT
             (
                 null, 1, Region.US,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 2,
+                BaseLeagueTier.LeagueTierType.FIRST, "1", 2,
                 3L, 4, 5, 6, 7,
                 allSeasons.get(1).getStart().plusSeconds(20)
             ),
@@ -276,7 +276,7 @@ public class TeamIT
             (
                 null, 2, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 3,
+                BaseLeagueTier.LeagueTierType.FIRST, "1", 3,
                 3L, 4, 5, 6, 7,
                 allSeasons.get(2).getStart().plusSeconds(20)
             )
@@ -448,7 +448,7 @@ public class TeamIT
         (
             null, 1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+            BaseLeagueTier.LeagueTierType.FIRST, "1", 1,
             3L, 4, 5, 6, 7,
             allSeasons.get(3).getStart().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS) //normal
         );
@@ -456,7 +456,7 @@ public class TeamIT
         (
             null, 1, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 2,
+            BaseLeagueTier.LeagueTierType.FIRST, "1", 2,
             3L, 4, 5, 6, 7,
             allSeasons.get(4).getStart().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS) //normal
         );
@@ -464,7 +464,7 @@ public class TeamIT
         (
             null, 1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(3), 1,
+            BaseLeagueTier.LeagueTierType.FIRST, "3", 1,
             3L, 4, 5, 6, 7,
             allSeasons.get(3).getStart().plusSeconds(10) //oversteps next season boundaries
         );
@@ -473,7 +473,7 @@ public class TeamIT
         (
             null, 1, Region.KR,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 3,
+            BaseLeagueTier.LeagueTierType.FIRST, "1", 3,
             3L, 4, 5, 6, 7,
             allSeasons.get(5).getStart().plusSeconds(20) //oversteps next season boundaries
         );
@@ -486,7 +486,7 @@ public class TeamIT
         (
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 4,
+            BaseLeagueTier.LeagueTierType.FIRST, "1", 4,
             4L, 5, 6, 7, 8,
             allSeasons.get(3).getStart()
         );
@@ -494,7 +494,7 @@ public class TeamIT
         (
             null, 2, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 5,
+            BaseLeagueTier.LeagueTierType.FIRST, "1", 5,
             4L, 5, 6, 7, 8,
             allSeasons.get(4).getStart()
         );
@@ -596,7 +596,7 @@ public class TeamIT
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 2,
+            BaseLeagueTier.LeagueTierType.FIRST, "1", 2,
             3L, 4, 5, 6, 7,
             lastPlayed
         );
@@ -610,7 +610,7 @@ public class TeamIT
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.SECOND, BigInteger.valueOf(2), 1,
+            BaseLeagueTier.LeagueTierType.SECOND, "2", 1,
             5L, 6, 7, 8, 9,
             lastPlayed.plusSeconds(2)
         );

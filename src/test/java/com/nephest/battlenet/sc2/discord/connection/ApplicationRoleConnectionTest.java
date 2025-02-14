@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.connection;
@@ -14,7 +14,6 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -52,7 +51,7 @@ public class ApplicationRoleConnectionTest
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            BigInteger.ONE,
+            "1",
             1,
             1234L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -55,7 +55,6 @@ import com.nephest.battlenet.sc2.web.util.MonoUtil;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.User;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -535,25 +534,25 @@ public class DiscordIT
         Team team1 = seasonGenerator.createTeam
         (
             season2, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1,
-            BigInteger.valueOf(10000L), 1L, 1, 2, 3, 4, characters[2]
+            "10000", 1L, 1, 2, 3, 4, characters[2]
         );
         //current season 1v1, should be skipped despite being a GM, only MMR matters
         Team team2 = seasonGenerator.createTeam
         (
             season2, new BaseLeague(BaseLeague.LeagueType.GRANDMASTER, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1,
-            BigInteger.valueOf(10001L), 0L, 1, 2, 3, 4, characters[1]
+            "10001", 0L, 1, 2, 3, 4, characters[1]
         );
         //not a 1v1 team, should be skipped
         Team team3 = seasonGenerator.createTeam
         (
             season2, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, bronze1,
-            BigInteger.valueOf(10002L), 2L, 1, 2, 3, 4, characters[0]
+            "10002", 2L, 1, 2, 3, 4, characters[0]
         );
         //1v1 team from the previous season, should be skipped despite high mmr
         Team team4 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.GOLD, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, gold2,
-            BigInteger.valueOf(10003L), 3L, 1, 2, 3, 4, characters[0]
+            "10003", 3L, 1, 2, 3, 4, characters[0]
         );
 
         return Tuples.of(account, characters, team1);
@@ -595,7 +594,7 @@ public class DiscordIT
         Team team1 = seasonGenerator.createTeam
         (
             oldSeason, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1,
-            BigInteger.valueOf(10000L), 1L, 1, 2, 3, 4, character
+            "10000", 1L, 1, 2, 3, 4, character
         );
 
         assertTrue(discordService.findMainTeam(account.getId()).isEmpty());
