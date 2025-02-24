@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -128,11 +128,11 @@ public class TeamStateDAOIT
         teamStateDAO.saveState(Set.of(state1, state2Secondary, state2Main));
 
         Set<TeamLegacyUid> legacyIds1 = Set.of(
-            new TeamLegacyUid(QueueType.LOTV_4V4, Region.EU, LEGACY_ID_1)
+            new TeamLegacyUid(QueueType.LOTV_4V4, TeamType.ARRANGED, Region.EU, LEGACY_ID_1)
         );
 
         Set<TeamLegacyUid> legacyIds2 = Set.of(
-            new TeamLegacyUid(QueueType.LOTV_1V1, Region.US, LEGACY_ID_2)
+            new TeamLegacyUid(QueueType.LOTV_1V1, TeamType.ARRANGED, Region.US, LEGACY_ID_2)
         );
 
         assertEquals(3, ladderTeamStateDAO.find(legacyIds1).size());

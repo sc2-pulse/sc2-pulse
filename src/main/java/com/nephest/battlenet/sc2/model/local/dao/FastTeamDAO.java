@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.StatefulBasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.Team;
 import java.time.OffsetDateTime;
@@ -89,12 +90,13 @@ implements StatefulBasicEntityOperations<Team>
     public Optional<Team> findById
     (
             QueueType queueType,
+            TeamType teamType,
             Region region,
             String legacyId,
             Integer season
     )
     {
-        return find(Team.uid(queueType, region, legacyId, season));
+        return find(Team.uid(queueType, teamType, region, legacyId, season));
     }
 
     @Override

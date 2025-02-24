@@ -227,6 +227,7 @@ public class TeamGroupHistoryCornerCaseIT
                         new TeamLegacyUid
                         (
                             QueueType.LOTV_1V1,
+                            TeamType.ARRANGED,
                             Region.EU,
                             "200"
                         ),

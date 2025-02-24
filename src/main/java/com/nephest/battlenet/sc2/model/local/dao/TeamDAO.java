@@ -104,7 +104,7 @@ implements BasicEntityOperations<Team>
 
     private static final String MERGE_CLAUSE =
         " "
-         + "ON CONFLICT(queue_type, region, legacy_id, season) DO UPDATE SET "
+         + "ON CONFLICT(queue_type, team_type, region, legacy_id, season) DO UPDATE SET "
         + "division_id=excluded.division_id, "
         + "league_type=excluded.league_type, "
         + "tier_type=excluded.tier_type, "
@@ -120,6 +120,7 @@ implements BasicEntityOperations<Team>
         + "existing AS "
         + "("
             + "SELECT team.queue_type, "
+            + "team.team_type, "
             + "team.id, "
             + "team.region, "
             + "team.legacy_id, "
@@ -132,7 +133,7 @@ implements BasicEntityOperations<Team>
                 + "rating, points, wins, losses, ties, last_played, "
                 + "tier_type "
             + ") "
-                + "USING(queue_type, region, legacy_id, season) "
+                + "USING(queue_type, team_type, region, legacy_id, season) "
         + "), "
         + "updated AS "
         + "("
@@ -156,6 +157,7 @@ implements BasicEntityOperations<Team>
             + ") "
             + "INNER JOIN team t ON "
                 + "t.queue_type = v.queue_type "
+                + "AND t.team_type = v.team_type "
                 + "AND t.region = v.region "
                 + "AND t.legacy_id = v.legacy_id "
                 + "AND t.season = v.season "
@@ -207,6 +209,7 @@ implements BasicEntityOperations<Team>
             + ") "
             + "LEFT JOIN existing ON "
                 + "v.queue_type = existing.queue_type "
+                + "AND v.team_type = existing.team_type "
                 + "AND v.region = existing.region "
                 + "AND v.legacy_id = existing.legacy_id "
                 + "AND v.season = existing.season "
@@ -243,7 +246,7 @@ implements BasicEntityOperations<Team>
         """
             SELECT id
             FROM team
-            WHERE (team.queue_type, team.region, team.legacy_id) IN (:legacyUids)
+            WHERE (team.queue_type, team.team_type, team.region, team.legacy_id) IN (:legacyUids)
             AND (:from::smallint IS NULL OR season >= :from::smallint)
             AND (:to::smallint IS NULL OR season < :to::smallint)
         """;
@@ -620,6 +623,7 @@ implements BasicEntityOperations<Team>
         List<Object[]> legacyUids = ids.stream()
             .map(id->new Object[]{
                 conversionService.convert(id.getQueueType(), Integer.class),
+                conversionService.convert(id.getTeamType(), Integer.class),
                 conversionService.convert(id.getRegion(), Integer.class),
                 id.getId()
             })

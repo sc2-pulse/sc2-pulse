@@ -86,6 +86,7 @@ public class FastTeamIT
         //not loaded yet
         assertFalse(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
+            TeamType.ARRANGED,
             Region.EU,
             "1204",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
@@ -97,6 +98,7 @@ public class FastTeamIT
 
         assertTrue(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
+            TeamType.ARRANGED,
             Region.EU,
             "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
@@ -104,6 +106,7 @@ public class FastTeamIT
         //US is not loaded
         assertFalse(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
+            TeamType.ARRANGED,
             Region.US,
             "1.10.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
@@ -113,6 +116,7 @@ public class FastTeamIT
         //old data was removed
         assertFalse(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
+            TeamType.ARRANGED,
             Region.EU,
             "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
@@ -166,6 +170,7 @@ public class FastTeamIT
         Team foundTeam1 = fastTeamDAO.findById
         (
             QueueType.LOTV_1V1,
+            TeamType.ARRANGED,
             Region.EU,
             "1",
             1
@@ -179,6 +184,7 @@ public class FastTeamIT
         Team foundTeam2 = fastTeamDAO.findById
         (
             QueueType.LOTV_1V1,
+            TeamType.ARRANGED,
             Region.EU,
             "2",
             1
@@ -207,6 +213,7 @@ public class FastTeamIT
         assertTrue(fastTeamDAO.load(Region.EU, SeasonGenerator.DEFAULT_SEASON_ID));
         assertTrue(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
+            TeamType.ARRANGED,
             Region.EU,
             "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
@@ -216,6 +223,7 @@ public class FastTeamIT
         fastTeamDAO.clear(Region.EU);
         assertFalse(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
+            TeamType.ARRANGED,
             Region.EU,
             "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
@@ -225,6 +233,7 @@ public class FastTeamIT
         assertTrue(fastTeamDAO.load(Region.EU, SeasonGenerator.DEFAULT_SEASON_ID));
         assertTrue(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
+            TeamType.ARRANGED,
             Region.EU,
             "1.20.4",
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()

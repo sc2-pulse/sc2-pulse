@@ -23,11 +23,12 @@ implements java.io.Serializable
 
     public static final Comparator<Team> NATURAL_ID_COMPARATOR =
         Comparator.comparing(Team::getQueueType)
+            .thenComparing(Team::getTeamType)
             .thenComparing(Team::getRegion)
             .thenComparing(Team::getLegacyId)
             .thenComparing(Team::getSeason);
 
-    private static final long serialVersionUID = 10L;
+    private static final long serialVersionUID = 11L;
 
     private Long id;
 
@@ -112,6 +113,7 @@ implements java.io.Serializable
     public static Team uid
     (
         QueueType queueType,
+        TeamType teamType,
         Region region,
         String legacyId,
         Integer season
@@ -126,7 +128,7 @@ implements java.io.Serializable
             (
                 null,
                 queueType,
-                null
+                teamType
             ),
             null,
             legacyId,
@@ -142,7 +144,14 @@ implements java.io.Serializable
     @Override
     public int hashCode()
     {
-        return Objects.hash(getSeason(), getRegion(), getQueueType(), getLegacyId());
+        return Objects.hash
+        (
+            getSeason(),
+            getRegion(),
+            getQueueType(),
+            getTeamType(),
+            getLegacyId()
+        );
     }
 
     @Override
@@ -153,6 +162,7 @@ implements java.io.Serializable
         return getSeason().equals(team.getSeason())
             && getRegion() == team.getRegion()
             && getQueueType() == team.getQueueType()
+            && getTeamType() == team.getTeamType()
             && getLegacyId().equals(team.getLegacyId());
     }
 
@@ -161,9 +171,9 @@ implements java.io.Serializable
     {
         return String.format
         (
-            "%s[%s %s %s %s]",
+            "%s[%s %s %s %s %s]",
             Team.class.getSimpleName(),
-            getSeason(), getRegion().toString(), getQueueType(), getLegacyId()
+            getSeason(), getRegion().toString(), getQueueType(), getTeamType(), getLegacyId()
         );
     }
 

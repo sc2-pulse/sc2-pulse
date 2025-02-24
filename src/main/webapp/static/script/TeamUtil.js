@@ -447,7 +447,10 @@ class TeamUtil
 
     static getTeamLegacyUid(team)
     {
-        return team.queueType + "-" + EnumUtil.enumOfName(team.region, REGION).code + "-" + team.legacyId;
+        return team.queueType
+            + "-" + EnumUtil.enumOfId(team.teamType, TEAM_TYPE).code
+            + "-" + EnumUtil.enumOfName(team.region, REGION).code
+            + "-" + team.legacyId;
     }
 
     static getTeamMmrHistoryParams(teams)

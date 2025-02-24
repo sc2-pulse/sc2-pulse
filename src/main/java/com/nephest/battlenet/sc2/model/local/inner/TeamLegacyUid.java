@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.inner;
 
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Team;
 import java.util.Objects;
 
@@ -12,6 +13,7 @@ public class TeamLegacyUid
 {
 
     private QueueType queueType;
+    private TeamType teamType;
     private Region region;
     private String id;
 
@@ -19,36 +21,40 @@ public class TeamLegacyUid
     {
     }
 
-    public TeamLegacyUid(QueueType queueType, Region region, String id)
+    public TeamLegacyUid(QueueType queueType, TeamType teamType, Region region, String id)
     {
         this.queueType = queueType;
+        this.teamType = teamType;
         this.region = region;
         this.id = id;
     }
 
     public static TeamLegacyUid of(Team team)
     {
-        return new TeamLegacyUid(team.getQueueType(), team.getRegion(), team.getLegacyId());
+        return new TeamLegacyUid
+        (
+            team.getQueueType(),
+            team.getTeamType(),
+            team.getRegion(),
+            team.getLegacyId()
+        );
     }
 
     @Override
     public boolean equals(Object o)
     {
-        if (this == o) return true;
-        if (!(o instanceof TeamLegacyUid that)) return false;
-        return getQueueType() == that.getQueueType() && getRegion() == that.getRegion() && getId().equals(that.getId());
+        if (this == o) {return true;}
+        if (!(o instanceof TeamLegacyUid that)) {return false;}
+        return getQueueType() == that.getQueueType()
+            && getTeamType() == that.getTeamType()
+            && getRegion() == that.getRegion()
+            && getId().equals(that.getId());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getQueueType(), getRegion(), getId());
-    }
-
-    @Override
-    public String toString()
-    {
-        return "TeamLegacyUid{" + "queueType=" + queueType + ", region=" + region + ", id=" + id + '}';
+        return Objects.hash(getQueueType(), getTeamType(), getRegion(), getId());
     }
 
     public QueueType getQueueType()
@@ -59,6 +65,16 @@ public class TeamLegacyUid
     public void setQueueType(QueueType queueType)
     {
         this.queueType = queueType;
+    }
+
+    public TeamType getTeamType()
+    {
+        return teamType;
+    }
+
+    public void setTeamType(TeamType teamType)
+    {
+        this.teamType = teamType;
     }
 
     public Region getRegion()

@@ -222,6 +222,7 @@ public class TeamGroupIT
                     new TeamLegacyUid
                     (
                         QueueType.LOTV_1V1,
+                        TeamType.ARRANGED,
                         Region.EU,
                         "0"
                     ),
@@ -232,6 +233,7 @@ public class TeamGroupIT
                     new TeamLegacyUid
                     (
                         QueueType.LOTV_1V1,
+                        TeamType.ARRANGED,
                         Region.EU,
                         "1"
                     ),
@@ -271,6 +273,7 @@ public class TeamGroupIT
                     new TeamLegacyUid
                     (
                         QueueType.LOTV_1V1,
+                        TeamType.ARRANGED,
                         Region.EU,
                         "0"
                     ),
@@ -322,7 +325,12 @@ public class TeamGroupIT
     {
         String[] longIdList = LongStream.range(0, TeamGroupArgumentResolver.LEGACY_UIDS_MAX + 1)
             .boxed()
-            .map(l->new TeamLegacyUid(QueueType.LOTV_1V1, Region.EU, String.valueOf(l)))
+            .map(l->new TeamLegacyUid(
+                QueueType.LOTV_1V1,
+                TeamType.ARRANGED,
+                Region.EU,
+                String.valueOf(l))
+            )
             .map(uid->conversionService.convert(uid, String.class))
             .toArray(String[]::new);
         mvc.perform(get("/api/team/group/flat").queryParam("legacyUid", longIdList))
@@ -343,6 +351,7 @@ public class TeamGroupIT
                     new TeamLegacyUid
                     (
                         QueueType.LOTV_1V1,
+                        TeamType.ARRANGED,
                         Region.EU,
                         "0"
                     ),
@@ -353,6 +362,7 @@ public class TeamGroupIT
                     new TeamLegacyUid
                     (
                         QueueType.LOTV_1V1,
+                        TeamType.ARRANGED,
                         Region.EU,
                         "1"
                     ),

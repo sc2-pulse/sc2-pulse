@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -177,7 +177,7 @@ public class LadderMatchDAO
                 + "INNER JOIN player_character ON match_participant.player_character_id = player_character.id "
                 + "LEFT JOIN team ON match_participant.team_id = team.id "
                 + "WHERE "
-                + "(team.queue_type, team.region, team.legacy_id) IN (:teams) "
+                + "(team.queue_type, team.team_type, team.region, team.legacy_id) IN (:teams) "
                 + "AND match_participant.decision IN (:validDecisions) "
                 + "AND match.type NOT IN (:excludeTypes) "
                 + "%1$s "
@@ -207,7 +207,7 @@ public class LadderMatchDAO
                 + "INNER JOIN match_participant ON vs_match_filter.id = match_participant.match_id "
                 + "LEFT JOIN team ON match_participant.team_id = team.id "
                 + "WHERE "
-                + "(team.queue_type, team.region, team.legacy_id) IN (:teams1) "
+                + "(team.queue_type, team.team_type, team.region, team.legacy_id) IN (:teams1) "
                 + "GROUP BY vs_match_filter.id "
                 + "HAVING MAX(match_participant.decision) = MIN(match_participant.decision) "
             + ") g1 "
@@ -226,7 +226,7 @@ public class LadderMatchDAO
             + "WHERE "
             + "("
                 + "clan_member.clan_id = ANY (:clans2) "
-                + "OR (team.queue_type, team.region, team.legacy_id) IN (:teams2) "
+                + "OR (team.queue_type, team.team_type, team.region, team.legacy_id) IN (:teams2) "
             + ") "
             + "GROUP BY date, type, map_id "
             + "HAVING MAX(match_participant.decision) = MIN(match_participant.decision) "
@@ -577,6 +577,7 @@ public class LadderMatchDAO
         List<Object[]> teamIds1 = teams1.stream()
             .map(id->new Object[]{
                 conversionService.convert(id.getQueueType(), Integer.class),
+                conversionService.convert(id.getTeamType(), Integer.class),
                 conversionService.convert(id.getRegion(), Integer.class),
                 id.getId()
             })
@@ -584,6 +585,7 @@ public class LadderMatchDAO
         List<Object[]> teamIds2 = teams2.stream()
             .map(id->new Object[]{
                 conversionService.convert(id.getQueueType(), Integer.class),
+                conversionService.convert(id.getTeamType(), Integer.class),
                 conversionService.convert(id.getRegion(), Integer.class),
                 id.getId()
             })

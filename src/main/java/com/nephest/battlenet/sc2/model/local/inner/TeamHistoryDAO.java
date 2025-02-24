@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
@@ -284,11 +285,18 @@ public class TeamHistoryDAO
         ),
         LEGACY_UID
         (
-            EnumSet.of(StaticColumn.REGION, StaticColumn.QUEUE, StaticColumn.LEGACY_ID),
             EnumSet.of
             (
                 StaticColumn.REGION,
                 StaticColumn.QUEUE,
+                StaticColumn.TYPE,
+                StaticColumn.LEGACY_ID
+            ),
+            EnumSet.of
+            (
+                StaticColumn.REGION,
+                StaticColumn.QUEUE,
+                StaticColumn.TYPE,
                 StaticColumn.LEGACY_ID,
                 StaticColumn.SEASON
             )
@@ -940,6 +948,11 @@ public class TeamHistoryDAO
             (
                 teamHistory.staticData().get(StaticColumn.QUEUE),
                 QueueType.class
+            ),
+            sc2StatsConversionService.convert
+            (
+                teamHistory.staticData().get(StaticColumn.TYPE),
+                TeamType.class
             ),
             sc2StatsConversionService.convert
             (

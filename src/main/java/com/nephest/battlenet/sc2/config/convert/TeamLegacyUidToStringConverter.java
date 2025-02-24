@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.convert;
@@ -25,6 +25,7 @@ implements Converter<TeamLegacyUid, String>
     public String convert(TeamLegacyUid source)
     {
         return conversionService.convert(source.getQueueType(), Integer.class)
+            + SPLITTER + conversionService.convert(source.getTeamType(), Integer.class)
             + SPLITTER + conversionService.convert(source.getRegion(), Integer.class)
             + SPLITTER + source.getId();
     }

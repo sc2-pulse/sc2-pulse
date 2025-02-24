@@ -297,7 +297,13 @@ public class TeamGroupHistoryIT
         FULL_HISTORY = getFullTeamHistory();
         FULL_HISTORY_LEGACY_UID_GROUP = List.of(new TeamHistory
         (
-            Stream.of(StaticColumn.QUEUE, StaticColumn.REGION, StaticColumn.LEGACY_ID)
+            Stream.of
+            (
+                StaticColumn.QUEUE,
+                StaticColumn.TYPE,
+                StaticColumn.REGION,
+                StaticColumn.LEGACY_ID
+            )
                 .collect(Collectors.toMap(
                     Function.identity(),
                     col->FULL_HISTORY.get(0).staticData().get(col),
@@ -575,6 +581,7 @@ public class TeamGroupHistoryIT
                         new TeamLegacyUid
                         (
                             QueueType.LOTV_1V1,
+                            TeamType.ARRANGED,
                             Region.EU,
                             "11"
                         ),
@@ -725,6 +732,7 @@ public class TeamGroupHistoryIT
                         new TeamLegacyUid
                         (
                             QueueType.LOTV_1V1,
+                            TeamType.ARRANGED,
                             Region.EU,
                             "11"
                         ),
@@ -783,6 +791,7 @@ public class TeamGroupHistoryIT
                         new TeamLegacyUid
                         (
                             QueueType.LOTV_1V1,
+                            TeamType.ARRANGED,
                             Region.EU,
                             "11"
                         ),
@@ -851,6 +860,7 @@ public class TeamGroupHistoryIT
                         new TeamLegacyUid
                         (
                             QueueType.LOTV_1V1,
+                            TeamType.ARRANGED,
                             Region.EU,
                             "11"
                         ),
@@ -996,6 +1006,7 @@ public class TeamGroupHistoryIT
                         new TeamLegacyUid
                         (
                             QueueType.LOTV_1V1,
+                            TeamType.ARRANGED,
                             Region.EU,
                             "11"
                         ),
@@ -1067,6 +1078,7 @@ public class TeamGroupHistoryIT
                         new TeamLegacyUid
                         (
                             QueueType.LOTV_1V1,
+                            TeamType.ARRANGED,
                             Region.EU,
                             "11"
                         ),
@@ -1123,6 +1135,7 @@ public class TeamGroupHistoryIT
                         new TeamLegacyUid
                         (
                             QueueType.LOTV_1V1,
+                            TeamType.ARRANGED,
                             Region.EU,
                             "11"
                         ),
@@ -1181,6 +1194,7 @@ public class TeamGroupHistoryIT
                         new TeamLegacyUid
                         (
                             QueueType.LOTV_1V1,
+                            TeamType.ARRANGED,
                             Region.EU,
                             "11"
                         ),

@@ -490,3 +490,8 @@ RETURN QUERY SELECT * FROM unnest(result);
 END
 '
 LANGUAGE plpgsql;
+
+ALTER TABLE team
+    DROP CONSTRAINT "uq_team_queue_type_region_legacy_id_season",
+    ADD CONSTRAINT "uq_team_legacy_natural_id"
+        UNIQUE ("queue_type", "team_type", "region", "legacy_id", "season");

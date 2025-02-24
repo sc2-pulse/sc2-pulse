@@ -208,8 +208,8 @@ public class LegacySearchIT
     {
         Set<TeamLegacyUid> legacyIds = Set.of
         (
-            new TeamLegacyUid(QueueType.LOTV_4V4, Region.EU, LEGACY_ID_1),
-            new TeamLegacyUid(QueueType.LOTV_1V1, Region.US, LEGACY_ID_2)
+            new TeamLegacyUid(QueueType.LOTV_4V4, TeamType.ARRANGED, Region.EU, LEGACY_ID_1),
+            new TeamLegacyUid(QueueType.LOTV_1V1, TeamType.ARRANGED, Region.US, LEGACY_ID_2)
         );
         List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(legacyIds, true);
         assertEquals(4, teams.size());
@@ -279,7 +279,7 @@ public class LegacySearchIT
         assertEquals(BaseLeague.LeagueType.GOLD, state8.getLeague().getType());
 
         Set<TeamLegacyUid> legacyIds3 = Set.of(
-            new TeamLegacyUid(QueueType.LOTV_1V1, Region.US, LEGACY_ID_3)
+            new TeamLegacyUid(QueueType.LOTV_1V1, TeamType.ARRANGED, Region.US, LEGACY_ID_3)
         );
         List<LadderTeam> teams3 = ladderSearchDAO.findLegacyTeams(legacyIds3, true);
         assertEquals(1, teams3.size());

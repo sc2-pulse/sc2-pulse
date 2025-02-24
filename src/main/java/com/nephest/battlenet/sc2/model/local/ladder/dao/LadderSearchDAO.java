@@ -204,18 +204,22 @@ public class LadderSearchDAO
         "SELECT "
         + FIND_TEAM_MEMBERS_BASE
         + LADDER_SEARCH_TEAM_FROM
-        + "WHERE (team.queue_type, team.region, team.legacy_id) IN (:legacyUids) "
+        + "WHERE (team.queue_type, team.team_type, team.region, team.legacy_id) IN (:legacyUids) "
         + "ORDER BY team.season, team.id";
 
     private static final String FIND_FIRST_LEGACY_TEAM_MEMBERS =
         "WITH "
         + "team_filter AS "
         + "("
-            + "SELECT DISTINCT ON(team.queue_type, team.region, team.legacy_id) "
+            + "SELECT DISTINCT ON(team.queue_type, team.team_type, team.region, team.legacy_id) "
             + "id "
             + "FROM team "
-            + "WHERE (team.queue_type, team.region, team.legacy_id) IN (:legacyUids) "
-            + "ORDER BY team.queue_type DESC, team.region DESC, team.legacy_id DESC, team.season DESC"
+            + "WHERE (team.queue_type, team.team_type, team.region, team.legacy_id) IN (:legacyUids) "
+            + "ORDER BY team.queue_type DESC, "
+            + "team.team_type DESC, "
+            + "team.region DESC, "
+            + "team.legacy_id DESC, "
+            + "team.season DESC"
         + ") "
         + "SELECT "
         + FIND_TEAM_MEMBERS_BASE
@@ -542,6 +546,7 @@ public class LadderSearchDAO
         List<Object[]> legacyUids = ids.stream()
             .map(id->new Object[]{
                 conversionService.convert(id.getQueueType(), Integer.class),
+                conversionService.convert(id.getTeamType(), Integer.class),
                 conversionService.convert(id.getRegion(), Integer.class),
                 id.getId()
             })

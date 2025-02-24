@@ -675,8 +675,8 @@ CREATE TABLE "team"
         REFERENCES "population_state"("id")
         ON DELETE SET NULL ON UPDATE CASCADE,
 
-    CONSTRAINT "uq_team_queue_type_region_legacy_id_season"
-        UNIQUE ("queue_type", "region", "legacy_id", "season")
+    CONSTRAINT "uq_team_legacy_natural_id"
+        UNIQUE ("queue_type", "team_type", "region", "legacy_id", "season")
 
 )
 WITH (fillfactor = 50);

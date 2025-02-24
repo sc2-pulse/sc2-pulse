@@ -23,8 +23,7 @@ public class TeamTest
     public void testUniqueness()
     {
         BaseLeague league = new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED);
-        BaseLeague equalLeague = new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.RANDOM);
-        BaseLeague notEqualLeague = new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED);
+        BaseLeague equalLeague = new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED);
         Team team = new Team(0L, 0, Region.EU, league, FIRST, "0", 0,
             0L, 0, 0, 0,0, SC2Pulse.offsetDateTime());
         Team equalTeam = new Team(1L, 0, Region.EU, equalLeague, SECOND, "0", 1,
@@ -37,7 +36,12 @@ public class TeamTest
         {
             new Team(0L, 1, Region.EU, league, FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
             new Team(0L, 0, Region.US, league, FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
-            new Team(0L, 0, Region.EU, notEqualLeague, FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
+            new Team(0L, 0, Region.EU,
+                new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
+                FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
+            new Team(0L, 0, Region.EU,
+                new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.RANDOM),
+                FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
             new Team(0L, 0, Region.EU, league, FIRST, "1", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime())
         };
 
@@ -49,13 +53,13 @@ public class TeamTest
     {
         assertEquals
         (
-            Team.uid(QueueType.LOTV_1V1, Region.EU, "10", 1),
-            Team.uid(QueueType.LOTV_1V1, Region.EU, "10", 1)
+            Team.uid(QueueType.LOTV_1V1, TeamType.ARRANGED, Region.EU, "10", 1),
+            Team.uid(QueueType.LOTV_1V1, TeamType.ARRANGED, Region.EU, "10", 1)
         );
         assertNotEquals
         (
-            Team.uid(QueueType.LOTV_1V1, Region.EU, "10", 1),
-            Team.uid(QueueType.LOTV_1V1, Region.EU, "10", 2)
+            Team.uid(QueueType.LOTV_1V1, TeamType.ARRANGED, Region.EU, "10", 1),
+            Team.uid(QueueType.LOTV_1V1, TeamType.ARRANGED, Region.EU, "10", 2)
         );
     }
 
