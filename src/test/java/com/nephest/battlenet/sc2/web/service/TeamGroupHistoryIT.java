@@ -434,7 +434,8 @@ public class TeamGroupHistoryIT
 
                     StaticColumn.REGION, 2,
 
-                    StaticColumn.QUEUE, 201
+                    StaticColumn.QUEUE, 201,
+                    StaticColumn.TYPE, 0
                 ),
                 Map.ofEntries
                 (
@@ -477,7 +478,8 @@ public class TeamGroupHistoryIT
 
                     StaticColumn.REGION, 2,
 
-                    StaticColumn.QUEUE, 201
+                    StaticColumn.QUEUE, 201,
+                    StaticColumn.TYPE, 0
                 ),
                 Map.ofEntries
                 (
@@ -520,7 +522,8 @@ public class TeamGroupHistoryIT
 
                     StaticColumn.REGION, 2,
 
-                    StaticColumn.QUEUE, 201
+                    StaticColumn.QUEUE, 201,
+                    StaticColumn.TYPE, 0
                 ),
                 //current season team should be excluded. Snapshots only.
                 Map.ofEntries

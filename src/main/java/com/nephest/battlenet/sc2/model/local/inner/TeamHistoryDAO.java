@@ -216,6 +216,7 @@ public class TeamHistoryDAO
         ID("team_id", List.of()),
         REGION("region", List.of(StaticColumn.TEAM_JOIN)),
         QUEUE("queue_type", REGION.joins),
+        TYPE("team_type", REGION.joins),
         LEGACY_ID("legacy_id", REGION.joins),
         SEASON("season", REGION.joins);
 
