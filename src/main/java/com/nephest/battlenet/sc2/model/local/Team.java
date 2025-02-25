@@ -57,7 +57,10 @@ implements java.io.Serializable
 
     private OffsetDateTime lastPlayed;
 
-    public Team(){}
+    public Team()
+    {
+        this.league = new BaseLeague();
+    }
 
     public Team
     (

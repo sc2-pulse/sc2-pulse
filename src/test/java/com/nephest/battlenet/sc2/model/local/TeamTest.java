@@ -7,6 +7,7 @@ import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.FIRS
 import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.SECOND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -14,7 +15,11 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.TestUtil;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class TeamTest
 {
@@ -61,6 +66,18 @@ public class TeamTest
             Team.uid(QueueType.LOTV_1V1, TeamType.ARRANGED, Region.EU, "10", 1),
             Team.uid(QueueType.LOTV_1V1, TeamType.ARRANGED, Region.EU, "10", 2)
         );
+    }
+
+    public static Stream<Arguments> testNestedObjectInitialization()
+    {
+        return Stream.of(Arguments.of(new Team()));
+    }
+
+    @MethodSource
+    @ParameterizedTest
+    public void testNestedObjectInitialization(Team team)
+    {
+        assertNotNull(team.getLeague());
     }
 
 }
