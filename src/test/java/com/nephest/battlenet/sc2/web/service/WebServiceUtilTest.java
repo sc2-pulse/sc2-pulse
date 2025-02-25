@@ -1,12 +1,15 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.util.LogUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.assertj.core.api.Assertions;
@@ -61,6 +64,23 @@ public class WebServiceUtilTest
     public void testNotFoundIfNull(String val, int code)
     {
         assertEquals(code, WebServiceUtil.notFoundIfNull(val).getStatusCode().value());
+    }
+
+    @CsvSource
+    ({
+        "/, false",
+        ", false",
+        "/asd, false",
+        "/asd/qwe, false",
+        "/api, false",
+        "/api/, true"
+    })
+    @ParameterizedTest
+    public void testIsApiCall(String path, boolean expected)
+    {
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getPathInfo()).thenReturn(path);
+        assertEquals(expected, WebServiceUtil.isApiCall(req));
     }
 
 }

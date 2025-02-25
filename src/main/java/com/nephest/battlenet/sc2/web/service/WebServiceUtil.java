@@ -16,6 +16,7 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.TimeoutException;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
@@ -67,6 +68,7 @@ public class WebServiceUtil
     public static final String RATE_LIMIT_REMAINING_HEADER_NAME = "X-RateLimit-Remaining";
     public static final String RATE_LIMIT_RESET_HEADER_NAME = "X-RateLimit-Reset";
     public static final long RATE_LIMIT_RESET_TIMESTAMP_THRESHOLD = System.currentTimeMillis();
+    public static final String API_PATH_PREFIX = "/api/";
 
     private WebServiceUtil(){}
 
@@ -478,6 +480,11 @@ public class WebServiceUtil
         return t == null
             ? ResponseEntity.notFound().build()
             : ResponseEntity.ok(t);
+    }
+
+    public static boolean isApiCall(HttpServletRequest req)
+    {
+        return req.getPathInfo() != null && req.getPathInfo().startsWith(API_PATH_PREFIX);
     }
 
 }
