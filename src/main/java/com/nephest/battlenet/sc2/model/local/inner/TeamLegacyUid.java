@@ -12,6 +12,8 @@ import java.util.Objects;
 public class TeamLegacyUid
 {
 
+    public static final String DELIMITER = "-";
+
     private QueueType queueType;
     private TeamType teamType;
     private Region region;
@@ -40,6 +42,20 @@ public class TeamLegacyUid
         );
     }
 
+    public static TeamLegacyUid parse(String str)
+    {
+        String[] split = str.split(DELIMITER);
+        if(split.length != 4) throw new IllegalArgumentException("legacyUid must have 4 components");
+
+        return new TeamLegacyUid
+        (
+            QueueType.from(Integer.parseInt(split[0])),
+            TeamType.from(Integer.parseInt(split[1])),
+            Region.from(Integer.parseInt(split[2])),
+            split[3]
+        );
+    }
+
     @Override
     public boolean equals(Object o)
     {
@@ -55,6 +71,14 @@ public class TeamLegacyUid
     public int hashCode()
     {
         return Objects.hash(getQueueType(), getTeamType(), getRegion(), getId());
+    }
+
+    public String toPulseString()
+    {
+        return getQueueType().getId()
+            + DELIMITER + getTeamType().getId()
+            + DELIMITER + getRegion().getId()
+            + DELIMITER + getId();
     }
 
     public QueueType getQueueType()
