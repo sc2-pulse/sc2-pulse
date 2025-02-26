@@ -51,4 +51,33 @@ public class PlayerCharacterTest
         assertEquals(expected, PlayerCharacter.isFakeDiscriminator(discriminator));
     }
 
+    @Test
+    public void testTagAndDiscriminator()
+    {
+        PlayerCharacter c = new PlayerCharacter();
+        DiscriminatedTagTestUtil.testTagAndDiscriminator(c::setName, c::getDiscriminatedTag);
+    }
+
+    @Test
+    public void whenFakeName_thenTagAndDiscriminatorAreNull()
+    {
+        PlayerCharacter c = new PlayerCharacter();
+        DiscriminatedTagTestUtil.whenFakeName_thenTagAndDiscriminatorAreNull
+        (
+            c::setName,
+            c::getDiscriminatedTag
+        );
+    }
+
+    @Test
+    public void whenFakeDiscriminator_thenDiscriminatorIsNull()
+    {
+        PlayerCharacter c = new PlayerCharacter();
+        DiscriminatedTagTestUtil.whenFakeDiscriminator_thenDiscriminatorIsNull
+        (
+            c::setName,
+            c::getDiscriminatedTag
+        );
+    }
+
 }

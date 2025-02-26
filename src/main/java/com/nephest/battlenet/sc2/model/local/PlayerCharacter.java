@@ -1,28 +1,33 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.util.DiscriminatedTag;
 import jakarta.validation.constraints.NotNull;
 import java.util.Comparator;
 import java.util.Objects;
 
+@JsonIgnoreProperties(value={"discriminatedTag"}, allowGetters=true)
 public class PlayerCharacter
 extends BasePlayerCharacter
 implements java.io.Serializable, PlayerCharacterNaturalId
 {
 
-    private static final long serialVersionUID = 6L;
+    private static final long serialVersionUID = 7L;
 
     public static final Comparator<PlayerCharacter> NATURAL_ID_COMPARATOR =
         Comparator.comparing(PlayerCharacter::getRegion)
             .thenComparing(PlayerCharacter::getRealm)
             .thenComparing(PlayerCharacter::getBattlenetId);
     public static final int FAKE_DISCRIMINATOR = 1;
+    public static final String DISCRIMINATOR_DELIMITER = "#";
 
     private Long id;
 
@@ -34,6 +39,8 @@ implements java.io.Serializable, PlayerCharacterNaturalId
 
     @NotNull
     private Long battlenetId;
+
+    private transient DiscriminatedTag discriminatedTag;
 
     public PlayerCharacter(){}
 
@@ -144,6 +151,32 @@ implements java.io.Serializable, PlayerCharacterNaturalId
     public Long getBattlenetId()
     {
         return battlenetId;
+    }
+
+    @Override
+    public void setName(String name)
+    {
+        super.setName(name);
+        this.discriminatedTag = null;
+    }
+
+    private void parseDiscriminatedTag()
+    {
+        discriminatedTag = getName() == null || Account.isFakeBattleTag(getName())
+            ? DiscriminatedTag.EMPTY
+            : DiscriminatedTag.parse
+            (
+                getName(),
+                DiscriminatedTag.DEFAULT_DELIMITER,
+                i->isFakeDiscriminator(i) ? null : i
+            );
+    }
+
+    @JsonUnwrapped
+    public DiscriminatedTag getDiscriminatedTag()
+    {
+        if(discriminatedTag == null) parseDiscriminatedTag();
+        return discriminatedTag;
     }
 
 }

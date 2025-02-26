@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -35,6 +35,24 @@ public class AccountTest
         assertEquals(BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME, account.getFakeOrRealBattleTag());
         account.setHidden(false);
         assertEquals(account.getBattleTag(), account.getFakeOrRealBattleTag());
+    }
+
+    @Test
+    public void testTagAndDiscriminator()
+    {
+        Account a = new Account();
+        DiscriminatedTagTestUtil.testTagAndDiscriminator(a::setBattleTag, a::getDiscriminatedTag);
+    }
+
+    @Test
+    public void whenFakeBattleTag_thenTagAndDiscriminatorAreNull()
+    {
+        Account a = new Account();
+        DiscriminatedTagTestUtil.whenFakeName_thenTagAndDiscriminatorAreNull
+        (
+            a::setBattleTag,
+            a::getDiscriminatedTag
+        );
     }
 
 }
