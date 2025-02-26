@@ -3,6 +3,9 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.nephest.battlenet.sc2.config.convert.jackson.TeamLegacyUidToStringConverter;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseTeam;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -10,12 +13,18 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.inner.DelegatedTeamLegacyUid;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import jakarta.validation.constraints.NotNull;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.Objects;
 
+@JsonIgnoreProperties(value={"legacyUid"}, allowGetters=true)
 public class Team
 extends BaseTeam
 implements java.io.Serializable
@@ -56,6 +65,8 @@ implements java.io.Serializable
     private Integer leagueRank;
 
     private OffsetDateTime lastPlayed;
+
+    private transient TeamLegacyUid legacyUid = new DelegatedTeamLegacyUid(this);
 
     public Team()
     {
@@ -178,6 +189,14 @@ implements java.io.Serializable
             Team.class.getSimpleName(),
             getSeason(), getRegion().toString(), getQueueType(), getTeamType(), getLegacyId()
         );
+    }
+
+    @Serial
+    private void readObject(ObjectInputStream in)
+    throws IOException, ClassNotFoundException
+    {
+        in.defaultReadObject();
+        legacyUid = new DelegatedTeamLegacyUid(this);
     }
 
     public void setId(Long id)
@@ -318,6 +337,12 @@ implements java.io.Serializable
     public void setLastPlayed(OffsetDateTime lastPlayed)
     {
         this.lastPlayed = lastPlayed;
+    }
+
+    @JsonSerialize(converter = TeamLegacyUidToStringConverter.class)
+    public TeamLegacyUid getLegacyUid()
+    {
+        return legacyUid;
     }
 
 }
