@@ -71,13 +71,13 @@ public class TeamHistoryDAO
         RATING("rating"),
         GAMES("games"),
         WINS("wins"),
-        LEAGUE("league", true),
-        TIER("tier", true),
+        LEAGUE_TYPE("league", true),
+        TIER_TYPE("tier", true),
         DIVISION_ID("division_id"),
-        RANK_GLOBAL("global_rank"),
-        RANK_REGION("region_rank"),
-        RANK_LEAGUE("league_rank"),
-        COUNT_GLOBAL
+        GLOBAL_RANK("global_rank"),
+        REGION_RANK("region_rank"),
+        LEAGUE_RANK("league_rank"),
+        GLOBAL_TEAM_COUNT
         (
             "global_team_count", "global_team_count",
             List.of
@@ -88,8 +88,8 @@ public class TeamHistoryDAO
                 """
             )
         ),
-        COUNT_REGION("region_team_count", "team_state.region_team_count"),
-        COUNT_LEAGUE("league_team_count", "league_team_count", COUNT_GLOBAL.joins),
+        REGION_TEAM_COUNT("region_team_count", "team_state.region_team_count"),
+        LEAGUE_TEAM_COUNT("league_team_count", "league_team_count", GLOBAL_TEAM_COUNT.joins),
 
         ID("id", true),
         SEASON("season", true);
@@ -216,8 +216,8 @@ public class TeamHistoryDAO
 
         ID("team_id", List.of()),
         REGION("region", List.of(StaticColumn.TEAM_JOIN)),
-        QUEUE("queue_type", REGION.joins),
-        TYPE("team_type", REGION.joins),
+        QUEUE_TYPE("queue_type", REGION.joins),
+        TEAM_TYPE("team_type", REGION.joins),
         LEGACY_ID("legacy_id", REGION.joins),
         SEASON("season", REGION.joins);
 
@@ -288,15 +288,15 @@ public class TeamHistoryDAO
             EnumSet.of
             (
                 StaticColumn.REGION,
-                StaticColumn.QUEUE,
-                StaticColumn.TYPE,
+                StaticColumn.QUEUE_TYPE,
+                StaticColumn.TEAM_TYPE,
                 StaticColumn.LEGACY_ID
             ),
             EnumSet.of
             (
                 StaticColumn.REGION,
-                StaticColumn.QUEUE,
-                StaticColumn.TYPE,
+                StaticColumn.QUEUE_TYPE,
+                StaticColumn.TEAM_TYPE,
                 StaticColumn.LEGACY_ID,
                 StaticColumn.SEASON
             )
@@ -946,12 +946,12 @@ public class TeamHistoryDAO
         (
             sc2StatsConversionService.convert
             (
-                teamHistory.staticData().get(StaticColumn.QUEUE),
+                teamHistory.staticData().get(StaticColumn.QUEUE_TYPE),
                 QueueType.class
             ),
             sc2StatsConversionService.convert
             (
-                teamHistory.staticData().get(StaticColumn.TYPE),
+                teamHistory.staticData().get(StaticColumn.TEAM_TYPE),
                 TeamType.class
             ),
             sc2StatsConversionService.convert
@@ -1064,8 +1064,8 @@ public class TeamHistoryDAO
 
     private static boolean shouldExpandDivisions(HistoryParameters parameters)
     {
-        return parameters.historyColumns().contains(HistoryColumn.TIER)
-            || parameters.historyColumns().contains(HistoryColumn.LEAGUE);
+        return parameters.historyColumns().contains(HistoryColumn.TIER_TYPE)
+            || parameters.historyColumns().contains(HistoryColumn.LEAGUE_TYPE);
     }
 
     @SuppressWarnings("unchecked")
@@ -1092,8 +1092,8 @@ public class TeamHistoryDAO
         )
             .stream()
             .collect(Collectors.toMap(LeagueTier::getId, Function.identity()));
-        boolean expandTiers = parameters.historyColumns().contains(HistoryColumn.TIER);
-        boolean expandLeagues = parameters.historyColumns().contains(HistoryColumn.LEAGUE);
+        boolean expandTiers = parameters.historyColumns().contains(HistoryColumn.TIER_TYPE);
+        boolean expandLeagues = parameters.historyColumns().contains(HistoryColumn.LEAGUE_TYPE);
 
         Map<Integer, League> leagues = expandLeagues
             ? leagueDAO.find
@@ -1128,8 +1128,8 @@ public class TeamHistoryDAO
                 }
 
             }
-            if(expandTiers) h.history().put(HistoryColumn.TIER, historyTiers);
-            if(expandLeagues) h.history().put(HistoryColumn.LEAGUE, historyLeagues);
+            if(expandTiers) h.history().put(HistoryColumn.TIER_TYPE, historyTiers);
+            if(expandLeagues) h.history().put(HistoryColumn.LEAGUE_TYPE, historyLeagues);
         });
     }
 

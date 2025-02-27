@@ -299,8 +299,8 @@ public class TeamGroupHistoryIT
         (
             Stream.of
             (
-                StaticColumn.QUEUE,
-                StaticColumn.TYPE,
+                StaticColumn.QUEUE_TYPE,
+                StaticColumn.TEAM_TYPE,
                 StaticColumn.REGION,
                 StaticColumn.LEGACY_ID
             )
@@ -440,8 +440,8 @@ public class TeamGroupHistoryIT
 
                     StaticColumn.REGION, 2,
 
-                    StaticColumn.QUEUE, 201,
-                    StaticColumn.TYPE, 0
+                    StaticColumn.QUEUE_TYPE, 201,
+                    StaticColumn.TEAM_TYPE, 0
                 ),
                 Map.ofEntries
                 (
@@ -460,15 +460,15 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.RATING, List.of(0, 0, 0)),
                     entry(HistoryColumn.WINS, Stream.of(0, 0, 0).toList()),
                     entry(HistoryColumn.GAMES, List.of(3, 3, 3)),
-                    entry(HistoryColumn.LEAGUE, List.of(0, 0, 0)),
-                    entry(HistoryColumn.TIER, List.of(0, 0, 0)),
+                    entry(HistoryColumn.LEAGUE_TYPE, List.of(0, 0, 0)),
+                    entry(HistoryColumn.TIER_TYPE, List.of(0, 0, 0)),
 
-                    entry(HistoryColumn.RANK_GLOBAL, Stream.of(null, 12, 12).toList()),
-                    entry(HistoryColumn.COUNT_GLOBAL, Stream.of(null, 12, 12).toList()),
-                    entry(HistoryColumn.RANK_REGION, Stream.of(null, 6, 6).toList()),
-                    entry(HistoryColumn.COUNT_REGION, Stream.of(null, 6, 6).toList()),
-                    entry(HistoryColumn.RANK_LEAGUE, Stream.of(null, 3, 3).toList()),
-                    entry(HistoryColumn.COUNT_LEAGUE, Stream.of(null, 3, 3).toList()),
+                    entry(HistoryColumn.GLOBAL_RANK, Stream.of(null, 12, 12).toList()),
+                    entry(HistoryColumn.GLOBAL_TEAM_COUNT, Stream.of(null, 12, 12).toList()),
+                    entry(HistoryColumn.REGION_RANK, Stream.of(null, 6, 6).toList()),
+                    entry(HistoryColumn.REGION_TEAM_COUNT, Stream.of(null, 6, 6).toList()),
+                    entry(HistoryColumn.LEAGUE_RANK, Stream.of(null, 3, 3).toList()),
+                    entry(HistoryColumn.LEAGUE_TEAM_COUNT, Stream.of(null, 3, 3).toList()),
 
                     entry(HistoryColumn.ID, List.of(1L, 1L, 1L)),
                     entry(HistoryColumn.SEASON, List.of(1, 1, 1))
@@ -484,8 +484,8 @@ public class TeamGroupHistoryIT
 
                     StaticColumn.REGION, 2,
 
-                    StaticColumn.QUEUE, 201,
-                    StaticColumn.TYPE, 0
+                    StaticColumn.QUEUE_TYPE, 201,
+                    StaticColumn.TEAM_TYPE, 0
                 ),
                 Map.ofEntries
                 (
@@ -504,15 +504,15 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.RATING, List.of(12, 112, 113)),
                     entry(HistoryColumn.WINS, List.of(12, 13, 14)),
                     entry(HistoryColumn.GAMES, List.of(39, 42, 45)),
-                    entry(HistoryColumn.LEAGUE, List.of(0, 5, 1)),
-                    entry(HistoryColumn.TIER, List.of(0, 1, 0)),
+                    entry(HistoryColumn.LEAGUE_TYPE, List.of(0, 5, 1)),
+                    entry(HistoryColumn.TIER_TYPE, List.of(0, 1, 0)),
 
-                    entry(HistoryColumn.RANK_GLOBAL, Stream.of(null, 1, 2).toList()),
-                    entry(HistoryColumn.COUNT_GLOBAL, Stream.of(null, 12, 13).toList()),
-                    entry(HistoryColumn.RANK_REGION, Stream.of(null, 1, 2).toList()),
-                    entry(HistoryColumn.COUNT_REGION, Stream.of(null, 6, 7).toList()),
-                    entry(HistoryColumn.RANK_LEAGUE, Stream.of(null, 1, 2).toList()),
-                    entry(HistoryColumn.COUNT_LEAGUE, Stream.of(null, 1, 4).toList()),
+                    entry(HistoryColumn.GLOBAL_RANK, Stream.of(null, 1, 2).toList()),
+                    entry(HistoryColumn.GLOBAL_TEAM_COUNT, Stream.of(null, 12, 13).toList()),
+                    entry(HistoryColumn.REGION_RANK, Stream.of(null, 1, 2).toList()),
+                    entry(HistoryColumn.REGION_TEAM_COUNT, Stream.of(null, 6, 7).toList()),
+                    entry(HistoryColumn.LEAGUE_RANK, Stream.of(null, 1, 2).toList()),
+                    entry(HistoryColumn.LEAGUE_TEAM_COUNT, Stream.of(null, 1, 4).toList()),
 
                     entry(HistoryColumn.ID, List.of(13L, 13L, 13L)),
                     entry(HistoryColumn.SEASON, List.of(2, 2, 2))
@@ -528,8 +528,8 @@ public class TeamGroupHistoryIT
 
                     StaticColumn.REGION, 2,
 
-                    StaticColumn.QUEUE, 201,
-                    StaticColumn.TYPE, 0
+                    StaticColumn.QUEUE_TYPE, 201,
+                    StaticColumn.TEAM_TYPE, 0
                 ),
                 //current season team should be excluded. Snapshots only.
                 Map.ofEntries
@@ -548,15 +548,15 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.RATING, List.of(24, 24)),
                     entry(HistoryColumn.WINS, Stream.of(24, 24).toList()),
                     entry(HistoryColumn.GAMES, List.of(75, 75)),
-                    entry(HistoryColumn.LEAGUE, List.of(0, 0)),
-                    entry(HistoryColumn.TIER, List.of(0, 0)),
+                    entry(HistoryColumn.LEAGUE_TYPE, List.of(0, 0)),
+                    entry(HistoryColumn.TIER_TYPE, List.of(0, 0)),
 
-                    entry(HistoryColumn.RANK_GLOBAL, Stream.of(null, 12).toList()),
-                    entry(HistoryColumn.COUNT_GLOBAL, Stream.of(null, 12).toList()),
-                    entry(HistoryColumn.RANK_REGION, Stream.of(null, 6).toList()),
-                    entry(HistoryColumn.COUNT_REGION, Stream.of(null, 6).toList()),
-                    entry(HistoryColumn.RANK_LEAGUE, Stream.of(null, 3).toList()),
-                    entry(HistoryColumn.COUNT_LEAGUE, Stream.of(null, 3).toList()),
+                    entry(HistoryColumn.GLOBAL_RANK, Stream.of(null, 12).toList()),
+                    entry(HistoryColumn.GLOBAL_TEAM_COUNT, Stream.of(null, 12).toList()),
+                    entry(HistoryColumn.REGION_RANK, Stream.of(null, 6).toList()),
+                    entry(HistoryColumn.REGION_TEAM_COUNT, Stream.of(null, 6).toList()),
+                    entry(HistoryColumn.LEAGUE_RANK, Stream.of(null, 3).toList()),
+                    entry(HistoryColumn.LEAGUE_TEAM_COUNT, Stream.of(null, 3).toList()),
 
                     entry(HistoryColumn.ID, List.of(25L, 25L)),
                     entry(HistoryColumn.SEASON, List.of(3, 3))
