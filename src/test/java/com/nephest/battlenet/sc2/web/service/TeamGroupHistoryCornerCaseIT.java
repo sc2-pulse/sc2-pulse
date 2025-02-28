@@ -186,7 +186,7 @@ public class TeamGroupHistoryCornerCaseIT
         );
 
         jdbcTemplate.update("DELETE FROM team_state");
-        jdbcTemplate.update("UPDATE team SET last_played = null, legacy_id = 200");
+        jdbcTemplate.update("UPDATE team SET last_played = null, legacy_id = '1.200.1'");
         //team starts with 3 games, but it's counted as 1 game because it's the first snapshot
         teamStateDAO.takeSnapshot(List.of(1L), seasons.get(0).getStart());
         //nothing has changed, 0 games
@@ -229,7 +229,7 @@ public class TeamGroupHistoryCornerCaseIT
                             QueueType.LOTV_1V1,
                             TeamType.ARRANGED,
                             Region.EU,
-                            "200"
+                            "1.200.1"
                         ),
                         String.class
                     )

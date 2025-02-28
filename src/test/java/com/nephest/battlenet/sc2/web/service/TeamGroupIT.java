@@ -159,14 +159,14 @@ public class TeamGroupIT
                 league,
                 BaseLeagueTier.LeagueTierType.FIRST,
                 i <= 1
-                    ? "0"
+                    ? "1.0.1"
                     : i <= TeamGroupArgumentResolver.TEAMS_MAX + 1 - 4
-                        ? "1"
+                        ? "1.1.1"
                         : i == TeamGroupArgumentResolver.TEAMS_MAX + 1 - 3
-                            ? "2"
+                            ? "1.2.1"
                             : i == TeamGroupArgumentResolver.TEAMS_MAX + 1 - 2
-                                ? "3"
-                                : "4",
+                                ? "1.3.1"
+                                : "1.4.1",
                 i + 1,
                 1L, 1, 1, 1, 1,
                 null,
@@ -224,7 +224,7 @@ public class TeamGroupIT
                         QueueType.LOTV_1V1,
                         TeamType.ARRANGED,
                         Region.EU,
-                        "0"
+                        "1.0.1"
                     ),
                     String.class
                 ),
@@ -235,7 +235,7 @@ public class TeamGroupIT
                         QueueType.LOTV_1V1,
                         TeamType.ARRANGED,
                         Region.EU,
-                        "1"
+                        "1.1.1"
                     ),
                     String.class
                 )
@@ -275,7 +275,7 @@ public class TeamGroupIT
                         QueueType.LOTV_1V1,
                         TeamType.ARRANGED,
                         Region.EU,
-                        "0"
+                        "1.0.1"
                     ),
                     String.class
                 )
@@ -329,7 +329,7 @@ public class TeamGroupIT
                 QueueType.LOTV_1V1,
                 TeamType.ARRANGED,
                 Region.EU,
-                String.valueOf(l))
+                "1." + l + ".1")
             )
             .map(uid->conversionService.convert(uid, String.class))
             .toArray(String[]::new);
@@ -353,7 +353,7 @@ public class TeamGroupIT
                         QueueType.LOTV_1V1,
                         TeamType.ARRANGED,
                         Region.EU,
-                        "0"
+                        "1.0.1"
                     ),
                     String.class
                 ),
@@ -364,7 +364,7 @@ public class TeamGroupIT
                         QueueType.LOTV_1V1,
                         TeamType.ARRANGED,
                         Region.EU,
-                        "1"
+                        "1.1.1"
                     ),
                     String.class
                 )

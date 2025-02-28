@@ -204,10 +204,10 @@ public class TeamGroupHistoryIT
         );
 
         jdbcTemplate.update("DELETE FROM team_state");
-        jdbcTemplate.update("UPDATE team SET legacy_id = '11' WHERE id IN(1, 13, 25)");
+        jdbcTemplate.update("UPDATE team SET legacy_id = '1.11.1' WHERE id IN(1, 13, 25)");
         jdbcTemplate.update("UPDATE team SET legacy_id = '12' WHERE id IN(2, 14, 26)");
         jdbcTemplate.update("UPDATE team SET legacy_id = '13' WHERE id IN(3, 15, 27)");
-        jdbcTemplate.update("UPDATE team SET last_played = null WHERE legacy_id = '11'");
+        jdbcTemplate.update("UPDATE team SET last_played = null WHERE legacy_id = '1.11.1'");
 
         //take team snapshots
         for(int i = 0; i < seasons.size(); i++)
@@ -230,7 +230,7 @@ public class TeamGroupHistoryIT
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.SECOND,
-            "11",
+            "1.11.1",
             15,
             112L, 13, 14, 15, 0,
             null
@@ -259,7 +259,7 @@ public class TeamGroupHistoryIT
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            "11",
+            "1.11.1",
             7,
             113L, 14, 15, 16, 0,
             null
@@ -436,7 +436,7 @@ public class TeamGroupHistoryIT
                 (
                     StaticColumn.ID, 1L,
                     StaticColumn.SEASON, 1,
-                    StaticColumn.LEGACY_ID, "11",
+                    StaticColumn.LEGACY_ID, "1.11.1",
 
                     StaticColumn.REGION, 2,
 
@@ -480,7 +480,7 @@ public class TeamGroupHistoryIT
                 (
                     StaticColumn.ID, 13L,
                     StaticColumn.SEASON, 2,
-                    StaticColumn.LEGACY_ID, "11",
+                    StaticColumn.LEGACY_ID, "1.11.1",
 
                     StaticColumn.REGION, 2,
 
@@ -524,7 +524,7 @@ public class TeamGroupHistoryIT
                 (
                     StaticColumn.ID, 25L,
                     StaticColumn.SEASON, 3,
-                    StaticColumn.LEGACY_ID, "11",
+                    StaticColumn.LEGACY_ID, "1.11.1",
 
                     StaticColumn.REGION, 2,
 
@@ -583,7 +583,7 @@ public class TeamGroupHistoryIT
                             QueueType.LOTV_1V1,
                             TeamType.ARRANGED,
                             Region.EU,
-                            "11"
+                            "1.11.1"
                         ),
                         String.class
                     )
@@ -734,7 +734,7 @@ public class TeamGroupHistoryIT
                             QueueType.LOTV_1V1,
                             TeamType.ARRANGED,
                             Region.EU,
-                            "11"
+                            "1.11.1"
                         ),
                         String.class
                     )
@@ -793,7 +793,7 @@ public class TeamGroupHistoryIT
                             QueueType.LOTV_1V1,
                             TeamType.ARRANGED,
                             Region.EU,
-                            "11"
+                            "1.11.1"
                         ),
                         String.class
                     )
@@ -862,7 +862,7 @@ public class TeamGroupHistoryIT
                             QueueType.LOTV_1V1,
                             TeamType.ARRANGED,
                             Region.EU,
-                            "11"
+                            "1.11.1"
                         ),
                         String.class
                     )
@@ -1008,7 +1008,7 @@ public class TeamGroupHistoryIT
                             QueueType.LOTV_1V1,
                             TeamType.ARRANGED,
                             Region.EU,
-                            "11"
+                            "1.11.1"
                         ),
                         String.class
                     )
@@ -1080,7 +1080,7 @@ public class TeamGroupHistoryIT
                             QueueType.LOTV_1V1,
                             TeamType.ARRANGED,
                             Region.EU,
-                            "11"
+                            "1.11.1"
                         ),
                         String.class
                     )
@@ -1137,7 +1137,7 @@ public class TeamGroupHistoryIT
                             QueueType.LOTV_1V1,
                             TeamType.ARRANGED,
                             Region.EU,
-                            "11"
+                            "1.11.1"
                         ),
                         String.class
                     )
@@ -1196,7 +1196,7 @@ public class TeamGroupHistoryIT
                             QueueType.LOTV_1V1,
                             TeamType.ARRANGED,
                             Region.EU,
-                            "11"
+                            "1.11.1"
                         ),
                         String.class
                     )
