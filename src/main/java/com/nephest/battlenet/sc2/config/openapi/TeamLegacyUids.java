@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.openapi;
@@ -19,8 +19,11 @@ import java.lang.annotation.Target;
 @Target({ElementType.PARAMETER})
 @Parameter
 (
-    description = "queueId-regionId-legacyId",
-    array = @ArraySchema(schema = @Schema(type = "string", pattern = "[0-9]{3}-[0-9]-[0-9]+"))
+    description = "queueId-teamTypeId-regionId-legacyId",
+    array = @ArraySchema
+    (
+        schema = @Schema(type = "string", pattern = "[0-9]{3}-[0-9]-[0-9]-.+")
+    )
 )
 public @interface TeamLegacyUids
 {}

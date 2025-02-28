@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller.group;
@@ -29,11 +29,13 @@ import java.lang.annotation.Target;
     ),
     @Parameter
     (
-        in = ParameterIn.QUERY, name = "legacyUid", description = "queueId-regionId-legacyId",
+        in = ParameterIn.QUERY,
+        name = "legacyUid",
+        description = "queueId-teamTypeId-regionId-legacyId",
         array = @ArraySchema
         (
             maxItems = TeamGroupArgumentResolver.LEGACY_UIDS_MAX,
-            schema = @Schema(type = "string", pattern = "[0-9]{3}-[0-9]-[0-9]+")
+            schema = @Schema(type = "string", pattern = "[0-9]{3}-[0-9]-[0-9]-.+")
         )
     ),
     @Parameter
