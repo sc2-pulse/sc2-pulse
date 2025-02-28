@@ -69,7 +69,7 @@ public class WebServiceUtilTest
     @CsvSource
     ({
         "/, false",
-        ", false",
+        "'', false",
         "/asd, false",
         "/asd/qwe, false",
         "/api, false",
@@ -79,7 +79,12 @@ public class WebServiceUtilTest
     public void testIsApiCall(String path, boolean expected)
     {
         HttpServletRequest req = mock(HttpServletRequest.class);
-        when(req.getPathInfo()).thenReturn(path);
+        when(req.getContextPath()).thenReturn("");
+        when(req.getServletPath()).thenReturn(path);
+        assertEquals(expected, WebServiceUtil.isApiCall(req));
+
+        String contextPath = "/ctx";
+        when(req.getContextPath()).thenReturn(contextPath);
         assertEquals(expected, WebServiceUtil.isApiCall(req));
     }
 

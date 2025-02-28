@@ -484,7 +484,7 @@ public class WebServiceUtil
 
     public static boolean isApiCall(HttpServletRequest req)
     {
-        return req.getPathInfo() != null && req.getPathInfo().startsWith(API_PATH_PREFIX);
+        return req.getServletPath().startsWith(API_PATH_PREFIX);
     }
 
 }

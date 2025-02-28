@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 public class GoneFilterIT
 {
 
+    public static final String CONTEXT_PATH = "/ctx";
     public static final String OLD_LEGACY_UID = "201-1-12345";
 
     @Autowired
@@ -41,7 +42,9 @@ public class GoneFilterIT
     {
         mvc.perform
         (
-            get(path)
+            get(CONTEXT_PATH + path)
+                .contextPath(CONTEXT_PATH)
+                .servletPath(path.equals("/") ? "" : path)
                 .queryParam(LEGACY_UID_PARAMETER_NAME, OLD_LEGACY_UID)
                 .contentType(MediaType.TEXT_HTML)
         )
@@ -53,9 +56,12 @@ public class GoneFilterIT
     public void whenOldLegacyUidParameterButApiPath_thenBadRequest()
     throws Exception
     {
+        String path = "/api/team/group/flat";
         mvc.perform
         (
-            get("/api/team/group/flat")
+            get(CONTEXT_PATH + path)
+                .contextPath(CONTEXT_PATH)
+                .servletPath(path)
                 .queryParam(LEGACY_UID_PARAMETER_NAME, OLD_LEGACY_UID)
                 .contentType(MediaType.APPLICATION_JSON)
         )
