@@ -35,7 +35,11 @@ import java.lang.annotation.Target;
         array = @ArraySchema
         (
             maxItems = TeamGroupArgumentResolver.LEGACY_UIDS_MAX,
-            schema = @Schema(type = "string", pattern = "[0-9]{3}-[0-9]-[0-9]-.+")
+            schema = @Schema
+            (
+                type = "string",
+                pattern = "^(201|202|203|204|206)-(0|1)-(1|2|3|5)-.+$"
+            )
         )
     ),
     @Parameter
