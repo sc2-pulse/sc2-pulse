@@ -196,7 +196,7 @@ public class LadderSearchIndependentIT
             new ClanMember(character1.getId(), clan.getId()),
             new ClanMember(character2.getId(), clan.getId())
         ));
-        Team team1 = new Team
+        Team team1 = Team.joined
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
@@ -211,7 +211,7 @@ public class LadderSearchIndependentIT
             100, 0, 0, 0
         );
         teamMemberDAO.create(member1);
-        Team team1_2 = new Team
+        Team team1_2 = Team.joined
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
@@ -226,7 +226,7 @@ public class LadderSearchIndependentIT
             99, 0, 0, 0
         );
         teamMemberDAO.create(member1_2);
-        Team team1_3 = new Team
+        Team team1_3 = Team.joined
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
@@ -241,7 +241,7 @@ public class LadderSearchIndependentIT
             0, 50, 0, 0
         );
         teamMemberDAO.create(member1_3);
-        Team team2 = new Team
+        Team team2 = Team.joined
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
@@ -256,7 +256,7 @@ public class LadderSearchIndependentIT
             0, 100, 0, 0
         );
         teamMemberDAO.create(member2);
-        Team team3 = new Team
+        Team team3 = Team.joined
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
@@ -272,7 +272,7 @@ public class LadderSearchIndependentIT
         );
         teamMemberDAO.create(member3);
 
-        Team team3_2 = new Team
+        Team team3_2 = Team.joined
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
@@ -469,7 +469,7 @@ public class LadderSearchIndependentIT
         PlayerCharacter[] characters = new PlayerCharacter[]{character};
 
         //top mmr, but old season
-        Team team1 = new Team
+        Team team1 = Team.joined
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
@@ -478,7 +478,7 @@ public class LadderSearchIndependentIT
             SC2Pulse.offsetDateTime()
         );
         //2nd mmr, but prev season
-        Team team2 = new Team
+        Team team2 = Team.joined
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
@@ -487,7 +487,7 @@ public class LadderSearchIndependentIT
             SC2Pulse.offsetDateTime()
         );
         //3rd mmr, picked because it's the latest team
-        Team team3 = new Team
+        Team team3 = Team.joined
         (
             null, season3.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE,

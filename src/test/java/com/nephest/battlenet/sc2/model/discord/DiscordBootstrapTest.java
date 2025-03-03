@@ -148,7 +148,7 @@ public class DiscordBootstrapTest
             + DiscordBootstrap.SC2_REVEALED_TAG + "]"
             + "(<characterUrlTemplate#player-stats-mmr>)\n"
             + "\uD83C\uDDEA\uD83C\uDDFA bronze ` 123` 10";
-        LadderTeam team = new LadderTeam
+        LadderTeam team = LadderTeam.joined
         (
             1L, 1, Region.EU,
             new BaseLeague

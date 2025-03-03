@@ -170,7 +170,7 @@ public class LegacySearchIT
     {
         Division division1 = divisionDAO.findListByLadder(season, region,
             league, queueType, TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST).get(0);
-        Team team1 = new Team
+        Team team1 = Team.joined
         (
             null, season, region,
             new BaseLeague(league, queueType, TeamType.ARRANGED), BaseLeagueTier.LeagueTierType.FIRST,

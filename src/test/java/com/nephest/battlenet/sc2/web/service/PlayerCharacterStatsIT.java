@@ -247,7 +247,7 @@ public class PlayerCharacterStatsIT
         PlayerCharacter character
     )
     {
-        Team team = new Team
+        Team team = Team.joined
         (
             null,
             season.getBattlenetId(), region,

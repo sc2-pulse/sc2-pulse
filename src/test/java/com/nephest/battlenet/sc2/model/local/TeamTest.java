@@ -30,9 +30,9 @@ public class TeamTest
     {
         BaseLeague league = new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED);
         BaseLeague equalLeague = new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED);
-        Team team = new Team(0L, 0, Region.EU, league, FIRST, "0", 0,
+        Team team = Team.joined(0L, 0, Region.EU, league, FIRST, "0", 0,
             0L, 0, 0, 0,0, SC2Pulse.offsetDateTime());
-        Team equalTeam = new Team(1L, 0, Region.EU, equalLeague, SECOND, "0", 1,
+        Team equalTeam = Team.joined(1L, 0, Region.EU, equalLeague, SECOND, "0", 1,
             1L, 1, 1, 1, 1, SC2Pulse.offsetDateTime());
         equalTeam.setGlobalRank(-1);
         equalTeam.setRegionRank(-1);
@@ -40,15 +40,15 @@ public class TeamTest
 
         Team[] notEqualTeams = new Team[]
         {
-            new Team(0L, 1, Region.EU, league, FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
-            new Team(0L, 0, Region.US, league, FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
-            new Team(0L, 0, Region.EU,
+            Team.joined(0L, 1, Region.EU, league, FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
+            Team.joined(0L, 0, Region.US, league, FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
+            Team.joined(0L, 0, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
                 FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
-            new Team(0L, 0, Region.EU,
+            Team.joined(0L, 0, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.RANDOM),
                 FIRST, "0", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime()),
-            new Team(0L, 0, Region.EU, league, FIRST, "1", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime())
+            Team.joined(0L, 0, Region.EU, league, FIRST, "1", 0, 0L, 0, 0, 0,0, SC2Pulse.offsetDateTime())
         };
 
         TestUtil.testUniqueness(team, equalTeam, (Object[]) notEqualTeams);

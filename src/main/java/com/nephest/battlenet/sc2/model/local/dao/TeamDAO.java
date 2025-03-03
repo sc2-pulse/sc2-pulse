@@ -84,7 +84,8 @@ implements BasicEntityOperations<Team>
         + "team.global_rank AS \"team.global_rank\", "
         + "team.region_rank AS \"team.region_rank\", "
         + "team.league_rank AS \"team.league_rank\", "
-        + "team.last_played AS \"team.last_played\" ";
+        + "team.last_played AS \"team.last_played\", "
+        + "team.joined AS \"team.joined\" ";
 
     private static final String CREATE_TEMPLATE = "INSERT INTO team "
         + "("
@@ -130,7 +131,7 @@ implements BasicEntityOperations<Team>
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, last_played, "
+                + "rating, points, wins, losses, ties, joined, last_played, "
                 + "tier_type "
             + ") "
                 + "USING(queue_type, team_type, region, legacy_id, season) "
@@ -147,12 +148,13 @@ implements BasicEntityOperations<Team>
             + "wins=v.wins, "
             + "losses=v.losses, "
             + "ties=v.ties, "
-            + "last_played=v.last_played::timestamp with time zone "
+            + "last_played=v.last_played::timestamp with time zone, "
+            + "joined=v.joined "
             + "FROM vals v"
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, last_played, "
+                + "rating, points, wins, losses, ties, joined, last_played, "
                 + "tier_type "
             + ") "
             + "INNER JOIN team t ON "
@@ -191,6 +193,11 @@ implements BasicEntityOperations<Team>
                     + "EXTRACT(epoch FROM NOW() - previous_state.timestamp) /  "
                     + VALID_LADDER_RESET_DURATION.toSeconds()
             + ") "
+            + "AND "
+            + "( "
+                + "team.joined IS NULL "
+                + "OR team.joined <= v.joined "
+            + ") "
             + "RETURNING " + STD_SELECT
         + "), "
         + "missing AS "
@@ -198,13 +205,13 @@ implements BasicEntityOperations<Team>
             + "SELECT "
             + "v.legacy_id, v.division_id, "
             + "v.season, v.region, v.league_type, v.queue_type, v.team_type, "
-            + "v.rating, v.points, v.wins, v.losses, v.ties, v.tier_type::smallint, "
+            + "v.rating, v.points, v.wins, v.losses, v.ties, joined, v.tier_type::smallint, "
             + "v.last_played::timestamp with time zone "
             + "FROM vals v"
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, last_played, "
+                + "rating, points, wins, losses, ties, joined, last_played, "
                 + "tier_type "
             + ") "
             + "LEFT JOIN existing ON "
@@ -221,7 +228,7 @@ implements BasicEntityOperations<Team>
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, tier_type, "
+                + "rating, points, wins, losses, ties, joined, tier_type, "
                 + "last_played "
             + ") "
             + "SELECT * FROM missing "
@@ -472,7 +479,8 @@ implements BasicEntityOperations<Team>
                 rs.getLong("team.rating"),
                 rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
                 rs.getInt("team.points"),
-                rs.getObject("team.last_played", OffsetDateTime.class)
+                rs.getObject("team.last_played", OffsetDateTime.class),
+                rs.getObject("team.joined", OffsetDateTime.class)
             );
             team.setGlobalRank(DAOUtils.getInteger(rs, "team.global_rank"));
             team.setRegionRank(DAOUtils.getInteger(rs, "team.region_rank"));
@@ -572,6 +580,7 @@ implements BasicEntityOperations<Team>
                 t.getWins(),
                 t.getLosses(),
                 t.getTies(),
+                t.getJoined(),
                 t.getLastPlayed(),
                 conversionService.convert(t.getTierType(), Integer.class)
             })
@@ -743,6 +752,7 @@ implements BasicEntityOperations<Team>
             .addValue("wins", team.getWins())
             .addValue("losses", team.getLosses())
             .addValue("ties", team.getTies())
+            .addValue("joined", team.getJoined())
             .addValue("lastPlayed", team.getLastPlayed());
     }
 

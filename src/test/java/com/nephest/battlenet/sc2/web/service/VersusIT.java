@@ -277,7 +277,7 @@ public class VersusIT
 
     private static Team createTeam(TeamDAO teamDAO, PlayerCharacter character, Division division)
     {
-        return teamDAO.merge(Set.of(new Team(
+        return teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,

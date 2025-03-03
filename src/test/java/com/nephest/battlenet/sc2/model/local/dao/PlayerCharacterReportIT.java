@@ -708,7 +708,7 @@ public class PlayerCharacterReportIT
         assertTrue(endReports.stream().anyMatch(r->r.getId().equals(expiredConfirmedReport.getId())));
         assertTrue(endEvidences.stream().anyMatch(e->e.getId().equals(expiredConfirmedEvidence.getId())));
 
-        Team secondCheaterTeam = teamDAO.merge(Set.of(new Team
+        Team secondCheaterTeam = teamDAO.merge(Set.of(Team.joined
         (
             null,
             SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,

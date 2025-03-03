@@ -278,7 +278,7 @@ public class RolesSlashCommandTest
             false,
             2, 1, 1, 1
         );
-        LadderTeam mainTeam = new LadderTeam
+        LadderTeam mainTeam = LadderTeam.joined
         (
             1L, 1, Region.EU,
             new BaseLeague

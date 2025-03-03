@@ -194,42 +194,42 @@ public class SqlSyntaxIT
         assertEquals(3L, div2Found.getBattlenetId());
 
 
-        Team newTeam = new Team
+        Team newTeam = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             "1", division.getId(),
             1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         );
-        Team newTeam2 = new Team
+        Team newTeam2 = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             "10", division.getId(),
             1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         );
-        Team sameTeam = new Team
+        Team sameTeam = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             "1", division.getId(),
             2L, 2, 2, 2, 2,
             SC2Pulse.offsetDateTime()
         );
-        Team updatedTeam = new Team
+        Team updatedTeam = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
             "1", division2.getId(),
             3L, 3, 3, 3, 3,
             SC2Pulse.offsetDateTime()
         );
-        Team zergTeam = new Team
+        Team zergTeam = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
             "-1", division2.getId(),
             4L, 3, 3, 0, 3,
             SC2Pulse.offsetDateTime()
         );
-        Team zergTeamClone = new Team
+        Team zergTeamClone = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
             "-1", division2.getId(),
@@ -450,7 +450,7 @@ public class SqlSyntaxIT
 
     private static Team createGenericTeam(Season season, League league2, LeagueTier tier, Division division, String id)
     {
-        return new Team
+        return Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier.getType(),
             id, division.getId(),

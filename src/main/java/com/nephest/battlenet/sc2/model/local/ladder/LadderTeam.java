@@ -19,7 +19,7 @@ extends Team
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     private final List<LadderTeamMember> members;
 
@@ -36,7 +36,7 @@ implements java.io.Serializable
         String legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
-        OffsetDateTime lastPlayed,
+        OffsetDateTime lastPlayed, OffsetDateTime joined,
         List<LadderTeamMember> members,
         PopulationState populationState
     )
@@ -47,10 +47,41 @@ implements java.io.Serializable
             season, region, league, leagueTierType,
             legacyId, divisionId,
             rating, wins, losses, ties, points,
-            lastPlayed
+            lastPlayed, joined
         );
         this.members = members;
         this.populationState = populationState;
+    }
+
+    public static LadderTeam joined
+    (
+        Long id,
+        Integer season,
+        Region region,
+        BaseLeague league,
+        LeagueTier.LeagueTierType leagueTierType,
+        BigInteger legacyId,
+        Integer divisionId,
+        Long rating, Integer wins, Integer losses, Integer ties, Integer points,
+        OffsetDateTime lastPlayed,
+        List<LadderTeamMember> members,
+        PopulationState populationState
+    )
+    {
+        return new LadderTeam
+        (
+            id,
+            season,
+            region,
+            league,
+            leagueTierType,
+            legacyId,
+            divisionId,
+            rating, wins, losses, ties, points,
+            lastPlayed, lastPlayed,
+            members,
+            populationState
+        );
     }
 
     public List<LadderTeamMember> getMembers()

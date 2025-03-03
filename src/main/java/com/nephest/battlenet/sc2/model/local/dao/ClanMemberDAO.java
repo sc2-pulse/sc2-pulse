@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Repository;
 public class ClanMemberDAO
 {
 
-    public static final Duration TTL = Duration.ofDays(30);
+    public static final Duration TTL = Duration.ofDays(50);
 
     public static final String STD_SELECT =
         "clan_member.player_character_id AS \"clan_member.player_character_id\", "

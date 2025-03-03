@@ -1,10 +1,10 @@
-<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="https://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _, true)}">
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, ~{::script}, true)}">
 <head>
     <title>Donate - SC2 Pulse</title>
     <meta name="description" content="Ways to support the project and a quick rundown of where the money will go"/>
@@ -13,14 +13,9 @@
 <div th:replace="~{fragments/generic :: content(~{::section})}">
     <section>
         <h2>Donate</h2>
-        <p>You can support the project by making a donation.</p>
-        <p>SC2 Pulse will always remain free to use without any restrictions or tiers.</p>
-        <h3>Ways to donate</h3>
-        <ul>
-            <li><strong><a href="https://ko-fi.com/sc2pulse" rel="noopener" target="_blank">Ko-fi(preferred)</a></strong></li>
-            <li><a href="https://www.patreon.com/sc2pulse" rel="noopener" target="_blank">Patreon</a></li>
-        </ul>
+        <div th:utext="${@environment.getProperty('donate')}"></div>
     </section>
+    <script>ElementUtil.enhanceCopyToClipboard();</script>
 </div>
 </body>
 </html>

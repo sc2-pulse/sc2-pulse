@@ -39,7 +39,7 @@ public class ApplicationRoleConnectionTest
         when(conversionService.convert(BaseLeague.LeagueType.DIAMOND, Integer.class)).thenReturn(4);
         when(conversionService.convert(Race.PROTOSS, Integer.class)).thenReturn(2);
         String name = "name123";
-        Team team = new Team
+        Team team = Team.joined
         (
             1L,
             1,

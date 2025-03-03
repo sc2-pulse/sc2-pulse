@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serial;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -66,6 +67,9 @@ implements java.io.Serializable
 
     private OffsetDateTime lastPlayed;
 
+    @NotNull
+    private OffsetDateTime joined;
+
     private transient TeamLegacyUid legacyUid = new DelegatedTeamLegacyUid(this);
 
     public Team()
@@ -82,7 +86,7 @@ implements java.io.Serializable
         String legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
-        OffsetDateTime lastPlayed
+        OffsetDateTime lastPlayed, @NotNull OffsetDateTime joined
     )
     {
         super(rating, wins, losses, ties, points);
@@ -94,6 +98,34 @@ implements java.io.Serializable
         this.league = league;
         this.tierType = tierType;
         this.lastPlayed = lastPlayed;
+        this.joined = joined;
+    }
+
+    public static Team joined
+    (
+        Long id,
+        Integer season,
+        Region region,
+        BaseLeague league,
+        LeagueTier.LeagueTierType tierType,
+        BigInteger legacyId,
+        Integer divisionId,
+        Long rating, Integer wins, Integer losses, Integer ties, Integer points,
+        OffsetDateTime lastPlayed
+    )
+    {
+        return new Team
+        (
+            id,
+            season,
+            region,
+            league,
+            tierType,
+            legacyId,
+            divisionId,
+            rating, wins, losses, ties, points,
+            lastPlayed, lastPlayed
+        );
     }
 
     public static Team of
@@ -106,6 +138,7 @@ implements java.io.Serializable
         TeamDAO teamDAO
     )
     {
+        ZoneOffset offset = SC2Pulse.offsetDateTime().getOffset();
         return new Team
         (
             null,
@@ -119,8 +152,9 @@ implements java.io.Serializable
             bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(),
             bTeam.getPoints(),
             bTeam.getLastPlayedTimeStamp() != null
-                ? bTeam.getLastPlayedTimeStamp().atOffset(SC2Pulse.offsetDateTime().getOffset())
-                : SC2Pulse.offsetDateTime()
+                ? bTeam.getLastPlayedTimeStamp().atOffset(offset)
+                : SC2Pulse.offsetDateTime(),
+            bTeam.getJoined().atOffset(offset)
         );
     }
 
@@ -150,7 +184,7 @@ implements java.io.Serializable
             null,
             null, null, null,
             null,
-            null
+            null, null
         );
     }
 
@@ -337,6 +371,16 @@ implements java.io.Serializable
     public void setLastPlayed(OffsetDateTime lastPlayed)
     {
         this.lastPlayed = lastPlayed;
+    }
+
+    public @NotNull OffsetDateTime getJoined()
+    {
+        return joined;
+    }
+
+    public void setJoined(@NotNull OffsetDateTime joined)
+    {
+        this.joined = joined;
     }
 
     @JsonSerialize(converter = TeamLegacyUidToStringConverter.class)
