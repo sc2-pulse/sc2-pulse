@@ -151,7 +151,7 @@ public class TeamGroupIT
 
         for(int i = 0; i < teams.length; i++)
         {
-            LadderTeam ladderTeam = new LadderTeam
+            LadderTeam ladderTeam = LadderTeam.joined
             (
                 null,
                 i + 1,

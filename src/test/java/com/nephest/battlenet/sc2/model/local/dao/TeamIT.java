@@ -245,7 +245,7 @@ public class TeamIT
             0
         );
         teamDAO.merge(Set.of(
-            new Team
+            Team.joined
             (
                 null, 1, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -254,7 +254,7 @@ public class TeamIT
                 allSeasons.get(0).getStart()
             ),
             //eu season1 max
-            new Team
+            Team.joined
             (
                 null, 1, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -263,7 +263,7 @@ public class TeamIT
                 allSeasons.get(0).getStart().plusSeconds(10)
             ),
             //US team with max last_played to verify region filter
-            new Team
+            Team.joined
             (
                 null, 1, Region.US,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -272,7 +272,7 @@ public class TeamIT
                 allSeasons.get(1).getStart().plusSeconds(20)
             ),
             //EU season2 team with max last_played to verify season filter
-            new Team
+            Team.joined
             (
                 null, 2, Region.EU,
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -444,7 +444,7 @@ public class TeamIT
         );
 
         //season1 teams
-        Team team1 = new Team
+        Team team1 = Team.joined
         (
             null, 1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -452,7 +452,7 @@ public class TeamIT
             3L, 4, 5, 6, 7,
             allSeasons.get(3).getStart().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS) //normal
         );
-        Team team2 = new Team
+        Team team2 = Team.joined
         (
             null, 1, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -460,7 +460,7 @@ public class TeamIT
             3L, 4, 5, 6, 7,
             allSeasons.get(4).getStart().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS) //normal
         );
-        Team teamOversteppedEu = new Team
+        Team teamOversteppedEu = Team.joined
         (
             null, 1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -469,7 +469,7 @@ public class TeamIT
             allSeasons.get(3).getStart().plusSeconds(10) //oversteps next season boundaries
         );
         //larger KR overstep to ensure that only regional timestamps are taken into account
-        Team teamOversteppedKr = new Team
+        Team teamOversteppedKr = Team.joined
         (
             null, 1, Region.KR,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -482,7 +482,7 @@ public class TeamIT
             for(Region region : Region.values()) statefulBasicEntityOperations.load(region, 2);
 
         //season2 teams
-        Team team3 = new Team
+        Team team3 = Team.joined
         (
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
@@ -490,7 +490,7 @@ public class TeamIT
             4L, 5, 6, 7, 8,
             allSeasons.get(3).getStart()
         );
-        Team team4 = new Team
+        Team team4 = Team.joined
         (
             null, 2, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),

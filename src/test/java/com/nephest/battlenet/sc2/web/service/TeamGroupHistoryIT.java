@@ -219,7 +219,7 @@ public class TeamGroupHistoryIT
             teamStateDAO.takeSnapshot(seasonTeamIds, seasons.get(i).getStart().plusMinutes(1));
         }
         //take snapshot with different vals to verify that they are returned properly
-        teamDAO.merge(Set.of(new Team(
+        teamDAO.merge(Set.of(Team.joined(
             null,
             2,
             Region.EU,
@@ -248,7 +248,7 @@ public class TeamGroupHistoryIT
             teamStateDAO.takeSnapshot(seasonTeamIds, seasons.get(i).getStart().plusMinutes(2));
         }
         //set new team values to verify they are properly added at the end of a season
-        teamDAO.merge(Set.of(new Team(
+        teamDAO.merge(Set.of(Team.joined(
             null,
             2,
             Region.EU,
@@ -265,7 +265,7 @@ public class TeamGroupHistoryIT
             null
         )));
         //add one more team to change differentiate ranks from previous season
-        teamDAO.merge(Set.of(new Team(
+        teamDAO.merge(Set.of(Team.joined(
             null,
             2,
             Region.EU,

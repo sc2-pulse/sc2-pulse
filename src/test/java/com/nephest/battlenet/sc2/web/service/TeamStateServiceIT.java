@@ -201,7 +201,7 @@ public class TeamStateServiceIT
         OffsetDateTime odt
     )
     {
-        teamDAO.merge(Set.of(new Team(
+        teamDAO.merge(Set.of(Team.joined(
             null,
             10,
             Region.EU,

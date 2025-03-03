@@ -60,7 +60,7 @@ implements java.io.Serializable
         Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType leagueTierType,
-        BigInteger legacyId,
+        String legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         OffsetDateTime lastPlayed,
