@@ -206,7 +206,7 @@ implements BasicEntityOperations<Team>
             + "v.legacy_id, v.division_id, "
             + "v.season, v.region, v.league_type, v.queue_type, v.team_type, "
             + "v.rating, v.points, v.wins, v.losses, v.ties, "
-            + "joined::timestamp with time zone, "
+            + "v.joined::timestamp with time zone, "
             + "v.tier_type::smallint, "
             + "v.last_played::timestamp with time zone "
             + "FROM vals v"
