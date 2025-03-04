@@ -483,5 +483,32 @@ public class TeamStateServiceIT
         );
     }
 
+    @Test
+    public void whenFirstClear_thenClearFromMinOdt()
+    throws Exception
+    {
+        OffsetDateTime start = OffsetDateTime.MIN;
+        OffsetDateTime end = start.plusMonths(1);
+        seasonGenerator.generateSeason
+        (
+            List.of
+            (
+                new Season(null, 10, Region.EU, 2020, 1, start, end)
+            ),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            1
+        );
+        assertEquals(1, JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state"));
+        updateService.updated(SC2Pulse.instant());
+        BlockingQueue<LadderUpdateData> eventData = new ArrayBlockingQueue<>(1);
+        disposables.add(teamStateService.getUpdateEvent().subscribe(eventData::add));
+        eventService.createLadderUpdateEvent(createUpdateData(11));
+        eventData.take();
+        assertEquals(0, JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state"));
+    }
+
 
 }

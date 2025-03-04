@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -314,7 +314,9 @@ public class TeamStateService
         OffsetDateTime now = SC2Pulse.offsetDateTime();
         int removedMain = teamStateDAO.remove
         (
-            now.minusDays(getMainLengthDays()).minus(offset),
+            lastClearInstant.getValue() == Instant.MIN
+                ? OffsetDateTime.MIN
+                : now.minusDays(getMainLengthDays()).minus(offset),
             now.minusDays(getMainLengthDays()),
             true
         );
@@ -322,7 +324,9 @@ public class TeamStateService
 
         int removedSecondary = teamStateDAO.remove
         (
-            now.minusDays(getSecondaryLengthDays()).minus(offset),
+            lastClearInstant.getValue() == Instant.MIN
+                ? OffsetDateTime.MIN
+                : now.minusDays(getSecondaryLengthDays()).minus(offset),
             now.minusDays(getSecondaryLengthDays()),
             false
         );
