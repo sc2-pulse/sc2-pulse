@@ -3,6 +3,14 @@ ALTER TABLE "league_tier"
     DROP CONSTRAINT "uq_league_tier_league_id_type";
 CREATE UNIQUE INDEX "uq_league_tier_league_id_type" ON "league_tier"("league_id", COALESCE("type", -1));
 
+UPDATE team
+SET tier_type = league_tier.type
+FROM team valid_team
+INNER JOIN division ON valid_team.division_id = division.id
+INNER JOIN league_tier ON division.league_tier_id = league_tier.id
+WHERE valid_team.tier_type IS NULL
+AND league_tier.type != 0
+AND team.id = valid_team.id;
 
 WITH season_filter AS
 (
@@ -35,7 +43,7 @@ INNER JOIN division team_division ON team.division_id = team_division.id
 INNER JOIN league_tier ON team_division.league_tier_id = league_tier.id
 INNER JOIN league_tier_filter USING(league_id)
 WHERE team.tier_type IS NULL
-AND league_tier.type != 0
+AND league_tier.type = 0
 AND division.id = team_division.id;
 
 ALTER TABLE "season"
