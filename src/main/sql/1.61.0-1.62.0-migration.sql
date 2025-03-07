@@ -317,7 +317,7 @@ BEGIN
 SELECT season INTO seasonMin
 FROM team_state
 INNER JOIN team ON team_state.team_id = team.id
-WHERE timestamp = (SELECT MIN(timestamp) FROM team_state)
+WHERE timestamp = (SELECT MIN(timestamp) FROM team_state WHERE population_state_id IS NOT NULL)
 LIMIT 1;
 RAISE NOTICE 'Starting from season %', seasonMin;
 FOR seasonId IN SELECT DISTINCT(battlenet_id) FROM season WHERE battlenet_id >= seasonMin ORDER BY battlenet_id LOOP
