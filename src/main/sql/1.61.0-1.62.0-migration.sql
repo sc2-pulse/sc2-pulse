@@ -193,6 +193,55 @@ END
 $do$
 LANGUAGE plpgsql;
 
+ALTER TABLE team_state
+ADD COLUMN "region_team_count" INTEGER;
+
+DO
+$do$
+DECLARE
+    seasonId INTEGER;
+    seasonMin SMALLINT;
+    teamId BIGINT;
+BEGIN
+SELECT season INTO seasonMin
+FROM team_state
+INNER JOIN team ON team_state.team_id = team.id
+WHERE timestamp = (SELECT MIN(timestamp) FROM team_state)
+LIMIT 1;
+RAISE NOTICE 'Starting from season %', seasonMin;
+FOR seasonId IN SELECT DISTINCT(battlenet_id) FROM season WHERE battlenet_id >= seasonMin ORDER BY battlenet_id LOOP
+FOR teamId IN SELECT id FROM team WHERE season = seasonId LOOP
+
+UPDATE team_state
+SET region_team_count = population_state.region_team_count
+FROM population_state
+WHERE team_state.team_id = teamId
+AND team_state.population_state_id = population_state.id;
+END LOOP;
+RAISE NOTICE 'Updated season % region_team_count, ', seasonId;
+END LOOP;
+
+END
+$do$
+LANGUAGE plpgsql;
+
+
+CREATE UNIQUE INDEX CONCURRENTLY team_state_pkey2 ON team_state(team_id, timestamp)
+    INCLUDE(rating, games, division_id, region_rank, region_team_count);
+ALTER TABLE team_state
+    DROP CONSTRAINT team_state_pkey CASCADE,
+    ADD CONSTRAINT team_state_pkey PRIMARY KEY USING INDEX team_state_pkey2;
+ALTER TABLE match_participant
+    ADD CONSTRAINT "fk_match_participant_team_state_uid"
+    FOREIGN KEY ("team_id", "team_state_timestamp")
+    REFERENCES "team_state"("team_id", "timestamp")
+    ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE team_state_archive
+    ADD CONSTRAINT "fk_team_state_archive_team_id_timestamp"
+    FOREIGN KEY ("team_id", "timestamp")
+    REFERENCES "team_state"("team_id", "timestamp")
+    ON DELETE CASCADE ON UPDATE CASCADE;
+
 DO
 $do$
 DECLARE
@@ -264,55 +313,6 @@ END LOOP;
 END
 $do$
 LANGUAGE plpgsql;
-
-ALTER TABLE team_state
-ADD COLUMN "region_team_count" INTEGER;
-
-DO
-$do$
-DECLARE
-    seasonId INTEGER;
-    seasonMin SMALLINT;
-    teamId BIGINT;
-BEGIN
-SELECT season INTO seasonMin
-FROM team_state
-INNER JOIN team ON team_state.team_id = team.id
-WHERE timestamp = (SELECT MIN(timestamp) FROM team_state)
-LIMIT 1;
-RAISE NOTICE 'Starting from season %', seasonMin;
-FOR seasonId IN SELECT DISTINCT(battlenet_id) FROM season WHERE battlenet_id >= seasonMin ORDER BY battlenet_id LOOP
-FOR teamId IN SELECT id FROM team WHERE season = seasonId LOOP
-
-UPDATE team_state
-SET region_team_count = population_state.region_team_count
-FROM population_state
-WHERE team_state.team_id = teamId
-AND team_state.population_state_id = population_state.id;
-END LOOP;
-RAISE NOTICE 'Updated season % region_team_count, ', seasonId;
-END LOOP;
-
-END
-$do$
-LANGUAGE plpgsql;
-
-
-CREATE UNIQUE INDEX CONCURRENTLY team_state_pkey2 ON team_state(team_id, timestamp)
-    INCLUDE(rating, games, division_id, region_rank, region_team_count);
-ALTER TABLE team_state
-    DROP CONSTRAINT team_state_pkey CASCADE,
-    ADD CONSTRAINT team_state_pkey PRIMARY KEY USING INDEX team_state_pkey2;
-ALTER TABLE match_participant
-    ADD CONSTRAINT "fk_match_participant_team_state_uid"
-    FOREIGN KEY ("team_id", "team_state_timestamp")
-    REFERENCES "team_state"("team_id", "timestamp")
-    ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE team_state_archive
-    ADD CONSTRAINT "fk_team_state_archive_team_id_timestamp"
-    FOREIGN KEY ("team_id", "timestamp")
-    REFERENCES "team_state"("team_id", "timestamp")
-    ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE team DROP CONSTRAINT uq_team_queue_type_region_legacy_id_season;
 ALTER TABLE team ALTER COLUMN legacy_id TYPE TEXT COLLATE "C";
