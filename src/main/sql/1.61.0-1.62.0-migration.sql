@@ -337,7 +337,7 @@ $do$
 LANGUAGE plpgsql;
 
 
-CREATE UNIQUE INDEX CONCURRENTLY team_state_pkey2 ON team_state(team_id, timestamp)
+CREATE UNIQUE INDEX team_state_pkey2 ON team_state(team_id, timestamp)
     INCLUDE(rating, games, division_id, region_rank, region_team_count);
 ALTER TABLE team_state
     DROP CONSTRAINT team_state_pkey CASCADE,
