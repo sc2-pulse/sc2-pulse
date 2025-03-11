@@ -388,10 +388,11 @@ last_snapshots AS
         "global_rank",
         "region_rank",
         "league_rank",
-        "secondary"
+        "secondary",
+        "region_team_count"
     )
         SELECT
-        "id",
+        team."id",
         "timestamp",
         "division_id",
         "population_state_id",
@@ -401,10 +402,12 @@ last_snapshots AS
         "global_rank",
         "region_rank",
         "league_rank",
-        CASE WHEN queue_type != 201 THEN true ELSE NULL END
+        CASE WHEN queue_type != 201 THEN true ELSE NULL END,
+        "region_team_count"
         FROM team
         INNER JOIN snapshot_timestamp USING(region)
         INNER JOIN current_season USING(region)
+        LEFT JOIN population_state ON team.population_state_id = population_state.id
         WHERE season = seasonId
         AND season != current_season.battlenet_id
         RETURNING team_id, timestamp
