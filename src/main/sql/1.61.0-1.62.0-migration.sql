@@ -216,14 +216,7 @@ WITH next_season_start AS
 CREATE TABLE team_state_archive
 (
     "team_id" BIGINT NOT NULL,
-    "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL,
-
-    PRIMARY KEY ("team_id", "timestamp"),
-
-    CONSTRAINT "fk_team_state_archive_team_id_timestamp"
-        FOREIGN KEY ("team_id", "timestamp")
-        REFERENCES "team_state"("team_id", "timestamp")
-        ON DELETE CASCADE ON UPDATE CASCADE
+    "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 INSERT INTO team_state_archive(team_id, timestamp)
@@ -251,7 +244,6 @@ ALTER TABLE team_state
 DROP COLUMN archived;
 
 VACUUM(ANALYZE) team_state, team_state_archive;
-REINDEX INDEX "team_state_archive_pkey";
 
 DO
 $do$
@@ -347,11 +339,6 @@ ALTER TABLE match_participant
     FOREIGN KEY ("team_id", "team_state_timestamp")
     REFERENCES "team_state"("team_id", "timestamp")
     ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE team_state_archive
-    ADD CONSTRAINT "fk_team_state_archive_team_id_timestamp"
-    FOREIGN KEY ("team_id", "timestamp")
-    REFERENCES "team_state"("team_id", "timestamp")
-    ON DELETE CASCADE ON UPDATE CASCADE;
 
 DO
 $do$
@@ -424,6 +411,13 @@ END LOOP;
 END
 $do$
 LANGUAGE plpgsql;
+
+ALTER TABLE team_state_archive
+    ADD CONSTRAINT "team_state_archive_pkey" PRIMARY KEY  ("team_id", "timestamp"),
+    ADD CONSTRAINT "fk_team_state_archive_team_id_timestamp"
+        FOREIGN KEY ("team_id", "timestamp")
+        REFERENCES "team_state"("team_id", "timestamp")
+        ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE team DROP CONSTRAINT uq_team_queue_type_region_legacy_id_season;
 ALTER TABLE team ALTER COLUMN legacy_id TYPE TEXT COLLATE "C";
