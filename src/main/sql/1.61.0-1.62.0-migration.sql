@@ -251,7 +251,7 @@ ALTER TABLE team_state
 DROP COLUMN archived;
 
 VACUUM(ANALYZE) team_state, team_state_archive;
-REINDEX "team_state_archive_pkey";
+REINDEX INDEX "team_state_archive_pkey";
 
 DO
 $do$
