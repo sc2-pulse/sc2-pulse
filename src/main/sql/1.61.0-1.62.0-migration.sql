@@ -490,10 +490,6 @@ END
 $do$
 LANGUAGE plpgsql;
 
-ALTER TABLE team
-    ADD CONSTRAINT "uq_team_queue_type_region_legacy_id_season"
-        UNIQUE ("queue_type", "region", "legacy_id", "season");
-
 CREATE OR REPLACE FUNCTION get_player_character_summary
 (character_ids BIGINT[], from_timestamp TIMESTAMP WITH TIME ZONE, races SMALLINT[])
 RETURNS SETOF player_character_summary
@@ -617,6 +613,5 @@ END
 LANGUAGE plpgsql;
 
 ALTER TABLE team
-    DROP CONSTRAINT "uq_team_queue_type_region_legacy_id_season",
     ADD CONSTRAINT "uq_team_legacy_natural_id"
         UNIQUE ("queue_type", "team_type", "region", "legacy_id", "season");
