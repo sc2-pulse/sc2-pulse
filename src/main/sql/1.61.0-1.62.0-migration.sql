@@ -297,42 +297,51 @@ $do$
 LANGUAGE plpgsql;
 
 ALTER TABLE team_state
-ADD COLUMN "region_team_count" INTEGER;
+ADD COLUMN "region_team_count" INTEGER,
+DROP CONSTRAINT team_state_pkey CASCADE;
+DROP INDEX ix_team_state_timestamp;
+CREATE INDEX team_state_tmp ON team_state(population_state_id) WHERE population_state_id IS NOT NULL;
+CREATE INDEX population_state_tmp ON population_state(id) INCLUDE(region_team_count);
 
 DO
 $do$
 DECLARE
-    seasonId INTEGER;
-    seasonMin SMALLINT;
-    teamId BIGINT;
+    populationStateId BIGINT;
+    regionTeamCount INTEGER;
+    updatedTotal INTEGER;
+    updatedCurrent INTEGER;
+    prevCheckpoint INTEGER;
+    curCheckpoint INTEGER;
 BEGIN
-SELECT season INTO seasonMin
-FROM team_state
-INNER JOIN team ON team_state.team_id = team.id
-WHERE timestamp = (SELECT MIN(timestamp) FROM team_state WHERE population_state_id IS NOT NULL)
-LIMIT 1;
-RAISE NOTICE 'Starting from season %', seasonMin;
-FOR seasonId IN SELECT DISTINCT(battlenet_id) FROM season WHERE battlenet_id >= seasonMin ORDER BY battlenet_id LOOP
-FOR teamId IN SELECT id FROM team WHERE season = seasonId LOOP
+RAISE NOTICE '% started', timeofday();
+updatedTotal := 0;
+prevCheckpoint := 0;
+FOR populationStateId IN SELECT DISTINCT(population_state_id) FROM team_state WHERE population_state_id IS NOT NULL LOOP
+SELECT region_team_count INTO regionTeamCount FROM population_state WHERE id = populationStateId;
 
 UPDATE team_state
-SET region_team_count = population_state.region_team_count
-FROM population_state
-WHERE team_state.team_id = teamId
-AND team_state.population_state_id = population_state.id;
-END LOOP;
-RAISE NOTICE 'Updated season % region_team_count, ', seasonId;
+SET region_team_count = regionTeamCount
+WHERE team_state.population_state_id = populationStateId;
+
+GET DIAGNOSTICS updatedCurrent = ROW_COUNT;
+updatedTotal = updatedTotal + updatedCurrent;
+curCheckpoint = updatedTotal / 1000000;
+IF(curCheckpoint != prevCheckpoint) THEN
+    RAISE NOTICE '% team states updated %', timeofday(), updatedTotal;
+    prevCheckpoint = curCheckpoint;
+END IF;
 END LOOP;
 
 END
 $do$
 LANGUAGE plpgsql;
 
-
+DROP INDEX team_state_tmp;
+DROP INDEX population_state_tmp;
+CREATE INDEX "ix_team_state_timestamp" ON "team_state"("timestamp");
 CREATE UNIQUE INDEX team_state_pkey2 ON team_state(team_id, timestamp)
     INCLUDE(rating, games, division_id, region_rank, region_team_count);
 ALTER TABLE team_state
-    DROP CONSTRAINT team_state_pkey CASCADE,
     ADD CONSTRAINT team_state_pkey PRIMARY KEY USING INDEX team_state_pkey2;
 ALTER TABLE match_participant
     ADD CONSTRAINT "fk_match_participant_team_state_uid"
