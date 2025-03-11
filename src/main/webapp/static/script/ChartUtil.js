@@ -1283,7 +1283,7 @@ class ChartUtil
     static createPatchAnnotation(patch, region, position)
     {
         const release = patch.releases ? patch.releases[region] || Object.values(patch.releases).find(t=>true) : null;
-        const dateTime = release ? Util.parseIsoDateTime(release) : null;
+        const dateTime = release ? Util.parseIsoDateTime(release).valueOf() : null;
         return {
             type: "line",
             xMin: dateTime,
