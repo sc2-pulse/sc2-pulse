@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -83,7 +83,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
@@ -547,10 +546,6 @@ public class StatsService
     }
 
     @Transactional
-    (
-        //isolation = Isolation.READ_COMMITTED,
-        propagation = Propagation.REQUIRES_NEW
-    )
     public void saveLadder(Season season, BlizzardLadder bLadder, long id,AlternativeLadderService alternativeLadderService)
     {
         BlizzardLadderLeagueKey lKey = bLadder.getLeague().getLeagueKey();
@@ -817,10 +812,6 @@ public class StatsService
     }
 
     @Transactional
-    (
-        //isolation = Isolation.READ_COMMITTED,
-        propagation = Propagation.REQUIRES_NEW
-    )
     public void saveLadders
     (
         Season season,

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -53,7 +53,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -232,9 +231,6 @@ public class ProPlayerService
 
     @CacheEvict(cacheNames={"pro-player-characters"}, allEntries=true)
     @Transactional
-    (
-        propagation = Propagation.REQUIRES_NEW
-    )
     public int updateAligulac
     (
         List<ProPlayer> proPlayers,
