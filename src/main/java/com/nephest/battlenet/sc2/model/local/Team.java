@@ -38,7 +38,7 @@ implements java.io.Serializable
             .thenComparing(Team::getLegacyId)
             .thenComparing(Team::getSeason);
 
-    private static final long serialVersionUID = 11L;
+    private static final long serialVersionUID = 12L;
 
     private Long id;
 
@@ -70,6 +70,9 @@ implements java.io.Serializable
     @NotNull
     private OffsetDateTime joined;
 
+    @NotNull
+    private OffsetDateTime primaryDataUpdated;
+
     private transient TeamLegacyUid legacyUid = new DelegatedTeamLegacyUid(this);
 
     public Team()
@@ -86,7 +89,8 @@ implements java.io.Serializable
         String legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
-        OffsetDateTime lastPlayed, @NotNull OffsetDateTime joined
+        OffsetDateTime lastPlayed, @NotNull OffsetDateTime joined,
+        OffsetDateTime primaryDataUpdated
     )
     {
         super(rating, wins, losses, ties, points);
@@ -99,6 +103,7 @@ implements java.io.Serializable
         this.tierType = tierType;
         this.lastPlayed = lastPlayed;
         this.joined = joined;
+        this.primaryDataUpdated = primaryDataUpdated;
     }
 
     public static Team joined
@@ -124,7 +129,7 @@ implements java.io.Serializable
             legacyId,
             divisionId,
             rating, wins, losses, ties, points,
-            lastPlayed, lastPlayed
+            lastPlayed, lastPlayed, lastPlayed
         );
     }
 
@@ -138,7 +143,8 @@ implements java.io.Serializable
         TeamDAO teamDAO
     )
     {
-        ZoneOffset offset = SC2Pulse.offsetDateTime().getOffset();
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
+        ZoneOffset offset = now.getOffset();
         return new Team
         (
             null,
@@ -153,8 +159,9 @@ implements java.io.Serializable
             bTeam.getPoints(),
             bTeam.getLastPlayedTimeStamp() != null
                 ? bTeam.getLastPlayedTimeStamp().atOffset(offset)
-                : SC2Pulse.offsetDateTime(),
-            bTeam.getJoined().atOffset(offset)
+                : now,
+            bTeam.getJoined().atOffset(offset),
+            now
         );
     }
 
@@ -184,7 +191,7 @@ implements java.io.Serializable
             null,
             null, null, null,
             null,
-            null, null
+            null, null, null
         );
     }
 
@@ -381,6 +388,16 @@ implements java.io.Serializable
     public void setJoined(@NotNull OffsetDateTime joined)
     {
         this.joined = joined;
+    }
+
+    public OffsetDateTime getPrimaryDataUpdated()
+    {
+        return primaryDataUpdated;
+    }
+
+    public void setPrimaryDataUpdated(OffsetDateTime primaryDataUpdated)
+    {
+        this.primaryDataUpdated = primaryDataUpdated;
     }
 
     @JsonSerialize(converter = TeamLegacyUidToStringConverter.class)

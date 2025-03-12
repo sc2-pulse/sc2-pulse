@@ -43,6 +43,7 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -538,8 +539,10 @@ public class AlternativeLadderService
             .filter(teamValidationPredicate.and(t->isValidTeam(t, teamMemberCount, ladder.getLeague().getQueueType().getTeamFormat())))
             .map
             (
-                bTeam->Tuples.of
-                (
+                bTeam->
+                {
+                    OffsetDateTime now = SC2Pulse.offsetDateTime();
+                    return Tuples.of(
                     new Team
                     (
                         null,
@@ -547,11 +550,13 @@ public class AlternativeLadderService
                         baseLeague, null,
                         teamDao.legacyIdOf(baseLeague, bTeam), division.getId(),
                         bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints(),
-                        SC2Pulse.offsetDateTime(),
-                        bTeam.getJoined().atOffset(SC2Pulse.offsetDateTime().getOffset())
+                        now,
+                        bTeam.getJoined().atOffset(now.getOffset()),
+                        now
                     ),
                     bTeam
-                )
+                    );
+                }
             )
             .collect(Collectors.toList());
         Set<Team> changedTeams = fastTeamDAO

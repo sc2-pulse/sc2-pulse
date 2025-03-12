@@ -151,7 +151,7 @@ public class TeamGroupIT
 
         for(int i = 0; i < teams.length; i++)
         {
-            LadderTeam ladderTeam = LadderTeam.joined
+            LadderTeam ladderTeam = new LadderTeam
             (
                 null,
                 i + 1,
@@ -169,7 +169,7 @@ public class TeamGroupIT
                                 : "1.4.1",
                 i + 1,
                 1L, 1, 1, 1, 1,
-                null,
+                null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime(),
                 ladderTeamMembers,
                 i == statsSeasonIx
                     ? new PopulationState(null, null, 1, 1, 1)

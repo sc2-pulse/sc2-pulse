@@ -36,7 +36,7 @@ implements java.io.Serializable
         String legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
-        OffsetDateTime lastPlayed, OffsetDateTime joined,
+        OffsetDateTime lastPlayed, OffsetDateTime joined, OffsetDateTime primaryDataUpdated,
         List<LadderTeamMember> members,
         PopulationState populationState
     )
@@ -47,7 +47,7 @@ implements java.io.Serializable
             season, region, league, leagueTierType,
             legacyId, divisionId,
             rating, wins, losses, ties, points,
-            lastPlayed, joined
+            lastPlayed, joined, primaryDataUpdated
         );
         this.members = members;
         this.populationState = populationState;
@@ -78,7 +78,7 @@ implements java.io.Serializable
             legacyId,
             divisionId,
             rating, wins, losses, ties, points,
-            lastPlayed, lastPlayed,
+            lastPlayed, lastPlayed, lastPlayed,
             members,
             populationState
         );

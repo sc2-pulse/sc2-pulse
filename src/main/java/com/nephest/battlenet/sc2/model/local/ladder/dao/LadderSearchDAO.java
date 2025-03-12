@@ -354,6 +354,7 @@ public class LadderSearchDAO
                 null,
                 rs.getObject("team.last_played", OffsetDateTime.class),
                 rs.getObject("team.joined", OffsetDateTime.class),
+                rs.getObject("team.primary_data_updated", OffsetDateTime.class),
                 new ArrayList<>(),
                 PopulationStateDAO.TEAM_DATA_ROW_MAPPER.mapRow(rs, 1)
             );

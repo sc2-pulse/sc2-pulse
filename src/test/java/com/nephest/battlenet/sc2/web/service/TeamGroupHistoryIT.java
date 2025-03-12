@@ -219,7 +219,7 @@ public class TeamGroupHistoryIT
             teamStateDAO.takeSnapshot(seasonTeamIds, seasons.get(i).getStart().plusMinutes(1));
         }
         //take snapshot with different vals to verify that they are returned properly
-        teamDAO.merge(Set.of(Team.joined(
+        teamDAO.merge(Set.of(new Team(
             null,
             2,
             Region.EU,
@@ -233,7 +233,7 @@ public class TeamGroupHistoryIT
             "1.11.1",
             15,
             112L, 13, 14, 15, 0,
-            null
+            null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
         )));
         //take new team snapshots with ranks to verify them
         for(int i = 0; i < seasons.size(); i++)
@@ -248,7 +248,7 @@ public class TeamGroupHistoryIT
             teamStateDAO.takeSnapshot(seasonTeamIds, seasons.get(i).getStart().plusMinutes(2));
         }
         //set new team values to verify they are properly added at the end of a season
-        teamDAO.merge(Set.of(Team.joined(
+        teamDAO.merge(Set.of(new Team(
             null,
             2,
             Region.EU,
@@ -262,10 +262,10 @@ public class TeamGroupHistoryIT
             "1.11.1",
             7,
             113L, 14, 15, 16, 0,
-            null
+            null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
         )));
         //add one more team to change differentiate ranks from previous season
-        teamDAO.merge(Set.of(Team.joined(
+        teamDAO.merge(Set.of(new Team(
             null,
             2,
             Region.EU,
@@ -279,7 +279,7 @@ public class TeamGroupHistoryIT
             "991",
             7,
             114L, 14, 15, 16, 0,
-            null
+            null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
         )));
         //take final team snapshots with ranks to verify them
         for(int i = 0; i < seasons.size(); i++)

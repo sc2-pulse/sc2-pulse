@@ -627,3 +627,6 @@ INSERT INTO var(key, value) VALUES
 ('2.mmr.history.archive.season', '61'),
 ('3.mmr.history.archive.season', '61'),
 ('5.mmr.history.archive.season', '61');
+
+ALTER TABLE team ADD COLUMN "primary_data_updated" TIMESTAMP WITH TIME ZONE;
+

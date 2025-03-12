@@ -201,7 +201,7 @@ public class TeamStateServiceIT
         OffsetDateTime odt
     )
     {
-        teamDAO.merge(Set.of(Team.joined(
+        teamDAO.merge(Set.of(new Team(
             null,
             10,
             Region.EU,
@@ -215,7 +215,7 @@ public class TeamStateServiceIT
             legacyId,
             1,
             rating, wins, 1, 1, 0,
-            null
+            null, odt, odt
         )));
         teamStateDAO.takeSnapshot(List.of(id), odt);
     }
