@@ -615,3 +615,15 @@ LANGUAGE plpgsql;
 ALTER TABLE team
     ADD CONSTRAINT "uq_team_legacy_natural_id"
         UNIQUE ("queue_type", "team_type", "region", "legacy_id", "season");
+
+--replace season id with previous season
+INSERT INTO var(key, value) VALUES
+('1.mmr.history.finalized.season', '61'),
+('2.mmr.history.finalized.season', '61'),
+('3.mmr.history.finalized.season', '61'),
+('5.mmr.history.finalized.season', '61'),
+
+('1.mmr.history.archive.season', '61'),
+('2.mmr.history.archive.season', '61'),
+('3.mmr.history.archive.season', '61'),
+('5.mmr.history.archive.season', '61');
