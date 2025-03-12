@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.linked;
@@ -94,7 +94,7 @@ public class LinkedServiceIT
         discordService.linkAccountToDiscordUser(acc.getId(), discordUser.getId());
         mvc.perform
         (
-            get("/api/account/{id}/linked/external/accounts", acc.getId())
+            get("/api/account/{id}/linked/external/account", acc.getId())
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isNotFound())
@@ -104,7 +104,7 @@ public class LinkedServiceIT
         Map<SocialMedia, Object> linkedAccounts = WebServiceTestUtil.getObject
         (
             mvc, objectMapper, new TypeReference<>() {},
-            "/api/account/{id}/linked/external/accounts", acc.getId()
+            "/api/account/{id}/linked/external/account", acc.getId()
         );
         Assertions.assertThat(linkedAccounts)
             .usingRecursiveComparison()

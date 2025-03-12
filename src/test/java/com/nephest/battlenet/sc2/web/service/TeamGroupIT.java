@@ -264,7 +264,7 @@ public class TeamGroupIT
     public void testGetLadderTeams()
     throws Exception
     {
-        LadderTeam[] teams = objectMapper.readValue(mvc.perform(get("/api/team/group/teams/full")
+        LadderTeam[] teams = objectMapper.readValue(mvc.perform(get("/api/team/group/team/full")
             .queryParam
             (
                 "legacyUid",

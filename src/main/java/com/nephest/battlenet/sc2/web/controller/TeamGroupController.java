@@ -39,7 +39,7 @@ public class TeamGroupController
         return WebServiceUtil.notFoundIfEmpty(teamIds);
     }
 
-    @GetMapping("/teams/full") @TeamGroup
+    @GetMapping("/team/full") @TeamGroup
     public ResponseEntity<?> getLadderTeams(@TeamGroup Set<Long> teamIds)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findTeamsByIds(teamIds));
