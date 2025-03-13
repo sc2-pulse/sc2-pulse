@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -62,7 +62,7 @@ public class TeamStateDAO
         + ") "
         + "SELECT team.id, "
         + "CASE WHEN :timestamp::timestamp with time zone IS NULL "
-            + "THEN last_played "
+            + "THEN primary_data_updated "
             + "ELSE :timestamp::timestamp with time zone END, "
         + "division_id, wins, wins + losses + ties, rating, "
         + "CASE WHEN team.queue_type != :mainQueueType THEN true ELSE null::boolean END, "

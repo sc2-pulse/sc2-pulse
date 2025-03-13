@@ -176,4 +176,34 @@ public class TeamStateDAOIT
         assertEquals(0, teamStateDAO.getCount(Region.US, from));
     }
 
+    @Test
+    public void whenTakeSnapshotsWithNullOdt_thenUseTeamPrimaryDataUpdatedTimestamp()
+    {
+        seasonGenerator.generateDefaultSeason(0);
+        OffsetDateTime primaryDataUpdated = SC2Pulse.offsetDateTime();
+        Team team = teamDAO.merge(Set.of(new Team(
+            null,
+            SeasonGenerator.DEFAULT_SEASON_ID,
+            SeasonGenerator.DEFAULT_SEASON_REGION,
+            SeasonGenerator.defaultLeague(),
+            SeasonGenerator.DEFAULT_TIER,
+            "1.1.1",
+            1,
+            1L, 2, 3, 4, 5,
+            primaryDataUpdated.minusSeconds(1),
+            primaryDataUpdated.minusSeconds(2),
+            primaryDataUpdated
+
+        ))).iterator().next();
+        teamStateDAO.takeSnapshot(List.of(team.getId()));
+        assertTrue
+        (
+            ladderTeamStateDAO.find(Set.of(TeamLegacyUid.of(team)))
+                .get(0)
+                .getTeamState()
+                .getDateTime()
+                    .isEqual(primaryDataUpdated)
+        );
+    }
+
 }
