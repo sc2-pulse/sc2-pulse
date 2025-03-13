@@ -162,6 +162,11 @@ implements StatefulBasicEntityOperations<Team>
         (
             existingTeam.getJoined() == null
             || !existingTeam.getJoined().isAfter(newTeam.getJoined())
+        )
+        &&
+        (
+            existingTeam.getPrimaryDataUpdated() == null
+            || existingTeam.getPrimaryDataUpdated().isBefore(newTeam.getPrimaryDataUpdated())
         );
     }
 

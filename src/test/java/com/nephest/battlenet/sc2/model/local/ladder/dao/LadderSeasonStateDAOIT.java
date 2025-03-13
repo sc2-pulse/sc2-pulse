@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamIT;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderSeasonState;
@@ -200,8 +201,7 @@ public class LadderSeasonStateDAOIT
         assertEquals(4, states1.get(0).getSeasonState().getPlayerCount());
 
         //hour2: 2 4v4 US teams, 1 1v1 EU team
-        team1.setWins(2); // + 1 win
-        team1.setLastPlayed(SC2Pulse.offsetDateTime());
+        TeamIT.modifyForUpdate(team1);
         teamDAO.merge(Set.of(team1));
         OffsetDateTime time2 = time1.plusHours(1);
         TeamState state21 = TeamState.of(team1);

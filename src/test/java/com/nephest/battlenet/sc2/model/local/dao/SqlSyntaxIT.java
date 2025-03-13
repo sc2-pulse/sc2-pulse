@@ -290,18 +290,19 @@ public class SqlSyntaxIT
         //do not update a team when games played or division is the same
         assertEquals(0, teamDAO.merge(Set.of(team)).size());
         team.setDivisionId(division2.getId());
-        team.setLastPlayed(SC2Pulse.offsetDateTime());
+        TeamIT.modifyTimestampsForUpdate(team);
         assertEquals(1, teamDAO.merge(Set.of(team)).size());
         team.setDivisionId(division.getId());
-        team.setLastPlayed(SC2Pulse.offsetDateTime());
+        TeamIT.modifyTimestampsForUpdate(team);
         assertEquals(1, teamDAO.merge(Set.of(team)).size());
-        sameTeam.setLastPlayed(SC2Pulse.offsetDateTime());
+        TeamIT.modifyTimestampsForUpdate(sameTeam);
         assertEquals(0, teamDAO.merge(Set.of(sameTeam)).size());
         sameTeam.setDivisionId(division2.getId());
-        sameTeam.setLastPlayed(SC2Pulse.offsetDateTime());
+        TeamIT.modifyTimestampsForUpdate(sameTeam);
         assertEquals(1, teamDAO.merge(Set.of(sameTeam)).size());
-        updatedTeam.setLastPlayed(SC2Pulse.offsetDateTime());
-        teamDAO.merge(Set.of(updatedTeam));
+        updatedTeam.setLastPlayed(sameTeam.getLastPlayed().plusSeconds(1));
+        updatedTeam.setPrimaryDataUpdated(sameTeam.getPrimaryDataUpdated().plusSeconds(1));
+        assertEquals(1, teamDAO.merge(Set.of(updatedTeam)).size());
         Team foundTeam = teamDAO.findById(updatedTeam.getId()).orElse(null);
         assertEquals(updatedTeam.getId(), foundTeam.getId());
         assertNotNull(foundTeam);
@@ -409,8 +410,7 @@ public class SqlSyntaxIT
 
         assertEquals(zergTeam.getId(),
             teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
-        zergTeam.setWins(zergTeam.getWins() + 1);
-        zergTeam.setLastPlayed(SC2Pulse.offsetDateTime());
+        TeamIT.modifyForUpdate(zergTeam);
         teamDAO.merge(Set.of(zergTeam));
         assertEquals(zergTeam.getWins(), teamDAO.find1v1TeamByFavoriteRace(season.getBattlenetId(), character, Race.ZERG)
             .get().getKey().getWins());

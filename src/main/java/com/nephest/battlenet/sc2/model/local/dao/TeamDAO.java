@@ -198,6 +198,11 @@ implements BasicEntityOperations<Team>
                 + "team.joined IS NULL "
                 + "OR team.joined <= v.joined::timestamp with time zone "
             + ") "
+            + "AND "
+            + "( "
+                + "team.primary_data_updated IS NULL "
+                + "OR team.primary_data_updated < v.primary_data_updated "
+            + ") "
             + "RETURNING " + STD_SELECT
         + "), "
         + "missing AS "

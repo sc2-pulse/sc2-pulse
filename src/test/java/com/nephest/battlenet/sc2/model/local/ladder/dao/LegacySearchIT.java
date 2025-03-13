@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamIT;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
@@ -186,8 +187,7 @@ public class LegacySearchIT
             .collect(Collectors.toSet());
         teamMemberDAO.merge(members);
         teamStateDAO.saveState(Set.of(TeamState.of(team1)));
-        team1.setWins(team1.getWins() + 1);
-        team1.setLastPlayed(lastPlayed.plusSeconds(1));
+        TeamIT.modifyForUpdate(team1);
         teamDAO.merge(Set.of(team1));
         teamStateDAO.saveState(Set.of(TeamState.of(team1)));
         return team1;

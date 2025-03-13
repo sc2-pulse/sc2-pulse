@@ -294,6 +294,18 @@ public class TeamIT
         return operations.stream().map(Arguments::of);
     }
 
+    public static void modifyTimestampsForUpdate(Team team)
+    {
+        team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+        team.setPrimaryDataUpdated(team.getPrimaryDataUpdated().plusSeconds(1));
+    }
+
+    public static void modifyForUpdate(Team team)
+    {
+        modifyTimestampsForUpdate(team);
+        team.setWins(team.getWins() + 1);
+    }
+
     @MethodSource("teamOperations")
     @ParameterizedTest
     public void whenDivisionIdIsChanged_thenUpdate(BasicEntityOperations<Team> operations)
@@ -304,7 +316,7 @@ public class TeamIT
             team->
             {
                 team.setDivisionId(team.getDivisionId() + 1);
-                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+                modifyTimestampsForUpdate(team);
             },
             true
         );
@@ -320,7 +332,7 @@ public class TeamIT
             team->
             {
                 team.setWins(team.getWins() + 1);
-                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+                modifyTimestampsForUpdate(team);
             },
             true
         );
@@ -336,7 +348,7 @@ public class TeamIT
             team->
             {
                 team.setLosses(team.getLosses() + 1);
-                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+                modifyTimestampsForUpdate(team);
             },
             true
         );
@@ -357,7 +369,7 @@ public class TeamIT
                 team.setRating(team.getRating() + 1);
                 team.setWins(team.getWins() + 1);
                 team.setLosses(team.getLosses() + 1);
-                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+                modifyTimestampsForUpdate(team);
             },
             true
         );
@@ -375,6 +387,7 @@ public class TeamIT
             {
                 team.setWins(team.getWins() + 1);
                 team.setLastPlayed(SC2Pulse.offsetDateTime());
+                team.setPrimaryDataUpdated(team.getPrimaryDataUpdated().plusSeconds(1));
             },
             true
         );
@@ -418,6 +431,7 @@ public class TeamIT
             {
                 team.setWins(team.getWins() + 1);
                 team.setLastPlayed(lastPlayed);
+                team.setPrimaryDataUpdated(team.getPrimaryDataUpdated().plusSeconds(1));
             },
             true
         );
@@ -522,6 +536,7 @@ public class TeamIT
         //move team overstepped timestamp further to test update
         Team teamOversteppedEu_2 = SerializationUtils.clone(teamOversteppedEu);
         teamOversteppedEu_2.setLastPlayed(team3.getLastPlayed().plusMinutes(1));
+        teamOversteppedEu_2.setPrimaryDataUpdated(teamOversteppedEu_2.getPrimaryDataUpdated().plusSeconds(1));
         teamOversteppedEu_2.setWins(teamOversteppedEu.getWins() + 2);
         teamOversteppedEu_2.setRating(teamOversteppedEu.getRating() + 2);
         assertFalse(teamDAO.merge(Set.of(teamOversteppedEu_2)).isEmpty());
@@ -550,7 +565,7 @@ public class TeamIT
 
         //updated with correct timestamp
         Team team3_4 = SerializationUtils.clone(team3_3);
-        team3_4.setLastPlayed(team3_4.getLastPlayed().plusSeconds(1));
+        modifyTimestampsForUpdate(team3_4);
         team3_4.setWins(team3_4.getWins() + 4);
         team3_4.setRating(team3_4.getRating() + 4);
         assertFalse(operations.merge(Set.of(team3_4)).isEmpty());
@@ -580,11 +595,7 @@ public class TeamIT
         testMerge
         (
             operations,
-            team->
-            {
-                team.setWins(team.getWins() + 1);
-                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
-            },
+            TeamIT::modifyForUpdate,
             true
         );
     }
@@ -598,8 +609,7 @@ public class TeamIT
             operations,
             team->
             {
-                team.setWins(team.getWins() + 1);
-                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+                modifyForUpdate(team);
                 team.setJoined(team.getJoined().plusSeconds(1));
             },
             true
@@ -624,10 +634,77 @@ public class TeamIT
                     team.setJoined(null);
                 }
             },
+            TeamIT::modifyForUpdate,
+            true
+        );
+    }
+
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousPrimaryDataUpdatedIsAfterCurrentPrimaryDataUpdated_thenSkip
+    (
+        BasicEntityOperations<Team> operations
+    )
+    {
+        testMerge
+        (
+            operations,
             team->
             {
                 team.setWins(team.getWins() + 1);
                 team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+                team.setPrimaryDataUpdated(team.getPrimaryDataUpdated().minusSeconds(1));
+            },
+            false
+        );
+    }
+
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousPrimaryDataUpdatedEqualsCurrentPrimaryDataUpdated_thenSkip
+    (
+        BasicEntityOperations<Team> operations
+    )
+    {
+        testMerge
+        (
+            operations,
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+            },
+            false
+        );
+    }
+
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousPrimaryDataUpdatedIsNull_thenUpdate(BasicEntityOperations<Team> operations)
+    {
+        testMerge
+        (
+            operations,
+            team->
+            {
+                if(operations instanceof StatefulBasicEntityOperations<Team>)
+                {
+                    team.setPrimaryDataUpdated(null);
+                }
+                else
+                {
+                    template.update
+                    (
+                        "UPDATE team SET primary_data_updated = null WHERE id = ?",
+                        team.getId()
+                    );
+                }
+            },
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+                team.setPrimaryDataUpdated(SC2Pulse.offsetDateTime());
             },
             true
         );

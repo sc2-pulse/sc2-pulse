@@ -198,10 +198,12 @@ public class TeamGroupHistoryCornerCaseIT
 
         //bump games for the merge, this should have no effect expect for allowing us to merge
         team1.setWins(team1.getWins() -1);
+        team1.setPrimaryDataUpdated(team1.getPrimaryDataUpdated().plusSeconds(1));
         teamDAO.merge(Set.of(team1));
         team1.setWins(team1.getWins() + 1);
         //3 games because games didn't change but rating did, which means there was a reset
         team1.setRating(team2.getRating());
+        team1.setPrimaryDataUpdated(team1.getPrimaryDataUpdated().plusSeconds(1));
         teamDAO.merge(Set.of(team1));
         teamStateDAO.takeSnapshot(List.of(1L), seasons.get(0).getStart().plusHours(2));
 
@@ -209,6 +211,7 @@ public class TeamGroupHistoryCornerCaseIT
         team1.setWins(team2.getWins());
         team1.setLosses(team2.getLosses());
         team1.setTies(team2.getTies());
+        team1.setPrimaryDataUpdated(team1.getPrimaryDataUpdated().plusSeconds(1));
         teamDAO.merge(Set.of(team1));
         teamStateDAO.takeSnapshot(List.of(1L), seasons.get(0).getStart().plusHours(3));
 
@@ -269,6 +272,7 @@ public class TeamGroupHistoryCornerCaseIT
         //the data has changed, player action
         team1.setRating(1L);
         team1.setWins(team1.getWins() + 1);
+        team1.setPrimaryDataUpdated(team1.getPrimaryDataUpdated().plusSeconds(1));
         teamDAO.merge(Set.of(team1));
         teamStateDAO.takeSnapshot(List.of(1L), SeasonGenerator.DEFAULT_SEASON_START.plusHours(2));
 
