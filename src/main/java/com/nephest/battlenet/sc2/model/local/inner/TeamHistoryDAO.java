@@ -503,6 +503,12 @@ public class TeamHistoryDAO
             %5$s
         """;
 
+    private static final Map<GroupMode, String> FIND_SUMMARY_ID_COLUMN = Map.of
+    (
+        GroupMode.TEAM, "team_id",
+        GroupMode.LEGACY_UID, "team.id"
+    );
+
     private static final String FIND_SUMMARY_TEMPLATE =
         """
         WITH
@@ -519,7 +525,7 @@ public class TeamHistoryDAO
             %1$s
             FROM team_state
             %2$s
-            WHERE team_id IN(:teamIds)
+            WHERE %5$s IN(:teamIds)
             AND
             (
                 :from::timestamp with time zone IS NULL
@@ -1171,7 +1177,8 @@ public class TeamHistoryDAO
 
             groupMode.getGroupStaticColumns().stream()
                 .map(StaticColumn::getName)
-                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER))
+                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
+            FIND_SUMMARY_ID_COLUMN.get(groupMode)
         );
     }
 
