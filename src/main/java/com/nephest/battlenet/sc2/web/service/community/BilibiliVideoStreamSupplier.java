@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.community;
@@ -11,10 +11,8 @@ import com.nephest.battlenet.sc2.model.bilibili.BilibiliStream;
 import com.nephest.battlenet.sc2.web.service.BilibiliAPI;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-@Component
 public class BilibiliVideoStreamSupplier
 implements VideoStreamSupplier
 {

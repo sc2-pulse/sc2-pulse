@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.community;
@@ -141,7 +141,7 @@ public class CommunityVideoStreamIT
     @Autowired @Qualifier("twitchVideoStreamSupplier")
     private VideoStreamSupplier videoStreamSupplier;
 
-    @Autowired @Qualifier("bilibiliVideoStreamSupplier")
+    @Autowired @Qualifier("secondaryVideoStreamSupplier")
     private VideoStreamSupplier otherStreamSupplier;
 
     @MockBean
@@ -159,13 +159,13 @@ public class CommunityVideoStreamIT
         @MockBean(classes = {TwitchVideoStreamSupplier.class})
         private VideoStreamSupplier videoStreamSupplier;
 
-        @MockBean(classes = {BilibiliVideoStreamSupplier.class})
-        private VideoStreamSupplier otherStreamSupplier;
+        @MockBean(classes = {SecondaryVideoStreamSupplier.class})
+        private VideoStreamSupplier secondaryVideoStreamSupplier;
 
         @PostConstruct
         public void initMock(){
             when(videoStreamSupplier.getService()).thenReturn(SocialMedia.TWITCH);
-            when(otherStreamSupplier.getService()).thenReturn(SocialMedia.BILIBILI);
+            when(secondaryVideoStreamSupplier.getService()).thenReturn(SocialMedia.BILIBILI);
         }
     }
 
