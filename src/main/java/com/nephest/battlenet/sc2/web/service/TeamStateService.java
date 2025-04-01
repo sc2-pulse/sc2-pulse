@@ -262,7 +262,7 @@ public class TeamStateService
         for(int i = 0; i < teamIds.size(); )
         {
             LOG.trace("Final team states {} {} progress: {}/{}", region, season, i, teamIds.size());
-            int nextIx = Math.min((i + 1) * FINAL_TEAM_STATE_BATCH_SIZE, teamIds.size());
+            int nextIx = Math.min(i + FINAL_TEAM_STATE_BATCH_SIZE, teamIds.size());
             teamStateDAO.takeSnapshot(teamIds.subList(i, nextIx), odt);
             i = nextIx;
         }
@@ -293,7 +293,7 @@ public class TeamStateService
         for(int i = 0; i < teamIds.size(); )
         {
             LOG.trace("Team state archive {} {} progress: {}/{}", region, season, i, teamIds.size());
-            int nextIx = Math.min((i + 1) * TEAM_ARCHIVE_BATCH_SIZE, teamIds.size());
+            int nextIx = Math.min(i + TEAM_ARCHIVE_BATCH_SIZE, teamIds.size());
             teamStateArchiveDAO.archive(Set.copyOf(teamIds.subList(i, nextIx)));
             i = nextIx;
         }
