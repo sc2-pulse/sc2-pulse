@@ -343,7 +343,7 @@ public class CharacterController
     private static HttpStatus getStatus(ExternalLinkResolveResult result)
     {
         return !result.getFailedTypes().isEmpty()
-            ? HttpStatus.BAD_GATEWAY
+            ? WebServiceUtil.UPSTREAM_ERROR_STATUS
             : result.getLinks().isEmpty()
                 ? HttpStatus.NOT_FOUND
                 : HttpStatus.OK;

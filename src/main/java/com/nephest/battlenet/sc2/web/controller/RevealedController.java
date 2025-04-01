@@ -109,7 +109,7 @@ public class RevealedController
     private static HttpStatus getStatus(CommunityStreamResult result)
     {
         return !result.getErrors().isEmpty()
-            ? HttpStatus.BAD_GATEWAY
+            ? WebServiceUtil.UPSTREAM_ERROR_STATUS
             : result.getStreams().isEmpty()
                 ? HttpStatus.NOT_FOUND
                 : HttpStatus.OK;
