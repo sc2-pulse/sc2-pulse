@@ -72,6 +72,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import reactor.core.Disposable;
+import reactor.core.scheduler.Schedulers;
 
 @SpringBootTest(classes = {AllTestConfig.class, SpyBeanConfig.class})
 @AutoConfigureMockMvc
@@ -428,6 +429,7 @@ public class TeamStateServiceIT
         );
         stub.accept(Region.EU);
 
+        teamStateService.subToEvents(Schedulers.immediate());
         BlockingQueue<LadderUpdateData> eventData = new ArrayBlockingQueue<>(1);
         disposables.add(teamStateService.getUpdateEvent().subscribe(eventData::add));
 

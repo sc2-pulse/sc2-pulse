@@ -28,13 +28,16 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Scheduler;
 
 @Service
 public class TeamStateService
@@ -52,6 +55,8 @@ public class TeamStateService
     private final TeamStateDAO teamStateDAO;
     private final TeamStateArchiveDAO teamStateArchiveDAO;
     private final UpdateService updateService;
+    private final EventService eventService;
+    private final Scheduler defaultScheduler;
     private TeamStateService service;
     private int mainLengthDays, secondaryLengthDays;
 
@@ -60,6 +65,7 @@ public class TeamStateService
     private InstantVar lastClearInstant;
     private final Sinks.Many<LadderUpdateData> updateEvent = Sinks
         .many().multicast().onBackpressureBuffer(Region.values().length * 4, false);
+    private Disposable eventSub;
 
     @Autowired
     public TeamStateService
@@ -71,6 +77,7 @@ public class TeamStateService
         VarDAO varDAO,
         EventService eventService,
         UpdateService updateService,
+        @Qualifier("secondaryDbScheduler") Scheduler defaultScheduler,
         @Lazy TeamStateService service,
         @Value("${com.nephest.battlenet.sc2.mmr.history.main.length:#{'180'}}") int mainLengthDays,
         @Value("${com.nephest.battlenet.sc2.mmr.history.secondary.length:#{'180'}}") int secondaryLengthDays
@@ -81,11 +88,13 @@ public class TeamStateService
         this.teamStateDAO = teamStateDAO;
         this.teamStateArchiveDAO = teamStateArchiveDAO;
         this.updateService = updateService;
+        this.eventService = eventService;
+        this.defaultScheduler = defaultScheduler;
         this.service = service;
         this.mainLengthDays = mainLengthDays;
         this.secondaryLengthDays = secondaryLengthDays;
         initVars(varDAO);
-        subToEvents(eventService);
+        subToEvents();
     }
 
     private void initVars(VarDAO varDAO)
@@ -132,13 +141,19 @@ public class TeamStateService
         if(lastClearInstant.getValue() == null) lastClearInstant.setValue(Instant.MIN);
     }
 
-    private void subToEvents(EventService eventService)
+    protected void subToEvents(Scheduler scheduler)
     {
-        eventService.getLadderUpdateEvent()
+        if(eventSub != null) eventSub.dispose();
+        eventSub = eventService.getLadderUpdateEvent()
             .flatMap(data->WebServiceUtil.getOnErrorLogAndSkipMono(
-                Mono.fromRunnable(()->update(data)).then(Mono.just(data))), 1)
+                Mono.fromRunnable(()->update(data)).subscribeOn(scheduler).then(Mono.just(data))), 1)
             .doOnNext(data->updateEvent.emitNext(data, EventService.DEFAULT_FAILURE_HANDLER))
             .subscribe();
+    }
+
+    protected void subToEvents()
+    {
+        subToEvents(defaultScheduler);
     }
 
     protected TeamStateService getService()
@@ -158,6 +173,7 @@ public class TeamStateService
             .flatMap(Collection::stream)
             .forEach(v->v.setValueAndSave(Long.MIN_VALUE));
         lastClearInstant.setValueAndSave(Instant.MIN);
+        subToEvents();
     }
 
     protected Map<Region, LongVar> getLastFinalizedSeasonVars()
