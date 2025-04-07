@@ -223,7 +223,7 @@
     <span th:replace="~{fragments/section :: loading-indicator-error}"></span>
 </div>
 <span   th:fragment="loading-indicator-in-progress"
-        class="indicator-loading loading-in-progress text-primary spinner-border dimension-1 align-self-center  align-middle mt-3"
+        class="indicator-loading loading-in-progress text-primary spinner-border dimension-1 align-self-center  align-middle mt-3 mb-3"
         role="status"
         title="Loading..."
         data-toggle="tooltip"
@@ -231,7 +231,7 @@
 </span>
 <span
         th:fragment="loading-indicator-error"
-        class="indicator-loading loading-error text-danger font-weight-bold align-self-center align-middle rem-2 mt-3"
+        class="indicator-loading loading-error text-danger font-weight-bold align-self-center align-middle rem-2 mt-3 mb-3"
         role="status"
         title="Failed to load data"
         data-toggle="tooltip"
