@@ -29,19 +29,13 @@ class CharacterUtil
     static updateCharacterModel(id)
     {
         const params = new URLSearchParams();
-        params.append("matchType", CharacterUtil.getMatchTypePath(false));
-        if(document.getElementById("mmr-depth").value) params.append("mmrHistoryDepth", document.getElementById("mmr-depth").value);
-        const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common?" + params.toString();
+        params.append("characterId", id);
+        const request = ROOT_CONTEXT_PATH + "api/group/character/full?" + params.toString();
         const characterPromise = Session.beforeRequest()
             .then(n=>fetch(request).then(Session.verifyJsonResponse));
         return characterPromise
             .then(json => {
-                json.history = CharacterUtil.expandMmrHistory(json.history);
-                const searchStd = json;
-                searchStd.result = json.teams;
-                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, searchStd);
-                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, json.linkedDistinctCharacters.map(c=>c.members.character).find(c=>c.id == id));
-                Model.DATA.get(VIEW.CHARACTER).set("reports", json.reports)
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, json[0]);
                 return json;
              });
     }
@@ -131,9 +125,8 @@ class CharacterUtil
 
     static updateCharacterTeamsView()
     {
-        const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id;
+        const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id;
         const searchResult = {result: Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams};
-        CharacterUtil.updateCharacterInfo(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH), id);
         CharacterUtil.updateCharacterTeamsSection(searchResult);
     }
 
@@ -141,18 +134,12 @@ class CharacterUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updateCharacterModel(id)
-            .then(o => CharacterUtil.updateCharacterMatchesView())
             .then(jsons => {
-                CharacterUtil.resetAdditionalLinks();
-                CharacterUtil.updateCharacterTeamsView();
-                CharacterUtil.updateCharacterStatsView();
-                CharacterUtil.updateCharacterLinkedCharactersView(id);
-                CharacterUtil.updateCharacterMmrHistoryView();
-                CharacterUtil.updateCharacterReportsView();
+                const fullChar = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+                CharacterUtil.updateCharacterInfoName(fullChar.members, id);
                 CharacterUtil.updateCharacterGroupLink(
                     document.querySelector("#player-info .group-link"),
-                    Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH),
-                    Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)
+                    fullChar
                 );
                 for(const link of document.querySelectorAll(".character-link-follow-only[rel~=nofollow]")) link.relList.remove("nofollow");
                 Util.setGeneratingStatus(STATUS.SUCCESS);
@@ -169,12 +156,12 @@ class CharacterUtil
     static enhanceDynamicCharacterData()
     {
         ElementUtil.ELEMENT_TASKS.set("player-stats-player-tab", e=>Util.load(document.querySelector("#character-links-section"),
-            n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id)));
+            n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id)));
         document.querySelectorAll(".character-additional-links-reload")
             .forEach(reloadCtl=>reloadCtl.addEventListener("click",e=>{
                 CharacterUtil.resetAdditionalLinks();
                 Util.load(document.querySelector("#character-links-section"),
-                    n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id));
+                    n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id));
             }));
     }
 
@@ -344,7 +331,7 @@ class CharacterUtil
         }
     }
 
-    static updateCharacterInfoName(commonCharacter, member)
+    static updateCharacterInfoName(member)
     {
         let charName;
         let charClan;
@@ -400,16 +387,6 @@ class CharacterUtil
         additionalNameElem.textContent = charNameAdditional;
         const additionalContainer = document.querySelector("#player-info-additional-container");
         additionalContainer.querySelectorAll(":scope .player-flag").forEach(f=>f.remove());
-        const cheaterFlag = commonCharacter.linkedDistinctCharacters
-            .flatMap(dc=>dc.members)
-            .find(m=>m.restrictions == true)
-                ? CHEATER_FLAG.CHEATER
-                : commonCharacter.linkedDistinctCharacters
-                  .flatMap(dc=>dc.members)
-                  .find(m=>m.restrictions == false)
-                    ? CHEATER_FLAG.SUSPICIOUS
-                    : null;
-        if(cheaterFlag) additionalContainer.appendChild(ElementUtil.createCheaterFlag(cheaterFlag, true));
         if(member.proNickname) additionalContainer.appendChild(ElementUtil.createProFlag());
     }
 
@@ -510,7 +487,7 @@ class CharacterUtil
 
     static updateCharacterMmrHistoryView()
     {
-        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character;
         const queueFilterSelect = document.getElementById("mmr-queue-filter");
         const queue = EnumUtil.enumOfFullName(queueFilterSelect.options[queueFilterSelect.selectedIndex].value, TEAM_FORMAT);
         const queueFilter = queue.code;
@@ -1043,7 +1020,7 @@ class CharacterUtil
         const tabNav = tab.closest(".nav-item");
         const pane = document.querySelector("#player-stats-matches");
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-        const characterId = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id;
+        const characterId = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id;
         const matches = commonCharacter.matches;
 
         tabNav.classList.remove("d-none");
@@ -1145,7 +1122,7 @@ class CharacterUtil
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
         const lastMatch = commonCharacter.matches[commonCharacter.matches.length - 1];
         CharacterUtil.loadNextMatchesModel(
-            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id,
+            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id,
             lastMatch.match.date, lastMatch.match.type, lastMatch.map.id
         ).then(json => {
             if(json.result.length > 0) CharacterUtil.updateCharacterMatchesView();
@@ -1276,7 +1253,7 @@ class CharacterUtil
     {
         const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
         if(prev != null)  window.clearTimeout(prev);
-        ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(e=>CharacterUtil.updateCharacter(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id), ElementUtil.INPUT_TIMEOUT));
+        ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(e=>CharacterUtil.updateCharacter(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id), ElementUtil.INPUT_TIMEOUT));
     }
 
     static enhanceMatchTypeInput()
@@ -1318,13 +1295,13 @@ class CharacterUtil
             .then(r=>window.scrollTo(0, 0));
     }
 
-    static updateCharacterGroupLink(link, commonCharacter, character)
+    static updateCharacterGroupLink(link, fullCharacter)
     {
         const params = new URLSearchParams();
-        if(commonCharacter.proPlayer != null) {
-            params.append("proPlayerId", commonCharacter.proPlayer.proPlayer.id);
+        if(fullCharacter.members.proId != null) {
+            params.append("proPlayerId", fullCharacter.members.proId);
         } else {
-            params.append("accountId", character.accountId);
+            params.append("accountId", fullCharacter.members.account.id);
         }
         const fullParams = GroupUtil.fullUrlSearchParams(params);
         link.setAttribute("href", `${ROOT_CONTEXT_PATH}?${fullParams.toString()}#group-group`);
@@ -1520,7 +1497,7 @@ class CharacterUtil
         document.querySelector("#report-character-form").addEventListener("submit", e=>{
             e.preventDefault();
             const fd = new FormData(document.querySelector("#report-character-form"));
-            fd.set("playerCharacterId", Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id);
+            fd.set("playerCharacterId", Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id);
             Util.setGeneratingStatus(STATUS.BEGIN);
             CharacterUtil.reportCharacter(fd)
                 .then(e => Util.setGeneratingStatus(STATUS.SUCCESS))
@@ -1535,7 +1512,7 @@ class CharacterUtil
         for(const team of BufferUtil.teamBuffer.buffer.values()) {
             team.members.forEach(m=>
             {
-                if(m.character.id == Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id) return;
+                if(m.character.id == Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id) return;
 
                 const unmasked = Util.unmaskName(m);
                 const option = document.createElement("option");

@@ -66,7 +66,7 @@ class RevealUtil
         const method = evt.target.getAttribute("data-reveal-mode") == "reveal" ? "POST" : "DELETE";
         const fd = new FormData(evt.target);
         const proPlayerId = fd.get("player");
-        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character;
         return RevealUtil.reveal(character.accountId, proPlayerId, method)
             .then(e=>CharacterUtil.updateCharacter(character.id))
             .then(e=>BootstrapUtil.hideActiveModal())
@@ -475,7 +475,7 @@ class RevealUtil
     static updateLog()
     {
         const linkedCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character;
         const logContainer = document.querySelector('#modal-reveal-player .log');
         ElementUtil.executeTask('#modal-reveal-player', ()=>
             RevealUtil.blame(linkedCharacter, character, logContainer.querySelector(":scope .blame"))
