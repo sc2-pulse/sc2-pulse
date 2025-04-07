@@ -517,6 +517,17 @@ class Util
             });
     }
 
+    static resetLoadingIndicatorTree(container)
+    {
+        Util.resetLoadingIndicator(container);
+        Util.resetNestedLoadingIndicators(container);
+    }
+
+    static resetNestedLoadingIndicators(container)
+    {
+        container.querySelectorAll(".container-loading").forEach(Util.resetLoadingIndicator);
+    }
+
     static resetLoadingIndicator(container)
     {
         return ElementUtil.executeTask(container.id, ()=>ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE));
