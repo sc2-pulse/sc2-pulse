@@ -139,7 +139,7 @@ class CharacterUtil
                 CharacterUtil.updateCharacterInfoName(fullChar.members, id);
                 CharacterUtil.updateCharacterGroupLink(
                     document.querySelector("#player-info .group-link"),
-                    fullChar
+                    fullChar.members
                 );
                 for(const link of document.querySelectorAll(".character-link-follow-only[rel~=nofollow]")) link.relList.remove("nofollow");
                 Util.setGeneratingStatus(STATUS.SUCCESS);
@@ -1295,14 +1295,20 @@ class CharacterUtil
             .then(r=>window.scrollTo(0, 0));
     }
 
-    static updateCharacterGroupLink(link, fullCharacter)
+    static createTopCharacterGroupIdParameters(member)
     {
         const params = new URLSearchParams();
-        if(fullCharacter.members.proId != null) {
-            params.append("proPlayerId", fullCharacter.members.proId);
+        if(member.proId != null) {
+            params.append("proPlayerId", member.proId);
         } else {
-            params.append("accountId", fullCharacter.members.account.id);
+            params.append("accountId", member.account.id);
         }
+        return params;
+    }
+
+    static updateCharacterGroupLink(link, member)
+    {
+        const params = CharacterUtil.createTopCharacterGroupIdParameters(member);
         const fullParams = GroupUtil.fullUrlSearchParams(params);
         link.setAttribute("href", `${ROOT_CONTEXT_PATH}?${fullParams.toString()}#group-group`);
     }
