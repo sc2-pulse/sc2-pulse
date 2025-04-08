@@ -1133,7 +1133,7 @@ class ChartUtil
 
     static isTierThresholdApplicable(yAxis)
     {
-        return yAxis == "percent-global" || yAxis == "percent-region";
+        return yAxis == "percent-region";
     }
 
     static createCustomAnnotationsCallback(context)

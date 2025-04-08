@@ -512,8 +512,6 @@ class TeamUtil
         const seasonLastOnly = document.getElementById("team-mmr-season-last").checked;
         const depth = document.getElementById("team-mmr-depth").value;
         const depthDate = depth > 0 ? new Date(Date.now() - (depth * 24 * 60 * 60 * 1000)) : null;
-        const excludeStart = document.getElementById("team-mmr-exclude-start").value || 0;
-        const excludeEnd = document.getElementById("team-mmr-exclude-end").value || 0;
         const yAxis = document.getElementById("team-mmr-y-axis").value;
         const mmrYValueGetter = CharacterUtil.mmrYValueGetter(yAxis);
         const xAxisType = document.getElementById("team-mmr-x-type").checked ? "time" : "category";
@@ -545,7 +543,7 @@ class TeamUtil
             }
             curEntry++;
         }
-        transformedData = TeamUtil.filterTeamMmrHistory(transformedData, depthDate, excludeStart, excludeEnd);
+        transformedData = TeamUtil.filterTeamMmrHistory(transformedData, depthDate);
         transformedData.sort((a,b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
         transformedData.forEach(CharacterUtil.calculateMmrHistoryTopPercentage);
         const mmrHistoryGrouped = Util.groupBy(transformedData, h=>h.teamState.dateTime.getTime());
@@ -571,23 +569,20 @@ class TeamUtil
             null,
             xAxisType == "time" ? dt=>parseInt(dt) : dt=>Util.DATE_TIME_FORMAT.format(new Date(parseInt(dt)))
         );
-        TeamUtil.updateTeamMmrFilters(transformedData, depthDate, excludeStart, excludeEnd);
+        TeamUtil.updateTeamMmrFilters(transformedData, depthDate);
     }
 
-    static filterTeamMmrHistory(mmrHistory, depthDate, excludeStart, excludeEnd)
+    static filterTeamMmrHistory(mmrHistory, depthDate)
     {
         if(depthDate != null) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() > depthDate.getTime());
-        if(excludeEnd > 0)
-            mmrHistory = mmrHistory.filter(h=>h.teamState.rating < excludeStart || h.teamState.rating >= excludeEnd);
         return mmrHistory;
     }
 
-    static updateTeamMmrFilters(mmrHistory, depthDate, excludeStart, excludeEnd)
+    static updateTeamMmrFilters(mmrHistory, depthDate)
     {
         document.getElementById("team-mmr-filters").textContent =
         "(" + mmrHistory.length  + " entries"
         + (depthDate != null ? ", starting from " + Util.DATE_FORMAT.format(depthDate) : "")
-        + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "")
         + ")";
     }
 
@@ -632,8 +627,6 @@ class TeamUtil
     static enhanceMmrForm()
     {
         document.getElementById("team-mmr-depth").addEventListener("input",  TeamUtil.onMmrInput);
-        document.getElementById("team-mmr-exclude-start").addEventListener("input", TeamUtil.onMmrInput);
-        document.getElementById("team-mmr-exclude-end").addEventListener("input", TeamUtil.onMmrInput);
         document.getElementById("team-mmr-season-last").addEventListener("change", evt=>TeamUtil.updateTeamMmrView());
         document.getElementById("team-mmr-y-axis").addEventListener("change", e=>{
             CharacterUtil.setMmrYAxis(e.target.value, e.target.getAttribute("data-chartable"));

@@ -517,8 +517,6 @@ class CharacterUtil
         const teamTypeFilter = queue == TEAM_FORMAT._1V1 ? TEAM_TYPE.ARRANGED.code : TEAM_TYPE.RANDOM.code;
         const depth = document.getElementById("mmr-depth").value || null;
         const depthStartTimestamp = depth ? Date.now() - (depth * 24 * 60 * 60 * 1000) : null;
-        const excludeStart = document.getElementById("mmr-exclude-start").value || 0;
-        const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
         const bestRaceOnly = document.getElementById("mmr-best-race").checked;
         const seasonLastOnly = document.getElementById("mmr-season-last").checked;
         const yAxis = document.getElementById("mmr-y-axis").value;
@@ -534,14 +532,14 @@ class CharacterUtil
         if(!seasonLastOnly) mmrHistory = mmrHistory
             .concat(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         mmrHistory.forEach(CharacterUtil.calculateMmrHistoryTopPercentage);
-        mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter, excludeStart, excludeEnd);
+        mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter);
         mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
         mmrHistory.sort((a, b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
         if(queue !== TEAM_FORMAT._1V1) mmrHistory.forEach(h=>h.race = "ALL");
         if(depth) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() >= depthStartTimestamp);
         const historyByRace = Util.groupBy(mmrHistory, h=>h.race);
         if(bestRaceOnly === true) mmrHistory = CharacterUtil.filterMmrHistoryBestRace(historyByRace);
-        mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter, excludeStart, excludeEnd);
+        mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter);
         const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime.getTime());
         const headers = Array.from(historyByRace.keys()).sort((a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order);
         const data = [];
@@ -571,7 +569,7 @@ class CharacterUtil
         document.getElementById("mmr-history-filters").textContent =
             "(" + queue.name
             + (depth ? ", starting from " + Util.DATE_TIME_FORMAT.format(new Date(depthStartTimestamp)) : "")
-            + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
+            + ", "
               + mmrHistory.length  + " entries)";
         const gamesMmr = CharacterUtil.getGamesAndAverageMmrSortedArray(mmrHistory);
         CharacterUtil.updateTierProgressTable(document.querySelector("#mmr-tier-progress-table"), gamesMmr);
@@ -1001,11 +999,9 @@ class CharacterUtil
         return elem;
     }
 
-    static filterMmrHistory(history, queueFilter, teamTypeFilter, excludeStart, excludeEnd)
+    static filterMmrHistory(history, queueFilter, teamTypeFilter)
     {
         let filtered = history.filter(h=>h.league.queueType == queueFilter && h.league.teamType == teamTypeFilter);
-        if(excludeEnd > 0)
-            filtered = filtered.filter(h=>h.teamState.rating < excludeStart || h.teamState.rating >= excludeEnd);
         return filtered;
     }
 
@@ -1257,8 +1253,6 @@ class CharacterUtil
     {
         document.getElementById("mmr-queue-filter").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
         document.getElementById("mmr-depth").addEventListener("input",  CharacterUtil.onMmrInput);
-        document.getElementById("mmr-exclude-start").addEventListener("input", CharacterUtil.onMmrInput);
-        document.getElementById("mmr-exclude-end").addEventListener("input", CharacterUtil.onMmrInput);
         document.getElementById("mmr-best-race").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
         document.getElementById("mmr-season-last").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
         document.getElementById("mmr-y-axis").addEventListener("change", e=>{
@@ -1271,7 +1265,7 @@ class CharacterUtil
 
     static setMmrYAxis(mode, chartable)
     {
-        if(mode == "mmr" || mode == "win-rate-season") {
+        if(mode == "mmr") {
             ChartUtil.setNormalYAxis(chartable);
         } else {
             ChartUtil.setTopPercentYAxis(chartable);
@@ -1685,12 +1679,6 @@ class CharacterUtil
 CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS = 2 * 24 * 60 * 60 * 1000;
 CharacterUtil.MMR_Y_VALUE_GETTERS = new Map([
     ["mmr", (history)=>history.teamState.rating],
-    ["percent-global", (history)=>history.teamState.globalTopPercent],
     ["percent-region", (history)=>history.teamState.regionTopPercent],
-    ["percent-league", (history)=>(history.teamState.leagueRank / history.teamState.leagueTeamCount) * 100],
-    ["win-rate-season", (history)=>history.teamState.wins
-        ? (history.teamState.wins / history.teamState.games) * 100
-        : null
-    ],
     ["default", (history)=>history.teamState.rating],
 ]);
