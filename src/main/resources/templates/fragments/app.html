@@ -540,7 +540,7 @@
                     </nav>
                     <div id="player-stats-all" class="tab-content">
                         <section id="player-stats-summary" class="tab-pane fade" data-view-title="Summary">
-                            <section id="player-stats">
+                            <section id="player-stats" class="container-loading loading-none">
                                 <h3>
                                     Career summary
                                     <img
@@ -557,6 +557,7 @@
                                         most of the games as a specific race
                                     </p>
                                 </aside>
+                                <div th:replace="~{fragments/section :: loading-indicator}"></div>
                             </section>
                         </section>
                         <section id="player-stats-mmr" class="tab-pane fade show active" data-view-title="MMR history">

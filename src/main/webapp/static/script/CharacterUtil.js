@@ -7,6 +7,7 @@ class CharacterUtil
     static setCharacterViewTasks()
     {
         ElementUtil.ELEMENT_TASKS.set("player-stats-characters-tab", e=>CharacterUtil.enqueueUpdateCharacterLinkedCharacters());
+        ElementUtil.ELEMENT_TASKS.set("player-stats-summary-tab", e=>CharacterUtil.enqueueUpdateCharacterStats());
     }
 
     static showCharacterInfo(e = null, explicitId = null)
@@ -436,12 +437,54 @@ class CharacterUtil
         ElementUtil.updateTabSelect(document.getElementById("teams-season-select"), navs);
     }
 
+    static resetCharacterStats()
+    {
+        delete Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).stats;
+        for(const statsSection of document.getElementsByClassName("player-stats-dynamic"))
+            statsSection.classList.add("d-none");
+    }
+
+    static enqueueUpdateCharacterStats()
+    {
+        return Util.load(document.querySelector("#player-stats"), n=>CharacterUtil.updateCharacterStats());
+    }
+
+    static updateCharacterStats()
+    {
+        CharacterUtil.resetCharacterStats();
+        const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id;
+        return CharacterUtil.updateCharacterStatsModel(id)
+            .then(stats=>{
+                CharacterUtil.updateCharacterStatsView();
+                return {data: stats, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static getCharacterStats(id)
+    {
+        const request = ROOT_CONTEXT_PATH + "api/character/" + encodeURIComponent(id) + "/stats/full";
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static updateCharacterStatsModel(id)
+    {
+        return CharacterUtil.getCharacterStats(id)
+            .then(stats=>{
+                Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).stats = stats;
+                return stats;
+            });
+    }
+
     static updateCharacterStatsView()
     {
+        for(const statsSection of document.getElementsByClassName("player-stats-dynamic")) statsSection.classList.add("d-none");
         const searchResult = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).stats;
+        if(!searchResult) return;
+
         const includePrevious = localStorage.getItem("player-search-stats-include-previous") != "false";
         const grayOutPrevious = localStorage.getItem("player-search-stats-gray-out-previous") != "false";
-        for(const statsSection of document.getElementsByClassName("player-stats-dynamic")) statsSection.classList.add("d-none");
         for(const ladderStats of searchResult)
         {
             const stats = ladderStats.stats;
