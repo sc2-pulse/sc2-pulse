@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2024 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -627,9 +627,10 @@
                                 <select id="teams-season-select" class="form-control mb-2 text-center"></select>
                             </section>
                         </section>
-                        <section id="player-stats-characters" class="tab-pane fade" data-view-title="Linked characters">
+                        <section id="player-stats-characters" class="tab-pane fade container-loading loading-none" data-view-title="Linked characters">
                             <div th:replace="~{fragments/table :: player-search('linked-characters-table', 'Linked characters', 'table-selectable-row')}"></div>
                             <p th:replace="~{fragments/section :: missing-characters-message}"></p>
+                            <div th:replace="~{fragments/section :: loading-indicator}"></div>
                         </section>
                         <section id="player-stats-player" class="tab-pane fade" data-view-title="Player info">
                             <section id="pro-player-info" class="pro-player-info">

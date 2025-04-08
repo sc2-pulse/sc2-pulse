@@ -87,6 +87,7 @@ class SC2Restful
                 ChartUtil.enhanceMmrAnnotationControls();
                 StatsUtil.updateGamesStatsVisibility();
             case START_MODE.MINIMAL:
+                CharacterUtil.setCharacterViewTasks();
                 CharacterUtil.enhanceMmrForm();
                 CharacterUtil.enhanceReportForm();
                 CharacterUtil.updateReportForm();

@@ -4,8 +4,14 @@
 class CharacterUtil
 {
 
+    static setCharacterViewTasks()
+    {
+        ElementUtil.ELEMENT_TASKS.set("player-stats-characters-tab", e=>CharacterUtil.enqueueUpdateCharacterLinkedCharacters());
+    }
+
     static showCharacterInfo(e = null, explicitId = null)
     {
+        Util.resetLoadingIndicatorTree(document.querySelector("#player-info"));
         if (e != null) e.preventDefault();
         const id = explicitId || e.currentTarget.getAttribute("data-character-id");
 
@@ -36,6 +42,7 @@ class CharacterUtil
         return characterPromise
             .then(json => {
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, json[0]);
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, {});
                 return json;
              });
     }
@@ -1004,13 +1011,45 @@ class CharacterUtil
         return racialHistory.get(result) ? racialHistory.get(result) : [];
     }
 
-    static updateCharacterLinkedCharactersView(id)
+    static updateCharacterLinkedCharacters()
+    {
+        CharacterUtil.resetCharacterLinkedCharacters();
+        const fullChar = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        return CharacterUtil.updateCharacterLinkedCharactersModel(fullChar.members)
+            .then(chars=>{
+                CharacterUtil.updateCharacterLinkedCharactersView();
+                return {data: chars, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static enqueueUpdateCharacterLinkedCharacters()
+    {
+        return Util.load(document.querySelector("#player-stats-characters"), n=>CharacterUtil.updateCharacterLinkedCharacters());
+    }
+
+    static resetCharacterLinkedCharacters()
+    {
+        delete Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedDistinctCharacters;
+        ElementUtil.removeChildren(document.querySelector("#linked-characters-table tbody"));
+    }
+
+    static updateCharacterLinkedCharactersModel(member)
+    {
+        const params = CharacterUtil.createTopCharacterGroupIdParameters(member);
+        return GroupUtil.getCharacters(params)
+            .then(chars=>Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedDistinctCharacters = chars);
+    }
+
+    static updateCharacterLinkedCharactersView()
     {
         const table = document.getElementById("linked-characters-table");
         for(const tr of table.querySelectorAll(":scope tr.active")) tr.classList.remove("active");
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        if(!commonCharacter.linkedDistinctCharacters) return;
+
+        const fullChar = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
         CharacterUtil.updateCharacters(table, commonCharacter.linkedDistinctCharacters);
-        const activeCharAnchor = table.querySelector(':scope a[data-character-id="' + id + '"]');
+        const activeCharAnchor = table.querySelector(':scope a[data-character-id="' + fullChar.members.character.id + '"]');
         if(activeCharAnchor != null) activeCharAnchor.closest("tr").classList.add("active");
     }
 
