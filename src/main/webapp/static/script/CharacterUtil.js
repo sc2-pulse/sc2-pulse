@@ -8,6 +8,7 @@ class CharacterUtil
     {
         ElementUtil.ELEMENT_TASKS.set("player-stats-characters-tab", e=>CharacterUtil.enqueueUpdateCharacterLinkedCharacters());
         ElementUtil.ELEMENT_TASKS.set("player-stats-summary-tab", e=>CharacterUtil.enqueueUpdateCharacterStats());
+        ElementUtil.ELEMENT_TASKS.set("player-stats-player-tab", e=>CharacterUtil.enqueueUpdateCharacterLinks());
     }
 
     static showCharacterInfo(e = null, explicitId = null)
@@ -161,21 +162,15 @@ class CharacterUtil
         ElementUtil.executeTask("character-links-section", ()=>Model.DATA.get(VIEW.CHARACTER).delete("additionalLinks"));
     }
 
-    static enhanceDynamicCharacterData()
+    static enqueueUpdateAdditionalCharacterLinks()
     {
-        ElementUtil.ELEMENT_TASKS.set("player-stats-player-tab", e=>Util.load(document.querySelector("#character-links-section"),
-            n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id)));
-        document.querySelectorAll(".character-additional-links-reload")
-            .forEach(reloadCtl=>reloadCtl.addEventListener("click",e=>{
-                CharacterUtil.resetAdditionalLinks();
-                Util.load(document.querySelector("#character-links-section"),
-                    n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id));
-            }));
+        return Util.load(document.querySelector("#additional-link-loading"),
+            n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id));
     }
 
     static updateAdditionalCharacterLinks(id)
     {
-        const linksContainer = document.querySelector("#character-links-section");
+        CharacterUtil.resetAdditionalLinks();
         document.querySelectorAll(".additional-link-container").forEach(e=>e.classList.add("d-none"));
         return CharacterUtil.updateAdditionalCharacterLinksModel(id)
             .then(linkResult => {
@@ -267,9 +262,35 @@ class CharacterUtil
         }
 
         CharacterUtil.updateCharacterInfoName(commonCharacter, member);
-        const region = EnumUtil.enumOfName(character.region, REGION);
+        CharacterUtil.updateCharacterDiscordConnection(commonCharacter);
+        CharacterUtil.updateCharacterProInfo(commonCharacter);
+    }
+
+    static enqueueUpdateCharacterLinks()
+    {
+        return Util.load(document.querySelector("#player-stats-player-loading"), n=>CharacterUtil.updateCharacterLinks());
+    }
+
+    static updateCharacterLinks()
+    {
+        return new Promise((res, rej)=>{
+            CharacterUtil.updateCharacterMemberLinksView();
+            res();
+        })
+            .then(e=>Promise.allSettled([
+                CharacterUtil.enqueueUpdateAdditionalCharacterLinks(),
+                CharacterUtil.enqueueUpdateCharacterProInfo(),
+                CharacterUtil.enqueueUpdateCharacterLinkedExternalAccounts()])
+            ).then(results=>{return {data: results, status: Util.getAllSettledLoadingStatus(results)};});
+    }
+
+    static updateCharacterMemberLinksView()
+    {
+
+        const fullChar = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        const region = EnumUtil.enumOfName(fullChar.members.character.region, REGION);
         const profileLinkElement = document.getElementById("link-sc2");
-        const profileSuffix = `/${region.code}/${character.realm}/${character.battlenetId}`;
+        const profileSuffix = `/${region.code}/${fullChar.members.character.realm}/${fullChar.members.character.battlenetId}`;
         document.getElementById("link-sc2arcade").setAttribute("href", "https://sc2arcade.com/profile" + profileSuffix + "/lobbies-history");
         if(region == REGION.CN)
         {
@@ -281,19 +302,88 @@ class CharacterUtil
             profileLinkElement.setAttribute("href", "https://starcraft2.blizzard.com/profile" + profileSuffix);
             profileLinkElement.parentElement.classList.remove("d-none");
         }
-        if(Util.isFakeBattleTag(account.battleTag)) {
+        if(Util.isFakeBattleTag(fullChar.members.account.battleTag)) {
             document.querySelector("#link-battletag").classList.add("d-none");
         } else {
             document.querySelector("#link-battletag").classList.remove("d-none");
-            document.querySelector("#link-battletag span").textContent = account.battleTag;
+            document.querySelector("#link-battletag span").textContent = fullChar.members.account.battleTag;
         }
-        CharacterUtil.updateCharacterDiscordConnection(commonCharacter);
-        CharacterUtil.updateCharacterProInfo(commonCharacter);
     }
 
-    static updateCharacterDiscordConnection(commonCharacter)
+    static resetCharacterLinkedExternalAccountsModel()
     {
-        const discordUser = commonCharacter.discordUser;
+        delete Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedExternalAccounts;
+    }
+
+    static resetCharacterLinkedExternalAccountsView()
+    {
+        document.querySelector("#player-info .account.external").classList.add("d-none");
+    }
+
+    static resetCharacterLinkedExternalAccounts()
+    {
+        CharacterUtil.resetCharacterLinkedExternalAccountsModel();
+        CharacterUtil.resetCharacterLinkedExternalAccountsView();
+    }
+
+    static getLinkedExternalAccounts(accountId)
+    {
+        const request = ROOT_CONTEXT_PATH + "api/account/" + encodeURIComponent(accountId) + "/linked/external/account";
+        return Session.beforeRequest()
+           .then(n=>fetch(request))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static updateCharacterLinkedExternalAccountsModel(accountId)
+    {
+        return CharacterUtil.getLinkedExternalAccounts(accountId)
+            .then(accounts=>{
+                Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedExternalAccounts = accounts;
+                return accounts;
+            });
+    }
+
+    static updateCharacterLinkedExternalAccounts()
+    {
+        CharacterUtil.resetCharacterLinkedExternalAccounts();
+        const fullChar = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        return CharacterUtil.updateCharacterLinkedExternalAccountsModel(fullChar.members.account.id)
+            .then(accounts=>{
+                CharacterUtil.updateCharacterLinkedExternalAccountsView();
+                return {data: accounts, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static enqueueUpdateCharacterLinkedExternalAccounts()
+    {
+        return Util.load(document.querySelector("#linked-external-accounts"), n=>CharacterUtil.updateCharacterLinkedExternalAccounts());
+    }
+
+    static updateCharacterLinkedExternalAccountsView()
+    {
+        const accounts = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedExternalAccounts;
+        if(!accounts) return;
+
+        if(!CharacterUtil.LINKED_EXTERNAL_ACCOUNT_UPDATERS)
+            CharacterUtil.LINKED_EXTERNAL_ACCOUNT_UPDATERS = CharacterUtil.createCharacterLinkedExternalAccountUpdaters();
+        for(const [accType, acc] of Object.entries(accounts))
+        {
+            const updater = CharacterUtil.LINKED_EXTERNAL_ACCOUNT_UPDATERS.get(accType);
+            if(!updater) throw new Error("Updated for " + accType + " type not found");
+
+            updater(acc);
+        }
+    }
+
+    static createCharacterLinkedExternalAccountUpdaters()
+    {
+        const updaters = new Map();
+        updaters.set("DISCORD", CharacterUtil.updateCharacterDiscordConnection);
+        return updaters;
+    }
+
+    static updateCharacterDiscordConnection(discordUser)
+    {
         const connectionElem = document.querySelector("#link-discord-connection");
         if(!discordUser) {
             connectionElem.classList.add("d-none");
@@ -304,13 +394,55 @@ class CharacterUtil
         }
     }
 
-    static updateCharacterProInfo(commonCharacter)
+    static resetCharacterProInfoModel()
+    {
+        delete Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).proPlayer;
+    }
+
+    static resetCharacterProInfoView()
     {
         for(const el of document.querySelectorAll(".pro-player-info")) el.classList.add("d-none");
-        if(commonCharacter.proPlayer == null) return;
+    }
+
+    static resetCharacterProInfo()
+    {
+        CharacterUtil.resetCharacterProInfoModel();
+        CharacterUtil.resetCharacterProInfoView();
+    }
+
+    static updateCharacterProInfoModel(proPlayerId)
+    {
+        return RevealUtil.getPlayer(proPlayerId)
+            .then(proPlayers=>{
+                Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).proPlayer = proPlayers[0];
+                return proPlayers[0];
+            });
+    }
+
+    static updateCharacterProInfo()
+    {
+        CharacterUtil.resetCharacterProInfo();
+        const fullMember = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        if(!fullMember.members.proId) return Promise.resolve({data: null, status: LOADING_STATUS.COMPLETE});
+
+        return CharacterUtil.updateCharacterProInfoModel(fullMember.members.proId)
+            .then(proPlayer=>{
+                CharacterUtil.doUpdateCharacterProInfo(proPlayer);
+                return {data: proPlayer, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static enqueueUpdateCharacterProInfo()
+    {
+        return Util.load(document.querySelector("#pro-player-info"), n=>CharacterUtil.updateCharacterProInfo());
+    }
+
+    static doUpdateCharacterProInfo(proPlayer)
+    {
+        CharacterUtil.resetCharacterProInfoView();
+        if(proPlayer == null) return;
 
         for(const link of document.querySelectorAll("#revealed-report [rel~=nofollow]")) link.relList.remove("nofollow");
-        const proPlayer = commonCharacter.proPlayer;
         document.querySelector("#pro-player-info").classList.remove("d-none");
         CharacterUtil.setProPlayerField("#pro-player-name", "td", proPlayer.proPlayer.name);
         CharacterUtil.setProPlayerField("#pro-player-birthday", "td", proPlayer.proPlayer.birthday != null

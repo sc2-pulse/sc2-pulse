@@ -634,7 +634,8 @@
                             <div th:replace="~{fragments/section :: loading-indicator}"></div>
                         </section>
                         <section id="player-stats-player" class="tab-pane fade" data-view-title="Player info">
-                            <section id="pro-player-info" class="pro-player-info">
+                            <div id="player-stats-player-loading" class="container-loading loading-none"></div>
+                            <section id="pro-player-info" class="pro-player-info container-loading loading-none">
                                 <h3>Player</h3>
                                 <table class="table c-table-simple m-auto">
                                     <tbody>
@@ -645,28 +646,10 @@
                                     <tr id="pro-player-earnings" class="pro-player-info"><th scope="row">Earnings</th><td></td></tr>
                                     </tbody>
                                 </table>
+                                <div th:replace="~{fragments/section :: loading-indicator}"></div>
                             </section>
-                            <section id="character-links-section" class="container-loading">
-                                <h3>
-                                    <span class="position-relative">
-                                        <span class="character-additional-links-reload cursor-pointer">Links</span>
-                                        <span
-                                            class="indicator-loading loading-error text-danger font-weight-bold position-absolute"
-                                            data-toggle="tooltip"
-                                            title="Failed to load additional links"
-                                        >
-                                            ×
-                                        </span>
-                                        <span
-                                              class="indicator-loading loading-in-progress align-self-center spinner-border dimension-1 text-primary align-middle position-absolute"
-                                              role="status"
-                                              aria-hidden="true"
-                                              title="Loading additional links"
-                                              data-toggle="tooltip"
-                                        >
-                                        </span>
-                                    </span>
-                                </h3>
+                            <section id="character-links-section" class="container-loading loading-none">
+                                <h3>Links</h3>
                                 <ul id="character-links" class="list-unstyled text-center">
                                     <li class="mb-3">
                                         <ul class="d-flex flex-center-wrap-gap list-unstyled">
@@ -729,9 +712,12 @@
                                                     <img th:src="@{/static/icon/logo/sc2replaystats.png}" alt="SC2Replaystats"/>
                                                 </a>
                                             </li>
+                                            <li id="additional-link-loading" class="container-loading loading-none">
+                                               <div class="text-center"><div th:replace="~{fragments/section :: loading-indicator}"></div></div>
+                                            </li>
                                         </ul>
                                     </li>
-                                    <li>
+                                    <li id="linked-external-accounts" class="container-loading loading-none">
                                         <ul class="d-inline-flex flex-column flex-center-wrap-gap list-unstyled flex-list">
                                             <li>
                                                 <span id="link-battletag" class="social-media d-flex flex-center-wrap-gap">
@@ -740,12 +726,13 @@
                                                 </span>
                                             </li>
                                             <li>
-                                                <span id="link-discord-connection" class="social-media d-flex flex-center-wrap-gap">
+                                                <span id="link-discord-connection" class="social-media account external d-flex flex-center-wrap-gap">
                                                     <img th:src="@{/static/icon/logo/discord.svg}" alt="Discord" title="Discord" class="flex-grow-1"/>
                                                     <span class="tag copy-to-clipboard text-right"></span>
                                                 </span>
                                             </li>
                                         </ul>
+                                        <div class="text-center"><div th:replace="~{fragments/section :: loading-indicator}"></div></div>
                                     </li>
                                     <li class="additional-link-container d-none">
                                         <table class="inline-table table-gap-1">
