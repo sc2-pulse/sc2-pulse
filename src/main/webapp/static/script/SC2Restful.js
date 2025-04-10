@@ -92,7 +92,6 @@ class SC2Restful
                 CharacterUtil.enhanceReportForm();
                 CharacterUtil.updateReportForm();
                 CharacterUtil.enhanceMatchesHistoricalMmrInput();
-                CharacterUtil.enhanceLoadMoreMatchesInput();
                 CharacterUtil.enhanceMatchTypeInput();
                 RevealUtil.enhanceCtl();
                 VersusUtil.enhance();

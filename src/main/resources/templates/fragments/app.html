@@ -760,8 +760,10 @@
                                 </ul>
                             </section>
                         </section>
-                        <section id="player-stats-matches" class="tab-pane fade" data-view-title="Matches">
-                            <div th:replace="~{/fragments/section :: matches('', true, true)}"></div>
+                        <section id="player-stats-matches" class="tab-pane fade container-loading loading-none" data-view-title="Matches">
+                            <div th:replace="~{/fragments/section :: matches('', true, false)}"></div>
+                            <div th:replace="~{fragments/section :: loading-indicator}"></div>
+                            <div id="player-stats-matches-reset-loading" class="container-loading loading-none"></div>
                         </section>
                     </div>
                 </div>

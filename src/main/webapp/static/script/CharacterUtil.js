@@ -9,6 +9,9 @@ class CharacterUtil
         ElementUtil.ELEMENT_TASKS.set("player-stats-characters-tab", e=>CharacterUtil.enqueueUpdateCharacterLinkedCharacters());
         ElementUtil.ELEMENT_TASKS.set("player-stats-summary-tab", e=>CharacterUtil.enqueueUpdateCharacterStats());
         ElementUtil.ELEMENT_TASKS.set("player-stats-player-tab", e=>CharacterUtil.enqueueUpdateCharacterLinks());
+        ElementUtil.ELEMENT_TASKS.set("player-stats-matches-tab", e=>CharacterUtil.enqueueResetNextMatchesView());
+        ElementUtil.infiniteScroll(document.querySelector("#player-stats-matches .container-indicator-loading-default"),
+            e=>CharacterUtil.enqueueUpdateNextMatches());
     }
 
     static showCharacterInfo(e = null, explicitId = null)
@@ -1244,12 +1247,6 @@ class CharacterUtil
             localStorage.getItem("matches-historical-mmr") != "false"
         );
         Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.TEAMS, {result: commonCharacter.teams ? commonCharacter.teams.concat(result.teams) : result.teams});
-        if(result.validMatches.length >= MATCH_BATCH_SIZE) {
-            document.querySelector("#load-more-matches").classList.remove("d-none");
-        }
-        else {
-            document.querySelector("#load-more-matches").classList.add("d-none");
-        }
 
         return Promise.resolve();
     }
@@ -1329,32 +1326,72 @@ class CharacterUtil
         cell.textContent = stats[key];
     }
 
-    static loadNextMatches(evt)
+    static resetNextMatchesModel()
     {
-        evt.preventDefault();
-        Util.setGeneratingStatus(STATUS.BEGIN);
-        const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-        const lastMatch = commonCharacter.matches[commonCharacter.matches.length - 1];
-        CharacterUtil.loadNextMatchesModel(
-            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id,
-            lastMatch.match.date, lastMatch.match.type, lastMatch.map.id
-        ).then(json => {
-            if(json.result.length > 0) CharacterUtil.updateCharacterMatchesView();
-            if(json.result.length < MATCH_BATCH_SIZE) document.querySelector("#load-more-matches").classList.add("d-none");
-            Util.setGeneratingStatus(STATUS.SUCCESS);
-         })
-         .catch(error => Session.onPersonalException(error));
+        const data = Model.DATA.get(VIEW.CHARACTER);
+        if(!data || !data.get(VIEW_DATA.VAR)) return;
+
+        delete Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).matches;
     }
 
-    static loadNextMatchesModel(id, dateAnchor, typeAnchor, mapAnchor)
+    static resetNextMatchesView()
     {
-        return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${id}/matches/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1${CharacterUtil.getMatchTypePath()}`))
-            .then(Session.verifyJsonResponse)
-            .then(json => {
-                const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-                commonCharacter.matches = commonCharacter.matches.concat(json.result);
-                return json;
+        ElementUtil.removeChildren(document.querySelector("#matches tbody"));
+    }
+
+    static resetNextMatches()
+    {
+        CharacterUtil.resetNextMatchesModel();
+        CharacterUtil.resetNextMatchesView();
+        Util.resetLoadingIndicator(document.querySelector("#player-stats-matches"));
+    }
+
+    static enqueueResetNextMatchesView()
+    {
+        return Util.load(document.querySelector("#player-stats-matches-reset-loading"), n=>{
+            CharacterUtil.resetNextMatchesView();
+            return Promise.resolve({data: null, status: LOADING_STATUS.COMPLETE});
+        });
+    }
+
+    static enqueueUpdateNextMatches()
+    {
+        return Util.load(document.querySelector("#player-stats-matches"), n=>CharacterUtil.updateNextMatches());
+    }
+
+    static updateNextMatches()
+    {
+        const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        if(!commonCharacter.matches) CharacterUtil.resetNextMatchesView();
+        const lastMatch = commonCharacter.matches ? commonCharacter.matches[commonCharacter.matches.length - 1] : null;
+        let type = localStorage.getItem("matches-type") || "all";
+        if(type == "all") type = null;
+        return CharacterUtil.updateNextMatchesModel(
+            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id,
+            type,
+            lastMatch?.match.date, lastMatch?.match.type, lastMatch?.map.id
+        ).then(matches => {
+            if(matches && matches.length > 0) CharacterUtil.updateCharacterMatchesView();
+            const cursorIsComplete = !matches || matches.length < MATCH_BATCH_SIZE;
+            return {data: matches, status: cursorIsComplete ? LOADING_STATUS.COMPLETE : LOADING_STATUS.NONE};
+         });
+    }
+
+    static updateNextMatchesModel(id, type, dateCursor, typeCursor, mapCursor)
+    {
+        const params = new URLSearchParams();
+        params.append("characterId", id);
+        if(type) params.append("type", type);
+        if(dateCursor) params.append("dateCursor", dateCursor);
+        if(typeCursor) params.append("typeCursor", typeCursor);
+        if(mapCursor) params.append("mapCursor", mapCursor);
+        return GroupUtil.getMatches(params)
+            .then(matches => {
+                if(matches) {
+                    const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+                    commonCharacter.matches = commonCharacter.matches ? commonCharacter.matches.concat(matches) : matches;
+                }
+                return matches;
             });
     }
 
@@ -1477,13 +1514,9 @@ class CharacterUtil
         ctl.addEventListener("change", e=>window.setTimeout(e=>{
             const data = Model.DATA.get(VIEW.CHARACTER);
             if(!data || !data.get(VIEW_DATA.VAR)) return;
-            CharacterUtil.updateCharacter(data.get(VIEW_DATA.VAR).id);
+            CharacterUtil.resetNextMatches();
+            CharacterUtil.enqueueUpdateNextMatches();
         }, 1));
-    }
-
-    static enhanceLoadMoreMatchesInput()
-    {
-        document.querySelector("#load-more-matches").addEventListener("click", CharacterUtil.loadNextMatches);
     }
 
     static enhanceAutoClanSearch()
