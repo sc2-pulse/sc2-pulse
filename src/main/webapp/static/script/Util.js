@@ -522,6 +522,11 @@ class Util
         return ElementUtil.executeTask(container.id, ()=>ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE));
     }
 
+    static getAllSettledLoadingStatus(results, fulfilledStatus = LOADING_STATUS.COMPLETE)
+    {
+        return results.some(result=>result.status === "rejected") ? LOADING_STATUS.ERROR : fulfilledStatus;
+    }
+
     static getHrefUrlSearchParams(element)
     {
         const href = element.getAttribute("href");
