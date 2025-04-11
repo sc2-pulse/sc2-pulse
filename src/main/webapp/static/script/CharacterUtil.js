@@ -41,14 +41,13 @@ class CharacterUtil
     {
         const params = new URLSearchParams();
         params.append("characterId", id);
-        const request = ROOT_CONTEXT_PATH + "api/group/character/full?" + params.toString();
-        const characterPromise = Session.beforeRequest()
-            .then(n=>fetch(request).then(Session.verifyJsonResponse));
-        return characterPromise
-            .then(json => {
-                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, json[0]);
+        return GroupUtil.getCharacters(params)
+            .then(characters => {
+                if(!characters) throw Error("Character not found");
+
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, characters[0]);
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, {});
-                return json;
+                return characters;
              });
     }
 
