@@ -148,6 +148,7 @@ class CharacterUtil
             .then(jsons => {
                 const fullChar = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
                 CharacterUtil.updateCharacterInfoName(fullChar.members, id);
+                CharacterUtil.updateFollowAccountCtl();
                 CharacterUtil.updateCharacterGroupLink(
                     document.querySelector("#player-info .group-link"),
                     fullChar.members
@@ -240,17 +241,12 @@ class CharacterUtil
         linkElement.closest(".additional-link-container").classList.remove("d-none");
     }
 
-    static updateCharacterInfo(commonCharacter, id)
+    static updateFollowAccountCtl()
     {
-        const searchResult = commonCharacter.teams;
-        const member = searchResult[0].members.filter(m=>m.character.id == id)[0];
-        const account = member.account;
-        const character = member.character;
-
-        const info = document.getElementById("player-info");
-        info.setAttribute("data-account-id", account.id);
         if(Session.currentAccount != null && Session.currentFollowing != null)
         {
+            const account = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.account;
+            document.getElementById("player-info").setAttribute("data-account-id", account.id);
             if(Object.values(Session.currentFollowing).filter(val=>val.followingAccountId == account.id).length > 0)
             {
                 document.querySelector("#follow-button").classList.add("d-none");
@@ -262,10 +258,6 @@ class CharacterUtil
                 document.querySelector("#unfollow-button").classList.add("d-none");
             }
         }
-
-        CharacterUtil.updateCharacterInfoName(commonCharacter, member);
-        CharacterUtil.updateCharacterDiscordConnection(commonCharacter);
-        CharacterUtil.updateCharacterProInfo(commonCharacter);
     }
 
     static enqueueUpdateCharacterLinks()
