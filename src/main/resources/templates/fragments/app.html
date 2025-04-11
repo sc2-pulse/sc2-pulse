@@ -622,10 +622,12 @@
                                 <div id="mmr-chart-container" class="container-chart"><canvas id="mmr-chart" class="c-chart"></canvas></div>
                             </section>
                         </section>
-                        <section id="player-stats-history" class="tab-pane fade" data-view-title="Teams">
+                        <section id="player-stats-history" class="tab-pane fade container-loading loading-none" data-view-title="Teams">
                             <section id="character-teams-section">
                                 <h3>Teams</h3>
-                                <select id="teams-season-select" class="form-control mb-2 text-center"></select>
+                                <select id="teams-season-select" class="form-control mb-2 text-center season-picker"></select>
+                                <div th:replace="~{fragments/table :: team('character-teams-table-container', 'character-teams-table', 'table-team teams table-selectable-row', 'true')}"></div>
+                                <div th:replace="~{fragments/section :: loading-indicator}"></div>
                             </section>
                         </section>
                         <section id="player-stats-characters" class="tab-pane fade container-loading loading-none" data-view-title="Linked characters">

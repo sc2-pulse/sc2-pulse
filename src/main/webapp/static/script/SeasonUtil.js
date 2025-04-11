@@ -39,7 +39,6 @@ class SeasonUtil
         Session.currentSeasonsMap = seasonMap;
         Session.currentSeasonsIdMap = Array.from(seasonMap.values()).reduce((max, cur)=>max.size > cur.size ? max : cur);
         for(const season of seasons) SeasonUtil.updateSeasonMeta(season);
-        SeasonUtil.updateSeasonsTabs(Session.currentSeasons);
         for(const seasonPicker of document.querySelectorAll(".season-picker"))
         {
             ElementUtil.removeChildren(seasonPicker);
@@ -79,26 +78,6 @@ class SeasonUtil
         SeasonUtil.updateSeasonDates(season);
         SeasonUtil.updateSeasonDuration(season);
         SeasonUtil.updateSeasonDescription(season);
-    }
-
-    static updateSeasonsTabs(seasons)
-    {
-        const seasonPills = ElementUtil.createTabList(seasons.length, "character-teams-season", "4");
-        seasonPills.nav.classList.add("d-none");
-        const teamSection = document.getElementById("character-teams-section");
-        BootstrapUtil.enhanceTabSelect(document.getElementById("teams-season-select"), seasonPills.nav);
-        teamSection.appendChild(seasonPills.nav);
-        for(const pane of seasonPills.pane.getElementsByClassName("tab-pane"))
-        {
-            const table = TableUtil.createTable(["Format", "Rank", "MMR", "League", "Region", "Team", "Games", "Win%", "Misc"]);
-            table.querySelector("table").id = pane.id + "-table";
-            const headers = table.querySelectorAll(":scope thead th");
-            TableUtil.hoverableColumnHeader(headers[1]);
-            TableUtil.hoverableColumnHeader(headers[6]);
-            table.getElementsByTagName("table")[0].setAttribute("data-ladder-format-show", "true");
-            pane.appendChild(table);
-        }
-        teamSection.appendChild(seasonPills.pane);
     }
 
     static updateSeasonState(searchParams)

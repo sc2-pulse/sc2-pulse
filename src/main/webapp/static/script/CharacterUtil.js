@@ -12,6 +12,7 @@ class CharacterUtil
         ElementUtil.ELEMENT_TASKS.set("player-stats-matches-tab", e=>CharacterUtil.enqueueResetNextMatchesView());
         ElementUtil.infiniteScroll(document.querySelector("#player-stats-matches .container-indicator-loading-default"),
             e=>CharacterUtil.enqueueUpdateNextMatches());
+        ElementUtil.ELEMENT_TASKS.set("player-stats-history-tab", e=>CharacterUtil.enqueueUpdateCharacterTeams());
     }
 
     static showCharacterInfo(e = null, explicitId = null)
@@ -134,11 +135,80 @@ class CharacterUtil
             .catch(error => Session.onPersonalException(error));
     }
 
+    static resetCharacterTeamsModel()
+    {
+        const viewData = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        delete viewData.teams;
+        delete viewData.result;
+    }
+
+    static resetCharacterTeamsView()
+    {
+        ElementUtil.removeChildren(document.querySelector("#character-teams-table tbody"));
+    }
+
+    static resetCharacterTeamsLoading()
+    {
+        Util.resetLoadingIndicator(document.querySelector("#player-stats-history"));
+    }
+
+    static resetCharacterTeams(resetLoading = false)
+    {
+        CharacterUtil.resetCharacterTeamsModel();
+        CharacterUtil.resetCharacterTeamsView();
+        if(resetLoading) CharacterUtil.resetCharacterTeamsLoading();
+    }
+
+    static updateCharacterTeamsModel(characterId, season)
+    {
+        const params = new URLSearchParams();
+        params.append("characterId", characterId);
+        params.append("season", season);
+        return GroupUtil.getTeams(params)
+            .then(teams=>{
+                const viewData = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+                viewData.teams = teams;
+                viewData.result = teams;
+                return teams;
+            });
+    }
+
+    static updateCharacterTeams()
+    {
+        CharacterUtil.resetCharacterTeams();
+        return CharacterUtil.updateCharacterTeamsModel(
+            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id,
+            document.querySelector("#teams-season-select").value
+        )
+            .then(teams=>{
+                CharacterUtil.updateCharacterTeamsView()
+                return {data: teams, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static enqueueUpdateCharacterTeams()
+    {
+         return Util.load(document.querySelector("#player-stats-history"), n=>CharacterUtil.updateCharacterTeams());
+    }
+
     static updateCharacterTeamsView()
     {
-        const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id;
-        const searchResult = {result: Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams};
-        CharacterUtil.updateCharacterTeamsSection(searchResult);
+        const searchData = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        if(!searchData.teams) return;
+
+        TeamUtil.updateTeamsTable(document.querySelector("#character-teams-table"), searchData);
+    }
+    
+    static onCharacterTeamsSeasonChange(evt)
+    {
+        CharacterUtil.resetCharacterTeams(true);
+        return CharacterUtil.enqueueUpdateCharacterTeams();
+    }
+
+    static enhanceCharacterTeamsSeasonCtl()
+    {
+        document.querySelector("#teams-season-select")
+            .addEventListener("change", CharacterUtil.onCharacterTeamsSeasonChange);
     }
 
     static updateCharacter(id)
@@ -522,45 +592,6 @@ class CharacterUtil
         const additionalContainer = document.querySelector("#player-info-additional-container");
         additionalContainer.querySelectorAll(":scope .player-flag").forEach(f=>f.remove());
         if(member.proNickname) additionalContainer.appendChild(ElementUtil.createProFlag());
-    }
-
-    static updateCharacterTeamsSection(searchResultFull)
-    {
-        const searchResult = searchResultFull.result;
-        const grouped = searchResult.reduce(function(rv, x) {
-            (rv[x["season"]] = rv[x["season"]] || []).push(x);
-            return rv;
-        }, {});
-
-        const navs = document.querySelectorAll("#character-teams-section .nav-item");
-        const panes = document.querySelectorAll("#character-teams-section .tab-pane");
-        let shown = false;
-        let ix = 0;
-
-        for(const nav of navs) nav.classList.add("d-none");
-        const groupedEntries = Object.entries(grouped);
-        for(const [season, teams] of groupedEntries)
-        {
-            const nav = navs[ix];
-            const link = nav.getElementsByClassName("nav-link")[0];
-            const pane = panes[ix];
-            const seasonFull = Session.currentSeasons.find(s=>s.battlenetId == season);
-            const linkText = seasonFull.descriptiveName;
-            link.textContent = linkText;
-            if(!shown)
-            {
-                if(season == Session.currentSeason || ix == groupedEntries.length - 1)
-                {
-                    $(link).tab("show");
-                    shown = true;
-                }
-            }
-            const table = pane.getElementsByClassName("table")[0];
-            TeamUtil.updateTeamsTable(table, {result: teams});
-            nav.classList.remove("d-none");
-            ix++;
-        }
-        ElementUtil.updateTabSelect(document.getElementById("teams-season-select"), navs);
     }
 
     static resetCharacterStats()

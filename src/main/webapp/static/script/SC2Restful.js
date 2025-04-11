@@ -91,6 +91,7 @@ class SC2Restful
                 CharacterUtil.enhanceMmrForm();
                 CharacterUtil.enhanceReportForm();
                 CharacterUtil.updateReportForm();
+                CharacterUtil.enhanceCharacterTeamsSeasonCtl();
                 CharacterUtil.enhanceMatchesHistoricalMmrInput();
                 CharacterUtil.enhanceMatchTypeInput();
                 RevealUtil.enhanceCtl();
