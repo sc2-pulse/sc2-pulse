@@ -446,9 +446,10 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <section id="character-reports" class="d-none collapse mb-3">
+                    <section id="character-reports" class="d-none collapse mb-3 container-loading loading-none">
                         <h3>Reports</h3>
                         <div class="character-reports"></div>
+                        <div th:replace="~{fragments/section :: loading-indicator}"></div>
                     </section>
                     <nav>
                         <ul id="player-stats-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">

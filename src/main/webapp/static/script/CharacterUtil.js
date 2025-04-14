@@ -95,12 +95,56 @@ class CharacterUtil
         return path ? "/" + type : type;
     }
 
+    static resetCharacterReportsModel()
+    {
+        Model.DATA.get(VIEW.CHARACTER).delete("reports");
+    }
+
+    static resetCharacterReportsView()
+    {
+        ElementUtil.removeChildren(document.querySelector("#character-reports .character-reports"));
+    }
+
+    static resetCharacterReportsLoading()
+    {
+        Util.resetLoadingIndicator(document.querySelector("#character-reports"));
+    }
+
+    static resetCharacterReports(resetLoading = false)
+    {
+        CharacterUtil.resetCharacterReportsModel();
+        CharacterUtil.resetCharacterReportsView();
+        if(resetLoading) CharacterUtil.resetCharacterReportsLoading();
+    }
+
+    static getCharacterReports(ids)
+    {
+        const request = `${ROOT_CONTEXT_PATH}api/character/report/list/${ids.map(id=>encodeURIComponent(id)).join(",")}`;
+        return Session.beforeRequest()
+           .then(n=>fetch(request))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
     static updateCharacterReportsModel()
     {
-        return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedDistinctCharacters.map(c=>c.members.character.id).join(",")}`))
-            .then(Session.verifyJsonResponse)
-            .then(json => Model.DATA.get(VIEW.CHARACTER).set("reports", json));
+        return CharacterUtil.getCharacterReports(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedDistinctCharacters.map(c=>c.members.character.id))
+            .then(reports => Model.DATA.get(VIEW.CHARACTER).set("reports", reports));
+    }
+
+    static updateCharacterReports()
+    {
+        CharacterUtil.resetCharacterReports();
+        return CharacterUtil.enqueueUpdateCharacterLinkedCharacters()
+            .then(result=>CharacterUtil.updateCharacterReportsModel())
+            .then(reports=>{
+                CharacterUtil.updateCharacterReportsView();
+                return {data: reports, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static enqueueUpdateCharacterReports()
+    {
+        return Util.load(document.querySelector("#character-reports"), n=>CharacterUtil.updateCharacterReports());
     }
 
     static updateAllCharacterReportsModel(onlyUnreviewed = false)
@@ -224,6 +268,7 @@ class CharacterUtil
                     fullChar.members
                 );
                 for(const link of document.querySelectorAll(".character-link-follow-only[rel~=nofollow]")) link.relList.remove("nofollow");
+                CharacterUtil.enqueueUpdateCharacterReports();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
@@ -1582,6 +1627,18 @@ class CharacterUtil
         link.setAttribute("href", `${ROOT_CONTEXT_PATH}?${fullParams.toString()}#group-group`);
     }
 
+    static getCheaterFlag(reports)
+    {
+        if(!reports) return null;
+
+        const confirmedReports = reports.filter(r=>r.report.status);
+        return confirmedReports.some(r=>r.report.restrictions)
+            ? CHEATER_FLAG.CHEATER
+            : confirmedReports.some(r=>r.report.restrictions === false)
+                ? CHEATER_FLAG.SUSPICIOUS
+                : CHEATER_FLAG.REPORTED;
+    }
+
     static updateCharacterReportsView()
     {
         const reportsContainer = document.querySelector("#character-reports");
@@ -1594,7 +1651,7 @@ class CharacterUtil
         reportsContainer.classList.remove("d-none");
         CharacterUtil.updateCharacterReportsSection(reportsBody, reports, 4);
         if(!document.querySelector("#player-info-additional-container .player-flag-class-cheater"))
-            document.querySelector("#player-info-additional-container").appendChild(ElementUtil.createCheaterFlag(CHEATER_FLAG.REPORTED, true));
+            document.querySelector("#player-info-additional-container").appendChild(ElementUtil.createCheaterFlag(CharacterUtil.getCheaterFlag(reports), true));
     }
 
     static updateAllCharacterReportsView()
@@ -1822,10 +1879,12 @@ class CharacterUtil
                 }
                 return Session.verifyJsonResponse(resp);
             })
-            .then(e=>CharacterUtil.updateCharacterReportsModel())
+            .then(e=>{
+                CharacterUtil.resetCharacterReports(true);
+                return CharacterUtil.enqueueUpdateCharacterReports();
+            })
             .then(e=>{
                 $("#report-character-modal").modal('hide');
-                CharacterUtil.updateCharacterReportsView();
                 $("#character-reports").collapse('show');
                 window.setTimeout(e=>Util.scrollIntoViewById("character-reports"), 500);
             });
