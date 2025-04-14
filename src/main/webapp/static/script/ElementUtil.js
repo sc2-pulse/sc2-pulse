@@ -584,7 +584,7 @@ class ElementUtil
         let enqueuedTask = queue ? queue.then(task) : task();
         if(!enqueuedTask || !(enqueuedTask instanceof Promise)) enqueuedTask = Promise.resolve();
         ElementUtil.ELEMENT_TASK_QUEUE.set(id, enqueuedTask);
-        return task;
+        return enqueuedTask;
     }
 
     static isElementInViewport(el)
