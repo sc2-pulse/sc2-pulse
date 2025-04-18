@@ -565,6 +565,7 @@
                             <section id="character-mmr-section">
                                 <h3>Solo MMR history
                                     <span class="fullscreen-toggle align-middle" data-target="player-stats-mmr"></span></h3>
+                                <div id="mmr-history-all-loading" class="container-loading loading-none"></div>
 
                                 <div id="mmr-history-info-panel" class="flex-col-adaptive adaptive-border-color-splitter">
                                 <div id="mmr-history-ctl">
@@ -621,6 +622,9 @@
                                     <tbody><tr></tr></tbody>
                                 </table>
                                 <div id="mmr-chart-container" class="container-chart"><canvas id="mmr-chart" class="c-chart"></canvas></div>
+                                <div id="mmr-history-loading" class="container-loading loading-none">
+                                    <div th:replace="~{fragments/section :: loading-indicator}"></div>
+                                </div>
                             </section>
                         </section>
                         <section id="player-stats-history" class="tab-pane fade container-loading loading-none" data-view-title="Teams">

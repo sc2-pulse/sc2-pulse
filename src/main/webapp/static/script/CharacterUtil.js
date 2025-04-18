@@ -13,6 +13,7 @@ class CharacterUtil
         ElementUtil.infiniteScroll(document.querySelector("#player-stats-matches .container-indicator-loading-default"),
             e=>CharacterUtil.enqueueUpdateNextMatches());
         ElementUtil.ELEMENT_TASKS.set("player-stats-history-tab", e=>CharacterUtil.enqueueUpdateCharacterTeams());
+        ElementUtil.ELEMENT_TASKS.set("player-stats-mmr-tab", e=>CharacterUtil.enqueueUpdateCharacterMmrHistoryAll());
     }
 
     static showCharacterInfo(e = null, explicitId = null)
@@ -737,72 +738,291 @@ class CharacterUtil
         elem.textContent = data;
     }
 
+    static createMmrHistoryIndex(history, historyColumn)
+    {
+        const historyLength = Object.values(history)[0].length;
+        const index = {};
+        for(let i = 0; i < historyLength; i++)
+            index[history[historyColumn.fullName][i]] = i;
+        return index;
+    }
+
+    static calculateMmrHistoryTimestampIndex(historyData)
+    {
+        historyData.forEach(d=>{
+            d.timestampIndex = CharacterUtil.createMmrHistoryIndex(d.history, TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP);
+        });
+    }
+
+    static calculateMmrHistoryStats(history)
+    {
+        return {
+            length: history.map(h=>Object.values(h.history)[0].length).reduce((a, b) => a + b, 0)
+        };
+    }
+
+    static recalculateCharacterMmrHistoryStats()
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        if(!mmrHistory.history?.data) return;
+
+        mmrHistory.history.stats = CharacterUtil.calculateMmrHistoryStats(mmrHistory.history.data);
+    }
+
+    static resetCharacterMmrHistoryFilteredData()
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        mmrHistory.history.data = structuredClone(mmrHistory.history.originalData);
+        CharacterUtil.recalculateCharacterMmrHistoryStats();
+    }
+
+    static resetCharacterMmrParameters()
+    {
+        delete Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH)?.mmrHistory?.parameters;
+    }
+
+    static resetCharacterMmrHistoryModel()
+    {
+        delete Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH)?.mmrHistory?.history;
+    }
+
+    static resetCharacterMmrHistoryView()
+    {
+        document.querySelector("#mmr-chart-container").classList.add("d-none");
+    }
+
+    static resetCharacterMmrHistory(resetLoading = false)
+    {
+        CharacterUtil.resetCharacterMmrHistoryModel();
+        CharacterUtil.resetCharacterMmrHistoryView();
+        if(resetLoading) Util.resetLoadingIndicator(document.querySelector("#mmr-history-loading"));
+    }
+
+    static resetCharacterMmrHistoryAll(resetLoading = false)
+    {
+        CharacterUtil.resetCharacterMmrHistory(resetLoading);
+    }
+
+    static updateCharacterMmrHistoryModel(ids, legacyUids, groupBy, from, to, staticColumns, historyColumns)
+    {
+        return TeamUtil.getHistory(ids, legacyUids, groupBy, from, to, staticColumns, historyColumns)
+            .then(history=>{
+                const dataHistory = {};
+                Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory.history = dataHistory;
+                dataHistory.data = history;
+                if(history) {
+                    CharacterUtil.calculateMmrHistoryTimestampIndex(history);
+                    dataHistory.originalData = structuredClone(history);
+                    CharacterUtil.recalculateCharacterMmrHistoryStats();
+                    CharacterUtil.filterCharacterMmrHistory();
+                }
+                return dataHistory;
+            });
+    }
+
     static updateCharacterMmrHistoryView()
     {
-        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character;
-        const queueFilterSelect = document.getElementById("mmr-queue-filter");
-        const queue = EnumUtil.enumOfFullName(queueFilterSelect.options[queueFilterSelect.selectedIndex].value, TEAM_FORMAT);
-        const queueFilter = queue.code;
-        const teamTypeFilter = queue == TEAM_FORMAT._1V1 ? TEAM_TYPE.ARRANGED.code : TEAM_TYPE.RANDOM.code;
-        const depth = document.getElementById("mmr-depth").value || null;
-        const depthStartTimestamp = depth ? Date.now() - (depth * 24 * 60 * 60 * 1000) : null;
-        const bestRaceOnly = document.getElementById("mmr-best-race").checked;
-        const seasonLastOnly = document.getElementById("mmr-season-last").checked;
-        const yAxis = document.getElementById("mmr-y-axis").value;
-        const mmrYValueGetter = CharacterUtil.mmrYValueGetter(yAxis);
-        const xAxisType = document.getElementById("mmr-x-type").checked ? "time" : "category";
-        const showLeagues = document.getElementById("mmr-leagues").checked;
+        const mmrHistoryAll = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        if(!mmrHistoryAll?.history?.data) return;
 
-        const lastSeasonTeamSnapshotDates = CharacterUtil.getLastSeasonTeamSnapshotDates(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
-        const teams = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams
-            .filter(t=>t.queueType == queueFilter && t.teamType == teamTypeFilter)
-            .map(t=>CharacterUtil.convertTeamToTeamSnapshot(t, lastSeasonTeamSnapshotDates, seasonLastOnly));
-        let mmrHistory = teams;
-        if(!seasonLastOnly) mmrHistory = mmrHistory
-            .concat(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
-        mmrHistory.forEach(CharacterUtil.calculateMmrHistoryTopPercentage);
-        mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter);
-        mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
-        mmrHistory.sort((a, b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
-        if(queue !== TEAM_FORMAT._1V1) mmrHistory.forEach(h=>h.race = "ALL");
-        if(depth) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() >= depthStartTimestamp);
-        const historyByRace = Util.groupBy(mmrHistory, h=>h.race);
-        if(bestRaceOnly === true) mmrHistory = CharacterUtil.filterMmrHistoryBestRace(historyByRace);
-        mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter);
-        const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime.getTime());
-        const headers = Array.from(historyByRace.keys()).sort((a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order);
+        const parameters = mmrHistoryAll.parameters;
+        const mmrHistory = mmrHistoryAll.history;
+        const fullChar = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        const xAxisType = (localStorage.getItem("mmr-x-type") || "true") === "true" ? "time" : "category";
+
         const data = [];
-        const rawData = [];
-        for(const [dateTime, histories] of mmrHistoryGroped.entries())
-        {
-            rawData.push(histories);
-            data[dateTime] = {};
-            for(const history of histories) data[dateTime][history.race] = mmrYValueGetter(history);
-        }
+        const rawData = {index: {}, history: {}};
         ChartUtil.CHART_RAW_DATA.set("mmr-table", {rawData: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
-        ChartUtil.setCustomConfigOption("mmr-table", "region", character.region);
+        ChartUtil.setCustomConfigOption("mmr-table", "region", fullChar.members.character.region);
+        const mmrYValueGetter = CharacterUtil.MMR_Y_VALUE_OPERATIONS.get(parameters.yAxis).get;
+        for(const curHistory of mmrHistory.data) {
+            const curHistoryLength = Object.values(curHistory.history)[0].length;
+            const legacyIdData = TeamUtil.parseLegacyId(curHistory.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID.fullName]);
+            const curHistoryRace = legacyIdData.race || CharacterUtil.ALL_RACE;
+            rawData.history[curHistoryRace.name] = curHistory;
+            for(let i = 0; i < curHistoryLength; i++) {
+                const curTimestamp = curHistory.history[TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP.fullName][i];
+                let curRow = data[curTimestamp];
+                if(!curRow) {
+                    curRow = {};
+                    data[curTimestamp] = curRow;
+                    rawData.index[curTimestamp] = {};
+                }
+                curRow[curHistoryRace.fullName] = mmrYValueGetter(curHistory, i);
+                rawData.index[curTimestamp][curHistoryRace.name] = i;
+            }
+        }
         TableUtil.updateVirtualColRowTable
         (
             document.getElementById("mmr-table"),
             data,
             (tableData=>{
-                CharacterUtil.decorateMmrPoints(tableData, rawData, headers, (raw, header)=>raw.find(e=>e.race == header), showLeagues);
+                if(parameters.showLeagues) CharacterUtil.decorateMmrPointsIndex(tableData, rawData);
                 ChartUtil.CHART_RAW_DATA.get("mmr-table").data = tableData;
             }),
-            queue == TEAM_FORMAT._1V1
+            parameters.queueData.queue == TEAM_FORMAT._1V1
                 ? (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order
                 : null,
-            queue == TEAM_FORMAT._1V1 ? (name)=>EnumUtil.enumOfName(name, RACE).name : (name)=>name.toLowerCase(),
-            xAxisType == "time" ? dt=>parseInt(dt) : dt=>Util.DATE_TIME_FORMAT.format(new Date(parseInt(dt)))
+            parameters.queueData.queue == TEAM_FORMAT._1V1 ? (name)=>EnumUtil.enumOfName(name, RACE).name : (name)=>name.toLowerCase(),
+            xAxisType == "time" ? dt=>parseInt(dt) * 1000 : dt=>Util.DATE_TIME_FORMAT.format(new Date(parseInt(dt) * 1000))
         );
         document.getElementById("mmr-history-filters").textContent =
-            "(" + queue.name
-            + (depth ? ", starting from " + Util.DATE_TIME_FORMAT.format(new Date(depthStartTimestamp)) : "")
-            + ", "
-              + mmrHistory.length  + " entries)";
-        const gamesMmr = CharacterUtil.getGamesAndAverageMmrSortedArray(mmrHistory);
-        CharacterUtil.updateTierProgressTable(document.querySelector("#mmr-tier-progress-table"), gamesMmr);
-        CharacterUtil.updateGamesAndAverageMmrTable(document.querySelector("#mmr-summary-table"), gamesMmr);
+            "(" + parameters.queueData.queue.name
+            + (parameters.from ? ", " + Util.DATE_TIME_FORMAT.format(parameters.from)
+                + " - " + Util.DATE_TIME_FORMAT.format(parameters.to) : "")
+            + ", " + mmrHistory.stats.length  + " entries)";
+        document.querySelector("#mmr-chart-container").classList.remove("d-none");
+    }
+
+    static filterMmrHistoryLastSeason(history)
+    {
+        if(!history[TEAM_HISTORY_HISTORY_COLUMN.SEASON.fullName]) return history;
+
+        const names = Object.keys(history);
+        const filtered = {};
+        for(const name of names) filtered[name] = [];
+        for(let i = 0; i < history[TEAM_HISTORY_HISTORY_COLUMN.SEASON.fullName].length; i++) {
+            const nextSeason = i + 1 == history[TEAM_HISTORY_HISTORY_COLUMN.SEASON.fullName].length
+                ? null
+                : history[TEAM_HISTORY_HISTORY_COLUMN.SEASON.fullName][i + 1];
+            const curSeason = history[TEAM_HISTORY_HISTORY_COLUMN.SEASON.fullName][i];
+            if(curSeason != nextSeason) {
+                for(const name of names) {
+                    filtered[name].push(history[name][i]);
+                }
+            }
+        }
+        return filtered;
+    }
+
+    static calculateMmrHistoryMax(history, valueGetter, maxGetter)
+    {
+        const length = Object.values(history.history)[0].length;
+        return maxGetter(Array.from(Array(length).keys()).map(i=>valueGetter(history, i)));
+    }
+
+    static filterMmrHistoryBestRace(histories, valueGetter, maxGetter, comparator)
+    {
+        if(histories.length == 1) return histories[0];
+
+        return histories.map(h=>[h, CharacterUtil.calculateMmrHistoryMax(h, valueGetter, maxGetter)])
+            .sort((a, b)=>comparator(a[1], b[1]))[0][0];
+    }
+
+    static filterCharacterMmrHistory()
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        if(mmrHistory.parameters.endOfSeason)
+            for(let i = 0; i < mmrHistory.history.data.length; i++)
+                mmrHistory.history.data[i].history
+                    = CharacterUtil.filterMmrHistoryLastSeason(mmrHistory.history.data[i].history);
+        if(mmrHistory.parameters.bestRaceOnly) {
+            const operations = CharacterUtil.MMR_Y_VALUE_OPERATIONS.get(mmrHistory.parameters.yAxis);
+            mmrHistory.history.data = [CharacterUtil.filterMmrHistoryBestRace(
+                mmrHistory.history.data,
+                operations.get, operations.max, operations.compare)];
+        }
+        if(mmrHistory.parameters.endOfSeason || mmrHistory.parameters.bestRaceOnly)
+            CharacterUtil.recalculateCharacterMmrHistoryStats();
+        if(mmrHistory.parameters.endOfSeason && mmrHistory.history.data != null)
+            CharacterUtil.calculateMmrHistoryTimestampIndex(mmrHistory.history.data);
+    }
+
+    static updateCharacterMmrHistory()
+    {
+        CharacterUtil.resetCharacterMmrHistory();
+        CharacterUtil.setCharacterMmrParameters();
+        const params = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory.parameters;
+
+        const historyColumns = new Set(CharacterUtil.MMR_Y_REQUIRED_HISTORY_COLUMNS.get(params.yAxis));
+        if(params.showLeagues) historyColumns.add(TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_TYPE);
+        if(params.endOfSeason) historyColumns.add(TEAM_HISTORY_HISTORY_COLUMN.SEASON);
+        params.historyColumns = historyColumns;
+        return CharacterUtil.updateCharacterMmrHistoryModel(
+            null,
+            params.queueData.legacyUids,
+            TEAM_HISTORY_GROUP_MODE.LEGACY_UID,
+            params.from,
+            params.to,
+            [TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID],
+            historyColumns
+        )
+            .then(history=>{
+                CharacterUtil.updateCharacterMmrHistoryView();
+                return {data: history, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static setCharacterMmrParameters(rewrite = false)
+    {
+        const searchData = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        if(!rewrite && searchData.mmrHistory.parameters != null) return false;
+
+        searchData.mmrHistory.parameters = CharacterUtil.createCharacterMmrParameters();
+        return true;
+    }
+
+    static getCharacterMmrQueueData()
+    {
+        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character;
+        const region = EnumUtil.enumOfFullName(character.region, REGION);
+        const member = {realm: character.realm, id: character.battlenetId};
+        const queueFilterSelect = document.getElementById("mmr-queue-filter");
+        const queue = EnumUtil.enumOfFullName(queueFilterSelect.options[queueFilterSelect.selectedIndex].value, TEAM_FORMAT);
+        const teamType = queue == TEAM_FORMAT._1V1 ? TEAM_TYPE.ARRANGED : TEAM_TYPE.RANDOM;
+        const legacyUids = queue == TEAM_FORMAT._1V1
+            ? TeamUtil.createLegacyUidsForAllRaces(queue, teamType, region, member)
+            : [TeamUtil.createLegacyUid(queue, teamType, region, TeamUtil.createLegacyIdSection(member))];
+        return {
+            queue: queue,
+            teamType: teamType,
+            legacyUids: legacyUids
+        };
+    }
+
+    static createCharacterMmrParameters()
+    {
+        const depth = document.getElementById("mmr-depth").value || null;
+        const to = depth ? new Date() : null;
+        const from = depth ? (new Date(to.valueOf() - (depth * 24 * 60 * 60 * 1000))) : null;
+        const yAxis = localStorage.getItem("mmr-y-axis") || "mmr";
+        return {
+            from: from,
+            to: to,
+            queueData: CharacterUtil.getCharacterMmrQueueData(),
+            yAxis: yAxis,
+            endOfSeason: (localStorage.getItem("mmr-season-last") || "false") === "true",
+            showLeagues: (localStorage.getItem("mmr-leagues") || "true") === "true",
+            bestRaceOnly: (localStorage.getItem("mmr-best-race") || "false") === "true"
+        };
+    }
+
+    static enqueueUpdateCharacterMmrHistory()
+    {
+        return Util.load(document.querySelector("#mmr-history-loading"), n=>CharacterUtil.updateCharacterMmrHistory());
+    }
+
+    static resetUpdateCharacterMmrHistoryAllLoading()
+    {
+        Util.resetLoadingIndicator(document.querySelector("#mmr-history-all-loading"));
+    }
+
+    static updateCharacterMmrHistoryAll(resetParameters = true)
+    {
+        const searchData = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        const oldParameters = searchData.mmrHistory?.parameters;
+        searchData.mmrHistory = {};
+        if(!resetParameters) searchData.mmrHistory.parameters = oldParameters;
+        return Promise.allSettled([CharacterUtil.enqueueUpdateCharacterMmrHistory()])
+            .then(results=>{
+                Util.throwFirstSettledError(results);
+                return {data: results, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static enqueueUpdateCharacterMmrHistoryAll(resetParameters = true)
+    {
+        return Util.load(document.querySelector("#mmr-history-all-loading"), n=>CharacterUtil.updateCharacterMmrHistoryAll(resetParameters));
     }
     
     static mmrYValueGetter(mode)
@@ -842,6 +1062,33 @@ class CharacterUtil
         if(h.globalTopPercent) return;
         h.teamState.globalTopPercent = (h.teamState.globalRank / h.teamState.globalTeamCount) * 100;
         h.teamState.regionTopPercent = (h.teamState.regionRank / h.teamState.regionTeamCount) * 100;
+    }
+
+    static decorateMmrPointsIndex(tableData, rawData)
+    {
+        const pointStyles = [];
+        for(const header of tableData.headers) {
+            const rawHistory = rawData.history[header];
+            const curStyles = [];
+            pointStyles.push(curStyles);
+            let prevLeague = null;
+            for(const raw of Object.values(rawData.index)) {
+                const rawIndex = raw[header];
+                if(!rawIndex) {
+                    curStyles.push('');
+                    continue;
+                }
+
+                const leagueType = rawHistory.history[TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_TYPE.fullName][rawIndex];
+                if(leagueType != prevLeague) {
+                    curStyles.push(SC2Restful.IMAGES.get(EnumUtil.enumOfId(leagueType, LEAGUE).name.toLowerCase()));
+                    prevLeague = leagueType;
+                } else {
+                    curStyles.push('');
+                }
+            }
+        }
+        tableData.pointStyles = pointStyles;
     }
 
     static decorateMmrPoints(tableData, rawData, headers, getter, injectLeague = true)
@@ -1172,88 +1419,150 @@ class CharacterUtil
             ? SC2Restful.MMR_HISTORY_START_DATE : firstDateMax;
     }
 
+    static copyMmrHistory(src, dest)
+    {
+        const srcKeys = Object.keys(src.history);
+        const srcLength = Object.values(src.history)[0].length;
+        const copiedTimestamps = [];
+        for(let srcIx = 0; srcIx < srcLength; srcIx++) {
+            const srcTimestamp = src.history[TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP.fullName][srcIx];
+            const destIx = dest.timestampIndex[srcTimestamp];
+            if(destIx == null) continue;
+
+            for(const srcKey of srcKeys){
+                if(!dest.history[srcKey]) dest.history[srcKey] = new Array(srcLength);
+                dest.history[srcKey][destIx] = src.history[srcKey][srcIx];
+            }
+            copiedTimestamps.push(srcTimestamp);
+        }
+        return copiedTimestamps;
+    }
+
+    static isMmrHistoryEntryComplete(historyData, index)
+    {
+        return historyData.history[TEAM_HISTORY_HISTORY_COLUMN.GLOBAL_TEAM_COUNT.fullName]?.[index] != null
+            || historyData?.completeTimestamps?.has(historyData.history[TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP.fullName][index]);
+    }
+
+    static updateCharacterMmrHistoryWithCompleteData(from)
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        const to = new Date(from.valueOf() + 1000);
+
+        return TeamUtil.getHistory(null,
+            mmrHistory.parameters.queueData.legacyUids,
+            TEAM_HISTORY_GROUP_MODE.LEGACY_UID,
+            from, to,
+            [TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID],
+            Object.values(TEAM_HISTORY_HISTORY_COLUMN)
+        )
+            .then(historyArray=>{
+                historyArray.forEach(history=>{
+                    const existingHistory = mmrHistory.history.data.find(h=>h.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID.fullName]
+                        === history.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID.fullName]);
+                    if(existingHistory != null) {
+                        if(existingHistory.completeTimestamps == null) existingHistory.completeTimestamps = new Set();
+                        CharacterUtil.copyMmrHistory(history, existingHistory).forEach(ts=>existingHistory.completeTimestamps.add(ts));
+                    }
+                });
+            });
+    }
+
+    static requeueUpdateCharacterMmrHistoryWithCompleteData(from, then)
+    {
+        return ElementUtil.clearAndSetInputTimeout(CharacterUtil.MMR_HISTORY_COMPLETE_POINT_TASK_NAME,
+            then != null
+                ? ()=>CharacterUtil.updateCharacterMmrHistoryWithCompleteData(from).then(then)
+                : ()=>CharacterUtil.updateCharacterMmrHistoryWithCompleteData(from),
+            CharacterUtil.MMR_HISTORY_COMPLETE_POINT_TIMEOUT);
+    }
+
     static getAdditionalMmrHistoryData(data, dataset, ix1, ix2)
     {
-        const races = [];
-        dataset.datasets.forEach(d=>races.push(d.label.toUpperCase()));
-        races.sort((a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order);
-        const race = races[ix2];
-        const curData = Object.values(data)[ix1].find(d=>d.race == race);
+        const header = dataset.datasets[ix2].label;
+        const historyData = data.history[header];
+        const history = historyData.history;
+        const historyIx = Object.values(data.index)[ix1][header];
+        const from = new Date(history[TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP.fullName][historyIx] * 1000);
+        ElementUtil.clearInputTimeout(CharacterUtil.MMR_HISTORY_COMPLETE_POINT_TASK_NAME);
+        if(!CharacterUtil.isMmrHistoryEntryComplete(historyData, historyIx))
+            CharacterUtil.requeueUpdateCharacterMmrHistoryWithCompleteData(from, ()=>ChartUtil.CHARTS.get("mmr-table").tooltip.update(true, false));
         const lines = [];
-        lines.push(curData.season);
-        curData.tierType = curData.tier;
-        lines.push(TeamUtil.createLeagueDiv(curData));
-        lines.push(curData.teamState.rating);
-        lines.push(CharacterUtil.createMmrHistoryGames(curData));
-        CharacterUtil.appendAdditionalMmrHistoryRanks(curData, lines);
+        lines.push(history[TEAM_HISTORY_HISTORY_COLUMN.SEASON.fullName]?.[historyIx] || CharacterUtil.MMR_HISTORY_PLACEHOLDER);
+        lines.push(CharacterUtil.createMmrHistoryLeague(
+            history[TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_TYPE.fullName]?.[historyIx],
+            history[TEAM_HISTORY_HISTORY_COLUMN.TIER_TYPE.fullName]?.[historyIx]
+        ));
+        lines.push(history[TEAM_HISTORY_HISTORY_COLUMN.RATING.fullName]?.[historyIx] || CharacterUtil.MMR_HISTORY_PLACEHOLDER);
+        lines.push(CharacterUtil.createMmrHistoryGames(
+            history[TEAM_HISTORY_HISTORY_COLUMN.GAMES.fullName]?.[historyIx],
+            history[TEAM_HISTORY_HISTORY_COLUMN.WINS.fullName]?.[historyIx]
+        ));
+        lines.push(CharacterUtil.createMmrHistoryRank(
+            history[TEAM_HISTORY_HISTORY_COLUMN.GLOBAL_RANK.fullName]?.[historyIx],
+            history[TEAM_HISTORY_HISTORY_COLUMN.GLOBAL_TEAM_COUNT.fullName]?.[historyIx]
+        ));
+        lines.push(CharacterUtil.createMmrHistoryRank(
+            history[TEAM_HISTORY_HISTORY_COLUMN.REGION_RANK.fullName]?.[historyIx],
+            history[TEAM_HISTORY_HISTORY_COLUMN.REGION_TEAM_COUNT.fullName]?.[historyIx]
+        ));
+        lines.push(CharacterUtil.createMmrHistoryRank(
+            history[TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_RANK.fullName]?.[historyIx],
+            history[TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_TEAM_COUNT.fullName]?.[historyIx]
+        ));
         return lines;
     }
 
-    static createMmrHistoryGames(curData)
+    static createMmrHistoryLeague(leagueType, tierType)
+    {
+        if(leagueType == null) return CharacterUtil.MMR_HISTORY_PLACEHOLDER;
+
+        return TeamUtil.createLeagueDiv({league: {type: leagueType}, tierType: tierType});
+    }
+    
+    static createMmrTooltipPlaceholder(levels = 2, classes)
     {
         const container = document.createElement("span");
-        container.innerHTML = curData.teamState.wins
-            ? `${curData.teamState.games}<br/>(${Math.round((curData.teamState.wins / curData.teamState.games) * 100)}%)`
-            : `${curData.teamState.games}<br/>-`;
+        container.appendChild(document.createTextNode(CharacterUtil.MMR_HISTORY_PLACEHOLDER));
+        for(let i = 0; i < levels - 1; i++) {
+            container.appendChild(document.createElement("br"));
+            container.appendChild(document.createTextNode(CharacterUtil.MMR_HISTORY_PLACEHOLDER));
+        }
+        if(classes) classes.forEach(clazz=>container.classList.add(clazz));
         return container;
+    }
+
+    static createMmrHistoryGames(games, wins)
+    {
+        if(games == null) return CharacterUtil.createMmrTooltipPlaceholder();
+
+        const content = games + "</br>" + (wins != null ? `${Math.round((wins / games) * 100)}%` : CharacterUtil.MMR_HISTORY_PLACEHOLDER);
+        const container = document.createElement("span");
+        container.innerHTML = content;
+        return container;
+    }
+
+    static createMmrHistoryRank(rank, teamCount)
+    {
+        if(rank == null || teamCount == null) return CharacterUtil.createMmrTooltipPlaceholder(2, ["tooltip-mmr-rank"]);
+
+        const rankElem = document.createElement("span");
+        rankElem.classList.add("tooltip-mmr-rank");
+        rankElem.innerHTML = `${Util.NUMBER_FORMAT.format(rank)}/${Util.NUMBER_FORMAT.format(teamCount)}<br/>
+            (${Util.DECIMAL_FORMAT.format((rank / teamCount) * 100)}%)`;
+        return rankElem;
+    }
+
+    static createMmrHistoryGamesFromTeamState(curData)
+    {
+        return CharacterUtil.createMmrHistoryGames(curData.teamState.games, curData.teamState.wins);
     }
 
     static appendAdditionalMmrHistoryRanks(curData, lines)
     {
-        const globalRank = document.createElement("span");
-        globalRank.classList.add("tooltip-mmr-rank");
-        globalRank.innerHTML = curData.teamState.globalRank
-            ? `${Util.NUMBER_FORMAT.format(curData.teamState.globalRank)}/${Util.NUMBER_FORMAT.format(curData.teamState.globalTeamCount)}<br/>
-                (${Util.DECIMAL_FORMAT.format(curData.teamState.globalTopPercent)}%)`
-            : "-"
-        lines.push(globalRank);
-        const regionRank = document.createElement("span");
-        regionRank.classList.add("tooltip-mmr-rank");
-        regionRank.innerHTML = curData.teamState.regionRank
-            ? `${Util.NUMBER_FORMAT.format(curData.teamState.regionRank)}/${Util.NUMBER_FORMAT.format(curData.teamState.regionTeamCount)}<br/>
-                (${Util.DECIMAL_FORMAT.format(curData.teamState.regionTopPercent)}%)`
-            : "-"
-        lines.push(regionRank);
-        lines.push(CharacterUtil.createMMRHistoryLeagueRank(curData, lines));
-    }
-
-    static createMMRHistoryLeagueRank(curData, lines)
-    {
-        const elem = document.createElement("span");
-        elem.classList.add("tooltip-mmr-rank");
-        elem.innerHTML = curData.teamState.leagueRank
-            ? `${Util.NUMBER_FORMAT.format(curData.teamState.leagueRank)}/${Util.NUMBER_FORMAT.format(curData.teamState.leagueTeamCount)}<br/>
-                (${Util.DECIMAL_FORMAT.format((curData.teamState.leagueRank / curData.teamState.leagueTeamCount) * 100)}%)`
-            : "-"
-        return elem;
-    }
-
-    static filterMmrHistory(history, queueFilter, teamTypeFilter)
-    {
-        let filtered = history.filter(h=>h.league.queueType == queueFilter && h.league.teamType == teamTypeFilter);
-        return filtered;
-    }
-
-    static filterMmrHistoryBestRace(racialHistory)
-    {
-        if(racialHistory.length == 0) return [];
-        let top = -1;
-        let result = null;
-        for(const [race, vals] of racialHistory.entries())
-        {
-            const curTop = vals.map(v=>v.teamState.rating).reduce((a, b) => Math.max(a, b));
-            if(curTop > top)
-            {
-                top = curTop;
-                result = race;
-            }
-        }
-        for(const race of Object.values(RACE)) {
-            const raceStr = race.name.toUpperCase();
-            if(raceStr != result) racialHistory.delete(raceStr);
-        }
-
-        return racialHistory.get(result) ? racialHistory.get(result) : [];
+        lines.push(CharacterUtil.createMmrHistoryRank(curData.teamState.globalRank, curData.teamState.globalTeamCount));
+        lines.push(CharacterUtil.createMmrHistoryRank(curData.teamState.regionRank, curData.teamState.regionTeamCount));
+        lines.push(CharacterUtil.createMmrHistoryRank(curData.teamState.leagueRank, curData.teamState.leagueTeamCount));
     }
 
     static updateCharacterLinkedCharacters()
@@ -1546,16 +1855,94 @@ class CharacterUtil
 
     static enhanceMmrForm()
     {
-        document.getElementById("mmr-queue-filter").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
-        document.getElementById("mmr-depth").addEventListener("input",  CharacterUtil.onMmrInput);
-        document.getElementById("mmr-best-race").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
-        document.getElementById("mmr-season-last").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
-        document.getElementById("mmr-y-axis").addEventListener("change", e=>{
+        document.getElementById("mmr-queue-filter").addEventListener("change", e=>window.setTimeout(evt=>CharacterUtil.onMmrHistoryQueueChange(e), 0));
+        document.getElementById("mmr-depth").addEventListener("input",  CharacterUtil.onMmrHistoryDepthChange);
+        document.getElementById("mmr-best-race").addEventListener("change", e=>window.setTimeout(evt=>CharacterUtil.onMmrHistoryBestRaceOnlyChange(e), 0));
+        document.getElementById("mmr-season-last").addEventListener("change", e=>window.setTimeout(evt=>CharacterUtil.onMmrHistoryEndOfSeasonChange(e), 0));
+        document.getElementById("mmr-y-axis").addEventListener("change", e=>window.setTimeout(evt=>{
             CharacterUtil.setMmrYAxis(e.target.value, e.target.getAttribute("data-chartable"));
+            CharacterUtil.onMmrHistoryYAxisChange(e);
+        }, 0));
+        document.getElementById("mmr-x-type").addEventListener("change", e=>window.setTimeout(evt=>CharacterUtil.updateCharacterMmrHistoryView(), 0));
+        document.getElementById("mmr-leagues").addEventListener("change", e=>window.setTimeout(evt=>CharacterUtil.onMmrHistoryShowLeaguesChange(e), 0));
+    }
+
+    static onMmrHistoryShowLeaguesChange(evt)
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        mmrHistory.parameters.showLeagues = (localStorage.getItem("mmr-leagues") || "true") === "true";
+        if(!mmrHistory.parameters.historyColumns.has(TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_TYPE)) {
+            CharacterUtil.reloadCharacterMmrHistory();
+        } else {
             CharacterUtil.updateCharacterMmrHistoryView();
-        });
-        document.getElementById("mmr-x-type").addEventListener("change", e=>window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, 1));
-        document.getElementById("mmr-leagues").addEventListener("change", e=>CharacterUtil.updateCharacterMmrHistoryView());
+        }
+    }
+
+    static onMmrHistoryEndOfSeasonChange(evt)
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        mmrHistory.parameters.endOfSeason = (localStorage.getItem("mmr-season-last") || "false") === "true";
+        if(!mmrHistory.parameters.historyColumns.has(TEAM_HISTORY_HISTORY_COLUMN.SEASON)) {
+            CharacterUtil.reloadCharacterMmrHistory();
+        } else {
+            CharacterUtil.refilterCharacterMmrHistory();
+        }
+    }
+
+    static onMmrHistoryBestRaceOnlyChange(evt)
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        mmrHistory.parameters.bestRaceOnly = (localStorage.getItem("mmr-best-race") || "false") === "true";
+        CharacterUtil.refilterCharacterMmrHistory();
+    }
+
+    static refilterCharacterMmrHistory()
+    {
+        CharacterUtil.resetCharacterMmrHistoryFilteredData();
+        CharacterUtil.filterCharacterMmrHistory();
+        CharacterUtil.updateCharacterMmrHistoryView();
+    }
+
+    static onMmrHistoryYAxisChange(evt)
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        const yAxis = localStorage.getItem("mmr-y-axis") || "mmr";
+        mmrHistory.parameters.yAxis = yAxis;
+        const requiredColumns = new Set(CharacterUtil.MMR_Y_REQUIRED_HISTORY_COLUMNS.get(yAxis));
+        const loadedColumns = Object.keys(mmrHistory.history.data[0].history);
+        if(requiredColumns.values().every(c=>loadedColumns.includes(c))) {
+            CharacterUtil.refilterCharacterMmrHistory();
+        } else {
+            CharacterUtil.reloadCharacterMmrHistory();
+        }
+    }
+
+    static reloadCharacterMmrHistory(resetParameters = false)
+    {
+        CharacterUtil.resetCharacterMmrHistory(true);
+        CharacterUtil.setCharacterMmrParameters(resetParameters);
+        return CharacterUtil.enqueueUpdateCharacterMmrHistory();
+    }
+
+    static reloadCharacterMmrHistoryAll(resetParameters = false)
+    {
+        CharacterUtil.resetCharacterMmrHistoryAll(true)
+        CharacterUtil.resetUpdateCharacterMmrHistoryAllLoading();
+        return CharacterUtil.enqueueUpdateCharacterMmrHistoryAll(resetParameters);
+    }
+
+    static onMmrHistoryQueueChange(evt)
+    {
+        Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory.parameters.queueData
+            = CharacterUtil.getCharacterMmrQueueData();
+        CharacterUtil.reloadCharacterMmrHistoryAll();
+    }
+
+    static onMmrHistoryDepthChange(evt)
+    {
+        const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
+        if(prev != null)  window.clearTimeout(prev);
+        ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(e=>CharacterUtil.reloadCharacterMmrHistoryAll(true), ElementUtil.INPUT_TIMEOUT));
     }
 
     static setMmrYAxis(mode, chartable)
@@ -1993,3 +2380,33 @@ CharacterUtil.MMR_Y_VALUE_GETTERS = new Map([
     ["percent-region", (history)=>history.teamState.regionTopPercent],
     ["default", (history)=>history.teamState.rating],
 ]);
+
+CharacterUtil.MMR_Y_VALUE_OPERATIONS = new Map([
+    ["mmr", {
+        get: (history, ix)=>history.history[TEAM_HISTORY_HISTORY_COLUMN.RATING.fullName][ix],
+        max: (values)=>Math.max(...values.filter(v=>v != null)),
+        compare: (a, b)=>b - a
+    }],
+    ["percent-region", {
+        get:  (history, ix)=>{
+            const rank = history.history[TEAM_HISTORY_HISTORY_COLUMN.REGION_RANK.fullName][ix];
+            return rank != null
+                ? (rank / history.history[TEAM_HISTORY_HISTORY_COLUMN.REGION_TEAM_COUNT.fullName][ix]) * 100
+                : null;
+        },
+        max: (values)=>Math.min(...values.filter(v=>v != null)),
+        compare: (a, b)=>a - b
+    }]
+]);
+CharacterUtil.MMR_Y_REQUIRED_HISTORY_COLUMNS = new Map([
+    ["mmr", new Set([TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP, TEAM_HISTORY_HISTORY_COLUMN.RATING])],
+    ["percent-region", new Set([
+        TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP,
+        TEAM_HISTORY_HISTORY_COLUMN.REGION_RANK,
+        TEAM_HISTORY_HISTORY_COLUMN.REGION_TEAM_COUNT
+    ])]
+]);
+CharacterUtil.MMR_HISTORY_PLACEHOLDER = '-';
+CharacterUtil.ALL_RACE = Object.freeze({name: "all", fullName: "ALL", order: 999});
+CharacterUtil.MMR_HISTORY_COMPLETE_POINT_TASK_NAME = "mmr-history-complete-point-task";
+CharacterUtil.MMR_HISTORY_COMPLETE_POINT_TIMEOUT = 100;

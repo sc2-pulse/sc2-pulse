@@ -594,7 +594,7 @@ class TeamUtil
         curData.tierType = curData.tier;
         lines.push(TeamUtil.createLeagueDiv(curData));
         lines.push(curData.teamState.rating);
-        lines.push(CharacterUtil.createMmrHistoryGames(curData));
+        lines.push(CharacterUtil.createMmrHistoryGamesFromTeamState(curData));
         CharacterUtil.appendAdditionalMmrHistoryRanks(curData, lines);
         return lines;
     }
