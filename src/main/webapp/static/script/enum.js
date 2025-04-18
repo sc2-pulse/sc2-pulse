@@ -293,3 +293,49 @@ const LADDER_STATS_GLOBAL_VIEW_MODE = Object.freeze
         order: 4
     },
 });
+
+const TEAM_HISTORY_GROUP_MODE = Object.freeze
+({
+    TEAM: {code:1, name: "team", fullName: "TEAM", order: 1},
+    LEGACY_UID: {code:2, name: "legacy-uid", fullName: "LEGACY_UID", order: 2}
+});
+
+const TEAM_HISTORY_STATIC_COLUMN = Object.freeze
+({
+    ID: {code:1, name: "id", fullName: "ID", order: 1},
+    REGION: {code:2, name: "region", fullName: "REGION", order: 2},
+    QUEUE_TYPE: {code:3, name: "queue", fullName: "QUEUE_TYPE", order: 3},
+    TEAM_TYPE: {code:4, name: "type", fullName: "TEAM_TYPE", order: 4},
+    LEGACY_ID: {code:5, name: "legacy-id", fullName: "LEGACY_ID", order: 5},
+    SEASON: {code:6, name: "season", fullName: "SEASON", order: 6}
+});
+
+const TEAM_HISTORY_HISTORY_COLUMN = Object.freeze
+({
+    TIMESTAMP: {code:1, name: "timestamp", fullName: "TIMESTAMP", order: 1},
+    RATING: {code:2, name: "rating", fullName: "RATING", order: 2},
+    GAMES: {code:3, name: "games", fullName: "GAMES", order: 3},
+    WINS: {code:4, name: "wins", fullName: "WINS", order: 4},
+    LEAGUE_TYPE: {code:5, name: "league", fullName: "LEAGUE_TYPE", order: 5},
+    TIER_TYPE: {code:6, name: "tier", fullName: "TIER_TYPE", order: 6},
+    DIVISION_ID: {code:7, name: "division-id", fullName: "DIVISION_ID", order: 7},
+    GLOBAL_RANK: {code:8, name: "global-rank", fullName: "GLOBAL_RANK", order: 8},
+    REGION_RANK: {code:9, name: "region-rank", fullName: "REGION_RANK", order: 9},
+    LEAGUE_RANK: {code:10, name: "league-rank", fullName: "LEAGUE_RANK", order: 10},
+    GLOBAL_TEAM_COUNT: {code:11, name: "global-team-count", fullName: "GLOBAL_TEAM_COUNT", order: 11},
+    REGION_TEAM_COUNT: {code:12, name: "region-team-count", fullName: "REGION_TEAM_COUNT", order: 12},
+    LEAGUE_TEAM_COUNT: {code:13, name: "league-team-count", fullName: "LEAGUE_TEAM_COUNT", order: 13},
+    ID: {code:14, name: "id", fullName: "ID", order: 14},
+    SEASON: {code:15, name: "season", fullName: "SEASON", order: 15},
+});
+
+const TEAM_HISTORY_SUMMARY_COLUMN = Object.freeze
+({
+    GAMES: {code:1, name: "games", fullName: "GAMES", textContent: "Games", order: 1},
+    RATING_MIN: {code:2, name: "rating-min", fullName: "RATING_MIN", textContent: "Min MMR", order: 2},
+    RATING_AVG: {code:3, name: "rating-avg", fullName: "RATING_AVG", textContent: "Avg MMR", order: 3},
+    RATING_MAX: {code:4, name: "rating-max", fullName: "RATING_MAX", textContent: "Max MMR", order: 4},
+    RATING_LAST: {code:5, name: "rating-last", fullName: "RATING_LAST", textContent: "Last MMR", order: 5},
+    REGION_RANK_LAST: {code:6, name: "region-rank-last", fullName: "REGION_RANK_LAST", textContent: "Last rank", order: 6},
+    REGION_TEAM_COUNT_LAST: {code:7, name: "region-team-count-last", fullName: "REGION_TEAM_COUNT_LAST", textContent: "Last teams", order: 7},
+});

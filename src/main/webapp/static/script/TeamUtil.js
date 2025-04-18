@@ -784,6 +784,82 @@ class TeamUtil
         if(sortCtl) sortCtl.addEventListener("change", ()=>window.setTimeout(TeamUtil.onTeamSort, 1));
     }
 
+    static createHistoryParams(ids, legacyUids, groupBy, from, to)
+    {
+        const params = new URLSearchParams();
+        if(ids) ids.forEach(id=>params.append("id", id));
+        if(legacyUids) legacyUids.forEach(l=>params.append("legacyUid", l));
+        if(groupBy) params.append("groupBy", groupBy.fullName);
+        if(from) params.append("from", from.toISOString());
+        if(to) params.append("to", to.toISOString());
+
+        return params;
+    }
+
+    static getHistory(ids, legacyUids, groupBy, from, to, staticColumns, historyColumns)
+    {
+        const params = TeamUtil.createHistoryParams(ids, legacyUids, groupBy, from, to);
+        if(staticColumns) staticColumns.forEach(c=>params.append("static", c.fullName));
+        if(historyColumns) historyColumns.forEach(h=>params.append("history", h.fullName));
+        const request = ROOT_CONTEXT_PATH + "api/team/group/history?" + params.toString();
+
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static getHistorySummary(ids, legacyUids, groupBy, from, to, staticColumns, summaryColumns)
+    {
+        const params = TeamUtil.createHistoryParams(ids, legacyUids, groupBy, from, to);
+        if(staticColumns) staticColumns.forEach(c=>params.append("static", c.fullName));
+        if(summaryColumns) summaryColumns.forEach(s=>params.append("summary", s.fullName));
+        const request = ROOT_CONTEXT_PATH + "api/team/group/history/summary?" + params.toString();
+
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static createLegacyUid(queue, teamType, region, legacyId)
+    {
+        return queue.code + "-" + teamType.code + "-" + region.code + "-" + legacyId;
+    }
+
+    static createLegacyIdSection(member)
+    {
+        return member.realm + "." + member.id + "." + (member.race || "");
+    }
+
+    static createLegacyId(members)
+    {
+        return members.map(TeamUtil.createLegacyIdSection).join("~");
+    }
+
+    static parseLegacyId(legacyId)
+    {
+        const split = legacyId.split(".");
+        return {
+            realm: parseInt(split[0]),
+            id: parseInt(split[1]),
+            race: split[2] !=='' ? EnumUtil.enumOfId(parseInt(split[2]), RACE) : null
+        };
+    }
+
+    static createLegacyIdsForAllRaces(member)
+    {
+        const memberClone = structuredClone(member);
+        return Object.values(RACE).map(race=>{
+            memberClone.race = race.code;
+            return TeamUtil.createLegacyIdSection(memberClone);
+        });
+    }
+    
+    static createLegacyUidsForAllRaces(queue, teamType, region, member)
+    {
+        return TeamUtil.createLegacyIdsForAllRaces(member)
+            .map(legacyId=>TeamUtil.createLegacyUid(queue, teamType, region, legacyId));
+    }
+
 }
 
 TeamUtil.TEAM_SEARCH_MMR_OFFSET = 50;
