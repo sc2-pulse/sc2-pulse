@@ -763,7 +763,7 @@ class ChartUtil
 
     static drawOnlyImagePoints(context, options)
     {
-        return options ? (options.pointStyle ? 0.5 : 0) : 0.5;
+        return options ? (options.pointStyle?.nodeType ? 0.5 : 0) : 0.5;
     }
 
     static collectChartJSData(elem)
