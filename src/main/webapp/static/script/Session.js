@@ -49,7 +49,8 @@ class Session
     {
         return Session.verifyResponse(resp, allowedStatus)
             .then(resp=>resp.text())
-            .then(body=>body && (body.startsWith("{") || body.startsWith("[")) ? JSON.parse(body) : null);
+            .then(body=>body && (body.startsWith("{") || body.startsWith("[")) ? JSON.parse(body) : null)
+            .then(json=>Util.isErrorDetails(json) ? null : json);
     }
 
     static updateApplicationVersion()

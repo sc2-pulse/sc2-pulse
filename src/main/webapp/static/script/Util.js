@@ -549,6 +549,11 @@ class Util
         return [EnumUtil.enumOfNamePrefix(prefixes[0], RACE), EnumUtil.enumOfNamePrefix(prefixes[1], RACE)];
     }
 
+    static isErrorDetails(json)
+    {
+        return json != null && json.status != null && json.type != null;
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
