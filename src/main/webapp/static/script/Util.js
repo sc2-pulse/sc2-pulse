@@ -538,6 +538,15 @@ class Util
         return results.some(result=>result.status === "rejected") ? LOADING_STATUS.ERROR : fulfilledStatus;
     }
 
+    static throwFirstSettledError(results)
+    {
+        const reason = results.map(result=>result.reason).find(reason=>reason != null);
+        if(reason != null) {
+            if(DEBUG == true) console.log(reason);
+            throw new Error(reason);
+        }
+    }
+
     static getHrefUrlSearchParams(element)
     {
         const href = element.getAttribute("href");
