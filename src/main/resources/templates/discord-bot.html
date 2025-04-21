@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -82,6 +82,7 @@
                         <strong>
                             Required permissions(for the bot): <code th:text="${T(com.nephest.battlenet.sc2.discord.event.RolesSlashCommand).REQUIRED_PERMISSIONS.![name].stream.collect(@formatUtil.joining(', '))}"></code>.
                             Make sure the bot role is above managed roles in the list of roles(server settings).
+                            This permission/system is disabled by default until the bot has required roles.
                         </strong>
                     </p>
                     <p>Execute the <a href="#slash-roles">/roles</a> command to make sure the server is configured correctly.</p>
