@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.openapi;
@@ -27,8 +27,15 @@ public class SpringDocConfig
                 .license(new License()
                     .name("Blizzard Developer API Terms Of Use")
                     .url("https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use"))
-                .description("You are free to use this web API for non-commercial purposes if you "
-                    + "credit the original website(https://sc2pulse.nephest.com/sc2)"));
+                .description("""
+                    You are free to use this web API for non-commercial purposes if you
+                    credit the original website(https://sc2pulse.nephest.com/sc2). Please note that
+                    we provide different types of data from upstream services for convenience and
+                    improved player experience. You can only access the data if: it's public such as
+                    MMR history or clan history; it's created by us such as anonymous aggregated
+                    stats; you direct a corresponding user to give us explicit permission to share
+                    their original upstream data with you.
+                    """));
     }
 
 }
