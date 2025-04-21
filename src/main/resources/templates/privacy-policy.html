@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -11,49 +11,100 @@
 </head>
 <body>
 <div th:replace="~{fragments/generic :: content(~{::section})}">
-    <section id="privacy">
+    <section id="privacy" class="text-content">
     <h2>Privacy Policy</h2>
-    <dl>
-        <dt>IP, URL</dt>
-        <dd>Your IP address and URL are recorded for technical purposes. It is stored in a short lived log and is not connected to
-        any other data. This information is used for debugging.</dd>
-        <dt>Google Analytics, AdSense</dt>
-        <dd>This site uses Google Analytics to collect usage statistics and to provide a better experience. This site uses AdSense
-        to show ads.
-            Third party vendors, including Google, use cookies to serve ads based on a user's prior visits to this website or other websites.
-            You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener nofollow">Ads settings</a>.
-            <a href="https://www.google.com/policies/privacy/partners/" target="_blank" rel="noopener nofollow">How Google uses data when you use our partners' sites or apps</a>.</dd>
-        <dt>Battle.net&reg; Account ID, Battle.net&reg; BattleTag</dt>
-        <dd>This information is used ot link your Battle.net account to SC2 Pulse data.</dd>
-        <dt>Battle.net&reg; Account Identity</dt>
-        <dd>This information is used within the OpenID&reg; protocol. Required for easy and secure authentication</dd>
-        <dt>User supplied data</dt>
-        <dd>Any content that was directly submitted by you is considered public.
-            All such content <strong>must</strong> non-licensed and related to StarCraft2.</dd>
-        <dt>3rd party connections</dt>
-        <dd>Such data will be stored in the DB according to the Privacy Policy of the corresponding service. You can remove
-        your data at any time by unlinking your accounts.</dd>
-        <dt>Revealed/Unmasked accounts</dt>
-        <dd>
-            Revealed accounts won't be removed. We usually remove some info if users request it,
-            but this is a special case because account removal will trigger a chain reaction from other users and the
-            whole feature will be useless. Account revealing is based on public data and will not be removed.
-        </dd>
-        <dt>Data removal</dt>
-        <dd>We strictly follow the <a href="https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use" target="_blank" rel="noopener nofollow">Blizzard ToS</a>,
-            which forces us to permanently delete
-            the data within 30 days after it was deleted from the Blizzard's API. Bear in mind that StartCraft&reg;2 leaderboards are
-            <a href="https://us.forums.blizzard.com/en/blizzard/t/data-protection-notice-and-faq/609/2"
-               target="_blank" rel="noopener nofollow">deemed as public data(section 15)</a>. You can remove some
-            of your data by submitting a data removal request to Blizzard, disabling 3rd party access in settings of your
-            Blizzard account, or using the <a th:href="@{/data/battle-net}">BattleNet data manager</a>. We update affected
-            player data of the last
-            <span th:text="${T(com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService).OLD_SEASON_COUNT + 1}"></span>
-            ranked ladder seasons, other data may be removed when it expires unless it's updated from other seasons.
-        </dd>
-        <dt>NO WARRANTY</dt>
-        <dd>SC2 PULSE PROVIDES THE DATA “AS IS,” AND “AS AVAILABLE,” AND THE ENTIRE RISK AS TO SATISFACTORY QUALITY, PERFORMANCE, ACCURACY, AND EFFORT IS WITH YOU.</dd>
-    </dl>
+    <section>
+        <h3>Blizzard data</h3>
+        <section>
+            <h4>Blizzard OAuth2 data</h4>
+            <dl>
+                <dt>Battle.net&reg; Account ID, Battle.net&reg; BattleTag</dt>
+                <dd>This information is used to link your Battle.net account to SC2 Pulse data.</dd>
+                <dt>Battle.net&reg; Account Identity</dt>
+                <dd>This information is used within the OpenID&reg; protocol. Required for easy and secure authentication</dd>
+            </dl>
+        </section>
+        <section>
+            <h4>Blizzard API data</h4>
+            <ul>
+                <li>Ranked ladder</li>
+                <li>Match history</li>
+                <li>Profile</li>
+            </ul>
+            <p>
+                Blizzard API data is collected and stored in the DB. We aggregate the data, index it, and derive useful
+                statistics from it. This data is displayed on different platforms such as our website and Discord bot
+                to improve experience of players.
+            </p>
+        </section>
+        <section>
+            <h4>Blizzard data retention</h4>
+            <p>
+                We strictly follow the <a href="https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use" target="_blank" rel="noopener nofollow">Blizzard ToS</a>,
+                which forces us to permanently delete
+                the data within 30 days after it was deleted from the Blizzard's API. Bear in mind that StartCraft&reg;2 leaderboards are
+                <a href="https://us.forums.blizzard.com/en/blizzard/t/data-protection-notice-and-faq/609/2"
+                   target="_blank" rel="noopener nofollow">deemed as public data(section 15)</a>. You can remove some
+                of your data by submitting a data removal request to Blizzard, disabling 3rd party access in settings of your
+                Blizzard account, or using the <a th:href="@{/data/battle-net}">BattleNet data manager</a>. We update affected
+                player data of the last
+                <span th:text="${T(com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService).OLD_SEASON_COUNT + 1}"></span>
+                ranked ladder seasons, other data may be removed when it expires unless it's updated from other seasons.
+            </p>
+            <section>
+                <h5>Revealed/Unmasked accounts</h5>
+                <p>
+                    Account revealing is based on public data and will not be removed. We usually remove some info if
+                    users request it, but this is a special case because account removal will trigger a chain reaction
+                    from other users and the whole feature will be useless.
+                </p>
+            </section>
+        </section>
+        <section>
+            <h4>NO WARRANTY</h4>
+            <p>
+                SC2 PULSE PROVIDES THE DATA “AS IS,” AND “AS AVAILABLE,” AND THE ENTIRE RISK AS TO SATISFACTORY QUALITY, PERFORMANCE, ACCURACY, AND EFFORT IS WITH YOU.
+            </p>
+        </section>
+    </section>
+    <section>
+        <h3>3rd party connections</h3>
+        <p>
+            Such data are be stored in the DB according to the Privacy Policy of the corresponding service. You can remove
+            your data at any time by unlinking your accounts.
+        </p>
+    </section>
+    <section>
+        <h3>SC2 Pulse data</h3>
+        <section>
+            <h4>IP, URL</h4>
+            <p>
+                Your IP address and URL are recorded for technical purposes. It is stored in a short lived log and is not connected to
+                any other data. This information is used for debugging.
+            </p>
+        </section>
+    </section>
+    <section>
+        <h3>Analytics/Tracking</h3>
+        <section>
+            <h4>Google Analytics, AdSense</h4>
+            <p>
+                This site uses Google Analytics to collect usage statistics and to provide a better experience. This site uses AdSense
+                to show ads.
+            </p>
+            <p>
+                Third party vendors, including Google, use cookies to serve ads based on a user's prior visits to this website or other websites.
+                You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener nofollow">Ads settings</a>.
+                <a href="https://www.google.com/policies/privacy/partners/" target="_blank" rel="noopener nofollow">How Google uses data when you use our partners' sites or apps</a>.
+            </p>
+        </section>
+    </section>
+    <section>
+        <h3>User supplied data</h3>
+        <p>Any content that was directly submitted by you is considered public.
+            All such content <strong>must</strong> non-licensed and related to StarCraft2.
+        </p>
+    </section>
     </section>
 </div>
 </body>
