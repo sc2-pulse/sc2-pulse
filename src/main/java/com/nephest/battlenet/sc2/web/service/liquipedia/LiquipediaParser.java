@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.liquipedia;
@@ -192,7 +192,7 @@ public final class LiquipediaParser
         if(pages.isEmpty()) return List.of();
 
         String content = pages.get(0).getRevisions().get(0).getSlots().get("main").getContent();
-        int ix = 0;
+        int ix = content.indexOf("===Patch");
         List<LiquipediaPatch> patches = new ArrayList<>();
         while(true)
         {

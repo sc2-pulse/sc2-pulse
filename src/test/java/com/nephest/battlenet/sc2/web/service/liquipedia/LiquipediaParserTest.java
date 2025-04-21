@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.liquipedia;
@@ -171,9 +171,9 @@ public class LiquipediaParserTest
         );
 
         List<LiquipediaPatch> patches = LiquipediaParser.parsePatchList(result);
-        assertEquals(179, patches.size());
+        assertEquals(181, patches.size());
 
-        Assertions.assertThat(patches.get(0))
+        Assertions.assertThat(patches.get(2))
             .usingRecursiveComparison()
             .isEqualTo(new LiquipediaPatch(
                 91115L,
@@ -181,7 +181,7 @@ public class LiquipediaParserTest
                 Map.of(Region.US, LocalDate.of(2023, 9, 29)),
                 null
             ));
-        Assertions.assertThat(patches.get(178))
+        Assertions.assertThat(patches.get(180))
             .usingRecursiveComparison()
             .isEqualTo(new LiquipediaPatch(
                 16195L,
@@ -189,7 +189,7 @@ public class LiquipediaParserTest
                 Map.of(Region.US, LocalDate.of(2010, 7, 30)),
                 null
             ));
-        Assertions.assertThat(patches.get(10))
+        Assertions.assertThat(patches.get(12))
             .usingRecursiveComparison()
             .isEqualTo(new LiquipediaPatch(
                 81102L,
