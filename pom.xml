@@ -379,11 +379,11 @@
                                         --js ${basedir}/src/main/webapp/static/script/IntervalExecutor.js
                                         --js ${basedir}/src/main/webapp/static/script/Util.js
                                         --js ${basedir}/src/main/webapp/static/script/BootstrapUtil.js
-                                        --js ${basedir}/src/main/webapp/static/script/CharacterUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/ChartUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/ElementUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/enum.js
                                         --js ${basedir}/src/main/webapp/static/script/EnumUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/CharacterUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/FollowUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/HistoryUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/LadderUtil.js
