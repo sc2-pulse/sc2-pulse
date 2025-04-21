@@ -68,6 +68,79 @@
         </section>
     </section>
     <section>
+        <h3>Discord data</h3>
+        <section>
+            <h4>Discord data collection</h4>
+            <section>
+                <h5>Discord data stored</h5>
+                <dl>
+                    <dt>User's name, and discriminator(if applicable)</dt>
+                    <dd>Used to display it on the website when the owner requests it.</dd>
+                    <dt>User's id</dt>
+                    <dd>
+                        <ul>
+                            <li>Used to link user's discord account to their sc2pulse and Blizzard account.</li>
+                            <li>The bot uses it to send important notifications via DM. Currently, this includes
+                            notifications about player reports if you are one of the participants of such a report
+                            (reported player, reporter, or moderator).
+                            The DMs are only sent to users who have linked their Discord account to their sc2pulse account.
+                            All such messages have a footer with the reason why they were sent to you.
+                            We only send messages that are really important, we don't send any updates, news, offers, etc.</li>
+                            <li>The id is never exposed anywhere.</li>
+                        </ul>
+                    </dd>
+                    <dt>User's OAuth2 access token and refresh token</dt>
+                    <dd>
+                        <ul>
+                            <li>Updates to Discord Application data for Linked Roles</li>
+                            <li>Determine user's guilds for the role management system</li>
+                        </ul>
+                    </dd>
+                </dl>
+            </section>
+            <section>
+                <h5>Discord data used</h5>
+                <p>The following data can be used at some point, but it's never persisted, and is discarded as soon
+                as it's no longer needed.</p>
+                <dl>
+                    <dt>User's guilds</dt>
+                    <dd>Used by the bot's role management system to determine the guilds it should try to update when
+                    new game data is detected for the corresponding user.</dd>
+                </dl>
+            </section>
+        </section>
+        <section>
+            <h4>Discord data retention</h4>
+            <p>
+                Users can remove their Discord data at any time by unlinking their Discord account in account settings
+                on our website. This also removes the integration on the Discord's side.
+            </p>
+            <p>
+                Users can also just remove the integration on Discord. If our bot receives an API error because of it,
+                we assume that you no longer want to use our Discord integration. Your OAuth2 keys will be removed
+                immediately, any related functionality will be disabled. If you don't link your account again in 1 day,
+                your Discord account will be unlinked from your sc2pulse account, and any corresponding Discord data
+                will be removed.
+            </p>
+            <p>
+                In other cases, we assume the users are still interested in our services, so we retain the data. Our use
+                case implies that players may go inactive at any time for prolonged periods of time up to several years.
+                This makes hard for us to determine if a player won't play anymore at all, or if they will return later.
+                Also, some users like to have their Discord contacts up even if they no longer play the game, such
+                as event admins, captains, etc.
+            </p>
+        </section>
+        <section>
+            <h4>Discord data modification</h4>
+            <p>
+                We try to keep your Discord data up to date. If you think that the state of your Discord data on sc2pulse
+                is incorrect, then you can reconnect(remove and connect again) your Discord account to your sc2pulse
+                account in settings of your sc2pulse account. If this doesn't work, then feel free to
+                <a th:href="@{/contacts}">contact us</a> directly.
+            </p>
+        </section>
+    </section>
+    <section>
         <h3>3rd party connections</h3>
         <p>
             Such data are be stored in the DB according to the Privacy Policy of the corresponding service. You can remove
