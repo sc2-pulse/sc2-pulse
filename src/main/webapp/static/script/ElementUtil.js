@@ -481,10 +481,10 @@ class ElementUtil
         }
     }
 
-    static clearAndSetInputTimeout(key, runnable)
+    static clearAndSetInputTimeout(key, runnable, timeout = ElementUtil.INPUT_TIMEOUT)
     {
         ElementUtil.clearInputTimeout(key);
-        ElementUtil.INPUT_TIMEOUTS.set(key, window.setTimeout(runnable, ElementUtil.INPUT_TIMEOUT));
+        ElementUtil.INPUT_TIMEOUTS.set(key, window.setTimeout(runnable, timeout));
     }
 
     static enhanceCopyToClipboard()
