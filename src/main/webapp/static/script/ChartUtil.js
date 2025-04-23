@@ -602,28 +602,18 @@ class ChartUtil
         const tooltipPosition = localStorage.getItem("chart-tooltip-position")
             || Util.isMobile() ? "average" : "dataXCursorY";
 
-        const calculatedPosition = ChartUtil.calculateTooltipPosition(xAlign, yAlign, width, height, space, canvasRect, caretY, positionY, left, top);
+        const calculatedPosition = tooltipPosition.includes("data") || tooltipPosition == "average"
+            ? ChartUtil.calculateTooltipPosition(
+                  isLeft ? "right" : "left",
+                  isTop ? "bottom" : "top",
+                  width, height, space,
+                  canvasRect, caretY, positionY,
+                  positionX + caretX - width / 2, positionY + caretY - height)
+            : ChartUtil.calculateTooltipPosition(xAlign, yAlign, width, height, space, canvasRect, caretY, positionY, left, top);
         left = calculatedPosition[0];
         top = calculatedPosition[1];
         tooltipEl.style.top = `${top}px`;
         tooltipEl.style.left = `${left}px`;
-
-        //make sure that cursor is visible
-        const tooltipRect = tooltipEl.getBoundingClientRect();
-        if((tooltipPosition.includes("data") || tooltipPosition == "average")
-            && Util.rectContains(tooltipRect, canvasRect.x + caretX, canvasRect.y + caretY)) {
-                const calculatedPosition2 = ChartUtil.calculateTooltipPosition(
-                isLeft ? "right" : "left",
-                isTop ? "bottom" : "top",
-                width, height, space,
-                canvasRect, caretY, positionY,
-                positionX + caretX - width / 2, positionY + caretY - height
-            );
-            left = calculatedPosition2[0];
-            top = calculatedPosition2[1];
-            tooltipEl.style.top = `${top}px`;
-            tooltipEl.style.left = `${left}px`;
-        }
     }
 
     static calculateTooltipPosition(xAlign, yAlign, width, height, space, canvasRect, caretY, positionY, left, top)
