@@ -801,6 +801,7 @@ class CharacterUtil
     static resetCharacterMmrHistoryAll(resetLoading = false)
     {
         CharacterUtil.resetCharacterMmrHistory(resetLoading);
+        CharacterUtil.resetCharacterMmrHistorySummary(resetLoading);
     }
 
     static updateCharacterMmrHistoryModel(ids, legacyUids, groupBy, from, to, staticColumns, historyColumns)
@@ -1013,7 +1014,9 @@ class CharacterUtil
         const oldParameters = searchData.mmrHistory?.parameters;
         searchData.mmrHistory = {};
         if(!resetParameters) searchData.mmrHistory.parameters = oldParameters;
-        return Promise.allSettled([CharacterUtil.enqueueUpdateCharacterMmrHistory()])
+        return Promise.allSettled([CharacterUtil.enqueueUpdateCharacterMmrHistory(),
+            CharacterUtil.enqueueUpdateCharacterMmrHistorySummary()
+        ])
             .then(results=>{
                 Util.throwFirstSettledError(results);
                 return {data: results, status: LOADING_STATUS.COMPLETE};
@@ -1123,65 +1126,179 @@ class CharacterUtil
         return entries;
     }
 
-    static updateGamesAndAverageMmrTable(table, gamesMmr)
+    static addLegacyIdData(history)
     {
-        const tbody = table.querySelector(":scope tbody");
-        ElementUtil.removeChildren(tbody);
-        for(const [race, stats] of gamesMmr)
-        {
+        history.legacyIdData = TeamUtil.parseLegacyId(history.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID.fullName]);
+    }
+
+    static resetCharacterMmrHistorySummaryNumericView()
+    {
+        ElementUtil.removeChildren(document.querySelector("#mmr-summary-table tbody"));
+    }
+
+    static resetCharacterMmrHistorySummaryProgressView()
+    {
+        ElementUtil.removeChildren(document.querySelector("#mmr-tier-progress-table tbody"));
+    }
+
+    static resetCharacterMmrHistorySummaryView()
+    {
+        CharacterUtil.resetCharacterMmrHistorySummaryNumericView();
+        CharacterUtil.resetCharacterMmrHistorySummaryProgressView();
+    }
+
+    static resetCharacterMmrHistorySummaryModel()
+    {
+        delete Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory?.summary;
+    }
+
+    static resetCharacterMmrHistorySummaryLoading()
+    {
+        Util.resetLoadingIndicator(document.querySelector("#mmr-summary-table-container"));
+    }
+
+    static resetCharacterMmrHistorySummary(resetLoading = false)
+    {
+        CharacterUtil.resetCharacterMmrHistorySummaryModel();
+        CharacterUtil.resetCharacterMmrHistorySummaryView();
+        if(resetLoading) CharacterUtil.resetCharacterMmrHistorySummaryLoading();
+    }
+
+    static updateCharacterMmrHistorySummaryModel(ids, legacyUids, groupBy, from, to, staticColumns, summaryColumns)
+    {
+        return TeamUtil.getHistorySummary(ids, legacyUids, groupBy, from, to, staticColumns, summaryColumns)
+            .then(summary=>{
+                if(summary != null) {
+                    summary.forEach(CharacterUtil.addLegacyIdData);
+                    summary.sort((a, b)=>b.summary[TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX.fullName] -
+                        a.summary[TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX.fullName]);
+                }
+                Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory.summary = summary;
+                return summary;
+            });
+    }
+
+    static updateCharacterMmrHistorySummaryNumericView()
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        if(!mmrHistory.summary) return;
+
+        CharacterUtil.updateGamesAndAverageMmrTable(
+            document.querySelector("#mmr-summary-table"),
+            mmrHistory.summary,
+            mmrHistory.parameters.numericSummaryColumns
+        );
+    }
+
+    static updateCharacterMmrHistorySummaryProgressView()
+    {
+        const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
+        if(!mmrHistory.summary) return;
+
+        CharacterUtil.updateTierProgressTable(document.querySelector("#mmr-tier-progress-table"), mmrHistory.summary);
+    }
+
+    static updateCharacterMmrHistorySummaryView()
+    {
+        CharacterUtil.updateCharacterMmrHistorySummaryNumericView();
+        CharacterUtil.updateCharacterMmrHistorySummaryProgressView();
+    }
+
+    static updateCharacterMmrHistorySummary()
+    {
+        CharacterUtil.resetCharacterMmrHistorySummary();
+        CharacterUtil.setCharacterMmrParameters();
+        const params = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory.parameters;
+
+        params.numericSummaryColumns = new Set(CharacterUtil.MMR_Y_REQUIRED_NUMERIC_SUMMARY_COLUMNS.get(params.yAxis));
+        params.progressSummaryColumns = new Set(CharacterUtil.MMR_REQUIRED_PROGRESS_SUMMARY_COLUMNS);
+        params.summaryColumns = new Set([...params.numericSummaryColumns, ...params.progressSummaryColumns]);
+        return CharacterUtil.updateCharacterMmrHistorySummaryModel(
+            null,
+            params.queueData.legacyUids,
+            TEAM_HISTORY_GROUP_MODE.LEGACY_UID,
+            params.from,
+            params.to,
+            [TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID],
+            params.summaryColumns
+        )
+            .then(history=>{
+                CharacterUtil.updateCharacterMmrHistorySummaryView();
+                return {data: history, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static enqueueUpdateCharacterMmrHistorySummary()
+    {
+        return Util.load(document.querySelector("#mmr-summary-table-container"), n=>CharacterUtil.updateCharacterMmrHistorySummary());
+    }
+
+    static updateMmrHistorySummaryTableBody(tbody, summaries, summaryColumns)
+    {
+        for(const summary of summaries) {
             const tr = tbody.insertRow();
-            const raceImage = SC2Restful.IMAGES.get(race.toLowerCase());
-            const raceCell = tr.insertCell();
-            if(raceImage) {
-                raceCell.appendChild(raceImage.cloneNode());
-            } else {
-                raceCell.textContent = race;
+            tr.insertCell().appendChild(ElementUtil.createRaceImage(summary.legacyIdData.race));
+            for(const column of summaryColumns) {
+                const val = summary.summary[column.fullName];
+                const td = tr.insertCell();
+                if(val != null) td.textContent = CharacterUtil.MMR_Y_SUMMARY_COLUMN_FORMATTERS.get(column)?.(val) || val;
             }
-            tr.insertCell().textContent = stats.games;
-            tr.insertCell().textContent = stats.lastMmr;
-            tr.insertCell().textContent = stats.averageMmr;
-            tr.insertCell().textContent = stats.maximumMmr;
         }
     }
 
-    static updateTierProgressTable(table, gamesMmr)
+    static updateMmrHistorySummaryTableHeaders(thead, summaryColumns, removeChildren = true)
+    {
+        if(removeChildren) ElementUtil.removeChildren(thead);
+        const thRow = thead.insertRow();
+        TableUtil.createTh(thRow).textContent = "Race";
+        for(const column of summaryColumns) TableUtil.createTh(thRow).textContent = column.textContent;
+    }
+
+    static updateGamesAndAverageMmrTable(table, summaries, columns)
+    {
+        const thead = table.querySelector(":scope thead");
+        CharacterUtil.updateMmrHistorySummaryTableHeaders(thead, columns);
+        if(!summaries) return;
+
+        const tbody = table.querySelector(":scope tbody");
+        CharacterUtil.updateMmrHistorySummaryTableBody(tbody, summaries, columns);
+    }
+
+    static updateTierProgressTable(table, summaries)
     {
         const tbody = table.querySelector(":scope tbody");
         ElementUtil.removeChildren(tbody);
-        for(const [race, stats] of gamesMmr)
+        for(const summary of summaries)
         {
-            const progress = CharacterUtil.createTierProgress(stats.lastTeamState);
+            const progress = CharacterUtil.createTierProgress(
+                summary.summary[TEAM_HISTORY_SUMMARY_COLUMN.REGION_RANK_LAST.fullName],
+                summary.summary[TEAM_HISTORY_SUMMARY_COLUMN.REGION_TEAM_COUNT_LAST.fullName],
+            );
             if(!progress) continue;
 
             const tr = tbody.insertRow();
-            const raceImage = SC2Restful.IMAGES.get(race.toLowerCase());
-            const raceCell = tr.insertCell();
-            if(raceImage) {
-                raceCell.appendChild(raceImage.cloneNode());
-            } else {
-                raceCell.textContent = race;
-            }
+            tr.insertCell().appendChild(ElementUtil.createRaceImage(summary.legacyIdData.race));
             TableUtil.insertCell(tr, "cell-main").appendChild(progress);
         }
     }
 
-    static createTierProgress(teamState)
+    static createTierProgress(rank, teamCount)
     {
-        if(!teamState.teamState.regionTeamCount || !teamState.teamState.regionRank) return null;
-        const tierRange = TeamUtil.getTeamRegionLeagueRange(teamState.teamState);
+        if(teamCount == null || rank == null) return null;
+        const tierRange = Util.getLeagueRange(rank, teamCount);
         let min, max, cur, nextTierRange;
         if(tierRange.league == LEAGUE.GRANDMASTER) {
             nextTierRange = {league: LEAGUE.GRANDMASTER, tierType: 0};
             min = SC2Restful.GM_COUNT;
             max = 1;
-            cur = teamState.teamState.regionRank;
+            cur = rank;
         } else {
             nextTierRange = tierRange.league == LEAGUE.MASTER && tierRange.tierType == 0
-                ? CharacterUtil.getGrandmasterTierRange(teamState.teamState.regionTeamCount)
+                ? CharacterUtil.getGrandmasterTierRange(teamCount)
                 : TIER_RANGE[tierRange.order - 1];
             min = tierRange.bottomThreshold;
             max = nextTierRange.bottomThreshold;
-            cur = (teamState.teamState.regionRank / teamState.teamState.regionTeamCount) * 100;
+            cur = (rank / teamCount) * 100;
         }
         const progressBar = ElementUtil.createProgressBar(cur, min, max);
         progressBar.classList.add("tier-progress", "flex-grow-1");
@@ -2406,6 +2523,29 @@ CharacterUtil.MMR_Y_REQUIRED_HISTORY_COLUMNS = new Map([
         TEAM_HISTORY_HISTORY_COLUMN.REGION_TEAM_COUNT
     ])]
 ]);
+CharacterUtil.MMR_Y_SUMMARY_COLUMN_FORMATTERS = new Map([
+    [TEAM_HISTORY_SUMMARY_COLUMN.RATING_AVG, Math.floor]
+]);
+CharacterUtil.MMR_Y_REQUIRED_NUMERIC_SUMMARY_COLUMNS = new Map([
+    ["mmr", new Set([
+        TEAM_HISTORY_SUMMARY_COLUMN.GAMES,
+        TEAM_HISTORY_SUMMARY_COLUMN.RATING_LAST,
+        TEAM_HISTORY_SUMMARY_COLUMN.RATING_AVG,
+        TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX,
+    ])],
+    //the same util top% summary is done
+    ["percent-region", new Set([
+        TEAM_HISTORY_SUMMARY_COLUMN.GAMES,
+        TEAM_HISTORY_SUMMARY_COLUMN.RATING_LAST,
+        TEAM_HISTORY_SUMMARY_COLUMN.RATING_AVG,
+        TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX,
+    ])]
+]);
+CharacterUtil.MMR_REQUIRED_PROGRESS_SUMMARY_COLUMNS = new Set([
+    TEAM_HISTORY_SUMMARY_COLUMN.REGION_RANK_LAST,
+    TEAM_HISTORY_SUMMARY_COLUMN.REGION_TEAM_COUNT_LAST
+]);
+
 CharacterUtil.MMR_HISTORY_PLACEHOLDER = '-';
 CharacterUtil.ALL_RACE = Object.freeze({name: "all", fullName: "ALL", order: 999});
 CharacterUtil.MMR_HISTORY_COMPLETE_POINT_TASK_NAME = "mmr-history-complete-point-task";

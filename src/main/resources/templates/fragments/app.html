@@ -572,7 +572,7 @@
                                 <div><div id="mmr-history-filters"></div><div id="mmr-history-games-avg-mmr"></div></div>
                                 <div th:replace="~{fragments/section:: form-mmr-history('mmr', true)}"></div>
                                 </div>
-                                <div id="mmr-summary-table-container" class="table-responsive">
+                                <div id="mmr-summary-table-container" class="table-responsive container-loading loading-none">
                                     <table id="mmr-summary-table" class="table inline-table table-sm table-hover">
                                         <thead>
                                         <tr>
@@ -585,6 +585,7 @@
                                         </thead>
                                         <tbody></tbody>
                                     </table>
+                                    <div th:replace="~{fragments/section :: loading-indicator}"></div>
                                 </div>
                                 <div class="table-responsive flex-grow-1">
                                     <table id="mmr-tier-progress-table" class="table table-sm table-hover">
