@@ -33,8 +33,13 @@ class TableUtil
 
     static createRowTh(row = null)
     {
+        return TableUtil.createTh(row, "row");
+    }
+
+    static createTh(row = null, scope = "column")
+    {
         const th = document.createElement("th");
-        th.setAttribute("scope", "row");
+        th.setAttribute("scope", scope);
         if(row != null) row.appendChild(th);
         return th;
     }
