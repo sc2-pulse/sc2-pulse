@@ -39,6 +39,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -339,23 +340,33 @@ public class TeamGroupHistoryIT
         return new TeamHistorySummary(history.staticData(), calculateSummary(history.history()));
     }
 
+    public static <T> Stream<T> mapValues
+    (
+        Collection<?> history,
+        Function<Number, T> mapper
+    )
+    {
+        return history.stream()
+            .map(TeamGroupHistoryIT::mapNumberValue)
+            .map(n->n != null ? mapper.apply(n) : null);
+    }
+
+    public static Number mapNumberValue(Object obj)
+    {
+        return obj != null ? (Number) obj : null;
+    }
+
     private static Map<SummaryColumn, ?> calculateSummary
     (
         Map<TeamHistoryDAO.HistoryColumn, List<?>> history
     )
     {
         history = playerActionsOnly(history);
-        List<Integer> rating = history.get(HistoryColumn.RATING)
-            .stream().map(r->((Number) r).intValue())
-            .toList();
+        List<Integer> rating = mapValues(history.get(HistoryColumn.RATING), Number::intValue).toList();
         if(rating.isEmpty()) return Map.of();
 
-        List<Long> teamId = history.get(HistoryColumn.ID).stream()
-            .map(r->((Number) r).longValue())
-            .toList();
-        List<Integer> games = history.get(HistoryColumn.GAMES).stream()
-            .map(r->((Number) r).intValue())
-            .toList();
+        List<Long> teamId = mapValues(history.get(HistoryColumn.ID), Number::longValue).toList();
+        List<Integer> games = mapValues(history.get(HistoryColumn.GAMES), Number::intValue).toList();
         return Map.of
         (
             SummaryColumn.GAMES, calculateGames(teamId, rating, games),
@@ -371,15 +382,9 @@ public class TeamGroupHistoryIT
         Map<TeamHistoryDAO.HistoryColumn, List<?>> history
     )
     {
-        List<Integer> rating = history.get(HistoryColumn.RATING)
-            .stream().map(r->((Number) r).intValue())
-            .toList();
-        List<Long> teamId = history.get(HistoryColumn.ID).stream()
-            .map(r->((Number) r).longValue())
-            .toList();
-        List<Integer> games = history.get(HistoryColumn.GAMES).stream()
-            .map(r->((Number) r).intValue())
-            .toList();
+        List<Integer> rating = mapValues(history.get(HistoryColumn.RATING), Number::intValue).toList();
+        List<Long> teamId = mapValues(history.get(HistoryColumn.ID), Number::longValue).toList();
+        List<Integer> games = mapValues(history.get(HistoryColumn.GAMES), Number::intValue).toList();
         List<Integer> validIx = IntStream.range(0, rating.size())
             .filter(i->i == 0
                 || !games.get(i).equals(games.get(i - 1))
