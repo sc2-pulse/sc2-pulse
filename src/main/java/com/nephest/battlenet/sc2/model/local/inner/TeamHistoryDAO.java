@@ -582,24 +582,17 @@ public class TeamHistoryDAO
         Class<T> clazz
     )
     {
-        return columns.stream()
-            .collect(Collectors.toMap(
-                Function.identity(),
-                column->
-                {
-                    try
-                    {
-                        return minConversionService
-                            .convert(rs.getObject(columnNameMapper.apply(column)), Object.class);
-                    }
-                    catch (SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                },
-                (l, r)->{throw new IllegalStateException("Unexpected merge");},
-                ()->new EnumMap<>(clazz)
-            ));
+        try
+        {
+            Map<T, Object> result = new EnumMap<>(clazz);
+            for(T column : columns) result.put(column, minConversionService
+                .convert(rs.getObject(columnNameMapper.apply(column)), Object.class));
+            return result;
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     private static Map<StaticColumn, ?> mapTeamColumns
