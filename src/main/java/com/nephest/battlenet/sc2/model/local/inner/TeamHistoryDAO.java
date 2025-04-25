@@ -404,6 +404,17 @@ public class TeamHistoryDAO
         (
             "rating_last", "LAST_VALUE(team_state.rating) OVER w",
             "rating_last", "MAX"
+        ),
+
+        REGION_RANK_LAST
+        (
+            "region_rank_last", "LAST_VALUE(team_state.region_rank) OVER w",
+            "region_rank_last", "MAX"
+        ),
+        REGION_TEAM_COUNT_LAST
+        (
+            "region_team_count_last", "LAST_VALUE(team_state.region_team_count) OVER w",
+            "region_team_count_last", "MAX"
         );
 
 

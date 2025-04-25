@@ -361,20 +361,25 @@ public class TeamGroupHistoryIT
         Map<TeamHistoryDAO.HistoryColumn, List<?>> history
     )
     {
+        List<Integer> ranks =
+            mapValues(history.get(HistoryColumn.REGION_RANK), Number::intValue).toList();
+        List<Integer> teamCount =
+            mapValues(history.get(HistoryColumn.REGION_TEAM_COUNT), Number::intValue).toList();
         history = playerActionsOnly(history);
         List<Integer> rating = mapValues(history.get(HistoryColumn.RATING), Number::intValue).toList();
         if(rating.isEmpty()) return Map.of();
 
         List<Long> teamId = mapValues(history.get(HistoryColumn.ID), Number::longValue).toList();
         List<Integer> games = mapValues(history.get(HistoryColumn.GAMES), Number::intValue).toList();
-        return Map.of
-        (
-            SummaryColumn.GAMES, calculateGames(teamId, rating, games),
-            SummaryColumn.RATING_MIN, Collections.min(rating),
-            SummaryColumn.RATING_MAX, Collections.max(rating),
-            SummaryColumn.RATING_AVG, rating.stream().mapToInt(i->i).average().orElseThrow(),
-            SummaryColumn.RATING_LAST, rating.get(rating.size() - 1)
-        );
+        Map<SummaryColumn, Object> summary = new EnumMap<>(SummaryColumn.class);
+        summary.put(SummaryColumn.GAMES, calculateGames(teamId, rating, games));
+        summary.put(SummaryColumn.RATING_MIN, Collections.min(rating));
+        summary.put(SummaryColumn.RATING_MAX, Collections.max(rating));
+        summary.put(SummaryColumn.RATING_AVG, rating.stream().mapToInt(i->i).average().orElseThrow());
+        summary.put(SummaryColumn.RATING_LAST, rating.get(rating.size() - 1));
+        summary.put(SummaryColumn.REGION_RANK_LAST, ranks.get(ranks.size() - 1));
+        summary.put(SummaryColumn.REGION_TEAM_COUNT_LAST, teamCount.get(teamCount.size() - 1));
+        return Collections.unmodifiableMap(summary);
     }
 
     private static Map<TeamHistoryDAO.HistoryColumn, List<?>> playerActionsOnly
