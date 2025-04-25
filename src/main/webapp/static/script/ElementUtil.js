@@ -112,6 +112,13 @@ class ElementUtil
         return noRace;
     }
 
+    static createRaceImage(race)
+    {
+        return race != null
+            ? SC2Restful.IMAGES.get(race.name.toLowerCase()).cloneNode()
+            : ElementUtil.createNoRaceImage();
+    }
+
     static createIcoFontElement(name, title, clazz)
     {
         const elem = document.createElement("span");
