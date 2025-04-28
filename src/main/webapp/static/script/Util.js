@@ -579,6 +579,14 @@ class Util
         return json != null && json.status != null && json.type != null;
     }
 
+    static getLeagueRange(rank, teamCount)
+    {
+        if(rank <= SC2Restful.GM_COUNT) return {league: LEAGUE.GRANDMASTER, tierType: 0};
+
+        const topPercentage = (rank / teamCount) * 100;
+        return Object.values(TIER_RANGE).find(r=>topPercentage <= r.bottomThreshold);
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =

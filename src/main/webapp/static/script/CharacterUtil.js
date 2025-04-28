@@ -692,7 +692,7 @@ class CharacterUtil
     static createTierProgress(teamState)
     {
         if(!teamState.teamState.regionTeamCount || !teamState.teamState.regionRank) return null;
-        const tierRange = TeamUtil.getRegionLeagueRange(teamState.teamState);
+        const tierRange = TeamUtil.getTeamRegionLeagueRange(teamState.teamState);
         let min, max, cur, nextTierRange;
         if(tierRange.league == LEAGUE.GRANDMASTER) {
             nextTierRange = {league: LEAGUE.GRANDMASTER, tierType: 0};

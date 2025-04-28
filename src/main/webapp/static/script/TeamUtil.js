@@ -196,7 +196,7 @@ class TeamUtil
         const team = TeamUtil.getTeamFromElement(parent);
 
         const globalRange = TeamUtil.getGlobalLeagueRange(team);
-        const regionRange = TeamUtil.getRegionLeagueRange(team);
+        const regionRange = TeamUtil.getTeamRegionLeagueRange(team);
 
         const leagueTable = TableUtil.createTable(["Type", "League"], false);
         const tbody = leagueTable.querySelector("tbody");
@@ -223,12 +223,9 @@ class TeamUtil
                 : "unknown");
     }
 
-    static getRegionLeagueRange(team)
+    static getTeamRegionLeagueRange(team)
     {
-        if(team.regionRank <= SC2Restful.GM_COUNT) return {league: LEAGUE.GRANDMASTER, tierType: 0};
-
-        const regionTopPercent = (team.regionRank / team.regionTeamCount) * 100;
-        return Object.values(TIER_RANGE).find(r=>regionTopPercent <= r.bottomThreshold);
+        return Util.getLeagueRange(team.regionRank, team.regionTeamCount);
     }
 
     static getGlobalLeagueRange(team)
