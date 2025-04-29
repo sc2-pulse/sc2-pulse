@@ -58,6 +58,7 @@ class ChartUtil
                 {
                     normalized: true,
                     parsing: {xAxisKey: false, yAxisKey: false},
+                    animation: false,
                     aspectRatio: ChartUtil.ASPECT_RATIO,
                     maintainAspectRatio: config.maintainAspectRatio === "false" ? false : true,
                     scales:
@@ -128,26 +129,6 @@ class ChartUtil
                         padding:
                         {
                             right: 15
-                        }
-                    },
-                    ...(config.performance === "fast") && {animation:
-                    {
-                        duration: 0
-                    }},
-                    transitions:
-                    {
-                        active:{animation:{duration: config.performance === "fast" ? 0 : 300}},
-                        resize:{animation:{duration: 0}},
-                        show: {animation:{duration: 0}},
-                        hide: {animation:{duration: 0}},
-                        reset: {animation:{duration: 0}},
-                        zoom:
-                        {
-                            animation:
-                            {
-                                duration: 500,
-                                easing: 'easeInSine'
-                            }
                         }
                     },
                     plugins:
