@@ -1103,11 +1103,22 @@ class ChartUtil
         return yAxis == "percent-region";
     }
 
+    static shouldUseAnnotationCache(context)
+    {
+        return context.chart?.config?._config?.options?.plugins?.annotation?.annotationCache
+            && context.chart?.isZoomingOrPanning();
+    }
+
     static createCustomAnnotationsCallback(context)
     {
-        return context.chart.config._config.customConfig
-            ? ChartUtil.createCustomAnnotations(context.chart.config._config.customConfig)
+        const annotations = context.chart.config._config.customConfig
+            ? ChartUtil.shouldUseAnnotationCache(context)
+                ? context.chart.config._config.options.plugins.annotation.annotationCache
+                : ChartUtil.createCustomAnnotations(context.chart.config._config.customConfig)
             : {};
+        if(annotations && context.chart?.config?._config?.options?.plugins?.annotation)
+            context.chart.config._config.options.plugins.annotation.annotationCache = annotations;
+        return annotations;
     }
 
     static createCustomAnnotations(config)
