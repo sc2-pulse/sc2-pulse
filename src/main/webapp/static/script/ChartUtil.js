@@ -652,7 +652,7 @@ class ChartUtil
             {
                 data.datasets[i]["borderWidth"] = ChartUtil.getLineBorderWidth(config);
                 data.datasets[i]["pointRadius"] = config.performance == "fast"
-                    ? ChartUtil.drawOnlyImagePoints
+                    ? 0
                     : (config.pointRadius != null ? parseFloat(config.pointRadius) : 0.01);
                 data.datasets[i]["hoverPointRadius"] = 2;
 
@@ -732,11 +732,6 @@ class ChartUtil
         return ctx.createPattern(canvas, "repeat");
     }
 
-    static drawOnlyImagePoints(context, options)
-    {
-        return options ? (options.pointStyle?.nodeType ? 0.5 : 0) : 0.5;
-    }
-
     static collectChartJSData(elem)
     {
         const type = elem.getAttribute("data-chart-type");
@@ -756,7 +751,8 @@ class ChartUtil
                         label: tableData.headers[i],
                         data: tableData.values[i],
                         hidden: !Util.hasNonZeroValues(tableData.values[i]),
-                        ...(tableData.pointStyles) && {pointStyle: tableData.pointStyles[i]}
+                        ...(tableData.pointStyles) && {pointStyle: tableData.pointStyles[i]},
+                        ...(tableData.dataAnnotations) && {annotations: tableData.dataAnnotations[i]}
                     }
                 )
             }
@@ -1116,14 +1112,21 @@ class ChartUtil
 
     static createCustomAnnotations(config)
     {
+        let annotations;
         switch(config.customAnnotations)
         {
             case "mmr-meta":
-                return ChartUtil.createMmrMetaAnnotations(config);
+                annotations = ChartUtil.createMmrMetaAnnotations(config);
+                break;
             case "50":
-                return ChartUtil.create50Annotation(config);
+                annotations = ChartUtil.create50Annotation(config);
+                break;
+            default:
+                annotations = {};
+                break;
         }
-        return {};
+        ChartUtil.createDatasetAnnotations(config).forEach(annotation=>annotations[annotation.name] = annotation);
+        return annotations;
     }
 
     static getAnnotationLineBorderWidth(config)
@@ -1132,6 +1135,19 @@ class ChartUtil
                 && ChartUtil.isTierThresholdApplicable(localStorage.getItem(config.id + "-y-axis")))
                     ? ChartUtil.THICK_LINE_BORDER_WIDTH
                     : ChartUtil.getLineBorderWidth(config);
+    }
+
+    static createDatasetAnnotations(config)
+    {
+        const chart = ChartUtil.CHARTS.get(config.chartable);
+        const dataAnnotations = config.data.datasets
+            .filter((ds, ix)=>chart ? chart.getDatasetMeta(ix).hidden !== true : ds)
+            .map(ds=>ds.annotations)
+            .filter(annotations=>annotations != null)
+            .flatMap(annotations=>annotations);
+        dataAnnotations.filter(annotation=>!annotation.name)
+            .forEach((annotation, i)=>annotation.name = "dataset-" + i);
+        return dataAnnotations;
     }
 
     static createMmrMetaAnnotations(config)
