@@ -1069,53 +1069,60 @@ class CharacterUtil
 
     static decorateMmrPointsIndex(tableData, rawData)
     {
-        const pointStyles = [];
-        for(const header of tableData.headers) {
+        const annotations = [];
+        tableData.headers.forEach((header, datasetIx)=>{
             const rawHistory = rawData.history[header];
-            const curStyles = [];
-            pointStyles.push(curStyles);
+            const curAnnotations = [];
+            annotations.push(curAnnotations);
             let prevLeague = null;
-            for(const raw of Object.values(rawData.index)) {
+            Array.from(Object.values(rawData.index)).forEach((raw, valIx)=>{
                 const rawIndex = raw[header];
-                if(!rawIndex) {
-                    curStyles.push('');
-                    continue;
-                }
+                if(!rawIndex) return;
 
                 const leagueType = rawHistory.history[TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_TYPE.fullName][rawIndex];
-                if(leagueType != prevLeague) {
-                    curStyles.push(SC2Restful.IMAGES.get(EnumUtil.enumOfId(leagueType, LEAGUE).name.toLowerCase()));
+                if(leagueType != prevLeague && Number.isFinite(tableData.values[datasetIx][valIx])) {
+                    const annotation = {
+                        name: "league-" + header + "-" + rawIndex,
+                        type: "point",
+                        pointStyle: SC2Restful.IMAGES.get(EnumUtil.enumOfId(leagueType, LEAGUE).name.toLowerCase()),
+                        xValue: tableData.rowHeaders[valIx],
+                        yValue: tableData.values[datasetIx][valIx]
+                    }
+                    curAnnotations.push(annotation);
                     prevLeague = leagueType;
-                } else {
-                    curStyles.push('');
                 }
-            }
-        }
-        tableData.pointStyles = pointStyles;
+            });
+        });
+        tableData.dataAnnotations = annotations;
     }
 
     static decorateMmrPoints(tableData, rawData, headers, getter, injectLeague = true)
     {
-        const pointStyles = [];
-        for(const header of headers) {
-            const curStyles = [];
-            pointStyles.push(curStyles);
+        const annotations = [];
+        tableData.headers.forEach((header, datasetIx)=>{
+            const curAnnotations = [];
+            annotations.push(curAnnotations);
             let prevLeague = null;
-            for(const raw of rawData) {
+            rawData.forEach((raw, valIx)=>{
                 const snapshot = getter(raw, header);
-                if(!snapshot) {
-                    curStyles.push('');
-                    continue;
+                if(!snapshot) return;
+
+                const xValue = tableData.rowHeaders[valIx];
+                if(snapshot.league.type != prevLeague && injectLeague
+                    && Number.isFinite(tableData.values[datasetIx][valIx])) {
+                        const annotation = {
+                            name: "league-" + header + "-" + xValue,
+                            type: "point",
+                            pointStyle: SC2Restful.IMAGES.get(EnumUtil.enumOfId(snapshot.league.type, LEAGUE).name.toLowerCase()),
+                            xValue: xValue,
+                            yValue: tableData.values[datasetIx][valIx]
+                        }
+                        curAnnotations.push(annotation);
+                        prevLeague = snapshot.league.type;
                 }
-                if(snapshot.league.type != prevLeague && injectLeague) {
-                    curStyles.push(SC2Restful.IMAGES.get(EnumUtil.enumOfId(snapshot.league.type, LEAGUE).name.toLowerCase()));
-                    prevLeague = snapshot.league.type;
-                } else {
-                    curStyles.push('');
-                }
-            }
-        }
-        tableData.pointStyles = pointStyles;
+            });
+        });
+        tableData.dataAnnotations = annotations;
     }
 
     static getGamesAndAverageMmrSortedArray(mmrHistory)
