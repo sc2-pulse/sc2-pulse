@@ -863,7 +863,9 @@ class ChartUtil
     {
         for(const chartable of document.getElementsByClassName("chartable"))
         {
-            ChartUtil.CHARTABLE_OBSERVER.observe(chartable, ChartUtil.CHARTABLE_OBSERVER_CONFIG);
+            const observer = new MutationObserver(ChartUtil.onChartableMutation);
+            observer.observe(chartable, ChartUtil.CHARTABLE_OBSERVER_CONFIG);
+            ChartUtil.CHARTABLE_OBSERVERS.set(chartable.id, observer);
         }
     }
 
@@ -1334,6 +1336,7 @@ class ChartUtil
 
 ChartUtil.CHARTS = new Map();
 ChartUtil.CHART_RAW_DATA = new Map();
+ChartUtil.CHARTABLE_OBSERVERS = new Map();
 
 ChartUtil.CHARTABLE_OBSERVER_CONFIG =
     {
@@ -1351,7 +1354,6 @@ ChartUtil.CHART_OBSERVER_CONFIG =
         characterData: false
     }
 
-ChartUtil.CHARTABLE_OBSERVER = new MutationObserver(ChartUtil.onChartableMutation);
 ChartUtil.CHART_OBSERVER = new MutationObserver(ChartUtil.onChartMutation);
 ChartUtil.ASPECT_RATIO = 2.5;
 ChartUtil.LOW_HEIGHT_REM = 8.5;
