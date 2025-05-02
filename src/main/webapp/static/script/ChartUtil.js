@@ -13,7 +13,8 @@ class ChartUtil
         config["group"] = chartable.getAttribute("data-chart-group") || "global";
         config["beginAtZero"] = chartable.getAttribute("data-chart-begin-at-zero")
             || (localStorage.getItem("chart-begin-at-zero") === "false" ? false : "true");
-        config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
+        config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id"))
+            .getContext("2d", {willReadFrequently: config.willReadFrequently === "true"});
         config["chartable"] = chartable.id;
         config["id"] = chartable.id.substring(0, chartable.id.length - 6);
         if (Util.isMobile()) config["zoom"] = null;
