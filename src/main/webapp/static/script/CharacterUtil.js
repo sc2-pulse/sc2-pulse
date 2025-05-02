@@ -834,7 +834,11 @@ class CharacterUtil
         const data = [];
         const rawData = {index: {}, history: {}};
         ChartUtil.CHART_RAW_DATA.set("mmr-table", {rawData: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
-        ChartUtil.setCustomConfigOption("mmr-table", "region", fullChar.members.character.region);
+        ChartUtil.batchExecute(
+            "mmr-table",
+            ()=>ChartUtil.setCustomConfigOption("mmr-table", "region", fullChar.members.character.region),
+            false
+        );
         const mmrYValueGetter = CharacterUtil.MMR_Y_VALUE_OPERATIONS.get(parameters.yAxis).get;
         for(const curHistory of mmrHistory.data) {
             const curHistoryLength = Object.values(curHistory.history)[0].length;
