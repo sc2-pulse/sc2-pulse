@@ -204,6 +204,8 @@ class ChartUtil
                 }
             }
         );
+        chart.tryUpdate = ChartUtil.tryUpdate;
+        chart.updateEnabled = true;
         if(config.zoom)
         {
             ChartUtil.createZoomControls(chart);
@@ -784,6 +786,43 @@ class ChartUtil
         return data;
     }
 
+    static batchExecute(id, task, update = true)
+    {
+        const updateStatus = ChartUtil.CHARTS.get(id)?.updateEnabled || true;
+        try {
+            ChartUtil.setChartUpdateEnabledAll(id, false);
+            task();
+            if(update) ChartUtil.CHARTS.get(id)?.update();
+        } catch(e) {
+            throw e;
+        } finally {
+            ChartUtil.setChartUpdateEnabledAll(id, updateStatus);
+        }
+    }
+
+    static setChartUpdateEnabledAll(id, updateEnabled)
+    {
+        const chart = ChartUtil.CHARTS.get(id);
+        if(chart) chart.updateEnabled = updateEnabled;
+        ChartUtil.setChartableUpdateEnabled(id, updateEnabled);
+    }
+
+    static setChartableUpdateEnabled(id, updateEnabled)
+    {
+        const observer = ChartUtil.CHARTABLE_OBSERVERS.get(id);
+        if(updateEnabled) {
+            const chartable = document.getElementById(id);
+            observer.observe(chartable, ChartUtil.CHARTABLE_OBSERVER_CONFIG);
+        } else {
+            observer.disconnect();
+        }
+    }
+    
+    static tryUpdate(params)
+    {
+        if(this.updateEnabled === true) this.update(params);
+    }
+
     static updateChart(chart, data)
     {
         if (data === null) return;
@@ -797,7 +836,7 @@ class ChartUtil
         ChartUtil.decorateChartData(data, chart.config._config.customConfig);
         if(chart.config._config.customConfig.isZoomed)
             ChartUtil.resetZoom({target: document.querySelector("#chart-zoom-ctl-" + chart.config._config.customConfig.chartable)});
-        chart.update();
+        chart.tryUpdate();
         ChartUtil.updateChartZoomLimits(chart);
     }
 
@@ -944,7 +983,7 @@ class ChartUtil
             }
         }
         if(chart) {
-            chart.update();
+            chart.tryUpdate();
             ChartUtil.resetZoom({target: document.querySelector("#chart-zoom-ctl-" + chartable.id)});
             ChartUtil.updateChartZoomLimits(chart);
         }
@@ -975,7 +1014,7 @@ class ChartUtil
                 Ignore the valid exception or throw a real exception otherwise.
             */
             try {
-                chart.update();
+                chart.tryUpdate();
             } catch (e) {
                 if(!e.message.includes("lastIndexOf")) throw e;
             }
@@ -1014,7 +1053,7 @@ class ChartUtil
     {
         for(const chart of ChartUtil.CHARTS.values()) {
             chart.config.options.aspectRatio = ChartUtil.ASPECT_RATIO;
-            chart.update();
+            chart.tryUpdate();
         }
     }
 
