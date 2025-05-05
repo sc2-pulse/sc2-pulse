@@ -791,6 +791,8 @@ th.hoverable span
 .tooltip-mmr-rank
 {
     font-size: 0.9em;
+    display: inline-block;
+    min-width: 7.3em;
 }
 
 .chart-zoom-ctl
