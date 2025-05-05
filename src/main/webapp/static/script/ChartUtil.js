@@ -94,7 +94,10 @@ class ChartUtil
                             ...(config.xType === "time") &&
                             {
                                 type: "timestack",
-                                timestack: {left_floating_tick_thres: false}
+                                timestack: {
+                                    left_floating_tick_thres: false,
+                                    tooltip_format: Util.DATE_TIME_OPTIONS
+                                }
                             }
                         },
                         y:
