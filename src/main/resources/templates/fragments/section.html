@@ -242,10 +242,14 @@
      th:class="|d-flex flex-wrap-gap justify-content-center ${clazz}|">
 </div>
 <div th:fragment="chartjs(name, containerClazz)"
-     th:id="|${name}-chart-container|"
-     th:class="|container-chart ${containerClazz}|"
+     th:class="container-chart-outer"
 >
-    <canvas th:id="|${name}-chart|" class="c-chart"></canvas>
+    <div
+        th:id="|${name}-chart-container|"
+        th:class="|container-chart ${containerClazz}|"
+    >
+        <canvas th:id="|${name}-chart|" class="c-chart"></canvas>
+    </div>
 </div>
 </body>
 </html>
