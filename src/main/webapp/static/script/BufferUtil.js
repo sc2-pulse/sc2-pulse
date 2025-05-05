@@ -28,7 +28,7 @@ class BufferUtil
     {
         const elem = document.querySelector("#team-buffer-mmr");
         if(BufferUtil.teamBuffer.buffer.size > 0) {
-            elem.setAttribute("href", TeamUtil.getTeamMmrHistoryHref(BufferUtil.teamBuffer.buffer.values()));
+            elem.setAttribute("href", TeamUtil.getTeamMmrHistoryHref(Array.from(BufferUtil.teamBuffer.buffer.values())));
             elem.classList.remove("d-none");
         } else {
             elem.classList.add("d-none");

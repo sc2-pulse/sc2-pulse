@@ -466,7 +466,7 @@ class TeamUtil
 
     static updateTeamMmr(searchParams = null)
     {
-        if(searchParams == null) searchParams = TeamUtil.getTeamMmrHistoryParams(BufferUtil.teamBuffer.buffer.values());
+        if(searchParams == null) searchParams = TeamUtil.getTeamMmrHistoryParams(Array.from(BufferUtil.teamBuffer.buffer.values()));
         const stringParams = searchParams.toString();
         const params = {params: stringParams};
         Util.setGeneratingStatus(STATUS.BEGIN);

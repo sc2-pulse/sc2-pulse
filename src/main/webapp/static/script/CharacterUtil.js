@@ -2027,7 +2027,7 @@ class CharacterUtil
         mmrHistory.parameters.yAxis = yAxis;
         const requiredColumns = new Set(CharacterUtil.MMR_Y_REQUIRED_HISTORY_COLUMNS.get(yAxis));
         const loadedColumns = Object.keys(mmrHistory.history.data[0].history);
-        if(requiredColumns.values().every(c=>loadedColumns.includes(c))) {
+        if(Array.from(requiredColumns.values()).every(c=>loadedColumns.includes(c))) {
             CharacterUtil.refilterCharacterMmrHistory();
         } else {
             CharacterUtil.reloadCharacterMmrHistory();
