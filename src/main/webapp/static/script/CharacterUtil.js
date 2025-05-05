@@ -1081,7 +1081,7 @@ class CharacterUtil
             let prevLeague = null;
             Array.from(Object.values(rawData.index)).forEach((raw, valIx)=>{
                 const rawIndex = raw[header];
-                if(!rawIndex) return;
+                if(rawIndex == null) return;
 
                 const leagueType = rawHistory.history[TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_TYPE.fullName][rawIndex];
                 if(leagueType != prevLeague && Number.isFinite(tableData.values[datasetIx][valIx])) {
