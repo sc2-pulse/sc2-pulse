@@ -1050,6 +1050,7 @@ class ChartUtil
             ChartUtil.ASPECT_RATIO = 2.5;
         }
         ChartUtil.updateAspectRatio();
+        Session.updateChartAspectRatio();
     }
 
     static updateAspectRatio()

@@ -329,9 +329,18 @@ class Session
         document.querySelector("#cheaters-visible").addEventListener("click", e=>window.setTimeout(Session.updateCheaterVisibility, 1));
     }
 
+    static updateChartAspectRatio()
+    {
+        const aspectRatio = ChartUtil.ASPECT_RATIO + "/1";
+        const sheet = Session.getStyleOverride().sheet;
+        for(let i = 0; i < sheet.cssRules.length; i++) if(sheet.cssRules[i].cssText.startsWith("#chart-aspect-ratio")) sheet.deleteRule(i);
+        sheet.insertRule("#chart-aspect-ratio, .container-chart {aspect-ratio: " + aspectRatio + " !important;}", 0);
+    }
+
     static updateStyleOverride()
     {
         Session.updateCheaterVisibility();
+        Session.updateChartAspectRatio();
     }
 
     static isAuthenticated()
