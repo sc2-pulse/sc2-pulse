@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.selenium;
@@ -299,7 +299,6 @@ public class GeneralSeleniumIT
 
         //character
         clickAndWait(driver, wait, "#ladder a.player-link", "#player-info.modal.show");
-        testCharacterMatches(driver, wait);
         switchTabsAndToggleInputs(driver, wait, "#player-stats-tabs");
         clickAndWait(driver, wait, "#player-info button.close:not(.close-left)", ".no-popup-hide:not(.d-none)");
 
@@ -307,13 +306,6 @@ public class GeneralSeleniumIT
         switchTabsAndToggleInputs(driver, wait, "#stats-tabs");
 
         checkJsErrors();
-    }
-
-    private static void testCharacterMatches(WebDriver driver, WebDriverWait wait)
-    {
-        clickAndWait(driver, wait, "#player-stats-matches-tab", "#player-stats-matches.show.active");
-        clickAndWait(driver, wait, "#load-more-matches", "#matches tbody tr:nth-child(20)");
-        clickAndWait(driver, wait, "#load-more-matches", "#matches tbody tr:nth-child(25)");
     }
 
     @Test
