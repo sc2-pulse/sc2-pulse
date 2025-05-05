@@ -799,12 +799,16 @@ th.hoverable span
 {
     font-size: 0.7rem;
     padding: .100rem .200rem;
-    float: right;
 }
 
 .chartable
 {
     display: none;
+}
+
+.container-chart-components
+{
+    text-align: end;
 }
 
 .table-image-md

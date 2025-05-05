@@ -262,7 +262,7 @@ class ChartUtil
         zoomCtl.setAttribute("data-chartable-id", chart.config._config.customConfig.chartable);
         zoomCtl.textContent = `${CHART_ZOOM_MOD_KEY}+mouse wheel/${CHART_ZOOM_MOD_KEY}+mouse drag to zoom, mouse drag to pan`;;
         zoomCtl.addEventListener("click", ChartUtil.resetZoom);
-        chart.canvas.closest(".container-chart").prepend(zoomCtl);
+        chart.canvas.closest(".container-chart-outer").querySelector(":scope .container-chart-components").prepend(zoomCtl);
     }
 
     static onCanvasInteraction(evt)
