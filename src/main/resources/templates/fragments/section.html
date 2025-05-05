@@ -33,7 +33,7 @@
         <thead><tr></tr></thead>
         <tbody><tr></tr></tbody>
     </table>
-    <div th:class="|container-chart ${!autoHeight ? 'container-chart-fixed-height' : ''}|"><canvas th:id="|${idPrefix}-${region}-chart|" class="c-chart"></canvas></div>
+    <div th:replace="~{fragments/section :: chartjs(|${idPrefix}-${region}|, ${!autoHeight ? 'container-chart-fixed-height' : ''})}"></div>
 </section>
 <section class="col-lg-6 mb-3"
          th:fragment="stats-race-league-region (region)"
@@ -56,7 +56,7 @@
         <thead><tr></tr></thead>
         <tbody><tr></tr></tbody>
     </table>
-    <div th:class="|container-chart ${!autoHeight ? 'container-chart-fixed-height' : ''}|"><canvas th:id="|${id}-chart|" class="c-chart"></canvas></div>
+    <div th:replace="~{fragments/section :: chartjs(${id}, ${!autoHeight ? 'container-chart-fixed-height' : ''})}"></div>
 </section>
 <section th:id="${id}" class="col-lg-6 mb-3" th:fragment="stats (id, title, titleY, type)"
          th:replace="~{fragments/section :: statsFull(${id}, ${title}, ${titleY}, ${type}, 'true', 'true', 1)}">>
@@ -240,6 +240,12 @@
 </span>
 <div th:fragment="container-generic(clazz)"
      th:class="|d-flex flex-wrap-gap justify-content-center ${clazz}|">
+</div>
+<div th:fragment="chartjs(name, containerClazz)"
+     th:id="|${name}-chart-container|"
+     th:class="|container-chart ${containerClazz}|"
+>
+    <canvas th:id="|${name}-chart|" class="c-chart"></canvas>
 </div>
 </body>
 </html>

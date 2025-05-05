@@ -245,7 +245,7 @@
                 <thead><tr></tr></thead>
                 <tbody><tr></tr></tbody>
             </table>
-            <div id="online-players-chart-container" class="container-chart"><canvas id="online-players-chart" class="c-chart"></canvas></div>
+            <div th:replace="~{fragments/section :: chartjs('online-players', _)}"></div>
         </section>
         <section id="online-games" class="col-lg-12 mb-3 games-participant">
             <h3>Games</h3>
@@ -268,7 +268,7 @@
                 <thead><tr></tr></thead>
                 <tbody><tr></tr></tbody>
             </table>
-            <div id="online-games-chart-container" class="container-chart"><canvas id="online-games-chart" class="c-chart"></canvas></div>
+            <div th:replace="~{fragments/section :: chartjs('online-games', _)}"></div>
         </section>
     </div>
 </section>
@@ -375,7 +375,7 @@
                     <thead><tr></tr></thead>
                     <tbody><tr></tr></tbody>
                 </table>
-                <div id="team-mmr-chart-container" class="container-chart"><canvas id="team-mmr-chart" class="c-chart"></canvas></div>
+                <div th:replace="~{fragments/section :: chartjs('team-mmr', _)}"></div>
             </div>
         </section>
         <section id="team-mmr-teams" class="tab-pane fade" data-view-name="team-mmr" data-view-title="MMR history - teams">
