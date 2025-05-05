@@ -806,6 +806,11 @@ th.hoverable span
     display: none;
 }
 
+.container-chart
+{
+    position: relative;
+}
+
 .container-chart-components
 {
     text-align: end;
