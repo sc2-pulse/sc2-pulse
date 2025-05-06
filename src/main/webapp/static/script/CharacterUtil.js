@@ -258,10 +258,16 @@ class CharacterUtil
             .addEventListener("change", CharacterUtil.onCharacterTeamsSeasonChange);
     }
 
+    static getCharacterUpdateTasks()
+    {
+        return CharacterUtil.CHARACTER_UPDATE_IDS.map(id=>ElementUtil.ELEMENT_TASK_QUEUE.get(id) || Promise.resolve());
+    }
+
     static updateCharacter(id)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return CharacterUtil.updateCharacterModel(id)
+        return Promise.allSettled(CharacterUtil.getCharacterUpdateTasks())
+            .then(r=>CharacterUtil.updateCharacterModel(id))
             .then(jsons => {
                 const fullChar = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
                 CharacterUtil.updateCharacterInfoName(fullChar.members, id);
@@ -2558,7 +2564,8 @@ CharacterUtil.MMR_REQUIRED_PROGRESS_SUMMARY_COLUMNS = new Set([
     TEAM_HISTORY_SUMMARY_COLUMN.REGION_RANK_LAST,
     TEAM_HISTORY_SUMMARY_COLUMN.REGION_TEAM_COUNT_LAST
 ]);
-
+CharacterUtil.CHARACTER_UPDATE_IDS = Array.from(document.querySelectorAll("#player-info .container-loading"))
+    .map(elem=>elem.id);
 CharacterUtil.MMR_HISTORY_PLACEHOLDER = '-';
 CharacterUtil.ALL_RACE = Object.freeze({name: "all", fullName: "ALL", order: 999});
 CharacterUtil.MMR_HISTORY_COMPLETE_POINT_TASK_NAME = "mmr-history-complete-point-task";
