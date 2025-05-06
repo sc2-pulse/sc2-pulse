@@ -33,7 +33,9 @@ class CharacterUtil
 
         return Promise.all(promises)
             .then(o=>{
-                if(!Session.isHistorical) HistoryUtil.pushState({type: "character", id: id}, document.title, "?" + searchParams.toString() + "#player-stats-summary");
+                if(!Session.isHistorical) HistoryUtil.pushState({type: "character", id: id}, document.title,
+                    "?" + searchParams.toString()
+                    + "#" + document.querySelector("#player-stats-tabs .nav-link.active").id);
                 Session.currentSearchParams = stringParams;
             })
             .then(e=>BootstrapUtil.showModal("player-info"));
