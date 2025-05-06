@@ -367,6 +367,7 @@ Session.currentRoles = null;
 Session.currentSearchParams = null;
 Session.isHistorical = false;
 Session.currentStateRestoration = Promise.resolve();
+Session.statesRestored = 0;
 Session.currentRestorationSearch = null;
 Session.currentRestorationHash = null;
 Session.lastNonModalParams = "?#stats";

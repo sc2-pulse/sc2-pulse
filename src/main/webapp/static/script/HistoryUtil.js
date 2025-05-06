@@ -221,6 +221,7 @@ class HistoryUtil
             }))
             .then(e => {
                 HistoryUtil.updateActiveTabs();
+                Session.statesRestored += 1;
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 ElementUtil.executeActiveTabTask();
             });
@@ -309,6 +310,7 @@ class HistoryUtil
         .then(e => {const ap = []; for(const lp of lazyPromises) ap.push(lp()); return Promise.all(ap)})
         .then(e => {
             HistoryUtil.updateActiveTabs();
+            Session.statesRestored += 1;
             Util.setGeneratingStatus(STATUS.SUCCESS);
             if(scrollTo != null) Util.scrollIntoViewById(scrollTo);
             ElementUtil.executeActiveTabTask();
