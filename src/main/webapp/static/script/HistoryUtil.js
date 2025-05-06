@@ -135,22 +135,25 @@ class HistoryUtil
             HistoryUtil.formatSearchString(params.toString(), deepestTabId));
     }
 
-    static updateActiveTabs()
+    static updateActiveTabs(alwaysReplace = true)
     {
         const modal = document.querySelector(".modal.show");
         const modalOnly = modal != null;
         const deepestDocumentTab = HistoryUtil.getDeepestTabId(document);
-        if(!deepestDocumentTab) return;
+        if(!deepestDocumentTab) return false;
         const hash = modalOnly
             ? HistoryUtil.getDeepestTabId(modal)
             : deepestDocumentTab;
         const dataTarget = "#" + (hash != null ? hash : modal.id);
+        if(alwaysReplace === false && dataTarget === window.location.hash) return false;
+
         ElementUtil.setMainContent(dataTarget);
         ElementUtil.updateTitleAndDescription(new URLSearchParams(Session.locationSearch()), "#" + hash, dataTarget);
 
         HistoryUtil.replaceState({}, document.title,
             HistoryUtil.formatSearchString(Session.locationSearch(),
                 hash != null ? hash : deepestDocumentTab));
+        return true;
     }
 
     static showAnchoredTabs(activateOnly = false, hash = Session.locationHash())
