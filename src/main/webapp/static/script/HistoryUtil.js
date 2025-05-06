@@ -189,9 +189,11 @@ class HistoryUtil
 
     static restoreState(e)
     {
-        Session.currentStateRestoration = Session.currentStateRestoration != null
+        let promise = Session.currentStateRestoration != null
             ? Session.currentStateRestoration.then(r=>HistoryUtil.doRestoreState(e))
             : HistoryUtil.doRestoreState(e);
+        if(Session.statesRestored === 0) promise = promise.then(e=>HistoryUtil.updateActiveTabs(false));
+        Session.currentStateRestoration = promise;
     }
 
     static doRestoreState(e)
