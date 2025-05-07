@@ -1302,16 +1302,21 @@ class ChartUtil
                 type: "line",
                 xMin: season.start.valueOf(),
                 xMax: season.start.valueOf(),
-                borderColor: "rgba(127, 127, 127, 0.5)",
+                borderColor: "rgba(127, 127, 127, 0.3)",
                 borderWidth: 1,
                 adjustScaleRange: false,
                 drawTime: "beforeDatasetsDraw",
                 label: {
+                    borderRadius: 3,
                     content: name,
                     display: true,
                     position: position,
-                    padding: 3,
-                    font: {weight: "normal"},
+                    padding: 2,
+                    font: {
+                        weight: "normal",
+                        lineHeight: 1,
+                        size: SC2Restful.REM * 0.8
+                    },
                     drawTime: "afterDatasetsDraw"
                 }
             }
