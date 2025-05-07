@@ -152,11 +152,15 @@
         </div>
         <div class="form-group col">
             <label th:for="|${id}-depth|" class="text-nowrap">Depth(days)</label>
+            <!--TODO
+                Should be empty depth for everything when team mmr performance is improved.
+                Using this quick fix until then.
+             -->
             <input th:id="|${id}-depth|" class="form-control text-center serializable"
                    type="number"
                    min="1"
                    max="10000"
-                   value="180"
+                   th:value="${id == 'mmr' ? '' : '180'}"
             />
         </div>
     </div>
