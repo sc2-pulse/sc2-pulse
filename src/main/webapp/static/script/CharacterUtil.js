@@ -1005,7 +1005,7 @@ class CharacterUtil
             queueData: CharacterUtil.getCharacterMmrQueueData(),
             yAxis: yAxis,
             endOfSeason: (localStorage.getItem("mmr-season-last") || "false") === "true",
-            showLeagues: (localStorage.getItem("mmr-leagues") || "true") === "true",
+            showLeagues: (localStorage.getItem("mmr-leagues") || "false") === "true",
             bestRaceOnly: (localStorage.getItem("mmr-best-race") || "false") === "true"
         };
     }
@@ -2006,7 +2006,7 @@ class CharacterUtil
     static onMmrHistoryShowLeaguesChange(evt)
     {
         const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
-        mmrHistory.parameters.showLeagues = (localStorage.getItem("mmr-leagues") || "true") === "true";
+        mmrHistory.parameters.showLeagues = (localStorage.getItem("mmr-leagues") || "false") === "true";
         if(!mmrHistory.parameters.historyColumns.has(TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_TYPE)) {
             CharacterUtil.reloadCharacterMmrHistory();
         } else {
