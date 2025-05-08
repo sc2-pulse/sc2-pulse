@@ -1249,10 +1249,11 @@ class ChartUtil
             const patchPosition = ChartUtil.getPatchAnnotationPosition(chart);
             if(!patchAnnotations) {
                 patchAnnotations = {};
-                MetaUtil.PATCHES
+                const patchAnnotationArray = MetaUtil.PATCHES
                     .filter(patch=>patch.patch.build >= ChartUtil.PATCH_ANNOTATION_BUILD_MIN && patch.patch.versus == true)
-                    .forEach(patch=>patchAnnotations[patch.patch.build + "" + patch.patch.id]
-                        = ChartUtil.createPatchAnnotation(patch, config.region, patchPosition));
+                    .map(patch=>ChartUtil.createPatchAnnotation(patch, config.region, patchPosition));
+                patchAnnotationArray.sort((a, b)=>a.xMin - b.xMin);
+                patchAnnotationArray.forEach(annotation=>patchAnnotations[annotation.label.content] = annotation);
                 ChartUtil.PATCH_ANNOTATIONS.set(config.region, patchAnnotations);
             }
             Object.values(patchAnnotations).forEach(s=>s.label.position = patchPosition);
