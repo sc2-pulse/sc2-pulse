@@ -1165,7 +1165,7 @@ class ChartUtil
     static shouldUseAnnotationCache(context)
     {
         return context.chart?.config?._config?.options?.plugins?.annotation?.annotationCache
-            && context.chart?.isZoomingOrPanning();
+            && context.chart?.isPanning === true;
     }
 
     static createCustomAnnotationsCallback(context)
