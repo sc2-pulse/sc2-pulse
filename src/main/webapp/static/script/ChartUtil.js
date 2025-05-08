@@ -173,7 +173,9 @@ class ChartUtil
                                 enabled: true,
                                 mode: config.zoom,
                                 onPan: ChartUtil.onZoom,
-                                onPanStart: ctx=>!ctx.event.srcEvent[CHART_ZOOM_EVENT_MOD_KEY]
+                                onPanStart: ChartUtil.onPanStart,
+                                onPanComplete: ChartUtil.onPanComplete,
+                                onPanRejected: ChartUtil.onPanComplete
                             },
                             zoom:
                             {
@@ -298,6 +300,17 @@ class ChartUtil
         ctl.classList.add("active");
         ctl.textContent = "Reset zoom/pan";
         chart.chart.config._config.customConfig.isZoomed = true;
+    }
+
+    static onPanStart(ctx)
+    {
+        if(ctx.event.srcEvent[CHART_ZOOM_EVENT_MOD_KEY]) return false;
+        ctx.chart.isPanning = true;
+    }
+
+    static onPanComplete(ctx)
+    {
+        ctx.chart.isPanning = false;
     }
 
     static onLegendClick(e, legendItem)
