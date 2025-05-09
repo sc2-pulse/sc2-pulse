@@ -1243,6 +1243,7 @@ class ChartUtil
             const position = ChartUtil.getSeasonAnnotationPosition(ChartUtil.CHARTS.get(config.chartable));
             Object.values(seasonAnnotations).forEach(s=>s.label.position = position);
             Object.entries(seasonAnnotations).forEach(e=>annotations[e[0]] = e[1]);
+            ChartUtil.foldAnnotations(Array.from(Object.values(seasonAnnotations)), config, chart);
         }
         if(localStorage.getItem(config.id + "-patches") == "true" && localStorage.getItem(config.id + "-x-type") != "false") {
             let patchAnnotations = ChartUtil.PATCH_ANNOTATIONS.get(config.region);
@@ -1258,8 +1259,72 @@ class ChartUtil
             }
             Object.values(patchAnnotations).forEach(s=>s.label.position = patchPosition);
             Object.entries(patchAnnotations).forEach(e=>annotations[e[0]] = e[1]);
+            ChartUtil.foldAnnotations(Array.from(Object.values(patchAnnotations)), config, chart, ChartUtil.setAnnotationLabelVisibility);
         }
         return annotations;
+    }
+
+    static setAnnotationLabelVisibility(annotation, visibility)
+    {
+        annotation.label.display = visibility;
+    }
+
+    static setAnnotationVisibility(annotation, visibility)
+    {
+        annotation.display = visibility;
+    }
+
+    /**TODO
+        Fast approximate annotation pre-folding without redraws/updates. Based on x axis and approximate label width.
+        This can be handled by a plugin because it provides access to rendered labels so that proper pixel perfect
+        calculation can be made. Some properties can be tweaked via a plugin, but I can't find a way to hide annotations,
+        labels can be hidden, but not annotations.
+        This function will be used instead until a better solution is found.
+    **/
+    static foldAnnotations
+    (
+        annotations,
+        config,
+        chart,
+        visibilitySetter = ChartUtil.setAnnotationVisibility,
+        minSpaceBetween = ChartUtil.ANNOTATION_FOLDING_MIN_SPACE_BETWEEN,
+        widthCalculator = ChartUtil.CENTER_WIDTH_CALCULATOR
+    )
+    {
+        if(!annotations) return;
+
+        const width = widthCalculator();
+        const chartBounds = chart?.getZoomedScaleBounds()?.x
+        const xLength = chartBounds
+            ? chartBounds.max - chartBounds.min
+            : config.data.labels[config.data.labels.length - 1] - config.data.labels[0];
+        const xUnitWidth = width / xLength;
+        let prevVisibleIx = annotations.length - 1;
+        for(let i = annotations.length - 2; i >= 0; i--) {
+            const prevAnnotation = annotations[prevVisibleIx];
+            const curAnnotation = annotations[i];
+            const spaceBetweenX = (prevAnnotation.xMin - curAnnotation.xMin) * xUnitWidth;
+            const minSpaceBetweenX = ChartUtil.calculateApproximateAnnotationLabelWidth(curAnnotation.label) / 2
+                + ChartUtil.calculateApproximateAnnotationLabelWidth(prevAnnotation.label) / 2
+                + minSpaceBetween
+            if(spaceBetweenX < minSpaceBetweenX) {
+                visibilitySetter(curAnnotation, false)
+            } else {
+                visibilitySetter(curAnnotation, true)
+                prevVisibleIx = i;
+            }
+        }
+    }
+
+    static calculateApproximateAnnotationLabelWidth
+    (
+        label,
+        lengthSizeCoefficient = ChartUtil.ANNOTATION_APPROXIMATE_LABEL_WIDTH_COEFFICIENT
+    )
+    {
+        return (label.font?.size || Chart.defaults.font.size) * label.content.length * lengthSizeCoefficient
+            + ((label.padding || Chart.defaults.elements.labelAnnotation.padding) * 2)
+            + ((label.borderWidth || Chart.defaults.elements.labelAnnotation.borderWidth) * 2);
     }
 
     static create50Annotation(config)
@@ -1434,6 +1499,11 @@ ChartUtil.TIER_ANNOTATIONS = null;
 ChartUtil.SEASON_ANNOTATIONS = new Map();
 ChartUtil.PATCH_ANNOTATIONS = new Map();
 ChartUtil.PATCH_ANNOTATION_BUILD_MIN = 39576;
+ChartUtil.ANNOTATION_FOLDING_MIN_SPACE_BETWEEN = 2;
+ChartUtil.ANNOTATION_APPROXIMATE_LABEL_WIDTH_COEFFICIENT = 0.6;
+ChartUtil.DEFAULT_Y_AXIS_LABEL_OFFSET = SC2Restful.REM * 4;
+ChartUtil.CENTER_WIDTH_CALCULATOR =
+    ()=>document.querySelector("#section-center").clientWidth - ChartUtil.DEFAULT_Y_AXIS_LABEL_OFFSET;
 ChartUtil.CURSOR_PLUGIN =
 {
     id: "nephest-cursor",
