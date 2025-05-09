@@ -379,7 +379,6 @@
                                         --js ${basedir}/src/main/webapp/static/script/IntervalExecutor.js
                                         --js ${basedir}/src/main/webapp/static/script/Util.js
                                         --js ${basedir}/src/main/webapp/static/script/BootstrapUtil.js
-                                        --js ${basedir}/src/main/webapp/static/script/ChartUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/ElementUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/enum.js
                                         --js ${basedir}/src/main/webapp/static/script/EnumUtil.js
@@ -394,6 +393,7 @@
                                         --js ${basedir}/src/main/webapp/static/script/MetaUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/Session.js
                                         --js ${basedir}/src/main/webapp/static/script/SC2Restful.js
+                                        --js ${basedir}/src/main/webapp/static/script/ChartUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/StatsUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/TableUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/TeamUtil.js
