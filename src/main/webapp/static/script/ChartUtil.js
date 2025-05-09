@@ -1426,7 +1426,6 @@ class ChartUtil
                 position: position,
                 padding: 3,
                 backgroundColor: 'rgba(40, 167, 69, 0.9)',
-                borderWidth: 1,
                 font: {weight: "normal"},
                 drawTime: "afterDatasetsDraw"
             }
