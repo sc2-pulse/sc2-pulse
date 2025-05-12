@@ -1809,7 +1809,8 @@ class CharacterUtil
                 : character.currentStats;
             const row = tbody.insertRow();
             row.insertCell().appendChild(ElementUtil.createImage("flag/", character.members.character.region.toLowerCase(), "table-image-long"));
-            row.insertCell().appendChild(ElementUtil.createImage("league/", EnumUtil.enumOfId(character.leagueMax, LEAGUE).name, "table-image table-image-square mr-1"));
+            const leagueCell = row.insertCell();
+            if(character.leagueMax != null) leagueCell.appendChild(ElementUtil.createImage("league/", EnumUtil.enumOfId(character.leagueMax, LEAGUE).name, "table-image table-image-square mr-1"));
             row.insertCell().textContent = character.ratingMax;
             row.insertCell().textContent = character.totalGamesPlayed;
             CharacterUtil.insertSearchStats(row, stats, "rating", hasCurrentStats, grayOutPrevious);

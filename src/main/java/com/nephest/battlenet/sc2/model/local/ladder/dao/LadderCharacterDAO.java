@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -115,11 +115,13 @@ public class LadderCharacterDAO
     + "player_character_stats_current.games_played as \"games_played_cur\", "
     + "player_character_stats_current.global_rank as \"rank_cur\" "
 
-    + "FROM player_character_stats_filtered "
-    + "INNER JOIN player_character ON player_character.id = player_character_stats_filtered.player_character_id "
+    + "FROM player_character_filtered "
+    + "INNER JOIN player_character ON player_character.id = player_character_filtered.id "
     + "INNER JOIN account ON player_character.account_id = account.id "
-    + "INNER JOIN player_character_stats_max ON player_character.id = player_character_stats_max.player_character_id "
-    + "INNER JOIN player_character_stats ON player_character_stats_filtered.id = player_character_stats.id "
+    + "LEFT JOIN player_character_stats_filtered ON player_character_filtered.id "
+        + "= player_character_stats_filtered.player_character_id "
+    + "LEFT JOIN player_character_stats_max ON player_character.id = player_character_stats_max.player_character_id "
+    + "LEFT JOIN player_character_stats ON player_character_stats_filtered.id = player_character_stats.id "
     + "LEFT JOIN player_character_recent_race ON player_character.id = player_character_recent_race.player_character_id "
     + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
     + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
@@ -298,15 +300,15 @@ public class LadderCharacterDAO
         DISTINCT_CHARACTER_ROW_MAPPER =
         (rs, num)->
         {
-            Integer gamesPlayed = rs.getInt("games_played");
+            Integer gamesPlayed = DAOUtils.getInteger(rs, "games_played");
             Race race = DAOUtils.getConvertedObjectFromInteger(rs, "race", conversionService, Race.class);
             Clan clan = DAOUtils.getInteger(rs, "clan.id") == null
                 ? null
                 : ClanDAO.getStdRowMapper().mapRow(rs, num);
             return new LadderDistinctCharacter
             (
-                conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
-                rs.getInt("rating_max"),
+                conversionService.convert(DAOUtils.getInteger(rs,"league_max"), League.LeagueType.class),
+                DAOUtils.getInteger(rs, "rating_max"),
                 AccountDAO.getStdRowMapper().mapRow(rs, num),
                 PlayerCharacterDAO.getStdRowMapper().mapRow(rs, num),
                 clan,
