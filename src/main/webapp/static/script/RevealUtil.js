@@ -68,7 +68,7 @@ class RevealUtil
         const proPlayerId = fd.get("player");
         const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character;
         return RevealUtil.reveal(character.accountId, proPlayerId, method)
-            .then(e=>CharacterUtil.updateCharacter(character.id))
+            .then(e=>CharacterUtil.showCharacterInfo(null, character.id, false))
             .then(e=>BootstrapUtil.hideActiveModal())
             .then(e=>BootstrapUtil.showTab("player-stats-player-tab"));
     }
