@@ -204,16 +204,6 @@ class TableUtil
         table.setAttribute("data-last-updated", Date.now());
     }
 
-    static hoverableColumnHeader(thead)
-    {
-        const oldText = thead.textContent;
-        const container = document.createElement("span");
-        container.textContent = oldText;
-        thead.appendChild(container);
-        thead.classList.add("hoverable");
-        BootstrapUtil.addTooltip(thead, "Hover over this column values to get a more detailed view");
-    }
-
     static createSimpleRow(object, property, toString = false)
     {
         const row = document.createElement("tr");
