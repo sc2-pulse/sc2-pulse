@@ -16,7 +16,7 @@ class CharacterUtil
         ElementUtil.ELEMENT_TASKS.set("player-stats-mmr-tab", e=>CharacterUtil.enqueueUpdateCharacterMmrHistoryAll());
     }
 
-    static showCharacterInfo(e = null, explicitId = null)
+    static showCharacterInfo(e = null, explicitId = null, fullReload = true)
     {
         Util.resetLoadingIndicatorTree(document.querySelector("#player-info"));
         if (e != null) e.preventDefault();
@@ -28,14 +28,16 @@ class CharacterUtil
         searchParams.append("id", id);
         const stringParams = searchParams.toString();
         searchParams.append("m", "1");
-        promises.push(BootstrapUtil.hideActiveModal(["versus-modal", "player-info", "error-generation"]));
+        if(fullReload === true)
+            promises.push(BootstrapUtil.hideActiveModal(["versus-modal", "player-info", "error-generation"]));
         promises.push(CharacterUtil.updateCharacter(id));
 
         return Promise.all(promises)
             .then(o=>{
-                if(!Session.isHistorical) HistoryUtil.pushState({type: "character", id: id}, document.title,
-                    "?" + searchParams.toString()
-                    + "#" + document.querySelector("#player-stats-tabs .nav-link.active").id);
+                if(!Session.isHistorical && fullReload === true)
+                    HistoryUtil.pushState({type: "character", id: id}, document.title,
+                        "?" + searchParams.toString()
+                        + "#" + document.querySelector("#player-stats-tabs .nav-link.active").id);
                 Session.currentSearchParams = stringParams;
             })
             .then(e=>BootstrapUtil.showModal("player-info"));
