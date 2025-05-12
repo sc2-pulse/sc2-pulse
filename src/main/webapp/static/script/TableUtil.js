@@ -207,7 +207,9 @@ class TableUtil
     static hoverableColumnHeader(thead)
     {
         const oldText = thead.textContent;
-        thead.innerHTML = "<span>" + oldText + "</span>"
+        const container = document.createElement("span");
+        container.textContent = oldText;
+        thead.appendChild(container);
         thead.classList.add("hoverable");
         BootstrapUtil.addTooltip(thead, "Hover over this column values to get a more detailed view");
     }
