@@ -519,13 +519,16 @@ class Util
 
     static resetLoadingIndicatorTree(container)
     {
-        Util.resetLoadingIndicator(container);
-        Util.resetNestedLoadingIndicators(container);
+        return Promise.allSettled([
+            Util.resetLoadingIndicator(container),
+            Util.resetNestedLoadingIndicators(container)
+        ]);
     }
 
     static resetNestedLoadingIndicators(container)
     {
-        container.querySelectorAll(".container-loading").forEach(Util.resetLoadingIndicator);
+        return Promise.allSettled(Array.from(container.querySelectorAll(".container-loading"))
+            .map(Util.resetLoadingIndicator));
     }
 
     static resetLoadingIndicator(container)
