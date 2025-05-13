@@ -784,11 +784,19 @@ class TeamUtil
         if(sortCtl) sortCtl.addEventListener("change", ()=>window.setTimeout(TeamUtil.onTeamSort, 1));
     }
 
-    static createHistoryParams(ids, legacyUids, groupBy, from, to)
+    static createTeamGroupBaseParams(ids, legacyUids, fromSeason, toSeason)
     {
         const params = new URLSearchParams();
         if(ids) ids.forEach(id=>params.append("id", id));
         if(legacyUids) legacyUids.forEach(l=>params.append("legacyUid", l));
+        if(fromSeason != null) params.append("fromSeason", fromSeason);
+        if(toSeason != null) params.append("toSeason", toSeason);
+        return params;
+    }
+
+    static createHistoryParams(ids, legacyUids, groupBy, from, to)
+    {
+        const params = TeamUtil.createTeamGroupBaseParams(ids, legacyUids);
         if(groupBy) params.append("groupBy", groupBy.fullName);
         if(from) params.append("from", from.toISOString());
         if(to) params.append("to", to.toISOString());
@@ -858,6 +866,16 @@ class TeamUtil
     {
         return TeamUtil.createLegacyIdsForAllRaces(member)
             .map(legacyId=>TeamUtil.createLegacyUid(queue, teamType, region, legacyId));
+    }
+
+    static createLegacyUidFromHistoryStaticData(staticData)
+    {
+        return TeamUtil.createLegacyUid(
+            EnumUtil.enumOfId(staticData[TEAM_HISTORY_STATIC_COLUMN.QUEUE_TYPE.fullName], TEAM_FORMAT),
+            EnumUtil.enumOfId(staticData[TEAM_HISTORY_STATIC_COLUMN.TEAM_TYPE.fullName], TEAM_TYPE),
+            EnumUtil.enumOfId(staticData[TEAM_HISTORY_STATIC_COLUMN.REGION.fullName], REGION),
+            staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID.fullName]
+        );
     }
 
 }
