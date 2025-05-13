@@ -828,6 +828,16 @@ class TeamUtil
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
+    static getTeamGroup(ids, legacyUids, fromSeason, toSeason)
+    {
+        const params = TeamUtil.createTeamGroupBaseParams(ids, legacyUids, fromSeason, toSeason);
+        const request = ROOT_CONTEXT_PATH + "api/team/group/team/full?" + params.toString();
+
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
     static createLegacyUid(queue, teamType, region, legacyId)
     {
         return queue.code + "-" + teamType.code + "-" + region.code + "-" + legacyId;
