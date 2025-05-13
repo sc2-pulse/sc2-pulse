@@ -1185,14 +1185,32 @@ class CharacterUtil
         if(resetLoading) CharacterUtil.resetCharacterMmrHistorySummaryLoading();
     }
 
+    static updateMmrHistorySummaryWithTeams(summaries, teams)
+    {
+        const legacyIdSummaries = Util.toMap(summaries, s=>TeamUtil.createLegacyUidFromHistoryStaticData(s.staticData));
+        for(const team of teams) {
+            const summary = legacyIdSummaries.get(team.legacyUid);
+            if(summary == null) continue;
+
+            summary.summary[TEAM_HISTORY_SUMMARY_COLUMN.REGION_RANK_LAST.fullName] = team.regionRank;
+            summary.summary[TEAM_HISTORY_SUMMARY_COLUMN.REGION_TEAM_COUNT_LAST.fullName] = team.regionTeamCount;
+        }
+    }
+
     static updateCharacterMmrHistorySummaryModel(ids, legacyUids, groupBy, from, to, staticColumns, summaryColumns)
     {
-        return TeamUtil.getHistorySummary(ids, legacyUids, groupBy, from, to, staticColumns, summaryColumns)
-            .then(summary=>{
+        return Promise.all([
+            TeamUtil.getHistorySummary(ids, legacyUids, groupBy, from, to, staticColumns, summaryColumns),
+            TeamUtil.getTeamGroup(ids, legacyUids, Session.currentSeasons[0].battlenetId)
+        ])
+            .then(summaryBatch=>{
+                const summary = summaryBatch[0];
+                const currentTeams = summaryBatch[1];
                 if(summary != null) {
                     summary.forEach(CharacterUtil.addLegacyIdData);
                     summary.sort((a, b)=>b.summary[TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX.fullName] -
                         a.summary[TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX.fullName]);
+                    if(currentTeams != null) CharacterUtil.updateMmrHistorySummaryWithTeams(summary, currentTeams);
                 }
                 Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory.summary = summary;
                 return summary;
@@ -1240,7 +1258,12 @@ class CharacterUtil
             TEAM_HISTORY_GROUP_MODE.LEGACY_UID,
             params.from,
             params.to,
-            [TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID],
+            [
+                TEAM_HISTORY_STATIC_COLUMN.QUEUE_TYPE,
+                TEAM_HISTORY_STATIC_COLUMN.TEAM_TYPE,
+                TEAM_HISTORY_STATIC_COLUMN.REGION,
+                TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID
+            ],
             params.summaryColumns
         )
             .then(history=>{
