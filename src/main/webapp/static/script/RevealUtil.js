@@ -30,11 +30,11 @@ class RevealUtil
     static onModalShow()
     {
         RevealUtil.resetModel();
-        const currentCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        const proPlayerId = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)?.members?.proId;
         const form = document.querySelector("#modal-reveal-player-form");
         const submitCtl = document.querySelector('#modal-reveal-player button[form="modal-reveal-player-form"][type="submit"]');
         const filterInput = document.querySelector("#modal-reveal-player-input");
-        if(!currentCharacter.proPlayer) {
+        if(proPlayerId == null) {
             filterInput.disabled = false;
             form.setAttribute("data-reveal-mode", "reveal");
             FormUtil.filterFormInputGroup(filterInput);
@@ -45,7 +45,7 @@ class RevealUtil
         } else {
             filterInput.disabled = true;
             form.setAttribute("data-reveal-mode", "unlink");
-            FormUtil.setInputGroupFilterByValue(filterInput, currentCharacter.proPlayer.proPlayer.id);
+            FormUtil.setInputGroupFilterByValue(filterInput, proPlayerId);
             submitCtl.disabled = false;
             submitCtl.textContent = "Unlink";
             submitCtl.classList.remove("btn-success");
