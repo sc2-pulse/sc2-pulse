@@ -229,9 +229,9 @@ class RevealUtil
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
-    static blame(linkedCharacter, character, container)
+    static blame(isRevealed, character, container)
     {
-        if(!linkedCharacter.proPlayer) {
+        if(!isRevealed) {
             container.textContent = '';
             return Promise.resolve();
         }
@@ -474,11 +474,10 @@ class RevealUtil
 
     static updateLog()
     {
-        const linkedCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character;
+        const member = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members;
         const logContainer = document.querySelector('#modal-reveal-player .log');
         ElementUtil.executeTask('#modal-reveal-player', ()=>
-            RevealUtil.blame(linkedCharacter, character, logContainer.querySelector(":scope .blame"))
+            RevealUtil.blame(member.proId != null, member.character, logContainer.querySelector(":scope .blame"))
         );
         return RevealUtil.updateLogRevealers()
             .then(RevealUtil.reloadLogEntries);
