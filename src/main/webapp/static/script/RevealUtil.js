@@ -385,8 +385,8 @@ class RevealUtil
                 if(action == AUDIT_LOG_ACTION.INSERT || action == AUDIT_LOG_ACTION.DELETE)
                     return ["url"];
             }
-            default: return Object.keys(entry.dataJson);
         }
+        return Object.keys(entry.dataJson);
     }
 
     static renderLogEntryHeader(entry, model)
