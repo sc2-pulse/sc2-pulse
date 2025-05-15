@@ -1393,8 +1393,7 @@ class ChartUtil
                     padding: 2,
                     font: {
                         weight: "normal",
-                        lineHeight: 1,
-                        size: SC2Restful.REM * 0.8
+                        lineHeight: 1
                     },
                     drawTime: "afterDatasetsDraw"
                 }
