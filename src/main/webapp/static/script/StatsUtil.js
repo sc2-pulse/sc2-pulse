@@ -996,10 +996,8 @@ class StatsUtil
 
     static resetAndUpdateMapStatsFilmAsync()
     {
-        return ElementUtil.executeTask("stats-match-up-container", ()=>{
-            StatsUtil.resetMapStatsFilm();
-            return StatsUtil.updateMapStatsFilmAsync();
-        });
+        return ElementUtil.executeTask("stats-match-up-container", ()=>StatsUtil.resetMapStatsFilm())
+            .then(StatsUtil.updateMapStatsFilmAsync);
     }
 
     static resetMapStatsFilm(fullClear = true)
