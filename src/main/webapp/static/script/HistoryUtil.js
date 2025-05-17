@@ -317,6 +317,7 @@ class HistoryUtil
             HistoryUtil.updateActiveTabs();
             Session.statesRestored += 1;
             Util.setGeneratingStatus(STATUS.SUCCESS);
+            Session.isHistorical = false;
             if(scrollTo != null) Util.scrollIntoViewById(scrollTo);
             ElementUtil.executeActiveTabTask();
         });
