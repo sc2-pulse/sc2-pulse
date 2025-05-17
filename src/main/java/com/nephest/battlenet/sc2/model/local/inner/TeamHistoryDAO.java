@@ -1093,6 +1093,7 @@ public class TeamHistoryDAO
         )
             .stream()
             .collect(Collectors.toMap(Division::getId, Function.identity()));
+        if(divisions.isEmpty()) return;
 
         Map<Integer, LeagueTier> tiers = leagueTierDAO.findByIds
         (

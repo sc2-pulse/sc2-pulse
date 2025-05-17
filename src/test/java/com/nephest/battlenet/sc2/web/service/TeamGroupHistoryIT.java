@@ -72,6 +72,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @SpringBootTest(classes = AllTestConfig.class)
@@ -696,6 +697,19 @@ public class TeamGroupHistoryIT
                     FULL_HISTORY.get(1),
                     subList(FULL_HISTORY.get(2), 0, 1)
                 )
+            ),
+
+            Arguments.of
+            (
+                seasons.get(seasons.size() - 1).getEnd(),
+                null,
+                List.of()
+            ),
+            Arguments.of
+            (
+                null,
+                seasons.get(0).getStart(),
+                List.of()
             )
         );
     }
@@ -731,7 +745,7 @@ public class TeamGroupHistoryIT
     )
     throws Exception
     {
-        List<TeamHistory> found = objectMapper.readValue(mvc.perform
+        ResultActions resultActions = mvc.perform
         (
             get("/api/team/group/history")
                 .queryParam
@@ -767,7 +781,14 @@ public class TeamGroupHistoryIT
                 .queryParam("to", mvcConversionService.convert(to, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
-            .andExpect(status().isOk())
+            .andExpect(expected.isEmpty() ? status().isNotFound() : status().isOk());
+        if(expected.isEmpty())
+        {
+            resultActions.andExpect(content().string(""));
+            return;
+        }
+
+        List<TeamHistory> found = objectMapper.readValue(resultActions
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         found.sort(ID_COMPARATOR);
         Assertions.assertThat(found)
@@ -1077,7 +1098,7 @@ public class TeamGroupHistoryIT
     )
     throws Exception
     {
-        List<TeamHistorySummary> found = objectMapper.readValue(mvc.perform
+        ResultActions resultActions = mvc.perform
         (
             get("/api/team/group/history/summary")
                 .queryParam
@@ -1112,8 +1133,13 @@ public class TeamGroupHistoryIT
                 .queryParam("from", mvcConversionService.convert(from, String.class))
                 .queryParam("to", mvcConversionService.convert(to, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
+        );
+        if(expected.isEmpty())
+        {
+            resultActions.andExpect(content().string(""));
+            return;
+        }
+        List<TeamHistorySummary> found = objectMapper.readValue(resultActions
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         if(found.size() > 1) found.sort(ID_SUMMARY_COMPARATOR);
         Assertions.assertThat(found)
