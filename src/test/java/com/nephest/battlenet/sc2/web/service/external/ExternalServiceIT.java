@@ -48,6 +48,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -326,7 +327,7 @@ public class ExternalServiceIT
 
     private void verifyDbLinks()
     {
-        verifyLinks(playerCharacterLinkDAO.find(character.getId()));
+        verifyLinks(playerCharacterLinkDAO.find(Set.of(character.getId())));
     }
 
     private void verifyLinks(List<PlayerCharacterLink> links)

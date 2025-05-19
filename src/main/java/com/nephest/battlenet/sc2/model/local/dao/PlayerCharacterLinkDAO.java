@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -30,10 +30,10 @@ public class PlayerCharacterLinkDAO
         + "player_character_link.type AS \"player_character_link.type\", "
         + "player_character_link.url AS \"player_character_link.url\" ";
 
-    private static final String FIND_BY_CHARACTER_ID =
+    private static final String FIND_BY_CHARACTER_IDS =
         "SELECT " + STD_SELECT
         + "FROM player_character_link "
-        + "WHERE player_character_id = :playerCharacterId "
+        + "WHERE player_character_id IN (:playerCharacterIds) "
         + "ORDER BY player_character_id, type";
 
     private static final String FIND_BY_CHARACTER_TYPE_AND_URL =
@@ -126,13 +126,13 @@ public class PlayerCharacterLinkDAO
         return template.update(MERGE, params);
     }
 
-    public List<PlayerCharacterLink> find(Long playerCharacterId)
+    public List<PlayerCharacterLink> find(Set<Long> playerCharacterIds)
     {
-        if(playerCharacterId == null) return List.of();
+        if(playerCharacterIds.isEmpty()) return List.of();
 
         SqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterId", playerCharacterId);
-        return template.query(FIND_BY_CHARACTER_ID, params, STD_ROW_MAPPER);
+            .addValue("playerCharacterIds", playerCharacterIds);
+        return template.query(FIND_BY_CHARACTER_IDS, params, STD_ROW_MAPPER);
     }
 
     public List<PlayerCharacterLink> find(SocialMedia type, String url)

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -88,19 +88,24 @@ public class PlayerCharacterLinkDAOIT
         //generate additional data
         PlayerCharacter character2 = playerCharacterDAO.merge(
             new PlayerCharacter(null, account.getId(), Region.US, 1L, 1, "name#1"));
+        PlayerCharacter character3 = playerCharacterDAO.merge(
+            new PlayerCharacter(null, account.getId(), Region.US, 3L, 1, "name#3"));
 
         playerCharacterLinkDAO.merge(Set.of(
             new PlayerCharacterLink(character.getId(), SocialMedia.ALIGULAC, "url11"),
             new PlayerCharacterLink(character.getId(), SocialMedia.LIQUIPEDIA, "url12"),
 
-            new PlayerCharacterLink(character2.getId(), SocialMedia.ALIGULAC, "url21")
+            new PlayerCharacterLink(character2.getId(), SocialMedia.ALIGULAC, "url21"),
+            new PlayerCharacterLink(character3.getId(), SocialMedia.ALIGULAC, "url31")
         ));
 
-        List<PlayerCharacterLink> links1 = playerCharacterLinkDAO.find(character.getId());
-        assertEquals(2, links1.size());
+        List<PlayerCharacterLink> links1 = playerCharacterLinkDAO
+            .find(Set.of(character.getId(), character2.getId()));
+        assertEquals(3, links1.size());
         links1.sort(PlayerCharacterLink.NATURAL_ID_COMPARATOR);
         verifyLink(links1.get(0), character.getId(), SocialMedia.ALIGULAC, "url11");
         verifyLink(links1.get(1), character.getId(), SocialMedia.LIQUIPEDIA, "url12");
+        verifyLink(links1.get(2), character2.getId(), SocialMedia.ALIGULAC, "url21");
 
         playerCharacterLinkDAO.merge(Set.of(
             //updated
@@ -109,7 +114,7 @@ public class PlayerCharacterLinkDAOIT
             new PlayerCharacterLink(character.getId(), SocialMedia.YOUTUBE, "url14")
         ));
 
-        List<PlayerCharacterLink> links2 = playerCharacterLinkDAO.find(character.getId());
+        List<PlayerCharacterLink> links2 = playerCharacterLinkDAO.find(Set.of(character.getId()));
         assertEquals(3, links2.size());
         links2.sort(PlayerCharacterLink.NATURAL_ID_COMPARATOR);
         //url is updated

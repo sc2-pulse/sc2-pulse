@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.external;
@@ -51,7 +51,8 @@ public class ExternalPlayerCharacterLinkService
 
     public ExternalLinkResolveResult getLinks(PlayerCharacter playerCharacter)
     {
-        List<PlayerCharacterLink> existingLinks = playerCharacterLinkDAO.find(playerCharacter.getId());
+        List<PlayerCharacterLink> existingLinks = playerCharacterLinkDAO
+            .find(Set.of(playerCharacter.getId()));
         Set<SocialMedia> existingTypes = existingLinks.stream()
             .map(PlayerCharacterLink::getType)
             .collect(Collectors.toSet());
