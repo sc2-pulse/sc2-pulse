@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -26,8 +25,7 @@ extends BaseAPI
 {
 
     public static final String BASE_URL = "https://api.sc2replaystats.com";
-    public static final int REQUESTS_PER_PERIOD = 20;
-    public static final Duration REQUEST_SLOT_REFRESH_DURATION = Duration.ofSeconds(1);
+    public static final Duration REQUEST_SLOT_REFRESH_DURATION = Duration.ofMillis(200);
 
     private final String authorizationToken;
     private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
@@ -42,9 +40,7 @@ extends BaseAPI
     {
         initClient(objectMapper, userAgent);
         this.authorizationToken = authorizationToken;
-        Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_DURATION)
-            .doOnNext(i->rateLimiter.refreshSlots(REQUESTS_PER_PERIOD))
-            .subscribe();
+        rateLimiter.refreshSlots(1);
     }
 
     private void initClient(ObjectMapper objectMapper, String userAgent)
@@ -63,6 +59,13 @@ extends BaseAPI
             + "." + naturalId.getRegion().name();
     }
 
+    private void onRequestComplete(Object obj)
+    {
+        Mono.fromRunnable(()->rateLimiter.refreshSlots(1))
+            .delaySubscription(REQUEST_SLOT_REFRESH_DURATION)
+            .subscribe();
+    }
+
     @Cacheable(cacheNames = "replay-stats-character-search")
     public Mono<ReplayStatsPlayerCharacter> findCharacter(PlayerCharacterNaturalId naturalId)
     {
@@ -77,6 +80,8 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(ReplayStatsPlayerCharacter.class)
+            .doOnSuccess(this::onRequestComplete)
+            .doOnError(this::onRequestComplete)
             .delaySubscription(Mono.defer(rateLimiter::requestSlot))
             .cache
             (
