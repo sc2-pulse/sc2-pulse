@@ -77,7 +77,13 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(ReplayStatsPlayerCharacter.class)
-            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot))
+            .cache
+            (
+                (m)->WebServiceUtil.DEFAULT_API_CACHE_DURATION,
+                WebServiceUtil::cacheNotFoundError,
+                ()->WebServiceUtil.DEFAULT_API_CACHE_DURATION
+            );
     }
 
 }
