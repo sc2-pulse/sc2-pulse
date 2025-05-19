@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -111,7 +111,7 @@ public class SC2ReplayStatsAPIIT
                 api.findCharacter(PlayerCharacterNaturalId.of(Region.EU, 1, 315071L)),
                 validCharacter,
                 server,
-                WebServiceUtil.RETRY_COUNT
+                0
             );
             server.shutdown();
         }

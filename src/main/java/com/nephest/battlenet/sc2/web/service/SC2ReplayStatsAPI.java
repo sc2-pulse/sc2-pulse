@@ -77,7 +77,6 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(ReplayStatsPlayerCharacter.class)
-            .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
             .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
