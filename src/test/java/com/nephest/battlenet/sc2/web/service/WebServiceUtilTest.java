@@ -10,12 +10,17 @@ import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.util.LogUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 
 public class WebServiceUtilTest
@@ -86,6 +91,67 @@ public class WebServiceUtilTest
         String contextPath = "/ctx";
         when(req.getContextPath()).thenReturn(contextPath);
         assertEquals(expected, WebServiceUtil.isApiCall(req));
+    }
+
+    public static Stream<Arguments> testCacheError()
+    {
+        Throwable notFound = mock(WebClientResponseException.NotFound.class);
+        Throwable ise = mock(WebClientResponseException.InternalServerError.class);
+        List<Class<? extends Throwable>> targetExceptions =
+            List.of(WebClientResponseException.NotFound.class);
+        return Stream.of
+        (
+            Arguments.of(notFound, ise, targetExceptions),
+            Arguments.of(new RuntimeException("test", notFound), ise, targetExceptions)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    public void testCacheError
+    (
+        Throwable targetException,
+        Throwable notTargetException,
+        List<Class<? extends Throwable>> targetExceptions
+    )
+    {
+        assertEquals
+        (
+            WebServiceUtil.DEFAULT_API_CACHE_DURATION,
+            WebServiceUtil.cacheError
+            (
+                targetException,
+                targetExceptions,
+                WebServiceUtil.DEFAULT_API_CACHE_DURATION
+            )
+        );
+        assertEquals
+        (
+            Duration.ZERO,
+            WebServiceUtil.cacheError
+            (
+                notTargetException,
+                targetExceptions,
+                WebServiceUtil.DEFAULT_API_CACHE_DURATION
+            )
+        );
+    }
+
+    @Test
+    public void testCacheNotFoundError()
+    {
+        Throwable notFound = mock(WebClientResponseException.NotFound.class);
+        Throwable ise = mock(WebClientResponseException.InternalServerError.class);
+        assertEquals
+        (
+            WebServiceUtil.DEFAULT_API_CACHE_DURATION,
+            WebServiceUtil.cacheNotFoundError(notFound)
+        );
+        assertEquals
+        (
+            Duration.ZERO,
+            WebServiceUtil.cacheNotFoundError(ise)
+        );
     }
 
 }

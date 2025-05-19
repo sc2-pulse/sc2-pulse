@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -553,6 +554,29 @@ public class WebServiceUtil
     public static boolean isApiCall(HttpServletRequest req)
     {
         return req.getServletPath().startsWith(API_PATH_PREFIX);
+    }
+
+    public static Duration cacheError
+    (
+        Throwable error,
+        Collection<Class<? extends Throwable>> targetErrors,
+        Duration duration
+    )
+    {
+        return targetErrors.stream()
+            .anyMatch(targetError->ExceptionUtils.indexOfType(error, targetError) != -1)
+                ? duration
+                : Duration.ZERO;
+    }
+
+    public static Duration cacheNotFoundError(Throwable error)
+    {
+        return cacheError
+        (
+            error,
+            List.of(WebClientResponseException.NotFound.class),
+            DEFAULT_API_CACHE_DURATION
+        );
     }
 
 }
