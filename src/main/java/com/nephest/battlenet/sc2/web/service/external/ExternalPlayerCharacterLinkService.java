@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import jakarta.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.LinkedHashSet;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,10 +51,43 @@ public class ExternalPlayerCharacterLinkService
         this.playerCharacterLinkDAO = playerCharacterLinkDAO;
     }
 
-    public ExternalLinkResolveResult getLinks(PlayerCharacter playerCharacter)
+    public Mono<ExternalLinkResolveResult> getLinks(PlayerCharacter playerCharacter)
     {
-        List<PlayerCharacterLink> existingLinks = playerCharacterLinkDAO
-            .find(Set.of(playerCharacter.getId()));
+        return getLinks(Set.of(playerCharacter)).next();
+    }
+
+    public Flux<ExternalLinkResolveResult> getLinks(Set<PlayerCharacter> playerCharacters)
+    {
+        if(playerCharacters.isEmpty()) return Flux.empty();
+
+        Map<Long, List<PlayerCharacterLink>> links = playerCharacterLinkDAO
+            .find(playerCharacters.stream().map(PlayerCharacter::getId).collect(Collectors.toSet()))
+            .stream()
+            .collect(Collectors.groupingBy(PlayerCharacterLink::getPlayerCharacterId));
+        return Flux.fromIterable(playerCharacters)
+            .flatMap(playerCharacter->
+                getLinks(playerCharacter, links.getOrDefault(playerCharacter.getId(), List.of())))
+            .collectList()
+            .flatMapMany
+            (
+                results->saveStaticLinks
+                (
+                    results.stream()
+                        .map(ExternalLinkResolveResultMeta::newLinks)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toSet())
+                )
+                    .thenMany(Flux.fromIterable(results)
+                        .map(ExternalLinkResolveResultMeta::result))
+            );
+    }
+
+    private Mono<ExternalLinkResolveResultMeta> getLinks
+    (
+        PlayerCharacter playerCharacter,
+        List<PlayerCharacterLink> existingLinks
+    )
+    {
         Set<SocialMedia> existingTypes = existingLinks.stream()
             .map(PlayerCharacterLink::getType)
             .collect(Collectors.toSet());
@@ -60,21 +95,26 @@ public class ExternalPlayerCharacterLinkService
             .map(ExternalCharacterLinkResolver::getSupportedSocialMedia)
             .filter(type->!existingTypes.contains(type))
             .collect(Collectors.toSet());
-        List<PlayerCharacterLink> resolvedLinks = resolveLinks(playerCharacter, missingTypes)
+        return resolveLinks(playerCharacter, missingTypes)
             .collectList()
-            .block();
-        Set<SocialMedia> failedTypes = resolvedLinks.stream()
-            .filter(link->link.getRelativeUrl() == null)
-            .map(PlayerCharacterLink::getType)
-            .collect(Collectors.toSet());
-
-        Set<PlayerCharacterLink> validResolvedLinks = new LinkedHashSet<>(resolvedLinks.size());
-        for(PlayerCharacterLink link : resolvedLinks)
-            if(link.getRelativeUrl() != null)
-                validResolvedLinks.add(link);
-        saveStaticLinks(validResolvedLinks);
-        existingLinks.addAll(validResolvedLinks);
-        return new ExternalLinkResolveResult(existingLinks, failedTypes);
+            .map(resolvedLinks->{
+                Set<SocialMedia> failedTypes = resolvedLinks.stream()
+                    .filter(link->link.getRelativeUrl() == null)
+                    .map(PlayerCharacterLink::getType)
+                    .collect(Collectors.toSet());
+                Set<PlayerCharacterLink> validResolvedLinks = resolvedLinks.stream()
+                    .filter(link->link.getRelativeUrl() != null)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+                List<PlayerCharacterLink> allLinks = Stream.of(existingLinks, validResolvedLinks)
+                    .flatMap(Collection::stream)
+                    .toList();
+                return new ExternalLinkResolveResultMeta
+                (
+                    new ExternalLinkResolveResult(allLinks, failedTypes),
+                    existingLinks,
+                    validResolvedLinks
+                );
+            });
     }
 
     private Flux<PlayerCharacterLink> resolveLinks
@@ -111,14 +151,21 @@ public class ExternalPlayerCharacterLinkService
             .flatMap(Function.identity());
     }
 
-    private void saveStaticLinks(Set<PlayerCharacterLink> missingLinks)
+    private Mono<Void> saveStaticLinks(Set<PlayerCharacterLink> missingLinks)
     {
-        if(missingLinks.isEmpty()) return;
+        if(missingLinks.isEmpty()) return Mono.empty();
 
         Set<PlayerCharacterLink> linksToSave = missingLinks.stream()
             .filter(link->resolvers.get(link.getType()).isStatic())
             .collect(Collectors.toCollection(LinkedHashSet::new));
-        playerCharacterLinkDAO.merge(linksToSave);
+        return WebServiceUtil.blockingRunnable(()->playerCharacterLinkDAO.merge(linksToSave));
     }
+
+    private record ExternalLinkResolveResultMeta
+    (
+        @NotNull ExternalLinkResolveResult result,
+        @NotNull List<PlayerCharacterLink> existingLinks,
+        @NotNull Set<PlayerCharacterLink> newLinks
+    ){}
 
 }

@@ -333,7 +333,9 @@ public class CharacterController
         List<PlayerCharacter> characters = playerCharacterDAO.find(Set.of(id));
         if(characters.isEmpty()) return ResponseEntity.notFound().build();
 
-        ExternalLinkResolveResult result = externalPlayerCharacterLinkService.getLinks(characters.get(0));
+        ExternalLinkResolveResult result = externalPlayerCharacterLinkService
+            .getLinks(characters.get(0))
+            .block();
         ResponseEntity.BodyBuilder bodyBuilder = ResponseEntity.status(getStatus(result));
         if(result.getFailedTypes().isEmpty()) bodyBuilder
             .header(HttpHeaders.CACHE_CONTROL, WebServiceUtil.DEFAULT_CACHE_HEADER);
