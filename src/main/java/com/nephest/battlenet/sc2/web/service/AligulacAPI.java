@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -29,9 +30,13 @@ extends BaseAPI
 
     @Autowired
     public AligulacAPI
-    (ObjectMapper objectMapper, @Value("${com.nephest.battlenet.sc2.aligulac.api.key}") String apiKey)
+    (
+        ObjectMapper objectMapper,
+        @Value("${com.nephest.battlenet.sc2.aligulac.api.key}") String apiKey,
+        @Value("${com.nephest.battlenet.sc2.useragent}") String userAgent
+    )
     {
-        initClient(objectMapper);
+        initClient(objectMapper, userAgent);
         this.apiKey = apiKey;
     }
 
@@ -41,10 +46,11 @@ extends BaseAPI
         rateLimiter.refreshSlots(SLOTS_PER_PERIOD);
     }
 
-    private void initClient(ObjectMapper objectMapper)
+    private void initClient(ObjectMapper objectMapper, String userAgent)
     {
         setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper)
             .baseUrl(BASE_URL)
+            .defaultHeader(HttpHeaders.USER_AGENT, userAgent)
             .build());
     }
 

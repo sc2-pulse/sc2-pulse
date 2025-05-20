@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -14,6 +14,7 @@ import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -35,20 +36,22 @@ extends BaseAPI
     public SC2ReplayStatsAPI
     (
         ObjectMapper objectMapper,
-        @Value("${com.nephest.battlenet.sc2.replaystats.api.key}") String authorizationToken
+        @Value("${com.nephest.battlenet.sc2.replaystats.api.key}") String authorizationToken,
+        @Value("${com.nephest.battlenet.sc2.useragent}") String userAgent
     )
     {
-        initClient(objectMapper);
+        initClient(objectMapper, userAgent);
         this.authorizationToken = authorizationToken;
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_DURATION)
             .doOnNext(i->rateLimiter.refreshSlots(REQUESTS_PER_PERIOD))
             .subscribe();
     }
 
-    private void initClient(ObjectMapper objectMapper)
+    private void initClient(ObjectMapper objectMapper, String userAgent)
     {
         setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper)
             .baseUrl(BASE_URL)
+            .defaultHeader(HttpHeaders.USER_AGENT, userAgent)
             .build());
     }
 

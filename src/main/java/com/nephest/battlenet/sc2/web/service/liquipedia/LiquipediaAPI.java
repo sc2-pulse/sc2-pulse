@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.liquipedia;
@@ -37,32 +37,24 @@ extends BaseAPI
     public static final String BASE_URL = "https://liquipedia.net/starcraft2/api.php";
     public static final int REQUESTS_PER_PERIOD = 1;
     private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
-    private final String userAgent;
     private final int PATCH_BATCH_SIZE = 20;
 
     @Autowired
     public LiquipediaAPI
     (
         ObjectMapper objectMapper,
-        @Value("${com.nephest.battlenet.sc2.url.public:#{'local dev environment'}}") String uaUrl,
-        @Value("${contacts.email:}") String uaEmail
+        @Value("${com.nephest.battlenet.sc2.useragent}") String userAgent
     )
     {
-        userAgent = "SC2Pulse (" + uaUrl + (uaEmail != null ? "; " + uaEmail : "") + ")";
-        initClient(objectMapper);
+        initClient(objectMapper, userAgent);
     }
 
-    private void initClient(ObjectMapper objectMapper)
+    private void initClient(ObjectMapper objectMapper, String userAgent)
     {
         setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper, 800 * 1024)
             .baseUrl(BASE_URL)
             .defaultHeader(HttpHeaders.USER_AGENT, userAgent)
             .build());
-    }
-
-    public String getUserAgent()
-    {
-        return userAgent;
     }
 
     @Scheduled(cron="*/4 * * * * *")
