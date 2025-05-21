@@ -87,13 +87,20 @@ public class WebServiceUtil
         .transientErrors(true);
     public static final RetrySpec RETRY_NEVER = RetrySpec.max(0);
     public static final RetrySpec RETRY_ONCE = RetrySpec.max(1);
-    public static final ConnectionProvider CONNECTION_PROVIDER = ConnectionProvider.builder("sc2-connection-provider")
-        .maxConnections(800)
-        .maxIdleTime(Duration.ofSeconds(30))
-        .maxLifeTime(Duration.ofMinutes(10))
-        .evictInBackground(Duration.ofSeconds(30))
-        .lifo()
-        .build();
+    public static final ConnectionProvider CONNECTION_PROVIDER =
+        standardConfig("sc2-connection-provider")
+            .maxConnections(800)
+            .build();
+    public static final ConnectionProvider CONNECTION_PROVIDER_MEDIUM =
+        standardConfig("sc2-connection-provider_5")
+            .maxConnections(5)
+            .pendingAcquireMaxCount(200)
+            .build();
+    public static final ConnectionProvider CONNECTION_PROVIDER_SMALL =
+        standardConfig("sc2-connection-provider_1")
+            .maxConnections(1)
+            .pendingAcquireMaxCount(200)
+            .build();
     public static final SslContext INSECURE_SSL_CONTEXT;
     static
     {
@@ -119,6 +126,15 @@ public class WebServiceUtil
         return Mono.empty();
     };
 
+    public static ConnectionProvider.Builder standardConfig(String name)
+    {
+        return ConnectionProvider.builder(name)
+            .maxIdleTime(Duration.ofSeconds(30))
+            .maxLifeTime(Duration.ofMinutes(10))
+            .evictInBackground(Duration.ofSeconds(30))
+            .lifo();
+    }
+
     public static ClientHttpConnector getClientHttpConnector()
     {
         return getClientHttpConnector(CONNECT_TIMEOUT, IO_TIMEOUT);
@@ -135,6 +151,7 @@ public class WebServiceUtil
 
     public static WebClient.Builder getWebClientBuilder
     (
+        ConnectionProvider connectionProvider,
         ObjectMapper objectMapper,
         int inMemorySize,
         Function<HttpClient, HttpClient> clientCustomizer,
@@ -143,7 +160,8 @@ public class WebServiceUtil
     {
         MediaType[] finalTypes = codecTypes.length == 0 ? new MediaType[]{MediaType.APPLICATION_JSON} : codecTypes;
         return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(clientCustomizer.apply(getHttpClient(CONNECT_TIMEOUT, IO_TIMEOUT))))
+            .clientConnector(new ReactorClientHttpConnector(clientCustomizer.apply(
+                getHttpClient(connectionProvider, CONNECT_TIMEOUT, IO_TIMEOUT))))
             .exchangeStrategies(ExchangeStrategies.builder().codecs(conf->
             {
                 conf.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper, finalTypes));
@@ -153,14 +171,57 @@ public class WebServiceUtil
     }
 
     public static WebClient.Builder getWebClientBuilder
-    (ObjectMapper objectMapper, int inMemorySize, MediaType... codecTypes)
+    (
+        ConnectionProvider connectionProvider,
+        ObjectMapper objectMapper,
+        int inMemorySize,
+        MediaType... codecTypes
+    )
     {
-        return getWebClientBuilder(objectMapper, inMemorySize, Function.identity(), codecTypes);
+        return getWebClientBuilder
+        (
+            connectionProvider,
+            objectMapper,
+            inMemorySize,
+            Function.identity(),
+            codecTypes
+        );
     }
 
-    public static HttpClient getHttpClient(Duration connectTimeout, Duration ioTimeout)
+    public static WebClient.Builder getWebClientBuilder
+    (ObjectMapper objectMapper, int inMemorySize, MediaType... codecTypes)
     {
-        return HttpClient.create(CONNECTION_PROVIDER)
+        return getWebClientBuilder
+        (
+            CONNECTION_PROVIDER,
+            objectMapper,
+            inMemorySize,
+            codecTypes
+        );
+    }
+
+    public static WebClient.Builder getWebClientBuilder
+    (
+        ConnectionProvider connectionProvider,
+        ObjectMapper objectMapper
+    )
+    {
+        return getWebClientBuilder
+        (
+            connectionProvider,
+            objectMapper,
+            -1
+        );
+    }
+
+    public static HttpClient getHttpClient
+    (
+        ConnectionProvider connectionProvider,
+        Duration connectTimeout,
+        Duration ioTimeout
+    )
+    {
+        return HttpClient.create(connectionProvider)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) connectTimeout.toMillis())
             .doOnConnected
                 (
@@ -168,6 +229,11 @@ public class WebServiceUtil
                         .addHandlerLast(new WriteTimeoutHandler((int) ioTimeout.toSeconds()))
                 )
             .compress(true);
+    }
+
+    public static HttpClient getHttpClient(Duration connectTimeout, Duration ioTimeout)
+    {
+        return getHttpClient(CONNECTION_PROVIDER, connectTimeout, ioTimeout);
     }
 
     public static WebClient.Builder getWebClientBuilder(ObjectMapper objectMapper)
