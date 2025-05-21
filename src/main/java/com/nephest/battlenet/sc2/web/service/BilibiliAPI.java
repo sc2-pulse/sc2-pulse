@@ -44,7 +44,8 @@ extends BaseAPI
 
     private void initClient(ObjectMapper objectMapper)
     {
-        setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper)
+        setWebClient(WebServiceUtil.getWebClientBuilder(
+                WebServiceUtil.CONNECTION_PROVIDER_MEDIUM, objectMapper)
             .baseUrl("https://api.live.bilibili.com")
             .build());
     }

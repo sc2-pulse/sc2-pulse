@@ -51,7 +51,8 @@ extends BaseAPI
 
     private void initClient(ObjectMapper objectMapper, String userAgent)
     {
-        setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper, 800 * 1024)
+        setWebClient(WebServiceUtil.getWebClientBuilder(
+                WebServiceUtil.CONNECTION_PROVIDER_MEDIUM, objectMapper, 800 * 1024)
             .baseUrl(BASE_URL)
             .defaultHeader(HttpHeaders.USER_AGENT, userAgent)
             .build());
