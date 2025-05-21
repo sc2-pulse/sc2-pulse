@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -163,7 +163,7 @@ extends BaseAPI
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
             .next()
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     private <T> Flux<T> getFlux(Class<T> clazz, String uri, Object... params)
@@ -178,7 +178,7 @@ extends BaseAPI
                 .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     public Mono<DiscordUser> getCurrentUser()
@@ -191,7 +191,7 @@ extends BaseAPI
         return discordClient.getClient()
             .getUserById(id)
             .map(DiscordUser::from)
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     public Flux<DiscordUser> getUsers(Iterable<? extends Snowflake> ids)
@@ -203,7 +203,7 @@ extends BaseAPI
     public Flux<DiscordConnection> getCurrentUserConnections()
     {
         return getFlux(DiscordConnection.class, "/users/@me/connections")
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     /**
@@ -237,7 +237,7 @@ extends BaseAPI
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
             .next()
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     public Mono<Void> updateConnectionMetaData
@@ -262,7 +262,7 @@ extends BaseAPI
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
             .next()
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     @Cacheable(cacheNames = "discord-bot-guilds")
@@ -299,7 +299,7 @@ extends BaseAPI
                 .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     public Flux<Void> revokeRefreshToken(OAuth2AuthorizedClient oAuth2AuthorizedClient)
@@ -322,7 +322,7 @@ extends BaseAPI
                 .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, Void.class))
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     public Optional<OAuth2AuthorizedClient> getAuthorizedClient(Long accountId)
@@ -335,7 +335,7 @@ extends BaseAPI
     public <T> Flux<T> withLimiter(Publisher<T> publisher, boolean localLimiter)
     {
         Flux<T> result =  discordClient.getGlobalRateLimiter().withLimiter(publisher);
-        if(localLimiter) result = result.delaySubscription(rateLimiter.requestSlot());
+        if(localLimiter) result = result.delaySubscription(Mono.defer(rateLimiter::requestSlot));
         return result;
     }
 

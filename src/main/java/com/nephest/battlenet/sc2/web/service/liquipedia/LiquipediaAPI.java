@@ -84,7 +84,7 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(LiquipediaMediaWikiRevisionQueryResult.class)
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     public Flux<LiquipediaPlayer> parsePlayers(Set<String> names)

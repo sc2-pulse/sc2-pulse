@@ -70,7 +70,7 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(AligulacProPlayerRoot.class)
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
 }

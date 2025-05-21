@@ -790,7 +790,8 @@ extends BaseAPI
             .bodyToMono(BlizzardDataSeason.class).cast(BlizzardSeason.class)
             .retryWhen(ReactorRateLimiter.retryWhen(
                 regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false)))
-            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region)))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region))))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
     }
@@ -806,7 +807,8 @@ extends BaseAPI
             .bodyToMono(BlizzardSeason.class)
             .retryWhen(ReactorRateLimiter.retryWhen(
                 regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false)))
-            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region)))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region))))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
     }
@@ -868,7 +870,8 @@ extends BaseAPI
             .bodyToMono(BlizzardLeague.class)
             .retryWhen(ReactorRateLimiter.retryWhen(
                 regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false)))
-            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region)))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region))))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
 
@@ -928,7 +931,8 @@ extends BaseAPI
             .bodyToMono(BlizzardLadder.class)
             .retryWhen(ReactorRateLimiter.retryWhen(
                 regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false), priorityName))
-            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region), priorityName))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region), priorityName)))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
     }
@@ -959,7 +963,8 @@ extends BaseAPI
             .map(s->extractNewTeams(s, startingFromEpochSeconds))
             .retryWhen(ReactorRateLimiter.retryWhen(
                 regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false), priorityName))
-            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region), priorityName))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region), priorityName)))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
     }
@@ -1116,7 +1121,8 @@ extends BaseAPI
                 }
             })
             .retryWhen(ReactorRateLimiter.retryWhen(context.getRateLimiters(), retry))
-            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(context.getRateLimiters())))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -1255,7 +1261,8 @@ extends BaseAPI
             })
             .retryWhen(ReactorRateLimiter.retryWhen(
                 context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND, web), priorityName))
-            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters(), priorityName))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(context.getRateLimiters(), priorityName)))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -1370,7 +1377,8 @@ extends BaseAPI
             .zipWith(Mono.just(playerCharacter))
             .retryWhen(ReactorRateLimiter.retryWhen(
                 context.getRateLimiters(), getMatchRetry(region, web), priorityName))
-            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters(), priorityName))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(context.getRateLimiters(), priorityName)))
             .doOnRequest(s->{
                 matchHealthMonitors.get(region).addRequest();
                 context.getHealthMonitor().addRequest();
@@ -1434,7 +1442,8 @@ extends BaseAPI
             .zipWith(Mono.just(playerCharacter))
             .retryWhen(ReactorRateLimiter.retryWhen(
                 context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_NEVER, web)))
-            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(context.getRateLimiters())))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -1468,7 +1477,8 @@ extends BaseAPI
             .zipWith(Mono.just(playerCharacter))
             .retryWhen(ReactorRateLimiter.retryWhen(
                 context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_NEVER, web)))
-            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
+            .delaySubscription(Mono.defer(()->
+                ReactorRateLimiter.requestSlot(context.getRateLimiters())))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -1507,11 +1517,10 @@ extends BaseAPI
                 getRetry(region, WebServiceUtil.RETRY_ONCE, web),
                 SYSTEM_REQUEST_LIMIT_PRIORITY_NAME
             ))
-            .delaySubscription(ReactorRateLimiter.requestSlot
-            (
+            .delaySubscription(Mono.defer(()->ReactorRateLimiter.requestSlot(
                 context.getRateLimiters(),
                 SYSTEM_REQUEST_LIMIT_PRIORITY_NAME
-            ))
+            )))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -1562,8 +1571,9 @@ extends BaseAPI
                 context.getRateLimiters(),
                 getRetry(region, WebServiceUtil.RETRY, true),
                 SYSTEM_REQUEST_LIMIT_PRIORITY_NAME))
-            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters(),
-                SYSTEM_REQUEST_LIMIT_PRIORITY_NAME))
+            .delaySubscription(Mono.defer(()->ReactorRateLimiter.requestSlot(
+                context.getRateLimiters(),
+                SYSTEM_REQUEST_LIMIT_PRIORITY_NAME)))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.util;
@@ -25,7 +25,7 @@ import reactor.util.retry.RetrySpec;
 
     * Decorate target monos:
         * mono.retryWhen(rateLimiter.retryWhen(retrySpec));
-        * mono.delaySubscription(rateLimiter.requestSlot());
+        * mono.delaySubscription(Mono.defer(rateLimiter::requestSlot));
     * Refresh slots:
         * Flux
             .interval(Duration.ofSeconds(0), Duration.ofSeconds(1))

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class BilibiliAPI
@@ -75,7 +76,7 @@ extends BaseAPI
             .map(BilibiliAPI::fix)
             .sort(COMPARATOR)
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     private Flux<BilibiliStream> getStreamsRecursively

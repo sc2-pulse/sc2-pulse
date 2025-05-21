@@ -105,7 +105,7 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, ArcadePlayerCharacter.class))
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     public Mono<ArcadePlayerCharacter> findByRegionAndGameId(Region region, String gameId)
@@ -128,7 +128,7 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, ArcadePlayerCharacter.class))
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
 }
