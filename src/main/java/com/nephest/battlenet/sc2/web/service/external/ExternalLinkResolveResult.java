@@ -10,6 +10,7 @@ import java.util.Set;
 
 public record ExternalLinkResolveResult
 (
+    Long playerCharacterId,
     List<PlayerCharacterLink> links,
     Set<SocialMedia> failedTypes
 )

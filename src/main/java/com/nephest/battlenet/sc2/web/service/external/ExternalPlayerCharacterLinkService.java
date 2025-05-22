@@ -110,7 +110,7 @@ public class ExternalPlayerCharacterLinkService
                     .toList();
                 return new ExternalLinkResolveResultMeta
                 (
-                    new ExternalLinkResolveResult(allLinks, failedTypes),
+                    new ExternalLinkResolveResult(playerCharacter.getId(), allLinks, failedTypes),
                     existingLinks,
                     validResolvedLinks
                 );
