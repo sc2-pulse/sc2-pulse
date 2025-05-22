@@ -324,8 +324,9 @@ public class CharacterController
         return playerCharacterSummaryDAO.find(ids, SC2Pulse.offsetDateTime().minusDays(depth), races);
     }
 
+    @Hidden
     @GetMapping("/{id}/links/additional")
-    public ResponseEntity<ExternalLinkResolveResult> getAdditionalCharacterLinks
+    public ResponseEntity<ExternalLinkResolveResult> getAdditionalCharacterLinksLegacy
     (
         @PathVariable("id") long id
     )
