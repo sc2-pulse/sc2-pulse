@@ -337,16 +337,16 @@ public class CharacterController
             .getLinks(characters.get(0))
             .block();
         ResponseEntity.BodyBuilder bodyBuilder = ResponseEntity.status(getStatus(result));
-        if(result.getFailedTypes().isEmpty()) bodyBuilder
+        if(result.failedTypes().isEmpty()) bodyBuilder
             .header(HttpHeaders.CACHE_CONTROL, WebServiceUtil.DEFAULT_CACHE_HEADER);
         return bodyBuilder.body(result);
     }
 
     private static HttpStatus getStatus(ExternalLinkResolveResult result)
     {
-        return !result.getFailedTypes().isEmpty()
+        return !result.failedTypes().isEmpty()
             ? WebServiceUtil.UPSTREAM_ERROR_STATUS
-            : result.getLinks().isEmpty()
+            : result.links().isEmpty()
                 ? HttpStatus.NOT_FOUND
                 : HttpStatus.OK;
     }

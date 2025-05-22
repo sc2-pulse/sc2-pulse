@@ -227,7 +227,7 @@ public class ExternalServiceIT
                 NoCacheFilter.NO_CACHE_HEADERS.get(HttpHeaders.CACHE_CONTROL)
             ))
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
-        assertTrue(result.getFailedTypes().contains(SocialMedia.BATTLE_NET));
+        assertTrue(result.failedTypes().contains(SocialMedia.BATTLE_NET));
     }
 
     @Test
@@ -249,11 +249,11 @@ public class ExternalServiceIT
                 WebServiceUtil.DEFAULT_CACHE_HEADER
             ))
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
-        Optional<PlayerCharacterLink> bNetLink = result.getLinks().stream()
+        Optional<PlayerCharacterLink> bNetLink = result.links().stream()
             .filter(link->link.getType() == SocialMedia.BATTLE_NET)
             .findAny();
         assertTrue(bNetLink.isEmpty());
-        assertTrue(result.getFailedTypes().isEmpty());
+        assertTrue(result.failedTypes().isEmpty());
     }
 
     @Test
@@ -269,7 +269,7 @@ public class ExternalServiceIT
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
-        assertTrue(result.getFailedTypes().isEmpty());
+        assertTrue(result.failedTypes().isEmpty());
     }
 
     private void verifyExternalCharacterSearchByBattleNetProfile()
@@ -321,8 +321,8 @@ public class ExternalServiceIT
                 WebServiceUtil.DEFAULT_CACHE_HEADER
             ))
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
-        assertTrue(result.getFailedTypes().isEmpty());
-        verifyLinks(result.getLinks());
+        assertTrue(result.failedTypes().isEmpty());
+        verifyLinks(result.links());
     }
 
     private void verifyDbLinks()
