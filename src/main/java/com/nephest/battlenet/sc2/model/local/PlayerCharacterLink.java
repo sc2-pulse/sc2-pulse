@@ -1,9 +1,8 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -96,7 +95,6 @@ public class PlayerCharacterLink
         this.type = type;
     }
 
-    @JsonIgnore
     public String getRelativeUrl()
     {
         return relativeUrl;
