@@ -4,8 +4,6 @@
 package com.nephest.battlenet.sc2.web.service.external;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
@@ -14,13 +12,11 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.SpyBeanConfig;
-import com.nephest.battlenet.sc2.config.filter.NoCacheFilter;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -43,14 +39,19 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeAPI;
-import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -59,11 +60,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -109,7 +110,19 @@ public class ExternalServiceIT
     private Environment environment;
 
     private MockMvc mvc;
-    private PlayerCharacter character;
+    private PlayerCharacter character, character2;
+    private ExternalLinkResolveResult[] expectedResult;
+
+
+    private static Set<SocialMedia> ENABLED_TYPES;
+
+    @BeforeAll
+    public static void beforeAll(@Autowired List<ExternalCharacterLinkResolver> resolvers)
+    {
+        ENABLED_TYPES = resolvers.stream()
+            .map(ExternalCharacterLinkResolver::getSupportedSocialMedia)
+            .collect(Collectors.toSet());
+    }
 
     @BeforeEach
     public void beforeEach
@@ -159,6 +172,8 @@ public class ExternalServiceIT
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         character = playerCharacterDAO.merge(
             new PlayerCharacter(null, account.getId(), region, 315071L, 1, "name#1"));
+        character2 = playerCharacterDAO.merge(
+            new PlayerCharacter(null, account.getId(), region, 3141896L, 1, "name#2"));
         seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE),
@@ -166,7 +181,61 @@ public class ExternalServiceIT
             "10002", 1L, 1, 2, 3, 4,
             character
         );
+        seasonGenerator.createTeam
+        (
+            season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE),
+            TIER_TYPE, bronze1v1,
+            "10003", 1L, 1, 2, 3, 4,
+            character2
+        );
         playerCharacterStatsDAO.mergeCalculate();
+        expectedResult = new ExternalLinkResolveResult[]
+        {
+            new ExternalLinkResolveResult
+            (
+                character.getId(),
+                Stream.of
+                (
+                    new PlayerCharacterLink
+                    (
+                        character.getId(),
+                        SocialMedia.BATTLE_NET,
+                        "2/4771787010354446336"
+                    ),
+                    new PlayerCharacterLink
+                    (
+                        character.getId(),
+                        SocialMedia.REPLAY_STATS,
+                        "125470"
+                    )
+                )
+                    .filter(link->ENABLED_TYPES.contains(link.getType()))
+                    .toList(),
+                Set.of()
+            ),
+            new ExternalLinkResolveResult
+            (
+                character2.getId(),
+                Stream.of
+                (
+                    new PlayerCharacterLink
+                    (
+                        character2.getId(),
+                        SocialMedia.BATTLE_NET,
+                        "2/6699777368304648192"
+                    ),
+                    new PlayerCharacterLink
+                    (
+                        character2.getId(),
+                        SocialMedia.REPLAY_STATS,
+                        "22042"
+                    )
+                )
+                    .filter(link->ENABLED_TYPES.contains(link.getType()))
+                    .toList(),
+                Set.of()
+            )
+        };
     }
 
     @AfterAll
@@ -201,11 +270,31 @@ public class ExternalServiceIT
         verifyExternalCharacterSearchByBattleNetProfile();
 
         /*
-            The API was called once despite several searches was run. Previous search results
+            The API was called twice despite several searches was run. Previous search results
             should be persisted in the DB and used when possible to avoid redundant API calls.
          */
         verifyDbLinks();
-        verify(arcadeAPI, times(1)).findCharacter(any());
+        verify(arcadeAPI, times(2)).findCharacter(any());
+    }
+
+    private ExternalLinkResolveResult[] getLinks(ResultMatcher resultMatcher)
+    throws Exception
+    {
+        ExternalLinkResolveResult[] result = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group/character/link")
+                .queryParam
+                (
+                    "characterId",
+                    String.valueOf(character.getId()),
+                    String.valueOf(character2.getId())
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(resultMatcher)
+            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult[].class);
+        Arrays.sort(result, Comparator.comparing(ExternalLinkResolveResult::playerCharacterId));
+        return result;
     }
 
     @Test
@@ -214,20 +303,38 @@ public class ExternalServiceIT
     {
         Exception ex = WebClientResponseException.InternalServerError.create(500, "ISE", null, null, null);
         doReturn(Mono.error(new RuntimeException(ex)))
-            .when(arcadeAPI).findCharacter(any());
-        ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/{id}/links/additional", character.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().is5xxServerError())
-            .andExpect(header().string
-            (
-                HttpHeaders.CACHE_CONTROL,
-                NoCacheFilter.NO_CACHE_HEADERS.get(HttpHeaders.CACHE_CONTROL)
-            ))
-            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
-        assertTrue(result.failedTypes().contains(SocialMedia.BATTLE_NET));
+            .when(arcadeAPI).findCharacter(character);
+        Assertions.assertThat(getLinks(status().is5xxServerError()))
+            .usingRecursiveComparison()
+            .isEqualTo(new ExternalLinkResolveResult[] {
+                new ExternalLinkResolveResult
+                (
+                    character.getId(),
+                    expectedResult[0].links().stream()
+                        .filter(link->link.getType() != SocialMedia.BATTLE_NET)
+                        .toList(),
+                    Set.of(SocialMedia.BATTLE_NET)
+                ),
+                expectedResult[1]
+            });
+    }
+
+    private void verifyMissingLink()
+    throws Exception
+    {
+        Assertions.assertThat(getLinks(status().isOk()))
+            .usingRecursiveComparison()
+            .isEqualTo(new ExternalLinkResolveResult[] {
+                new ExternalLinkResolveResult
+                (
+                    character.getId(),
+                    expectedResult[0].links().stream()
+                        .filter(link->link.getType() != SocialMedia.BATTLE_NET)
+                        .toList(),
+                    Set.of()
+                ),
+                expectedResult[1]
+            });
     }
 
     @Test
@@ -236,24 +343,8 @@ public class ExternalServiceIT
     {
         //char without a battlenet::// link
         ArcadePlayerCharacter arcadeChar = new ArcadePlayerCharacter(1L, 2, "name#1", Region.EU, null);
-        doReturn(Mono.just(arcadeChar)).when(arcadeAPI).findCharacter(any());
-        ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/{id}/links/additional", character.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andExpect(header().string
-            (
-                HttpHeaders.CACHE_CONTROL,
-                WebServiceUtil.DEFAULT_CACHE_HEADER
-            ))
-            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
-        Optional<PlayerCharacterLink> bNetLink = result.links().stream()
-            .filter(link->link.getType() == SocialMedia.BATTLE_NET)
-            .findAny();
-        assertTrue(bNetLink.isEmpty());
-        assertTrue(result.failedTypes().isEmpty());
+        doReturn(Mono.just(arcadeChar)).when(arcadeAPI).findCharacter(character);
+        verifyMissingLink();
     }
 
     @Test
@@ -261,15 +352,8 @@ public class ExternalServiceIT
     throws Exception
     {
         Exception ex = WebClientResponseException.NotFound.create(404, "ISE", null, null, null);
-        doReturn(Mono.error(new RuntimeException(ex))).when(arcadeAPI).findCharacter(any());
-        ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/{id}/links/additional", character.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
-        assertTrue(result.failedTypes().isEmpty());
+        doReturn(Mono.error(new RuntimeException(ex))).when(arcadeAPI).findCharacter(character);
+        verifyMissingLink();
     }
 
     private void verifyExternalCharacterSearchByBattleNetProfile()
@@ -309,68 +393,25 @@ public class ExternalServiceIT
     private void verifyExternalLinkResolver()
     throws Exception
     {
-        ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/{id}/links/additional", character.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andExpect(header().string
-            (
-                HttpHeaders.CACHE_CONTROL,
-                WebServiceUtil.DEFAULT_CACHE_HEADER
-            ))
-            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
-        assertTrue(result.failedTypes().isEmpty());
-        verifyLinks(result.links());
+        Assertions.assertThat(getLinks(status().isOk()))
+            .usingRecursiveComparison()
+            .isEqualTo(expectedResult);
     }
 
     private void verifyDbLinks()
     {
-        verifyLinks(playerCharacterLinkDAO.find(Set.of(character.getId())));
-    }
-
-    private void verifyLinks(List<PlayerCharacterLink> links)
-    {
-        assertFalse(links.isEmpty());
-        verifyLink
+        Assertions.assertThat
         (
-            links,
-            SocialMedia.BATTLE_NET,
-            "battlenet:://starcraft/profile/2/4771787010354446336"
-        );
-        if(isReplayStatsEnabled()) verifyLink
-        (
-            links,
-            SocialMedia.REPLAY_STATS,
-            "https://sc2replaystats.com/player/125470"
-        );
-    }
-
-    private PlayerCharacterLink find(List<PlayerCharacterLink> links, SocialMedia type)
-    {
-        return links.stream()
-            .filter(l->l.getType() == type)
-            .findAny()
-            .orElseThrow();
-    }
-
-    private void verifyLink(PlayerCharacterLink link, SocialMedia type, String absoluteUrl)
-    {
-        assertEquals(character.getId(), link.getPlayerCharacterId());
-        assertEquals(type, link.getType());
-        assertEquals(absoluteUrl, link.getAbsoluteUrl());
-    }
-
-    private void verifyLink(List<PlayerCharacterLink> links, SocialMedia type, String absoluteUrl)
-    {
-        verifyLink(find(links, type), type, absoluteUrl);
-    }
-
-
-    private boolean isReplayStatsEnabled()
-    {
-        return environment.getProperty("com.nephest.battlenet.sc2.replaystats.api.key") != null;
+            playerCharacterLinkDAO.find(Set.of(character.getId(), character2.getId()))
+        )
+                .usingRecursiveComparison()
+                .isEqualTo
+                (
+                    Arrays.stream(expectedResult)
+                        .map(ExternalLinkResolveResult::links)
+                        .flatMap(Collection::stream)
+                        .toList()
+                );
     }
 
 }

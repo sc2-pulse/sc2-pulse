@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
@@ -25,12 +26,16 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import com.nephest.battlenet.sc2.web.service.external.ExternalLinkResolveResult;
+import com.nephest.battlenet.sc2.web.service.external.ExternalPlayerCharacterLinkService;
 import io.swagger.v3.oas.annotations.Operation;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,10 +69,16 @@ public class GroupController
     private AccountDAO accountDAO;
 
     @Autowired
+    private PlayerCharacterDAO playerCharacterDAO;
+
+    @Autowired
     private LadderClanMemberEventDAO ladderClanMemberEventDAO;
 
     @Autowired
     private LadderMatchDAO ladderMatchDAO;
+
+    @Autowired
+    private ExternalPlayerCharacterLinkService externalPlayerCharacterLinkService;
 
     @Autowired
     private CharacterGroupArgumentResolver resolver;
@@ -111,6 +122,31 @@ public class GroupController
     {
         return WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
             .findDistinctCharactersByCharacterIds(characterIds));
+    }
+
+    @GetMapping("/character/link") @CharacterGroup
+    public ResponseEntity<?> getExternalLinks(@CharacterGroup Set<Long> characterIds)
+    {
+        List<ExternalLinkResolveResult> results = externalPlayerCharacterLinkService
+            .getLinks(Set.copyOf(playerCharacterDAO.find(characterIds)))
+            .collectList()
+            .block();
+        return ResponseEntity.status(getStatus(results)).body(results);
+    }
+
+    private static HttpStatus getStatus(Collection<? extends ExternalLinkResolveResult> results)
+    {
+        return results.isEmpty()
+            ? HttpStatus.NOT_FOUND
+            : results.stream()
+                .map(ExternalLinkResolveResult::failedTypes)
+                .anyMatch(s->!s.isEmpty())
+                    ? WebServiceUtil.UPSTREAM_ERROR_STATUS
+                    : results.stream()
+                        .map(ExternalLinkResolveResult::links)
+                        .anyMatch(l->!l.isEmpty())
+                            ? HttpStatus.OK
+                            : HttpStatus.NOT_FOUND;
     }
 
     @GetMapping("/clan/history")
