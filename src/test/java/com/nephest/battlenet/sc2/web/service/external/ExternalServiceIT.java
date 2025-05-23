@@ -54,10 +54,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
@@ -108,6 +113,9 @@ public class ExternalServiceIT
 
     @Autowired
     private Environment environment;
+
+    @Autowired @Qualifier("mvcConversionService")
+    private ConversionService mvcConversionService;
 
     private MockMvc mvc;
     private PlayerCharacter character, character2;
@@ -356,6 +364,57 @@ public class ExternalServiceIT
         verifyMissingLink();
     }
 
+    public static Stream<Arguments> testTypeFilter()
+    {
+        return ENABLED_TYPES.stream().map(Arguments::of);
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    public void testTypeFilter(SocialMedia type)
+    throws Exception
+    {
+        ExternalLinkResolveResult[] result = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group/character/link")
+                .queryParam
+                (
+                    "characterId",
+                    String.valueOf(character.getId()),
+                    String.valueOf(character2.getId())
+                )
+                .queryParam
+                (
+                    "type",
+                    mvcConversionService.convert(type, String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult[].class);
+        Arrays.sort(result, Comparator.comparing(ExternalLinkResolveResult::playerCharacterId));
+        Assertions.assertThat(result)
+            .usingRecursiveComparison()
+            .isEqualTo(new ExternalLinkResolveResult[] {
+                new ExternalLinkResolveResult
+                (
+                    character.getId(),
+                    expectedResult[0].links().stream()
+                        .filter(link->link.getType() == type)
+                        .toList(),
+                    Set.of()
+                ),
+                new ExternalLinkResolveResult
+                (
+                    character2.getId(),
+                    expectedResult[1].links().stream()
+                        .filter(link->link.getType() == type)
+                        .toList(),
+                    Set.of()
+                )
+            });
+    }
+
     private void verifyExternalCharacterSearchByBattleNetProfile()
     throws Exception
     {
@@ -402,7 +461,7 @@ public class ExternalServiceIT
     {
         Assertions.assertThat
         (
-            playerCharacterLinkDAO.find(Set.of(character.getId(), character2.getId()))
+            playerCharacterLinkDAO.find(Set.of(character.getId(), character2.getId()), Set.of())
         )
                 .usingRecursiveComparison()
                 .isEqualTo

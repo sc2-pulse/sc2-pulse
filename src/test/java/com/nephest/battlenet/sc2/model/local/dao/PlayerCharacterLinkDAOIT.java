@@ -16,9 +16,11 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import jakarta.validation.ConstraintViolationException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -100,7 +102,7 @@ public class PlayerCharacterLinkDAOIT
         ));
 
         List<PlayerCharacterLink> links1 = playerCharacterLinkDAO
-            .find(Set.of(character.getId(), character2.getId()));
+            .find(Set.of(character.getId(), character2.getId()), Set.of());
         assertEquals(3, links1.size());
         links1.sort(PlayerCharacterLink.NATURAL_ID_COMPARATOR);
         verifyLink(links1.get(0), character.getId(), SocialMedia.ALIGULAC, "url11");
@@ -114,7 +116,8 @@ public class PlayerCharacterLinkDAOIT
             new PlayerCharacterLink(character.getId(), SocialMedia.YOUTUBE, "url14")
         ));
 
-        List<PlayerCharacterLink> links2 = playerCharacterLinkDAO.find(Set.of(character.getId()));
+        List<PlayerCharacterLink> links2 = playerCharacterLinkDAO
+            .find(Set.of(character.getId()), Set.of());
         assertEquals(3, links2.size());
         links2.sort(PlayerCharacterLink.NATURAL_ID_COMPARATOR);
         //url is updated
@@ -123,6 +126,30 @@ public class PlayerCharacterLinkDAOIT
         verifyLink(links2.get(1), character.getId(), SocialMedia.LIQUIPEDIA, "url12");
         //new link is inserted
         verifyLink(links2.get(2), character.getId(), SocialMedia.YOUTUBE, "url14");
+    }
+
+    @Test
+    public void testFindByCharacterIdsTypeFilter()
+    {
+        PlayerCharacterLink aligulacLink
+            = new PlayerCharacterLink(character.getId(), SocialMedia.ALIGULAC, "url11");
+        PlayerCharacterLink liquipediaLink
+            = new PlayerCharacterLink(character.getId(), SocialMedia.LIQUIPEDIA, "url12");
+        playerCharacterLinkDAO.merge(Set.of(
+            aligulacLink,
+            liquipediaLink,
+            new PlayerCharacterLink(character.getId(), SocialMedia.YOUTUBE, "url14")
+        ));
+        Assertions.assertThat
+        (
+            playerCharacterLinkDAO.find
+            (
+                Set.of(character.getId()),
+                EnumSet.of(SocialMedia.ALIGULAC, SocialMedia.LIQUIPEDIA)
+            )
+        )
+                .usingRecursiveComparison()
+                .isEqualTo(List.of(aligulacLink, liquipediaLink));
     }
 
     @Test

@@ -53,20 +53,38 @@ public class ExternalPlayerCharacterLinkService
 
     public Mono<ExternalLinkResolveResult> getLinks(PlayerCharacter playerCharacter)
     {
-        return getLinks(Set.of(playerCharacter)).next();
+        return getLinks(Set.of(playerCharacter), Set.of()).next();
     }
 
-    public Flux<ExternalLinkResolveResult> getLinks(Set<PlayerCharacter> playerCharacters)
+    public Flux<ExternalLinkResolveResult> getLinks
+    (
+        Set<PlayerCharacter> playerCharacters,
+        Set<SocialMedia> types
+    )
     {
         if(playerCharacters.isEmpty()) return Flux.empty();
 
         Map<Long, List<PlayerCharacterLink>> links = playerCharacterLinkDAO
-            .find(playerCharacters.stream().map(PlayerCharacter::getId).collect(Collectors.toSet()))
+            .find
+            (
+                playerCharacters.stream()
+                    .map(PlayerCharacter::getId)
+                    .collect(Collectors.toSet()),
+                types
+            )
             .stream()
             .collect(Collectors.groupingBy(PlayerCharacterLink::getPlayerCharacterId));
+        Collection<ExternalCharacterLinkResolver> typeResolvers = types.isEmpty()
+            ? resolvers.values()
+            : resolvers.values().stream()
+                .filter(resolver->types.contains(resolver.getSupportedSocialMedia()))
+                .toList();
         return Flux.fromIterable(playerCharacters)
-            .flatMap(playerCharacter->
-                getLinks(playerCharacter, links.getOrDefault(playerCharacter.getId(), List.of())))
+            .flatMap(playerCharacter->getLinks(
+                playerCharacter,
+                links.getOrDefault(playerCharacter.getId(), List.of()),
+                typeResolvers
+            ))
             .collectList()
             .flatMapMany
             (
@@ -82,20 +100,21 @@ public class ExternalPlayerCharacterLinkService
             );
     }
 
-    private Mono<ExternalLinkResolveResultMeta> getLinks
+    private static Mono<ExternalLinkResolveResultMeta> getLinks
     (
         PlayerCharacter playerCharacter,
-        List<PlayerCharacterLink> existingLinks
+        List<PlayerCharacterLink> existingLinks,
+        Collection<ExternalCharacterLinkResolver> resolvers
     )
     {
         Set<SocialMedia> existingTypes = existingLinks.stream()
             .map(PlayerCharacterLink::getType)
             .collect(Collectors.toSet());
-        Set<SocialMedia> missingTypes = resolvers.values().stream()
+        Set<SocialMedia> missingTypes = resolvers.stream()
             .map(ExternalCharacterLinkResolver::getSupportedSocialMedia)
             .filter(type->!existingTypes.contains(type))
             .collect(Collectors.toSet());
-        return resolveLinks(playerCharacter, missingTypes)
+        return resolveLinks(playerCharacter, missingTypes, resolvers)
             .collectList()
             .map(resolvedLinks->{
                 Set<SocialMedia> failedTypes = resolvedLinks.stream()
@@ -117,15 +136,16 @@ public class ExternalPlayerCharacterLinkService
             });
     }
 
-    private Flux<PlayerCharacterLink> resolveLinks
+    private static Flux<PlayerCharacterLink> resolveLinks
     (
         PlayerCharacter playerCharacter,
-        Collection<SocialMedia> missingTypes
+        Collection<SocialMedia> missingTypes,
+        Collection<ExternalCharacterLinkResolver> resolvers
     )
     {
         return Flux.fromStream
         (
-            resolvers.values().stream()
+            resolvers.stream()
                 .filter(resolver->missingTypes.contains(resolver.getSupportedSocialMedia()))
                 .map(resolver->resolver
                     .resolveLink(playerCharacter)

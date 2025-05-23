@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import jakarta.validation.Valid;
+import java.sql.Types;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,6 +35,11 @@ public class PlayerCharacterLinkDAO
         "SELECT " + STD_SELECT
         + "FROM player_character_link "
         + "WHERE player_character_id IN (:playerCharacterIds) "
+        + "AND "
+        + "( "
+            + "array_length(:types, 1) IS NULL "
+            + "OR type = ANY (:types) "
+        + ") "
         + "ORDER BY player_character_id, type";
 
     private static final String FIND_BY_CHARACTER_TYPE_AND_URL =
@@ -126,12 +132,24 @@ public class PlayerCharacterLinkDAO
         return template.update(MERGE, params);
     }
 
-    public List<PlayerCharacterLink> find(Set<Long> playerCharacterIds)
+    public List<PlayerCharacterLink> find
+    (
+        Set<Long> playerCharacterIds,
+        Set<SocialMedia> types
+    )
     {
         if(playerCharacterIds.isEmpty()) return List.of();
 
         SqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterIds", playerCharacterIds);
+            .addValue("playerCharacterIds", playerCharacterIds)
+            .addValue
+            (
+                "types",
+                 types.stream()
+                    .map(type->conversionService.convert(type, Integer.class))
+                    .toArray(Integer[]::new),
+                Types.ARRAY
+            );
         return template.query(FIND_BY_CHARACTER_IDS, params, STD_ROW_MAPPER);
     }
 

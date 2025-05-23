@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
@@ -125,10 +126,14 @@ public class GroupController
     }
 
     @GetMapping("/character/link") @CharacterGroup
-    public ResponseEntity<?> getExternalLinks(@CharacterGroup Set<Long> characterIds)
+    public ResponseEntity<?> getExternalLinks
+    (
+        @CharacterGroup Set<Long> characterIds,
+        @RequestParam(name = "type", defaultValue = "") Set<SocialMedia> types
+    )
     {
         List<ExternalLinkResolveResult> results = externalPlayerCharacterLinkService
-            .getLinks(Set.copyOf(playerCharacterDAO.find(characterIds)))
+            .getLinks(Set.copyOf(playerCharacterDAO.find(characterIds)), types)
             .collectList()
             .block();
         return ResponseEntity.status(getStatus(results)).body(results);
