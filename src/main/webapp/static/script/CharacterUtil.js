@@ -2535,6 +2535,34 @@ class CharacterUtil
         );
     }
 
+    static createCharacterTable(header)
+    {
+        const table = TableUtil.createTable([
+            "Region",
+            "Best All League",
+            "Best All MMR",
+            "Total Games",
+            "Last 1v1 MMR",
+            "Last 1v1 Games",
+            "Player"
+        ]);
+        const tableElement = table.querySelector(":scope table");
+        tableElement.classList.add("table-character")
+        if(header != null) {
+            const caption = document.createElement("caption");
+            caption.appendChild(header);
+            tableElement.prepend(caption);
+        }
+        return table;
+    }
+
+    static renderCharacters(characters, header)
+    {
+        const table = CharacterUtil.createCharacterTable(header);
+        CharacterUtil.updateCharacters(table, characters);
+        return table;
+    }
+
 }
 CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS = 2 * 24 * 60 * 60 * 1000;
 CharacterUtil.MMR_Y_VALUE_GETTERS = new Map([
