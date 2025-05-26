@@ -339,3 +339,117 @@ const TEAM_HISTORY_SUMMARY_COLUMN = Object.freeze
     REGION_RANK_LAST: {code:6, name: "region-rank-last", fullName: "REGION_RANK_LAST", textContent: "Last rank", order: 6},
     REGION_TEAM_COUNT_LAST: {code:7, name: "region-team-count-last", fullName: "REGION_TEAM_COUNT_LAST", textContent: "Last teams", order: 7},
 });
+
+const SOCIAL_MEDIA = Object.freeze
+({
+    ALIGULAC:
+    Object.freeze
+    ({
+        code: 1,
+        name: "aligulac",
+        fullName: "ALIGULAC",
+        baseUrl: "http://aligulac.com",
+        baseUserUrl: "http://aligulac.com/players",
+        order: 1
+    }),
+    TWITCH:
+    Object.freeze
+    ({
+        code: 2,
+        name: "twitch",
+        fullName: "TWITCH",
+        baseUrl: "https://www.twitch.tv",
+        baseUserUrl: "https://www.twitch.tv",
+        order: 2
+    }),
+    LIQUIPEDIA:
+    Object.freeze
+    ({
+        code: 3,
+        name: "liquipedia",
+        fullName: "LIQUIPEDIA",
+        baseUrl: "https://liquipedia.net",
+        baseUserUrl: "https://liquipedia.net/starcraft2",
+        order: 3
+    }),
+    TWITTER:
+    Object.freeze
+    ({
+        code: 4,
+        name: "twitter",
+        fullName: "TWITTER",
+        baseUrl: "https://twitter.com",
+        baseUserUrl: "https://twitter.com",
+        order: 4
+    }),
+    INSTAGRAM:
+    Object.freeze
+    ({
+        code: 5,
+        name: "instagram",
+        fullName: "INSTAGRAM",
+        baseUrl: "https://www.instagram.com",
+        baseUserUrl: "https://www.instagram.com",
+        order: 5
+    }),
+    DISCORD:
+    Object.freeze
+    ({
+        code: 6,
+        name: "discord",
+        fullName: "DISCORD",
+        baseUrl: "https://discord.gg",
+        baseUserUrl: null,
+        order: 6
+    }),
+    YOUTUBE:
+    Object.freeze
+    ({
+        code: 7,
+        name: "youtube",
+        fullName: "YOUTUBE",
+        baseUrl: "https://www.youtube.com",
+        baseUserUrl: "https://www.youtube.com/channel",
+        order: 7
+    }),
+    UNKNOWN:
+    Object.freeze
+    ({
+        code: 8,
+        name: "",
+        fullName: "",
+        baseUrl: null,
+        baseUserUrl: null,
+        order: 8
+    }),
+    BATTLE_NET:
+    Object.freeze
+    ({
+        code: 9,
+        name: "battlenet",
+        fullName: "BATTLE_NET",
+        baseUrl: "battlenet:://starcraft",
+        baseUserUrl: "battlenet:://starcraft/profile",
+        order: 9
+    }),
+    REPLAY_STATS:
+    Object.freeze
+    ({
+        code: 10,
+        name: "replaystats",
+        fullName: "REPLAY_STATS",
+        baseUrl: "https://sc2replaystats.com",
+        baseUserUrl: "https://sc2replaystats.com/player",
+        order: 10
+    }),
+    BILIBILI:
+    Object.freeze
+    ({
+        code: 11,
+        name: "bilibili",
+        fullName: "BILIBILI",
+        baseUrl: "https://space.bilibili.com",
+        baseUserUrl: "https://space.bilibili.com",
+        order: 11
+    })
+});
