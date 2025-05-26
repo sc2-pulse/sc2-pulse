@@ -206,6 +206,8 @@ class GroupUtil
         const container = section.querySelector(":scope .group-characters");
         const promise = ()=>GroupUtil.getCharacters(groupParams)
             .then(characters=>{
+                const view = ViewUtil.getView(section);
+                Model.DATA.get(view).get(VIEW_DATA.SEARCH).characters = characters;
                 CharacterUtil.updateCharacters(container.querySelector(":scope .table-character"), characters);
                 return {data: characters, status: LOADING_STATUS.COMPLETE};
             });
