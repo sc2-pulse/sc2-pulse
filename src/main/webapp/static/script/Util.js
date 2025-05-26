@@ -509,6 +509,7 @@ class Util
                         && ElementUtil.isElementInViewport(infiniteScrollElem))
                             return Util.doLoad(container, lazyPromise, showErrors);
                 }
+                return result;
             })
             .catch(error=>{
                 ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR);
