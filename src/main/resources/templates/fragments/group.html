@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2024 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -103,6 +103,22 @@
                                 Clan
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a
+                                    id="group-links-tab"
+                                    class="nav-link"
+                                    data-toggle="pill"
+                                    href="#group-links"
+                                    data-target="#group-links"
+                                    role="tab"
+                                    aria-controls="group-links"
+                                    aria-selected="false"
+                                    data-feature-timestamp="1748444165000"
+                                    data-feature-timestamp-class="new-content"
+                            >
+                                Links
+                            </a>
+                        </li>
                     </ul>
                 </nav>
                 <div id="group-all" class="tab-content">
@@ -163,6 +179,11 @@
                     </section>
                     <section id="group-clan" class="group-clan container-loading loading-none tab-pane fade" data-view-title="Clan history">
                         <div th:replace="~{/fragments/section :: clan-history('group')}"></div>
+                        <div th:replace="~{fragments/section :: loading-indicator}"></div>
+                    </section>
+                    <section id="group-links" class="group-links container-loading loading-none tab-pane fade" data-view-title="Links">
+                        <h3>Links</h3>
+                        <div class="links d-flex flex-column gap-1-5 mb-3"></div>
                         <div th:replace="~{fragments/section :: loading-indicator}"></div>
                     </section>
                 </div>

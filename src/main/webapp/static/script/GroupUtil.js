@@ -346,6 +346,198 @@ class GroupUtil
         clanHistory.characters = Util.toMap(clanHistory.characters, character=>character.members.character.id);
     }
 
+    static getLinks(params)
+    {
+        const request = `${ROOT_CONTEXT_PATH}api/group/character/link?${params.toString()}`;
+        return Session.beforeRequest()
+           .then(n=>fetch(request))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 500]));
+    }
+
+    static resetLinksView(section)
+    {
+        ElementUtil.removeChildren(section.querySelector(":scope .links"))
+    }
+
+    static resetLinksModel(view)
+    {
+        delete Model.DATA.get(view).get(VIEW_DATA.SEARCH)?.links;
+    }
+
+    static resetLinks(section, clearLoading = false)
+    {
+        GroupUtil.resetLinksModel(ViewUtil.getView(section));
+        GroupUtil.resetLinksView(section);
+        if(clearLoading) Util.resetLoadingIndicatorTree(section.querySelector(":scope .group-links"));
+    }
+
+    static groupLinkData(links, type)
+    {
+        const failed = links.flatMap(l=>l.failedTypes).length > 0;
+        return {
+            type: type,
+            failed: failed,
+            status: failed ? LOADING_STATUS.ERROR : LOADING_STATUS.COMPLETE,
+            links: links.flatMap(l=>l.links)
+        };
+    }
+
+    static calculateMissingCharacters(links, allCharacters, validCharacters)
+    {
+        const linkCharacterIds  = new Set(links.filter(l=>l.links.length > 0).map(l=>l.playerCharacterId));
+        return {
+            missing: validCharacters.filter(c=>!linkCharacterIds.has(c.members.character.id)),
+            excluded: allCharacters.slice(validCharacters.length)
+        }
+    }
+
+    static renderLinkErrors(linkResults)
+    {
+        const ul = ElementUtil.createElement("ul", null, "errors mx-auto text-danger");
+        for(const linkResult of linkResults)
+            for(const error of linkResult.errors)
+                ul.appendChild(ElementUtil.createElement("li", null, linkResult.type.name + " error",
+                    linkResult.type.name + ": " + error));
+        return ul;
+    }
+
+    static renderMissingLinkCharacters(characters, title, description, classes)
+    {
+        const header = ElementUtil.createElement("h4", null, "text-warning", title + " ");
+        const infoIcon = ElementUtil.createIcoFontElement("info", description, "text-primary", [["data-toggle", "tooltip"]]);
+        header.appendChild(infoIcon);
+        const missingCharacters = CharacterUtil.renderCharacters(characters, header);
+        if(classes != null) missingCharacters.classList.add(...classes);
+        return missingCharacters;
+    }
+
+    static updateLinksView(section)
+    {
+        const view = ViewUtil.getView(section);
+        const links = Model.DATA.get(view).get(VIEW_DATA.SEARCH).links?.data;
+        if(!links) return;
+
+        const container = section.querySelector(".links");
+        const linkContainer = ElementUtil.createElement("div", null, "container-links d-flex flex-center-wrap-gap");
+        container.appendChild(linkContainer);
+        container.appendChild(ElementUtil.createElement("div", null, "c-divider-hr my-0"));
+        if(links.map(r=>r.errors.length).reduce((a, b) => a + b, 0) > 0)
+            container.appendChild(GroupUtil.renderLinkErrors(links));
+        for(const linkResult of links) {
+            if(linkResult.data == null) continue;
+
+            const a = ElementUtil.createElement("a", null, "social-media", null,
+                [["href", linkResult.data], ["target", "_blank"], ["rel", "noopener"]]);
+            a.appendChild(ElementUtil.createImage("logo/", linkResult.type.name, "", null, null, "png"));
+            linkContainer.appendChild(a);
+
+            if(linkResult.missing?.missing?.length != 0) {
+                container.appendChild(GroupUtil.renderMissingLinkCharacters(linkResult.missing.missing,
+                    "Missing " + linkResult.type.name + " characters",
+                    "Profiles that don't exist on " + linkResult.type.name,
+                    ["missing", linkResult.type.name]
+                ));
+            }
+            if(linkResult.missing?.excluded?.length != 0) {
+                container.appendChild(GroupUtil.renderMissingLinkCharacters(linkResult.missing.excluded,
+                    "Excluded " + linkResult.type.name + " characters",
+                    "Inactive profiles(based on 1v1 stats) that have been excluded to meet the "
+                        + linkResult.type.name + " group limit("
+                        + GroupUtil.LINK_OPERATIONS.get(linkResult.type).activeCharactersMax + ")",
+                    ["excluded", linkResult.type.name]
+                ));
+            }
+        }
+    }
+
+    static loadCharacterLinks(characters, type)
+    {
+        const params = new URLSearchParams();
+        params.append("type", type.fullName);
+        characters.forEach(c=>params.append("characterId", c.members.character.id));
+        return GroupUtil.getLinks(params);
+    }
+
+    static getActiveCharacters(characters, activeCharactersMax)
+    {
+        return activeCharactersMax === -1 || characters.length <= activeCharactersMax
+            ? characters
+            : characters[activeCharactersMax].currentStats.rating == null
+                && characters[activeCharactersMax].previousStats.rating == null
+                    ? characters.slice(0, activeCharactersMax)
+                    : null;
+    }
+
+    static getLinksFromCharacters(characters, type)
+    {
+        const operations = GroupUtil.LINK_OPERATIONS.get(type);
+        const validCharacters = GroupUtil.getActiveCharacters(characters, operations.activeCharactersMax);
+        if(validCharacters == null) return {
+            errors: [
+                "Active profile limit exceeded("
+                    + (characters.findLastIndex(c=>c.currentStats.rating != null || c.previousStats.rating != null) + 1
+                        || characters.length)
+                    + "/" + operations.activeCharactersMax + ")"
+            ],
+            status: LOADING_STATUS.ERROR,
+            type: type
+        };
+        return operations.load(validCharacters)
+            .then(links=>{
+                const grouped = GroupUtil.groupLinkData(links, type);
+                grouped.missing = GroupUtil.calculateMissingCharacters(links, characters, validCharacters);
+                grouped.errors = [];
+                return operations.generate(grouped);
+            })
+    }
+
+    static updateLinks(section)
+    {
+        GroupUtil.resetLinks(section);
+        const view = ViewUtil.getView(section);
+        const varModel = Model.DATA.get(view).get(VIEW_DATA.VAR);
+        return GroupUtil.updateCharacters(varModel.groupParams, section)
+            .then(e=>{
+                const chars = Model.DATA.get(view).get(VIEW_DATA.SEARCH).characters;
+                if(chars == null || chars.length == 0) {
+                    const error = new Error("No characters found");
+                    error.characterStatus = LOADING_STATUS.COMPLETE;
+                    throw error;
+                }
+                const sortedChars = Array.from(chars);
+                sortedChars.sort((a, b)=>(b.currentStats.gamesPlayed - a.currentStats.gamesPlayed)
+                    || (b.previousStats.gamesPlayed - a.previousStats.gamesPlayed)
+                    || (b.totalGamesPlayed - a.totalGamesPlayed)
+                );
+                return Promise.allSettled(Array.from(GroupUtil.LINK_OPERATIONS.keys())
+                    .map(type=>GroupUtil.getLinksFromCharacters(sortedChars, type)));
+            })
+            .then(results=>{
+                const result = {
+                    data: results.map(r=>r.value),
+                    status: results.map(r=>r.value?.status).some(status=>status == LOADING_STATUS.ERROR)
+                        || Util.getAllSettledLoadingStatus(results) == LOADING_STATUS.ERROR
+                            ? LOADING_STATUS.ERROR
+                            : LOADING_STATUS.COMPLETE
+                }
+                Model.DATA.get(view).get(VIEW_DATA.SEARCH).links = result;
+                GroupUtil.updateLinksView(section);
+                Util.throwFirstSettledError(results);
+                return result;
+            })
+            .catch(e=>{
+                if(e.characterStatus != null) return {data: null, status: e.characterStatus};
+                throw e;
+            });
+    }
+
+    static enqueueUpdateLinks()
+    {
+        const groupSection = document.querySelector("#group");
+        const linksContainer = groupSection.querySelector("#group-links");
+        return Util.load(linksContainer, ()=>GroupUtil.updateLinks(groupSection));
+    }
+
     static loadAndShowGroup(groupIds)
     {
         document.querySelectorAll("#group .container-loading")
@@ -404,6 +596,7 @@ class GroupUtil
         ElementUtil.ELEMENT_TASKS.set("group-characters-tab", e=>GroupUtil.updateCharacters(Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.VAR).groupParams, document.querySelector("#group")));
         GroupUtil.enhanceMatches();
         GroupUtil.enhanceClanHistory();
+        GroupUtil.enhanceLinks();
     }
 
     static enhanceMisc()
@@ -465,7 +658,29 @@ class GroupUtil
                 e=>GroupUtil.updateClanHistory(document.querySelector("#group"))));
     }
 
+    static enhanceLinks()
+    {
+        ElementUtil.ELEMENT_TASKS.set("group-links-tab", GroupUtil.enqueueUpdateLinks);
+    }
+
 }
 
 GroupUtil.CACHE = {};
 GroupUtil.PARAMETER_KEYS = new Set(["characterId", "accountId", "proPlayerId", "clanId"]);
+GroupUtil.LINK_OPERATIONS = new Map([
+    [
+        SOCIAL_MEDIA.REPLAY_STATS,
+        {
+            activeCharactersMax: 20,
+            load: characters=>GroupUtil.loadCharacterLinks(characters, SOCIAL_MEDIA.REPLAY_STATS),
+            generate: links=>{
+                if(links.failed || links?.links?.length == 0) return links;
+
+                const ids = links.links.map(link=>encodeURIComponent(link.relativeUrl));
+                ids.sort();
+                links.data = SOCIAL_MEDIA.REPLAY_STATS.baseUserUrl + "/" + ids.join(",");
+                return links;
+            }
+        }
+    ]
+]);
