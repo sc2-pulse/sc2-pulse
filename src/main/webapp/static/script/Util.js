@@ -507,7 +507,7 @@ class Util
                     if(infiniteScrollElem
                         && ElementUtil.isElementVisible(infiniteScrollElem)
                         && ElementUtil.isElementInViewport(infiniteScrollElem))
-                            return Util.load(container, lazyPromise);
+                            return Util.doLoad(container, lazyPromise, showErrors);
                 }
             })
             .catch(error=>{
