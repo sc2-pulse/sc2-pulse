@@ -502,7 +502,7 @@ class Util
         return lazyPromise()
             .then(result=>{
                 ElementUtil.setLoadingIndicator(container, result.status);
-                if(result.status != LOADING_STATUS.COMPLETE) {
+                if(result.status != LOADING_STATUS.COMPLETE && result.status != LOADING_STATUS.ERROR) {
                     const infiniteScrollElem = container.querySelector(":scope .indicator-loading-scroll-infinite");
                     if(infiniteScrollElem
                         && ElementUtil.isElementVisible(infiniteScrollElem)
