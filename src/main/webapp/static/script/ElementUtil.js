@@ -119,12 +119,13 @@ class ElementUtil
             : ElementUtil.createNoRaceImage();
     }
 
-    static createIcoFontElement(name, title, clazz)
+    static createIcoFontElement(name, title, clazz, attributes)
     {
         const elem = document.createElement("span");
         if(clazz != null) elem.setAttribute("class", clazz);
         elem.classList.add("icofont-" + name);
         elem.setAttribute("title", title || name);
+        if(attributes != null) for(const [name, val] of attributes) elem.setAttribute(name, val);
         return elem;
     }
 
