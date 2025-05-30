@@ -15,7 +15,10 @@
         <h2>Discord Bot</h2>
         <p>SC2 Pulse provides a discord bot for StarCraft2.
             <a th:href="@{/discord/bot/invite}" target="_blank" rel="nofollow noopener">Invite the bot to your discord server</a>.
-            Used in <span th:text="${@discordAPI.getBotGuilds()?.size()}"></span> servers.
+            <th:block th:with="installationData=${@discordAPI.getInstallationData().block()}">
+                Used in <span th:text="${installationData.guildCount()}"></span> servers
+                and by <span th:text="${installationData.userCount()}"></span> users.
+            </th:block>
         </p>
         <div>
             <section id="slash-commands">

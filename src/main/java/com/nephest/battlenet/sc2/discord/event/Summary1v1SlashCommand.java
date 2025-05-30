@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -54,6 +54,7 @@ implements SlashCommand, AutoComplete
         return ImmutableApplicationCommandRequest.builder()
             .name(Summary1v1Command.CMD_NAME)
             .description("League, games played; Last, avg, and max MMR; 1v1 only")
+            .integrationTypes(DiscordApplicationCommand.SUPPORTED_INTEGRATION_TYPES)
             .addOption(ApplicationCommandOptionData.builder()
                 .name("name")
                 .description("name, btag#123, [clantag], battlenet:://, starcraft2.blizzard.com.")

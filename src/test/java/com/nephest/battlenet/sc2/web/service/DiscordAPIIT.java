@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -6,10 +6,12 @@ package com.nephest.battlenet.sc2.web.service;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.discord.IdentifiableEntity;
+import com.nephest.battlenet.sc2.discord.InstallationData;
 import com.nephest.battlenet.sc2.model.Partition;
 import java.io.IOException;
 import java.sql.Connection;
@@ -77,6 +79,16 @@ public class DiscordAPIIT
     public void testGetBotGuilds()
     {
         assertFalse(api.getBotGuilds().isEmpty());
+    }
+
+    @Test
+    public void testGetInstallationData()
+    {
+        InstallationData data = api.getInstallationData().block();
+
+        assertNotNull(data);
+        assertTrue(data.guildCount() >= 0);
+        assertTrue(data.userCount() >= 0);
     }
 
     @Disabled("This test can send requests to the Discord API when reauthorizing the client")

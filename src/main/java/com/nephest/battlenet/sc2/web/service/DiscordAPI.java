@@ -10,6 +10,7 @@ import static org.springframework.security.oauth2.client.web.reactive.function.c
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.discord.GuildWrapper;
+import com.nephest.battlenet.sc2.discord.InstallationData;
 import com.nephest.battlenet.sc2.discord.SpringDiscordClient;
 import com.nephest.battlenet.sc2.discord.connection.ApplicationRoleConnection;
 import com.nephest.battlenet.sc2.discord.connection.ConnectionMetaData;
@@ -18,6 +19,7 @@ import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.guild.GuildEvent;
+import discord4j.core.object.entity.ApplicationInfo;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
@@ -274,10 +276,23 @@ extends BaseAPI
             .collect(Collectors.toUnmodifiableMap(Guild::getId, Function.identity()));
     }
 
-    @CacheEvict(cacheNames = "discord-bot-guilds", allEntries = true)
+    @CacheEvict
+    (
+        cacheNames = {"discord-bot-guilds", "discord-bot-installation-data"},
+        allEntries = true
+    )
     public Mono<Void> botGuildsChanged(GuildEvent evt)
     {
         return Mono.empty();
+    }
+
+    @Cacheable(cacheNames = "discord-bot-installation-data")
+    public Mono<InstallationData> getInstallationData()
+    {
+        return discordClient.getClient()
+            .getApplicationInfo()
+            .map(ApplicationInfo::getData)
+            .map(InstallationData::new);
     }
 
     public <T extends GuildWrapper> Flux<T> getGuilds

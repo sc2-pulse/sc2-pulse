@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -51,7 +51,8 @@ implements UserCommand
     {
         return ImmutableApplicationCommandRequest.builder()
             .name(Summary1v1Command.CMD_NAME)
-            .type(ApplicationCommand.Type.USER.getValue());
+            .type(ApplicationCommand.Type.USER.getValue())
+            .integrationTypes(DiscordApplicationCommand.SUPPORTED_INTEGRATION_TYPES);
     }
 
     @Override

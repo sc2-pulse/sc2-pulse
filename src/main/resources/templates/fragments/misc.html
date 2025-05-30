@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -14,10 +14,16 @@
         <div>Bot</div>
         <div class="feature text-secondary">1v1 stats</div>
         <div class="feature text-secondary">Role management</div>
-        <div class="usage text-secondary">
-            <span class="description">Used in</span>
-            <span th:text="${@discordAPI.getBotGuilds()?.size()}"></span> servers
-        </div>
+        <th:block th:with="installationData=${@discordAPI.getInstallationData().block()}">
+            <div class="usage server text-secondary c-divider">
+                <span class="description">Used in</span>
+                <span th:text="${installationData.guildCount()}"></span> servers
+            </div>
+            <div class="usage user text-secondary c-divider">
+                <span class="description">Used by</span>
+                <span th:text="${installationData.userCount()}"></span> users
+            </div>
+        </th:block>
     </div>
 </a>
 <a th:fragment="discord-server-tile" th:href="${@environment.getProperty('contacts.discord.server')}" class="d-inline-block link-tile link-tile-discord-server">
