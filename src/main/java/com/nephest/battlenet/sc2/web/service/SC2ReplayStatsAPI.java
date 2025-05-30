@@ -78,17 +78,13 @@ extends BaseAPI
             )
             .header("Authorization", authorizationToken)
             .accept(APPLICATION_JSON)
-            .retrieve()
-            .bodyToMono(ReplayStatsPlayerCharacter.class)
+            .exchangeToMono
+            (
+                resp->WebServiceUtil.handleMonoResponse(resp, ReplayStatsPlayerCharacter.class)
+            )
             .doOnSuccess(this::onRequestComplete)
             .doOnError(this::onRequestComplete)
-            .delaySubscription(Mono.defer(rateLimiter::requestSlot))
-            .cache
-            (
-                (m)->WebServiceUtil.DEFAULT_API_CACHE_DURATION,
-                WebServiceUtil::cacheNotFoundError,
-                ()->WebServiceUtil.DEFAULT_API_CACHE_DURATION
-            );
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
 }

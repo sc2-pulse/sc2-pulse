@@ -83,7 +83,7 @@ extends BaseAPI
 
         if(!response.headers().header(WebServiceUtil.RATE_LIMIT_LIMIT_HEADER_NAME).isEmpty())
             rateLimiter.update(getRateLimitData(response)).subscribe();
-        return WebServiceUtil.bodyToMonoErrorOnErrorCode(response, clazz);
+        return WebServiceUtil.handleMonoResponse(response, clazz);
     }
 
     /**
@@ -106,13 +106,7 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, ArcadePlayerCharacter.class))
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(Mono.defer(rateLimiter::requestSlot))
-            .cache
-            (
-                (m)->WebServiceUtil.DEFAULT_API_CACHE_DURATION,
-                WebServiceUtil::cacheNotFoundError,
-                ()->WebServiceUtil.DEFAULT_API_CACHE_DURATION
-            );
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
     public Mono<ArcadePlayerCharacter> findByRegionAndGameId(Region region, String gameId)
@@ -135,13 +129,7 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, ArcadePlayerCharacter.class))
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(Mono.defer(rateLimiter::requestSlot))
-            .cache
-            (
-                (m)->WebServiceUtil.DEFAULT_API_CACHE_DURATION,
-                WebServiceUtil::cacheNotFoundError,
-                ()->WebServiceUtil.DEFAULT_API_CACHE_DURATION
-            );
+            .delaySubscription(Mono.defer(rateLimiter::requestSlot));
     }
 
 }
