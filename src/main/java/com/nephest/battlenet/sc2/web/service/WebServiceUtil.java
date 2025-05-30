@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -126,6 +127,12 @@ public class WebServiceUtil
         LOG.error(ExceptionUtils.getRootCauseMessage(t));
         return Mono.empty();
     };
+
+    public static Set<? extends HttpStatusCode> CONTENT_STATUS_CODES = EnumSet.of(HttpStatus.OK);
+    public static Set<? extends HttpStatusCode> EMPTY_STATUS_CODES = EnumSet.of
+    (
+        HttpStatus.NOT_FOUND
+    );
 
     public static ConnectionProvider.Builder standardConfig(String name)
     {
@@ -577,6 +584,54 @@ public class WebServiceUtil
             List.of(WebClientResponseException.NotFound.class),
             DEFAULT_API_CACHE_DURATION
         );
+    }
+
+    public static <T> Mono<T> handleMonoResponse
+    (
+        ClientResponse response,
+        Class<T> targetClass,
+        Set<? extends HttpStatusCode> contentStatuses,
+        Set<? extends HttpStatusCode> emptyStatuses
+    )
+    {
+        return contentStatuses.contains(response.statusCode())
+            ? response.bodyToMono(targetClass)
+            : emptyStatuses.contains(response.statusCode())
+                ? Mono.empty()
+                : response.createException().flatMap(Mono::error);
+    }
+
+    public static <T> Mono<T> handleMonoResponse
+    (
+        ClientResponse response,
+        Class<T> targetClass
+    )
+    {
+        return handleMonoResponse(response, targetClass, CONTENT_STATUS_CODES, EMPTY_STATUS_CODES);
+    }
+
+    public static <T> Flux<T> handleFluxResponse
+    (
+        ClientResponse response,
+        Class<T> targetClass,
+        Set<? extends HttpStatusCode> contentStatuses,
+        Set<? extends HttpStatusCode> emptyStatuses
+    )
+    {
+        return contentStatuses.contains(response.statusCode())
+            ? response.bodyToFlux(targetClass)
+            : emptyStatuses.contains(response.statusCode())
+                ? Flux.empty()
+                : response.createException().flatMapMany(Flux::error);
+    }
+
+    public static <T> Flux<T> handleFluxResponse
+    (
+        ClientResponse response,
+        Class<T> targetClass
+    )
+    {
+        return handleFluxResponse(response, targetClass, CONTENT_STATUS_CODES, EMPTY_STATUS_CODES);
     }
 
 }
