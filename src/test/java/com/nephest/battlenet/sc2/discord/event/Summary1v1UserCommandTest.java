@@ -1,11 +1,9 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,7 +14,6 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
-import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,12 +76,11 @@ public class Summary1v1UserCommandTest
         when(discordBootstrap.getAccountVerificationLink()).thenReturn("publicUrl/verify");
         cmd = new Summary1v1UserCommand(accountDAO, cmdd, discordBootstrap);
         UserCommandTest.stubUserInteractionUsers(evt, resolvedUserId, interactionUserId);
-        Member member = mock(Member.class);
-        when(member.getDisplayName()).thenReturn("displayName123");
         User resolvedUser = evt.getResolvedUser();
         when(resolvedUser.getUsername()).thenReturn("name123");
-        when(resolvedUser.asMember(any())).thenReturn(Mono.just(member));
         when(evt.getInteraction().getGuildId()).thenReturn(Optional.of(Snowflake.of(1L)));
+        when(discordBootstrap.getTargetDisplayNameOrName(evt))
+            .thenReturn(Mono.just("displayName123"));
 
         when(accountDAO.findByDiscordUserId(resolvedUserId)).thenReturn
         (

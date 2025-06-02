@@ -31,6 +31,7 @@ implements UserCommand
 
     private final AccountDAO accountDAO;
     private final Summary1v1Command summary1v1Command;
+    private final DiscordBootstrap discordBootstrap;
 
     @Autowired
     public Summary1v1UserCommand
@@ -42,6 +43,7 @@ implements UserCommand
     {
         this.accountDAO = accountDAO;
         this.summary1v1Command = summary1v1Command;
+        this.discordBootstrap = discordBootstrap;
         this.unverifiedAccountVerifyDescription = UNVERIFIED_ACCOUNT_DESCRIPTION
             + "(" + discordBootstrap.getAccountVerificationLink() + ")";
     }
@@ -80,7 +82,7 @@ implements UserCommand
         }
         else
         {
-            String displayName = sanitizeName(DiscordBootstrap.getTargetDisplayNameOrName(evt).block());
+            String displayName = sanitizeName(discordBootstrap.getTargetDisplayNameOrName(evt).block());
             String name = sanitizeName(evt.getResolvedUser().getUsername());
             String[] names = displayName.equals(name)
                 ? new String[]{displayName}

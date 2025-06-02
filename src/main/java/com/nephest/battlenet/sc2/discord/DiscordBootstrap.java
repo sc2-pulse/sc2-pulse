@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -14,9 +14,9 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.web.service.DiscordAPI;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
-import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.EmojisUpdateEvent;
 import discord4j.core.event.domain.guild.MemberUpdateEvent;
@@ -96,6 +96,7 @@ public class DiscordBootstrap
     private final String accountVerificationLink;
     private final String importBattleNetDataLink;
     private final String discordBotPageUrl;
+    private final DiscordAPI discordAPI;
     private final GuildEmojiStore guildEmojiStore;
     private final UpdateService updateService;
 
@@ -104,11 +105,13 @@ public class DiscordBootstrap
     (
         @Value("#{${discord.race.emoji:{:}}}") Map<Race, String> raceEmojis,
         @Value("#{${discord.league.emoji:{:}}}") Map<BaseLeague.LeagueType, String> leagueEmojis,
+        DiscordAPI discordAPI,
         GuildEmojiStore guildEmojiStore,
         UpdateService updateService,
         WebContextUtil webContextUtil
     )
     {
+        this.discordAPI = discordAPI;
         this.raceEmojis = raceEmojis;
         this.leagueEmojis = leagueEmojis;
         characterUrlTemplate = webContextUtil.getCharacterUrlTemplate() + "#player-stats-mmr";
@@ -130,9 +133,16 @@ public class DiscordBootstrap
         return characterUrlTemplate;
     }
 
+    private boolean isGuildAccessible(InteractionCreateEvent evt)
+    {
+        return evt.getInteraction().getGuildId()
+            .map(id->discordAPI.getBotGuilds().containsKey(id))
+            .orElse(false);
+    }
+
     public String getRaceEmojiOrName(InteractionCreateEvent evt, Race race)
     {
-        return evt.getInteraction().getGuildId().isPresent()
+        return isGuildAccessible(evt)
             ? guildEmojiStore.getGuildRaceEmoji(guildEmojiStore.getGuildEmojis(evt), race)
                 .orElse(raceEmojis.getOrDefault(race, race.getName()))
             : raceEmojis.getOrDefault(race, race.getName());
@@ -140,7 +150,7 @@ public class DiscordBootstrap
 
     public String getLeagueEmojiOrName(InteractionCreateEvent evt, BaseLeague.LeagueType league)
     {
-        return evt.getInteraction().getGuildId().isPresent()
+        return isGuildAccessible(evt)
             ? guildEmojiStore.getGuildLeagueEmoji(guildEmojiStore.getGuildEmojis(evt), league)
                 .orElse(leagueEmojis.getOrDefault(league, league.getName()))
             : leagueEmojis.getOrDefault(league, league.getName());
@@ -302,11 +312,12 @@ public class DiscordBootstrap
             : cmd.isEphemeral();
     }
 
-    public static Mono<String> getTargetDisplayNameOrName(UserInteractionEvent evt)
+    public Mono<String> getTargetDisplayNameOrName(UserInteractionEvent evt)
     {
-        Snowflake guildId = evt.getInteraction().getGuildId().orElse(null);
-        return guildId != null
-            ? evt.getResolvedUser().asMember(guildId).map(Member::getDisplayName)
+        return isGuildAccessible(evt)
+            ? evt.getResolvedUser()
+                .asMember(evt.getInteraction().getGuildId().orElseThrow())
+                .map(Member::getDisplayName)
             : Mono.just(evt.getResolvedUser().getUsername());
     }
 

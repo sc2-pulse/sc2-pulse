@@ -32,14 +32,17 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.web.service.DiscordAPI;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
+import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
-import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.event.domain.interaction.InteractionCreateEvent;
+import discord4j.core.event.domain.interaction.UserInteractionEvent;
 import discord4j.core.object.command.Interaction;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.User;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.discordjson.json.ImmutableApplicationCommandRequest;
 import discord4j.rest.RestClient;
@@ -57,6 +60,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -67,6 +71,9 @@ import reactor.core.publisher.Mono;
 @ExtendWith(MockitoExtension.class)
 public class DiscordBootstrapTest
 {
+
+    @Mock
+    public DiscordAPI discordAPI;
 
     @Mock
     private GuildEmojiStore guildEmojiStore;
@@ -88,6 +95,7 @@ public class DiscordBootstrapTest
         (
             Map.of(),
             Map.of(),
+            discordAPI,
             guildEmojiStore,
             updateService,
             webContextUtil
@@ -299,13 +307,21 @@ public class DiscordBootstrapTest
         );
     }
 
-    @Test
-    public void whenNotInGuildContext_thenDontUseGuildStores()
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(longs = 1L)
+    public void whenNotInGuildContext_thenDontUseGuildStores(Long guildId)
     {
+        User user = mock(User.class);
+        when(user.getUsername()).thenReturn("Global");
         Interaction interaction = mock(Interaction.class);
-        when(interaction.getGuildId()).thenReturn(Optional.empty());
-        ApplicationCommandInteractionEvent evt = mock(ApplicationCommandInteractionEvent.class);
+        when(interaction.getGuildId())
+            .thenReturn(Optional.ofNullable(guildId).map(Snowflake::of));
+        UserInteractionEvent evt = mock(UserInteractionEvent.class);
         when(evt.getInteraction()).thenReturn(interaction);
+        when(evt.getResolvedUser()).thenReturn(user);
+        if(guildId != null) when(discordAPI.getBotGuilds())
+            .thenReturn(Map.of(Snowflake.of(guildId + 1), mock(Guild.class)));
 
         assertEquals(Race.TERRAN.getName(), discordBootstrap.getRaceEmojiOrName(evt, Race.TERRAN));
         assertEquals
@@ -313,6 +329,7 @@ public class DiscordBootstrapTest
             BaseLeague.LeagueType.BRONZE.getName(),
             discordBootstrap.getLeagueEmojiOrName(evt, BaseLeague.LeagueType.BRONZE)
         );
+        assertEquals("Global", discordBootstrap.getTargetDisplayNameOrName(evt).block());
         verifyNoInteractions(guildEmojiStore);
     }
 
