@@ -54,7 +54,8 @@ implements UserCommand
         return ImmutableApplicationCommandRequest.builder()
             .name(Summary1v1Command.CMD_NAME)
             .type(ApplicationCommand.Type.USER.getValue())
-            .integrationTypes(DiscordApplicationCommand.SUPPORTED_INTEGRATION_TYPES);
+            .integrationTypes(DiscordApplicationCommand.SUPPORTED_INTEGRATION_TYPES)
+            .contexts(DiscordApplicationCommand.SUPPORTED_CONTEXTS);
     }
 
     @Override

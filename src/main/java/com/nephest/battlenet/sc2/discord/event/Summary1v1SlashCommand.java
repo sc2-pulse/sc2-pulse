@@ -55,6 +55,7 @@ implements SlashCommand, AutoComplete
             .name(Summary1v1Command.CMD_NAME)
             .description("League, games played; Last, avg, and max MMR; 1v1 only")
             .integrationTypes(DiscordApplicationCommand.SUPPORTED_INTEGRATION_TYPES)
+            .contexts(DiscordApplicationCommand.SUPPORTED_CONTEXTS)
             .addOption(ApplicationCommandOptionData.builder()
                 .name("name")
                 .description("name, btag#123, [clantag], battlenet:://, starcraft2.blizzard.com.")
