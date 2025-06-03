@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -124,7 +124,12 @@ public class PlayerCharacterReportService
             null, report.getId(), reporterId, reporterIp, evidence, null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
         ));
         playerCharacterReportDAO.updateStatus(Set.of(report.getId()));
-        enqueueNotifications(report, evidenceObj);
+        /*TODO
+         * Notifications are temporarily disabled until the notification service provides better
+         * options such as group notifications.
+         * https://github.com/sc2-pulse/sc2-pulse/issues/382
+         */
+        //enqueueNotifications(report, evidenceObj);
         return evidenceObj.getId();
     }
 

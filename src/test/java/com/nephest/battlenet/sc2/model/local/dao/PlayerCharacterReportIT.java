@@ -83,6 +83,7 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -889,10 +890,18 @@ public class PlayerCharacterReportIT
 
     private void verifyAndClearNotifications(String msg, Long... ids)
     {
+        /*TODO
+         * Notifications are temporarily disabled until the notification service provides better
+         * options such as group notifications.
+         * https://github.com/sc2-pulse/sc2-pulse/issues/382
+         */
+        assertEquals(0, JdbcTestUtils.countRowsInTable(template, "notification"));
+        /*
         Set<Long> notificationIds = verifyNotifications(msg, ids).stream()
             .map(Notification::getId)
             .collect(Collectors.toSet());
         notificationDAO.removeByIds(notificationIds);
+        */
     }
 
     private LadderPlayerCharacterReport[] getReports()
