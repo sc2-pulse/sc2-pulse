@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import jakarta.validation.Valid;
 import java.sql.Types;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -54,8 +55,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.validation.annotation.Validated;
 
 @Repository
+@Validated
 public class TeamDAO
 implements BasicEntityOperations<Team>
 {
@@ -615,7 +618,7 @@ implements BasicEntityOperations<Team>
 
     public List<Long> findIdsByLegacyUids
     (
-        Set<TeamLegacyUid> ids,
+        @Valid Set<TeamLegacyUid> ids,
         Integer fromSeason,
         Integer toSeason
     )
@@ -623,6 +626,7 @@ implements BasicEntityOperations<Team>
         if(ids.isEmpty()) return List.of();
 
         List<Object[]> legacyUids = ids.stream()
+            .flatMap(TeamLegacyUid::expandWildcards)
             .map(id->new Object[]{
                 conversionService.convert(id.getQueueType(), Integer.class),
                 conversionService.convert(id.getTeamType(), Integer.class),

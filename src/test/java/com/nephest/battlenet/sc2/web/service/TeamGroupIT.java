@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
@@ -27,6 +28,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
@@ -167,7 +169,7 @@ public class TeamGroupIT
                             ? TeamLegacyId.trusted("1.2.1")
                             : i == TeamGroupArgumentResolver.TEAMS_MAX + 1 - 2
                                 ? TeamLegacyId.trusted("1.3.1")
-                                : TeamLegacyId.trusted("1.4.1"),
+                                : TeamLegacyId.trusted("1.3.2"),
                 i + 1,
                 1L, 1, 1, 1, 1,
                 null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime(),
@@ -259,6 +261,40 @@ public class TeamGroupIT
         )
             .toArray(Long[]::new);
         assertArrayEquals(expectedResult, ids);
+    }
+
+    @Test
+    public void testFlatWildcardRace()
+    throws Exception
+    {
+        Long[] ids = objectMapper.readValue(mvc.perform(get("/api/team/group/flat")
+            .queryParam
+            (
+                "legacyUid",
+                conversionService.convert
+                (
+                    new TeamLegacyUid
+                    (
+                        QueueType.LOTV_1V1,
+                        TeamType.ARRANGED,
+                        Region.EU,
+                        TeamLegacyId.standard(List.of(new TeamLegacyIdEntry(1, 3L, true)))
+                    ),
+                    String.class
+                )
+            ))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), Long[].class);
+        Arrays.sort(ids);
+        assertArrayEquals
+        (
+            new Long[]
+            {
+                (long) TeamGroupArgumentResolver.TEAMS_MAX,
+                (long) TeamGroupArgumentResolver.TEAMS_MAX + 1,
+            },
+            ids
+        );
     }
 
     @Test
@@ -376,6 +412,28 @@ public class TeamGroupIT
                 String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX - 1),
                 String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX),
                 String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)
+            ))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void whenWildCardLegacyUidWithMultiplePlayers_thenBadRequest()
+    throws Exception
+    {
+        mvc.perform(get("/api/team/group/flat")
+            .queryParam
+            (
+                "legacyUid",
+                new TeamLegacyUid
+                (
+                    QueueType.LOTV_2V2,
+                    TeamType.ARRANGED,
+                    Region.EU,
+                    TeamLegacyId.standard(List.of(
+                        new TeamLegacyIdEntry(1, 2L, Race.ZERG),
+                        new TeamLegacyIdEntry(3, 4L, true)
+                    ))
+                ).toPulseString()
             ))
             .andExpect(status().isBadRequest());
     }

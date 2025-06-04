@@ -9,26 +9,41 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Comparator;
 import java.util.Objects;
 
-public record TeamLegacyIdEntry(@NotNull Integer realm, @NotNull Long id, @Nullable Race race)
+public record TeamLegacyIdEntry
+(
+    @NotNull Integer realm,
+    @NotNull Long id,
+    @Nullable Race race,
+    boolean isWildcardRace
+)
 implements Comparable<TeamLegacyIdEntry>
 {
 
     public static final String DELIMITER = ".";
     public static final String REGEXP_DELIMITER = "\\.";
+    public static final String WILDCARD_STRING = "*";
     public static final Comparator<TeamLegacyIdEntry> COMPARATOR
         = Comparator.comparing(TeamLegacyIdEntry::realm)
             .thenComparing(TeamLegacyIdEntry::id);
 
-    public TeamLegacyIdEntry(Integer realm, Long id, @Nullable Race race)
+    public TeamLegacyIdEntry
+    (
+        @NotNull Integer realm,
+        @NotNull Long id,
+        @Nullable Race race
+    )
     {
-        this.realm = realm;
-        this.id = id;
-        this.race = race;
+        this(realm, id, race, false);
+    }
+
+    public TeamLegacyIdEntry(Integer realm, Long id, boolean isWildcardRace)
+    {
+        this(realm, id, null, isWildcardRace);
     }
 
     public TeamLegacyIdEntry(Integer realm, Long id)
     {
-        this(realm, id, null);
+        this(realm, id, null, false);
     }
 
     public static TeamLegacyIdEntry fromLegacyIdSectionString(String text)
@@ -36,12 +51,16 @@ implements Comparable<TeamLegacyIdEntry>
         String[] sections = text.split(REGEXP_DELIMITER);
         if(sections.length < 2 || sections.length > 3)
             throw new IllegalArgumentException("2-3 sections expected");
+        boolean isWildcardRace = sections.length == 3 && sections[2].equals(WILDCARD_STRING);
 
         return new TeamLegacyIdEntry
         (
             Integer.parseInt(sections[0]),
             Long.parseLong(sections[1]),
-            sections.length == 3 ? Race.from(Integer.parseInt(sections[2])) : null
+            sections.length == 3 && !isWildcardRace
+                ? Race.from(Integer.parseInt(sections[2]))
+                : null,
+            isWildcardRace
         );
     }
 
@@ -74,7 +93,8 @@ implements Comparable<TeamLegacyIdEntry>
     public StringBuilder appendLegacyIdSectionStringTo(StringBuilder sb)
     {
         sb.append(realm()).append(DELIMITER).append(id()).append(DELIMITER);
-        if (race() != null) {sb.append(race().getId());}
+        if (isWildcardRace()) {sb.append(WILDCARD_STRING);}
+        else if (race() != null) {sb.append(race().getId());}
 
         return sb;
     }

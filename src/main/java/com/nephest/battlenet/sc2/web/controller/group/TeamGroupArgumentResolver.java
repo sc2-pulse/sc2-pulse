@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller.group;
@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.web.controller.group;
 import com.nephest.battlenet.sc2.config.openapi.TeamLegacyUids;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -15,11 +16,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -29,6 +32,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.ResponseStatusException;
 
 @Component
+@Validated
 public class TeamGroupArgumentResolver
 implements HandlerMethodArgumentResolver
 {
@@ -62,12 +66,14 @@ implements HandlerMethodArgumentResolver
 
     private final RequestParamMethodArgumentResolver paramResolver
         = new RequestParamMethodArgumentResolver(true);
+    private final TeamGroupArgumentResolver resolver;
     private final TeamDAO teamDAO;
 
     @Autowired
-    public TeamGroupArgumentResolver(TeamDAO teamDAO)
+    public TeamGroupArgumentResolver(TeamDAO teamDAO, @Lazy TeamGroupArgumentResolver resolver)
     {
         this.teamDAO = teamDAO;
+        this.resolver = resolver;
     }
 
     public static Optional<String> checkIds
@@ -129,7 +135,7 @@ implements HandlerMethodArgumentResolver
         String error = checkIds(teamIds, legacyUids).orElse(null);
         if(error != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, error);
 
-        Set<Long> result = resolve(teamIds, legacyUids, fromSeason, toSeason);
+        Set<Long> result = resolver.resolve(teamIds, legacyUids, fromSeason, toSeason);
         TeamGroup annotation = parameter.getParameterAnnotation(TeamGroup.class);
         if(annotation.flatRequired() && result.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Flattened team group is empty");
@@ -145,7 +151,7 @@ implements HandlerMethodArgumentResolver
     public Set<Long> resolve
     (
         Set<Long> teamIds,
-        Set<TeamLegacyUid> legacyUids,
+        @Valid Set<TeamLegacyUid> legacyUids,
         Integer fromSeason,
         Integer toSeason
     )
@@ -187,7 +193,7 @@ implements HandlerMethodArgumentResolver
     private void getTeamIdsDescriptor
     (
         @RequestParam(name = "teamId", required = false, defaultValue = "") Set<Long> teamIds,
-        @RequestParam(name = "legacyUid", required = false, defaultValue = "") @TeamLegacyUids Set<TeamLegacyUid> legacyUid,
+        @RequestParam(name = "legacyUid", required = false, defaultValue = "") @Valid @TeamLegacyUids Set<TeamLegacyUid> legacyUid,
         @RequestParam(name = "fromSeason", required = false) @Min(0L) Integer fromSeason,
         @RequestParam(name = "toSeason", required = false) @Min(0L) Integer toSeason
     )

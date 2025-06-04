@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -22,7 +21,9 @@ public class TeamLegacyIdEntryTest
         return Stream.of
         (
             Arguments.of(new TeamLegacyIdEntry(1, 234L, Race.TERRAN), "1.234.1"),
-            Arguments.of(new TeamLegacyIdEntry(1, 234L), "1.234.")
+            Arguments.of(new TeamLegacyIdEntry(1, 234L), "1.234."),
+            Arguments.of(new TeamLegacyIdEntry(1, 234L, true), "1.234.*"),
+            Arguments.of(new TeamLegacyIdEntry(1, 234L, false), "1.234.")
         );
     }
 
@@ -98,17 +99,28 @@ public class TeamLegacyIdEntryTest
         assertEquals(expected, a.compareTo(b));
     }
 
-    @Test
-    public void testUniqueness()
+    public static Stream<Arguments> testUniqueness()
+    {
+        return Stream.of
+        (
+            Arguments.of(new TeamLegacyIdEntry(1, 2L, Race.TERRAN)),
+            Arguments.of(new TeamLegacyIdEntry(1, 2L, true)),
+            Arguments.of(new TeamLegacyIdEntry(1, 2L, false))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    public void testUniqueness(TeamLegacyIdEntry entry)
     {
         TestUtil.testUniqueness
         (
-            new TeamLegacyIdEntry(1, 2L, Race.TERRAN),
-            new TeamLegacyIdEntry(1, 2L),
+            entry,
+            new TeamLegacyIdEntry(entry.realm(), entry.id()),
             (Object[]) new TeamLegacyIdEntry[]
             {
-                new TeamLegacyIdEntry(2, 1L),
-                new TeamLegacyIdEntry(1, 3L)
+                new TeamLegacyIdEntry(entry.realm() + 1, entry.id()),
+                new TeamLegacyIdEntry(entry.realm(), entry.id() + 1)
             }
         );
     }

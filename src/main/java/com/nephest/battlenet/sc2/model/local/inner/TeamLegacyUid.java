@@ -4,11 +4,18 @@
 package com.nephest.battlenet.sc2.model.local.inner;
 
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.validation.SoloTeamFormatOrNotWildcardRace;
+import com.nephest.battlenet.sc2.model.validation.SoloTeamFormatOrNotWildcardRaceValidator;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
+@SoloTeamFormatOrNotWildcardRace
 public class TeamLegacyUid
 {
 
@@ -59,6 +66,40 @@ public class TeamLegacyUid
             Region.from(Integer.parseInt(split[2])),
             split[3]
         );
+    }
+
+    public static Stream<TeamLegacyUid> expandWildcards(TeamLegacyUid uid)
+    {
+        return expandRaceWildcards(uid);
+    }
+
+    public static Stream<TeamLegacyUid> expandRaceWildcards(TeamLegacyUid uid)
+    {
+        if
+        (
+            SoloTeamFormatOrNotWildcardRaceValidator.isSolo(uid)
+                && uid.getId().getEntries().get(0).isWildcardRace()
+        )
+        {
+            TeamLegacyIdEntry entry = uid.getId().getEntries().get(0);
+            return Arrays.stream(Race.values())
+                .map
+                (
+                    race->new TeamLegacyUid
+                    (
+                        uid.getQueueType(),
+                        uid.getTeamType(),
+                        uid.getRegion(),
+                        TeamLegacyId.standard(List.of(new TeamLegacyIdEntry(
+                            entry.realm(), entry.id(), race
+                        )))
+                    )
+                );
+        }
+        else
+        {
+            return Stream.of(uid);
+        }
     }
 
     @Override
