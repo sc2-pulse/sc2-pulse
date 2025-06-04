@@ -176,12 +176,6 @@
     </dependency>
 
     <dependency>
-        <groupId>de.codecentric</groupId>
-        <artifactId>spring-boot-admin-starter-server</artifactId>
-        <version>3.3.6</version>
-    </dependency>
-
-    <dependency>
         <groupId>com.discord4j</groupId>
         <artifactId>discord4j-core</artifactId>
         <version>3.2.8</version>
@@ -329,17 +323,6 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-tomcat</artifactId>
                     <scope>provided</scope>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-actuator</artifactId>
-                </dependency>
-
-                <dependency>
-                    <groupId>de.codecentric</groupId>
-                    <artifactId>spring-boot-admin-starter-client</artifactId>
-                    <version>3.3.6</version>
                 </dependency>
             </dependencies>
             <build>

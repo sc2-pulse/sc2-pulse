@@ -418,14 +418,6 @@ class PersonalUtil
             rolesElem.textContent = data.roles.sort((a, b)=>a.localeCompare(b)).join(", ");
             const additionalInfo = document.querySelector("#account-additional-info");
             ElementUtil.removeChildren(additionalInfo);
-            if(data.roles.includes("SERVER_WATCHER")) {
-                const adminLink = document.createElement("a");
-                adminLink.setAttribute("href", ROOT_CONTEXT_PATH + "sba");
-                adminLink.setAttribute("id", "server-info-panel-link");
-                adminLink.setAttribute("target", "_blank");
-                adminLink.textContent = "Server info panel";
-                additionalInfo.appendChild(adminLink);
-            }
         }
         PersonalUtil.updateAccountConnections(data);
     }

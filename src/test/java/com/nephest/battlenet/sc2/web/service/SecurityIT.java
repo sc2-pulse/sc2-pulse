@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -79,7 +79,6 @@ public class SecurityIT
     @CsvSource
     ({
         "GET, /admin, 403",
-        "GET, /sba, 403",
         "GET, /settings/advanced, 200",
     })
     @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER})
@@ -114,14 +113,6 @@ public class SecurityIT
     @CsvSource
     ({
         "GET, /admin, 403",
-        "GET, /sba/instances/1/actuator/loggers, 403",
-        "GET, /sba/actuator/info, 403",
-
-        //not found instead of ok because SBA server is not deployed in this test
-        "GET, /sba, 404",
-        "GET, /sba/instances, 404",
-        "GET, /sba/instances/1, 404",
-        "GET, /sba/instances/1/actuator/info, 404"
     })
     @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.SERVER_WATCHER})
     public void testServerWatcherSecurity(String method, String path, int status)
@@ -133,9 +124,7 @@ public class SecurityIT
     @ParameterizedTest
     @CsvSource
     ({
-        //not found instead of ok because SBA server is not deployed in this test
         "GET, /admin, 404",
-        "GET, /sba/instances/1/actuator/loggers, 404",
     })
     @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.ADMIN})
     public void testAdminSecurity(String method, String path, int status)

@@ -26,7 +26,7 @@ public class CoreHtmlController
     @GetMapping("/login")
     public String login()
     {
-        return "plogin";
+        return "login";
     }
 
     @GetMapping("/terms-of-service")
