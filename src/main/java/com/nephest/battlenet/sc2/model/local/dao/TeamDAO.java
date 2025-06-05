@@ -20,6 +20,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.web.service.StatsService;
@@ -407,27 +408,9 @@ implements BasicEntityOperations<Team>
         this.teamDAO = teamDAO;
     }
 
-    public String legacyIdOf(Set<? extends TeamLegacyIdEntry> entries)
+    public TeamLegacyId legacyIdOf(BaseLeague league, BlizzardTeam bTeam)
     {
-        if(entries.isEmpty()) return null;
-
-        StringBuilder sb = new StringBuilder();
-        String delimiter = "";
-        List<? extends TeamLegacyIdEntry> sortedEntries = entries.stream()
-            .sorted()
-            .toList();
-        for(TeamLegacyIdEntry entry : sortedEntries)
-        {
-            sb.append(delimiter);
-            entry.appendLegacyIdSectionStringTo(sb);
-            delimiter = LEGACY_ID_SECTION_DELIMITER;
-        }
-        return sb.toString();
-    }
-
-    public String legacyIdOf(BaseLeague league, BlizzardTeam bTeam)
-    {
-        return legacyIdOf
+        return TeamLegacyId.standard
         (
             league.getQueueType() == QueueType.LOTV_1V1
                 ? Arrays.stream(bTeam.getMembers())
@@ -444,9 +427,9 @@ implements BasicEntityOperations<Team>
         );
     }
 
-    public String legacyIdOf(BaseLeague league, BlizzardProfileTeam bTeam)
+    public TeamLegacyId legacyIdOf(BaseLeague league, BlizzardProfileTeam bTeam)
     {
-        return legacyIdOf
+        return TeamLegacyId.standard
         (
             league.getQueueType() == QueueType.LOTV_1V1
                 ? Arrays.stream(bTeam.getTeamMembers())
@@ -482,7 +465,7 @@ implements BasicEntityOperations<Team>
                         conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
                     ),
                 conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), LeagueTier.LeagueTierType.class),
-                rs.getString("team.legacy_id"),
+                TeamLegacyId.trusted(rs.getString("team.legacy_id")),
                 rs.getInt("team.division_id"),
                 rs.getLong("team.rating"),
                 rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
@@ -577,7 +560,7 @@ implements BasicEntityOperations<Team>
                 || !t.getLastPlayed()
                     .isBefore(minLastPlayedMap.get(t.getSeason()).get(t.getRegion())))
             .map(t->new Object[]{
-                t.getLegacyId(),
+                t.getLegacyId().getId(),
                 t.getDivisionId(),
                 t.getSeason(),
                 conversionService.convert(t.getRegion(), Integer.class),
@@ -644,7 +627,7 @@ implements BasicEntityOperations<Team>
                 conversionService.convert(id.getQueueType(), Integer.class),
                 conversionService.convert(id.getTeamType(), Integer.class),
                 conversionService.convert(id.getRegion(), Integer.class),
-                id.getId()
+                id.getId().getId()
             })
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -748,7 +731,7 @@ implements BasicEntityOperations<Team>
     private MapSqlParameterSource createParameterSource(Team team)
     {
         return new MapSqlParameterSource()
-            .addValue("legacyId", team.getLegacyId())
+            .addValue("legacyId", team.getLegacyId().getId())
             .addValue("divisionId", team.getDivisionId())
             .addValue("season", team.getSeason())
             .addValue("region", conversionService.convert(team.getRegion(), Integer.class))

@@ -43,6 +43,7 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
@@ -339,7 +340,7 @@ public class DiscordServiceTest
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            "1",
+            TeamLegacyId.trusted("1"),
             1,
             1234L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime(),

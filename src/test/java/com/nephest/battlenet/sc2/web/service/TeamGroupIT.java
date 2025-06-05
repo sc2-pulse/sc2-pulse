@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
@@ -159,14 +160,14 @@ public class TeamGroupIT
                 league,
                 BaseLeagueTier.LeagueTierType.FIRST,
                 i <= 1
-                    ? "1.0.1"
+                    ? TeamLegacyId.trusted("1.0.1")
                     : i <= TeamGroupArgumentResolver.TEAMS_MAX + 1 - 4
-                        ? "1.1.1"
+                        ? TeamLegacyId.trusted("1.1.1")
                         : i == TeamGroupArgumentResolver.TEAMS_MAX + 1 - 3
-                            ? "1.2.1"
+                            ? TeamLegacyId.trusted("1.2.1")
                             : i == TeamGroupArgumentResolver.TEAMS_MAX + 1 - 2
-                                ? "1.3.1"
-                                : "1.4.1",
+                                ? TeamLegacyId.trusted("1.3.1")
+                                : TeamLegacyId.trusted("1.4.1"),
                 i + 1,
                 1L, 1, 1, 1, 1,
                 null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime(),

@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
@@ -150,7 +151,7 @@ public class PlayerCharacterSummaryIT
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.PROTOSS)
             )),
             division1v1_2.getId(), 9L, 3, 3, 3, 1,
@@ -161,7 +162,7 @@ public class PlayerCharacterSummaryIT
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.ZERG)
             )),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
@@ -172,7 +173,7 @@ public class PlayerCharacterSummaryIT
             null, 1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.TERRAN)
             )),
             division1v1_1.getId(), 10L, 3, 3, 3, 1,
@@ -183,7 +184,7 @@ public class PlayerCharacterSummaryIT
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.TERRAN)
             )),
             division1v1_2.getId(), 10L, 3, 3, 3, 1,
@@ -194,7 +195,7 @@ public class PlayerCharacterSummaryIT
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId(), Race.TERRAN)
             )),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
@@ -205,7 +206,7 @@ public class PlayerCharacterSummaryIT
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu2.getRealm(), charEu2.getBattlenetId(), Race.ZERG)
             )),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,

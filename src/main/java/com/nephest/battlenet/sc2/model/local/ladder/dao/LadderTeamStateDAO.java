@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -166,7 +166,7 @@ public class LadderTeamStateDAO
             .map(id->new Object[]{
                 conversionService.convert(id.getQueueType(), Integer.class),
                 conversionService.convert(id.getRegion(), Integer.class),
-                id.getId()
+                id.getId().getId()
             })
            .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()

@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class ApplicationRoleConnectionTest
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            "1",
+            TeamLegacyId.trusted("1"),
             1,
             1234L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()

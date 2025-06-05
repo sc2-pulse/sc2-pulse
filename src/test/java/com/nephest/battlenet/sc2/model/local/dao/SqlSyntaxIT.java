@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchVideoDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -197,51 +198,57 @@ public class SqlSyntaxIT
         Team newTeam = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
-            "1", division.getId(),
+            TeamLegacyId.trusted("1"), division.getId(),
             1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         );
         Team newTeam2 = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
-            "10", division.getId(),
+            TeamLegacyId.trusted("10"), division.getId(),
             1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         );
         Team sameTeam = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
-            "1", division.getId(),
+            TeamLegacyId.trusted("1"), division.getId(),
             2L, 2, 2, 2, 2,
             SC2Pulse.offsetDateTime()
         );
         Team updatedTeam = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
-            "1", division2.getId(),
+            TeamLegacyId.trusted("1"), division2.getId(),
             3L, 3, 3, 3, 3,
             SC2Pulse.offsetDateTime()
         );
         Team zergTeam = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
-            "-1", division2.getId(),
+            TeamLegacyId.trusted("-1"), division2.getId(),
             4L, 3, 3, 0, 3,
             SC2Pulse.offsetDateTime()
         );
         Team zergTeamClone = Team.joined
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
-            "-1", division2.getId(),
+            TeamLegacyId.trusted("-1"), division2.getId(),
             4L, 3, 3, 0, 3,
             SC2Pulse.offsetDateTime()
         );
-        Team mergeTestTeam6 = createGenericTeam(season, league2, tier2, division2, "-4");
-        Team mergeTestTeam5 = createGenericTeam(season, league2, tier2, division2, "-5");
-        Team mergeTestTeam4 = createGenericTeam(season, league2, tier2, division2, "-6");
-        Team mergeTestTeam3 = createGenericTeam(season, league2, tier2, division2, "-7");
-        Team mergeTestTeam2 = createGenericTeam(season, league2, tier2, division2, "-8");
-        Team mergeTestTeam1 = createGenericTeam(season, league2, tier2, division2, "-9");
+        Team mergeTestTeam6
+            = createGenericTeam(season, league2, tier2, division2, TeamLegacyId.trusted("-4"));
+        Team mergeTestTeam5
+            = createGenericTeam(season, league2, tier2, division2, TeamLegacyId.trusted("-5"));
+        Team mergeTestTeam4
+            = createGenericTeam(season, league2, tier2, division2, TeamLegacyId.trusted("-6"));
+        Team mergeTestTeam3
+            = createGenericTeam(season, league2, tier2, division2, TeamLegacyId.trusted("-7"));
+        Team mergeTestTeam2
+            = createGenericTeam(season, league2, tier2, division2, TeamLegacyId.trusted("-8"));
+        Team mergeTestTeam1
+            = createGenericTeam(season, league2, tier2, division2, TeamLegacyId.trusted("-9"));
 
         teamDAO.create(newTeam);
         teamDAO.create(zergTeam);
@@ -311,7 +318,7 @@ public class SqlSyntaxIT
         assertEquals(league2.getTeamType(), foundTeam.getLeague().getTeamType());
         assertEquals(tier2.getType(), foundTeam.getTierType());
         assertEquals(division2.getId(), foundTeam.getDivisionId());
-        assertEquals("1", foundTeam.getLegacyId());
+        assertEquals(TeamLegacyId.trusted("1"), foundTeam.getLegacyId());
         assertEquals(3, foundTeam.getRating());
         assertEquals(3, foundTeam.getWins());
         assertEquals(3, foundTeam.getLosses());
@@ -448,7 +455,14 @@ public class SqlSyntaxIT
         assertEquals("val ue]1", varDAO.find(key).get());
     }
 
-    private static Team createGenericTeam(Season season, League league2, LeagueTier tier, Division division, String id)
+    private static Team createGenericTeam
+    (
+        Season season,
+        League league2,
+        LeagueTier tier,
+        Division division,
+        TeamLegacyId id
+    )
     {
         return Team.joined
         (

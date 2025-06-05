@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -88,7 +89,7 @@ public class FastTeamIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Region.EU,
-            "1204",
+            TeamLegacyId.trusted("1204"),
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
 
@@ -100,7 +101,7 @@ public class FastTeamIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Region.EU,
-            "1.20.4",
+            TeamLegacyId.trusted("1.20.4"),
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
         //US is not loaded
@@ -108,7 +109,7 @@ public class FastTeamIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Region.US,
-            "1.10.4",
+            TeamLegacyId.trusted("1.10.4"),
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
 
@@ -118,7 +119,7 @@ public class FastTeamIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Region.EU,
-            "1.20.4",
+            TeamLegacyId.trusted("1.20.4"),
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
     }
@@ -131,7 +132,7 @@ public class FastTeamIT
             null,
             1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, "1", 1,
+            BaseLeagueTier.LeagueTierType.FIRST, TeamLegacyId.trusted("1"), 1,
             1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         );
@@ -140,7 +141,7 @@ public class FastTeamIT
             null,
             1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, "2", 1,
+            BaseLeagueTier.LeagueTierType.FIRST, TeamLegacyId.trusted("2"), 1,
             2L, 2, 2, 2, 2,
             SC2Pulse.offsetDateTime()
         );
@@ -157,7 +158,7 @@ public class FastTeamIT
             null,
             1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, "1", 3,
+            BaseLeagueTier.LeagueTierType.FIRST, TeamLegacyId.trusted("1"), 3,
             3L, 4, 5, 6, 3,
             SC2Pulse.offsetDateTime()
         );
@@ -172,7 +173,7 @@ public class FastTeamIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Region.EU,
-            "1",
+            TeamLegacyId.trusted("1"),
             1
         ).orElseThrow();
         assertEquals(team1_1, foundTeam1);
@@ -186,7 +187,7 @@ public class FastTeamIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Region.EU,
-            "2",
+            TeamLegacyId.trusted("2"),
             1
         ).orElseThrow();
         assertEquals(team2, foundTeam2);
@@ -215,7 +216,7 @@ public class FastTeamIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Region.EU,
-            "1.20.4",
+            TeamLegacyId.trusted("1.20.4"),
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
 
@@ -225,7 +226,7 @@ public class FastTeamIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Region.EU,
-            "1.20.4",
+            TeamLegacyId.trusted("1.20.4"),
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
 
@@ -235,7 +236,7 @@ public class FastTeamIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Region.EU,
-            "1.20.4",
+            TeamLegacyId.trusted("1.20.4"),
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
     }

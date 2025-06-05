@@ -22,6 +22,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamIT;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
@@ -65,9 +66,9 @@ public class LegacySearchIT
     @Autowired @Qualifier("sc2StatsConversionService")
     private ConversionService conversionService;
 
-    public static final String LEGACY_ID_1 = "99999";
-    public static final String LEGACY_ID_2 = "999999";
-    public static final String LEGACY_ID_3 = "9999999";
+    public static final TeamLegacyId LEGACY_ID_1 = TeamLegacyId.trusted("99999");
+    public static final TeamLegacyId LEGACY_ID_2 = TeamLegacyId.trusted("999999");
+    public static final TeamLegacyId LEGACY_ID_3 = TeamLegacyId.trusted("9999999");
     public static OffsetDateTime ODT;
 
     @BeforeAll
@@ -134,8 +135,16 @@ public class LegacySearchIT
 
     public static Team setupTeam
     (
-        QueueType queueType, Region region, int season, String legacyId, BaseLeague.LeagueType league, int wins,
-        DivisionDAO divisionDAO, TeamDAO teamDAO, TeamMemberDAO teamMemberDAO, TeamStateDAO teamStateDAO
+        QueueType queueType,
+        Region region,
+        int season,
+        TeamLegacyId legacyId,
+        BaseLeague.LeagueType league,
+        int wins,
+        DivisionDAO divisionDAO,
+        TeamDAO teamDAO,
+        TeamMemberDAO teamMemberDAO,
+        TeamStateDAO teamStateDAO
     )
     {
         return setupTeam
@@ -159,7 +168,7 @@ public class LegacySearchIT
         QueueType queueType,
         Region region,
         int season,
-        String legacyId,
+        TeamLegacyId legacyId,
         BaseLeague.LeagueType league,
         int wins,
         OffsetDateTime lastPlayed,

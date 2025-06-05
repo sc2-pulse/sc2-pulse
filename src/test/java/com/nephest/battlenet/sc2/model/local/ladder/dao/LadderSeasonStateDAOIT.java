@@ -30,6 +30,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamIT;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderSeasonState;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
@@ -145,7 +146,7 @@ public class LadderSeasonStateDAOIT
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, "1", division1.getId(),
+            BaseLeagueTier.LeagueTierType.FIRST, TeamLegacyId.trusted("1"), division1.getId(),
             1L, 1, 1, 1, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -154,7 +155,7 @@ public class LadderSeasonStateDAOIT
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, "2", division1.getId(),
+            BaseLeagueTier.LeagueTierType.FIRST, TeamLegacyId.trusted("2"), division1.getId(),
             1L, 1, 1, 1, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -163,7 +164,7 @@ public class LadderSeasonStateDAOIT
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.PLATINUM, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, "10", division2.getId(),
+            BaseLeagueTier.LeagueTierType.FIRST, TeamLegacyId.trusted("10"), division2.getId(),
             1L, 1, 1, 1, 0,
             SC2Pulse.offsetDateTime()
         );

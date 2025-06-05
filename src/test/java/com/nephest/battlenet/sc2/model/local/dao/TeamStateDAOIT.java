@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
@@ -187,7 +188,7 @@ public class TeamStateDAOIT
             SeasonGenerator.DEFAULT_SEASON_REGION,
             SeasonGenerator.defaultLeague(),
             SeasonGenerator.DEFAULT_TIER,
-            "1.1.1",
+            TeamLegacyId.trusted("1.1.1"),
             1,
             1L, 2, 3, 4, 5,
             primaryDataUpdated.minusSeconds(1),

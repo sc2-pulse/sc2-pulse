@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.GroupController;
@@ -117,32 +118,32 @@ public class LadderCharacterTeamSearchIT
         team1 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, bronze1,
-            "10002", 1L, 1, 2, 3, 4, characters
+            TeamLegacyId.trusted("10002"), 1L, 1, 2, 3, 4, characters
         );
         team2 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, OTHER_TEAM_TYPE), TIER_TYPE, bronze1,
-            "10000", 2L, 1, 2, 3, 4, characters
+            TeamLegacyId.trusted("10000"), 2L, 1, 2, 3, 4, characters
         );
         team3 = seasonGenerator.createTeam
         (
             season2, new BaseLeague(BaseLeague.LeagueType.GOLD, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, gold2,
-            "10001", 3L, 1, 2, 3, 4, characters
+            TeamLegacyId.trusted("10001"), 3L, 1, 2, 3, 4, characters
         );
         team4 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1v1,
-            "10003", 0L, 1, 2, 3, 4, characters[0]
+            TeamLegacyId.trusted("10003"), 0L, 1, 2, 3, 4, characters[0]
         );
         team5 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1v1,
-            "10004", 0L, 1, 2, 3, 4, characters[2]
+            TeamLegacyId.trusted("10004"), 0L, 1, 2, 3, 4, characters[2]
         );
         team6 = seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, bronze1v1,
-            "10005", 0L, 1, 2, 3, 4, characters[2]
+            TeamLegacyId.trusted("10005"), 0L, 1, 2, 3, 4, characters[2]
         );
     }
 

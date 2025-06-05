@@ -31,6 +31,7 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO.HistoryColumn;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO.StaticColumn;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO.SummaryColumn;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
@@ -232,7 +233,7 @@ public class TeamGroupHistoryIT
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.SECOND,
-            "1.11.1",
+            TeamLegacyId.trusted("1.11.1"),
             15,
             112L, 13, 14, 15, 0,
             null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
@@ -261,7 +262,7 @@ public class TeamGroupHistoryIT
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            "1.11.1",
+            TeamLegacyId.trusted("1.11.1"),
             7,
             113L, 14, 15, 16, 0,
             null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
@@ -278,7 +279,7 @@ public class TeamGroupHistoryIT
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            "991",
+            TeamLegacyId.trusted("991"),
             7,
             114L, 14, 15, 16, 0,
             null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()

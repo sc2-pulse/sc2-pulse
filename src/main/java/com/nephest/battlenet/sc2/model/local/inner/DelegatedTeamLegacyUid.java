@@ -56,13 +56,13 @@ extends TeamLegacyUid
     }
 
     @Override
-    public String getId()
+    public TeamLegacyId getId()
     {
         return getTeam().getLegacyId();
     }
 
     @Override
-    public void setId(String id)
+    public void setId(TeamLegacyId id)
     {
         getTeam().setLegacyId(id);
     }

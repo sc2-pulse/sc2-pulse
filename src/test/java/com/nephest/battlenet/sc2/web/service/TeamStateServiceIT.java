@@ -35,6 +35,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistory;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
@@ -196,7 +197,7 @@ public class TeamStateServiceIT
     (
         long id,
         QueueType queueType,
-        String legacyId,
+        TeamLegacyId legacyId,
         long rating,
         int wins,
         OffsetDateTime odt
@@ -230,14 +231,14 @@ public class TeamStateServiceIT
                 QueueType.LOTV_1V1,
                 (Function<TeamStateService, Integer>) TeamStateService::getMainLengthDays,
                 10L,
-                "1.90.4"
+                TeamLegacyId.trusted("1.90.4")
             ),
             Arguments.of
             (
                 QueueType.LOTV_2V2,
                 (Function<TeamStateService, Integer>) TeamStateService::getSecondaryLengthDays,
                 10L,
-                "1.90.~1.91."
+                TeamLegacyId.trusted("1.90.~1.91.")
             )
         );
     }
@@ -249,7 +250,7 @@ public class TeamStateServiceIT
         QueueType queueType,
         Function<TeamStateService, Integer> depthSupplier,
         long teamId,
-        String legacyId
+        TeamLegacyId legacyId
     )
     throws Exception
     {

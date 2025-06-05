@@ -36,6 +36,7 @@ import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeAPI;
@@ -186,14 +187,14 @@ public class ExternalServiceIT
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE),
             TIER_TYPE, bronze1v1,
-            "10002", 1L, 1, 2, 3, 4,
+            TeamLegacyId.trusted("10002"), 1L, 1, 2, 3, 4,
             character
         );
         seasonGenerator.createTeam
         (
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE),
             TIER_TYPE, bronze1v1,
-            "10003", 1L, 1, 2, 3, 4,
+            TeamLegacyId.trusted("10003"), 1L, 1, 2, 3, 4,
             character2
         );
         playerCharacterStatsDAO.mergeCalculate();

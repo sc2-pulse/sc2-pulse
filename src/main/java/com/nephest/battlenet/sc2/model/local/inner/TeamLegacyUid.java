@@ -17,18 +17,23 @@ public class TeamLegacyUid
     private QueueType queueType;
     private TeamType teamType;
     private Region region;
-    private String id;
+    private TeamLegacyId id;
 
     public TeamLegacyUid()
     {
     }
 
-    public TeamLegacyUid(QueueType queueType, TeamType teamType, Region region, String id)
+    public TeamLegacyUid(QueueType queueType, TeamType teamType, Region region, TeamLegacyId id)
     {
         this.queueType = queueType;
         this.teamType = teamType;
         this.region = region;
         this.id = id;
+    }
+
+    public TeamLegacyUid(QueueType queueType, TeamType teamType, Region region, String id)
+    {
+        this(queueType, teamType, region, TeamLegacyId.trusted(id));
     }
 
     public static TeamLegacyUid of(Team team)
@@ -78,7 +83,7 @@ public class TeamLegacyUid
         return getQueueType().getId()
             + DELIMITER + getTeamType().getId()
             + DELIMITER + getRegion().getId()
-            + DELIMITER + getId();
+            + DELIMITER + getId().getId();
     }
 
     public QueueType getQueueType()
@@ -111,12 +116,12 @@ public class TeamLegacyUid
         this.region = region;
     }
 
-    public String getId()
+    public TeamLegacyId getId()
     {
         return id;
     }
 
-    public void setId(String id)
+    public void setId(TeamLegacyId id)
     {
         this.id = id;
     }

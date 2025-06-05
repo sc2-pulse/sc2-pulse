@@ -53,6 +53,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
@@ -279,7 +280,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu1.getRealm(), charEu1.getBattlenetId()),
                 new TeamLegacyIdEntry(charEu2.getRealm(), charEu2.getBattlenetId()),
                 new TeamLegacyIdEntry(charEu3.getRealm(), charEu3.getBattlenetId()),
@@ -292,7 +293,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_4V4, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu5.getRealm(), charEu5.getBattlenetId()),
                 new TeamLegacyIdEntry(charEu6.getRealm(), charEu6.getBattlenetId()),
                 new TeamLegacyIdEntry(charEu7.getRealm(), charEu7.getBattlenetId()),
@@ -305,7 +306,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charUs1.getRealm(), charUs1.getBattlenetId())
             )),
             division2v2.getId(), 1L, 1, 1, 1, 1,
@@ -315,7 +316,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charUs2.getRealm(), charUs2.getBattlenetId())
             )),
             division2v2.getId(), 1L, 1, 1, 1, 1,
@@ -325,7 +326,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charUs3.getRealm(), charUs3.getBattlenetId())
             )),
             division2v2.getId(), 2L, 2, 2, 2, 2,
@@ -335,7 +336,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charUs4.getRealm(), charUs4.getBattlenetId())
             )),
             division2v2.getId(), 2L, 2, 2, 2, 2,
@@ -346,7 +347,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.KR,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charKr1.getRealm(), charKr1.getBattlenetId(), Race.TERRAN)
             )),
             division1v1.getId(), 1L, 1, 1, 1, 1,
@@ -356,7 +357,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.KR,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charKr2.getRealm(), charKr2.getBattlenetId(), Race.PROTOSS)
             )),
             division1v1.getId(), 2L, 2, 2, 2, 2,
@@ -367,7 +368,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu9.getRealm(), charEu9.getBattlenetId(), Race.TERRAN)
             )),
             division1v1_2.getId(), 1L, 1, 1, 1, 1,
@@ -377,7 +378,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charEu10.getRealm(), charEu10.getBattlenetId(), Race.PROTOSS)
             )),
             division1v1_2.getId(), 2L, 2, 2, 2, 2,
@@ -388,7 +389,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charKr3.getRealm(), charKr3.getBattlenetId(), Race.TERRAN)
             )),
             division1v1.getId(), 1L, 1, 1, 1, 1,
@@ -398,7 +399,7 @@ public class MatchIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(charKr4.getRealm(), charKr4.getBattlenetId(), Race.PROTOSS)
             )),
             division1v1.getId(), 1L, 1, 1, 1, 1,

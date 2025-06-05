@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.StatefulBasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -89,11 +90,11 @@ implements StatefulBasicEntityOperations<Team>
 
     public Optional<Team> findById
     (
-            QueueType queueType,
-            TeamType teamType,
-            Region region,
-            String legacyId,
-            Integer season
+        QueueType queueType,
+        TeamType teamType,
+        Region region,
+        TeamLegacyId legacyId,
+        Integer season
     )
     {
         return find(Team.uid(queueType, teamType, region, legacyId, season));

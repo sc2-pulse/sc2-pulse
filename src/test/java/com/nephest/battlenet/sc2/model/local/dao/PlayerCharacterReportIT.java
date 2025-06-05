@@ -39,6 +39,7 @@ import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidence;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidenceVote;
@@ -714,7 +715,9 @@ public class PlayerCharacterReportIT
             null,
             SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, "12344", 1, 10L, 10, 0, 0, 0,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            TeamLegacyId.trusted("12344"), 1,
+            10L, 10, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
         template.update("UPDATE player_character_report SET restrictions = true");

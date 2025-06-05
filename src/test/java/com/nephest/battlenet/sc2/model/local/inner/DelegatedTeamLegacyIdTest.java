@@ -29,26 +29,28 @@ public class DelegatedTeamLegacyIdTest
         assertNull(uid.getId());
 
         //team set, uid get
+        TeamLegacyId legacyId1 = TeamLegacyId.trusted("1");
         team.setQueueType(QueueType.LOTV_1V1);
         team.setTeamType(TeamType.ARRANGED);
         team.setRegion(Region.US);
-        team.setLegacyId("1");
+        team.setLegacyId(legacyId1);
 
         assertEquals(QueueType.LOTV_1V1, uid.getQueueType());
         assertEquals(TeamType.ARRANGED, uid.getTeamType());
         assertEquals(Region.US, uid.getRegion());
-        assertEquals("1", uid.getId());
+        assertEquals(legacyId1, uid.getId());
 
         //uid set, team get
+        TeamLegacyId legacyId2 = TeamLegacyId.trusted("2");
         uid.setQueueType(QueueType.LOTV_2V2);
         uid.setTeamType(TeamType.RANDOM);
         uid.setRegion(Region.EU);
-        uid.setId("2");
+        uid.setId(legacyId2);
 
         assertEquals(QueueType.LOTV_2V2, team.getQueueType());
         assertEquals(TeamType.RANDOM, team.getTeamType());
         assertEquals(Region.EU, team.getRegion());
-        assertEquals("2", team.getLegacyId());
+        assertEquals(legacyId2, team.getLegacyId());
     }
 
 }

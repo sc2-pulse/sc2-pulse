@@ -37,6 +37,7 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import discord4j.common.util.Snowflake;
@@ -171,13 +172,17 @@ public class PlayerCharacterDAOIT
         Team team1 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, "1", division.getId(), 1L, 1, 1, 1, 1,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            TeamLegacyId.trusted("1"), division.getId(),
+            1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team2 = teamDAO.merge(Set.of(Team.joined(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, "2", division.getId(), 2L, 2, 2, 2, 2,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            TeamLegacyId.trusted("2"), division.getId(),
+            2L, 2, 2, 2, 2,
             SC2Pulse.offsetDateTime()
         ))).iterator().next();
         teamMemberDAO.merge(Set.of(

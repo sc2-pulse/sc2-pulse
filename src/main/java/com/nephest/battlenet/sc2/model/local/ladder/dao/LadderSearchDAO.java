@@ -21,6 +21,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
@@ -345,7 +346,7 @@ public class LadderSearchDAO
                     conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
                 ),
                 conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), LeagueTier.LeagueTierType.class),
-                rs.getString("team.legacy_id"),
+                TeamLegacyId.trusted(rs.getString("team.legacy_id")),
                 rs.getInt("team.division_id"),
                 rs.getLong("team.rating"),
                 rs.getInt("team.wins"),
@@ -550,7 +551,7 @@ public class LadderSearchDAO
                 conversionService.convert(id.getQueueType(), Integer.class),
                 conversionService.convert(id.getTeamType(), Integer.class),
                 conversionService.convert(id.getRegion(), Integer.class),
-                id.getId()
+                id.getId().getId()
             })
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()

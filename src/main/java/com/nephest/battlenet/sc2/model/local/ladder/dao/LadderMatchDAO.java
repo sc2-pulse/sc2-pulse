@@ -579,7 +579,7 @@ public class LadderMatchDAO
                 conversionService.convert(id.getQueueType(), Integer.class),
                 conversionService.convert(id.getTeamType(), Integer.class),
                 conversionService.convert(id.getRegion(), Integer.class),
-                id.getId()
+                id.getId().getId()
             })
             .collect(Collectors.toList());
         List<Object[]> teamIds2 = teams2.stream()
@@ -587,7 +587,7 @@ public class LadderMatchDAO
                 conversionService.convert(id.getQueueType(), Integer.class),
                 conversionService.convert(id.getTeamType(), Integer.class),
                 conversionService.convert(id.getRegion(), Integer.class),
-                id.getId()
+                id.getId().getId()
             })
             .collect(Collectors.toList());
         Integer[] clanIds = Stream.of(clans1, clans2)

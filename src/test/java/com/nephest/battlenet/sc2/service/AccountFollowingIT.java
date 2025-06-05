@@ -33,6 +33,7 @@ import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
@@ -158,7 +159,7 @@ public class AccountFollowingIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            "11111", bronze1.getId(),
+            TeamLegacyId.trusted("11111"), bronze1.getId(),
             100L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -180,7 +181,7 @@ public class AccountFollowingIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            "11112", bronze1.getId(),
+            TeamLegacyId.trusted("11112"), bronze1.getId(),
             101L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -196,7 +197,7 @@ public class AccountFollowingIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            "11113", bronze1.getId(),
+            TeamLegacyId.trusted("11113"), bronze1.getId(),
             99L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );

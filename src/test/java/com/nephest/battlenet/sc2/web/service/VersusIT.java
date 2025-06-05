@@ -44,6 +44,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.inner.VersusSummary;
@@ -281,7 +282,7 @@ public class VersusIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
-            teamDAO.legacyIdOf(Set.of(
+            TeamLegacyId.standard(Set.of(
                 new TeamLegacyIdEntry(character.getRealm(), character.getBattlenetId(), Race.TERRAN)
             )),
             division.getId(), 1L, 1, 1, 1, 1,

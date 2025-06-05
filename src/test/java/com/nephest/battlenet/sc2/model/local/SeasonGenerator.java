@@ -25,6 +25,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -316,7 +317,7 @@ public class SeasonGenerator
         BaseLeague league,
         BaseLeagueTier.LeagueTierType tierType,
         Division division,
-        String legacyId,
+        TeamLegacyId legacyId,
         long rating, int wins, int losses, int ties, int points,
         PlayerCharacter... members
     )
@@ -351,7 +352,7 @@ public class SeasonGenerator
                     TeamType.ARRANGED
                 ),
                 BaseLeagueTier.LeagueTierType.FIRST,
-                String.valueOf(i), 1,
+                TeamLegacyId.trusted(String.valueOf(i)), 1,
                 (long) i, i, 0, 0, 0,
                 SC2Pulse.offsetDateTime()
             );

@@ -4,7 +4,10 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.nephest.battlenet.sc2.config.convert.jackson.StringToTeamLegacyIdConverter;
+import com.nephest.battlenet.sc2.config.convert.jackson.TeamLegacyIdToStringConverter;
 import com.nephest.battlenet.sc2.config.convert.jackson.TeamLegacyUidToStringConverter;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseTeam;
@@ -14,6 +17,7 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.DelegatedTeamLegacyUid;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import jakarta.validation.constraints.NotNull;
@@ -43,7 +47,9 @@ implements java.io.Serializable
     private Long id;
 
     @NotNull
-    private String legacyId;
+    @JsonSerialize(converter = TeamLegacyIdToStringConverter.class)
+    @JsonDeserialize(converter = StringToTeamLegacyIdConverter.class)
+    private TeamLegacyId legacyId;
 
     @NotNull
     private Integer divisionId;
@@ -86,7 +92,7 @@ implements java.io.Serializable
         Integer season, Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType tierType,
-        String legacyId,
+        TeamLegacyId legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         OffsetDateTime lastPlayed, @NotNull OffsetDateTime joined,
@@ -113,7 +119,7 @@ implements java.io.Serializable
         Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType tierType,
-        String legacyId,
+        TeamLegacyId legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         OffsetDateTime lastPlayed
@@ -170,7 +176,7 @@ implements java.io.Serializable
         QueueType queueType,
         TeamType teamType,
         Region region,
-        String legacyId,
+        TeamLegacyId legacyId,
         Integer season
     )
     {
@@ -250,12 +256,12 @@ implements java.io.Serializable
         return id;
     }
 
-    public String getLegacyId()
+    public TeamLegacyId getLegacyId()
     {
         return legacyId;
     }
 
-    public void setLegacyId(String legacyId)
+    public void setLegacyId(TeamLegacyId legacyId)
     {
         this.legacyId = legacyId;
     }

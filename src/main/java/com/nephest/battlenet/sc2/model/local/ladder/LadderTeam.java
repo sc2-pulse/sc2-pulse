@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -19,12 +20,14 @@ extends Team
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
-    private final List<LadderTeamMember> members;
+    private List<LadderTeamMember> members;
 
     @JsonUnwrapped
-    private final PopulationState populationState;
+    private PopulationState populationState;
+
+    public LadderTeam(){}
 
     public LadderTeam
     (
@@ -33,7 +36,7 @@ implements java.io.Serializable
         Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType leagueTierType,
-        String legacyId,
+        TeamLegacyId legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         OffsetDateTime lastPlayed, OffsetDateTime joined, OffsetDateTime primaryDataUpdated,
@@ -60,7 +63,7 @@ implements java.io.Serializable
         Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType leagueTierType,
-        String legacyId,
+        TeamLegacyId legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         OffsetDateTime lastPlayed,
@@ -84,14 +87,25 @@ implements java.io.Serializable
         );
     }
 
+    public PopulationState getPopulationState()
+    {
+        return populationState;
+    }
+
+    public void setPopulationState(PopulationState populationState)
+    {
+        this.populationState = populationState;
+    }
+
     public List<LadderTeamMember> getMembers()
     {
         return members;
     }
 
-    public PopulationState getPopulationState()
+    public void setMembers(List<LadderTeamMember> members)
     {
-        return populationState;
+        this.members = members;
     }
+
 }
 

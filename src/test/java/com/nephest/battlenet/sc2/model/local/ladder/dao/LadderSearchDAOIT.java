@@ -31,6 +31,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
@@ -178,7 +179,7 @@ public class LadderSearchDAOIT
         Team newTeam = Team.joined
         (
             null, emptySeasons.get(0).getBattlenetId(), Region.EU, bronzeLeague, TIER_TYPE,
-            "9999", bronzeDivision.getId(),
+            TeamLegacyId.trusted("9999"), bronzeDivision.getId(),
             1L, 1, 1, 1, 1,
             SC2Pulse.offsetDateTime()
         );

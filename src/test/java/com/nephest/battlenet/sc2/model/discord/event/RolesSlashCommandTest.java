@@ -29,6 +29,7 @@ import com.nephest.battlenet.sc2.model.discord.GuildRoleStoreTest;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -288,7 +289,7 @@ public class RolesSlashCommandTest
                 TeamType.ARRANGED
             ),
             BaseLeagueTier.LeagueTierType.FIRST,
-            "1",
+            TeamLegacyId.trusted("1"),
             1,
             10L,
             120, 2, 1, 2,
