@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.inner;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serial;
@@ -22,10 +23,13 @@ implements Comparable<TeamLegacyId>, Serializable
 
     public static final String DELIMITER = "~";
 
+    @NotEmpty
     private List<TeamLegacyIdEntry> entries;
+
+    @NotBlank
     private final String id;
 
-    private TeamLegacyId(String id, List<TeamLegacyIdEntry> entries)
+    private TeamLegacyId(@NotBlank String id, List<TeamLegacyIdEntry> entries)
     {
         this.id = id;
         this.entries = entries;

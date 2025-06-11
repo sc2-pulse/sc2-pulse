@@ -438,4 +438,25 @@ public class TeamGroupIT
             .andExpect(status().isBadRequest());
     }
 
+    @Test
+    public void whenLegacyUidWithInvalidIdEntryCount_thenBadRequest()
+    throws Exception
+    {
+        mvc.perform(get("/api/team/group/flat")
+            .queryParam
+            (
+                "legacyUid",
+                new TeamLegacyUid
+                (
+                    QueueType.LOTV_2V2,
+                    TeamType.ARRANGED,
+                    Region.EU,
+                    TeamLegacyId.standard(List.of(
+                        new TeamLegacyIdEntry(1, 2L, Race.ZERG)
+                    ))
+                ).toPulseString()
+            ))
+            .andExpect(status().isBadRequest());
+    }
+
 }

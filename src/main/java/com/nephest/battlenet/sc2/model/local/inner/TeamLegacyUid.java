@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.validation.EntryCountMatchesPlayerCount;
 import com.nephest.battlenet.sc2.model.validation.SoloTeamFormatOrNotWildcardRace;
 import com.nephest.battlenet.sc2.model.validation.SoloTeamFormatOrNotWildcardRaceValidator;
 import java.util.Arrays;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+@EntryCountMatchesPlayerCount
 @SoloTeamFormatOrNotWildcardRace
 public class TeamLegacyUid
 {
