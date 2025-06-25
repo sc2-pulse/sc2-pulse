@@ -24,6 +24,11 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistoryHistoryData;
+import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryHistoryData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistorySummaryData;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistory;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO.GroupMode;
@@ -33,6 +38,7 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO.SummaryColumn;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
+import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistorySummaryData;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
 import java.sql.Connection;
@@ -44,6 +50,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +65,7 @@ import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -83,26 +91,32 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 public class TeamGroupHistoryIT
 {
 
-    public static final Comparator<TeamHistory> ID_COMPARATOR = Comparator.comparing(h->{
-        Object obj = h.staticData().get(StaticColumn.ID);
-        return obj == null ? null : ((Number) obj).longValue();
+    public static final Comparator<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> ID_COMPARATOR
+        = Comparator.comparing(h->{
+            Object obj = h.staticData().data().get(StaticColumn.ID);
+            return obj == null ? null : ((Number) obj).longValue();
     });
-    public static final Comparator<TeamHistory> TIMESTAMP_COMPARATOR = Comparator.comparing(h->{
-        List<?> objList = h.history().get(HistoryColumn.TIMESTAMP);
-        if(objList == null || objList.isEmpty()) return null;
+    public static final Comparator<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> TIMESTAMP_COMPARATOR
+        = Comparator.comparing(h->{
+            List<?> objList = h.history().data().get(HistoryColumn.TIMESTAMP);
+            if(objList == null || objList.isEmpty()) return null;
 
-        Object obj = objList.get(0);
-        return obj == null ? null : ((Number) obj).longValue();
+            Object obj = objList.get(0);
+            return obj == null ? null : ((Number) obj).longValue();
     });
-    public static final Comparator<TeamHistorySummary> ID_SUMMARY_COMPARATOR = Comparator.comparing(s->{
-        Object obj = s.staticData().get(StaticColumn.ID);
-        return obj == null ? null : ((Number) obj).longValue();
+    public static final Comparator<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> ID_SUMMARY_COMPARATOR
+        = Comparator.comparing(s->{
+            Object obj = s.staticData().data().get(StaticColumn.ID);
+            return obj == null ? null : ((Number) obj).longValue();
     });
-    public static final Comparator<TeamHistorySummary> MIN_RATING_SUMMARY_COMPARATOR =
-        Comparator.comparing(s->{
-            Object obj = s.summary().get(SummaryColumn.RATING_MIN);
+    public static final Comparator<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> MIN_RATING_SUMMARY_COMPARATOR
+        = Comparator.comparing(s->{
+            Object obj = s.summary().data().get(SummaryColumn.RATING_MIN);
             return obj == null ? null : ((Number) obj).intValue();
     });
+
+    @Autowired
+    private TeamHistoryDAO teamHistoryDAO;
 
     @Autowired
     private MockMvc mvc;
@@ -123,10 +137,10 @@ public class TeamGroupHistoryIT
     private ConversionService minConversionService;
 
     private static List<Season> seasons;
-    private static List<TeamHistory> FULL_HISTORY;
-    private static List<TeamHistory> FULL_HISTORY_LEGACY_UID_GROUP;
-    private static Map<GroupMode, List<TeamHistory>> REFERENCE_GROUPS;
-    private static Map<GroupMode, List<TeamHistorySummary>> REFERENCE_SUMMARY_GROUPS;
+    private static List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> FULL_HISTORY;
+    private static List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> FULL_HISTORY_LEGACY_UID_GROUP;
+    private static Map<GroupMode, List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>>> REFERENCE_GROUPS;
+    private static Map<GroupMode, List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>>> REFERENCE_SUMMARY_GROUPS;
 
     @BeforeAll
     public static void beforeAll
@@ -298,10 +312,9 @@ public class TeamGroupHistoryIT
             }
         }
         FULL_HISTORY = getFullTeamHistory();
-        FULL_HISTORY_LEGACY_UID_GROUP = List.of(new TeamHistory
+        FULL_HISTORY_LEGACY_UID_GROUP = List.of(new TeamHistory<>
         (
-            Stream.of
-            (
+            new RawTeamHistoryStaticData(Stream.of(
                 StaticColumn.QUEUE_TYPE,
                 StaticColumn.TEAM_TYPE,
                 StaticColumn.REGION,
@@ -309,19 +322,19 @@ public class TeamGroupHistoryIT
             )
                 .collect(Collectors.toMap(
                     Function.identity(),
-                    col->FULL_HISTORY.get(0).staticData().get(col),
+                    col->FULL_HISTORY.get(0).staticData().data().get(col),
                     (l, r)->{throw new IllegalStateException("Unexpected merge");},
                     ()->new EnumMap<StaticColumn, Object>(StaticColumn.class)
-                )),
-            Arrays.stream(HistoryColumn.values())
+                ))),
+            new RawTeamHistoryHistoryData(Arrays.stream(HistoryColumn.values())
                 .collect(Collectors.toMap(
                     Function.identity(),
                     col->FULL_HISTORY.stream()
-                        .flatMap(h->h.history().get(col).stream())
+                        .flatMap(h->h.history().data().get(col).stream())
                         .toList(),
                     (l, r)->{throw new IllegalStateException("Unexpected merge");},
                     ()->new EnumMap<>(HistoryColumn.class)
-                ))
+                )))
         ));
         REFERENCE_GROUPS = Map.of
         (
@@ -337,9 +350,12 @@ public class TeamGroupHistoryIT
             ));
     }
 
-    private static TeamHistorySummary toSummary(TeamHistory history)
+    private static TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData> toSummary
+    (
+        TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> history
+    )
     {
-        return new TeamHistorySummary(history.staticData(), calculateSummary(history.history()));
+        return new TeamHistorySummary<>(history.staticData(), calculateSummary(history.history()));
     }
 
     public static <T> Stream<T> mapValues
@@ -358,18 +374,19 @@ public class TeamGroupHistoryIT
         return obj != null ? (Number) obj : null;
     }
 
-    private static Map<SummaryColumn, ?> calculateSummary
+    private static RawTeamHistorySummaryData calculateSummary
     (
-        Map<TeamHistoryDAO.HistoryColumn, List<?>> history
+        RawTeamHistoryHistoryData data
     )
     {
+        Map<HistoryColumn, List<?>> history = data.data();
         List<Integer> ranks =
             mapValues(history.get(HistoryColumn.REGION_RANK), Number::intValue).toList();
         List<Integer> teamCount =
             mapValues(history.get(HistoryColumn.REGION_TEAM_COUNT), Number::intValue).toList();
         history = playerActionsOnly(history);
         List<Integer> rating = mapValues(history.get(HistoryColumn.RATING), Number::intValue).toList();
-        if(rating.isEmpty()) return Map.of();
+        if(rating.isEmpty()) return RawTeamHistorySummaryData.EMPTY;
 
         List<Long> teamId = mapValues(history.get(HistoryColumn.ID), Number::longValue).toList();
         List<Integer> games = mapValues(history.get(HistoryColumn.GAMES), Number::intValue).toList();
@@ -381,7 +398,7 @@ public class TeamGroupHistoryIT
         summary.put(SummaryColumn.RATING_LAST, rating.get(rating.size() - 1));
         summary.put(SummaryColumn.REGION_RANK_LAST, ranks.get(ranks.size() - 1));
         summary.put(SummaryColumn.REGION_TEAM_COUNT_LAST, teamCount.get(teamCount.size() - 1));
-        return Collections.unmodifiableMap(summary);
+        return new RawTeamHistorySummaryData(Collections.unmodifiableMap(summary));
     }
 
     private static Map<TeamHistoryDAO.HistoryColumn, List<?>> playerActionsOnly
@@ -438,14 +455,13 @@ public class TeamGroupHistoryIT
             .sum();
     }
 
-    private static List<TeamHistory> getFullTeamHistory()
+    private static List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> getFullTeamHistory()
     {
         return List.of
         (
-            new TeamHistory
+            new TeamHistory<>
             (
-                Map.of
-                (
+                new RawTeamHistoryStaticData(Map.of(
                     StaticColumn.ID, 1L,
                     StaticColumn.SEASON, 1,
                     StaticColumn.LEGACY_ID, "1.11.1",
@@ -454,9 +470,8 @@ public class TeamGroupHistoryIT
 
                     StaticColumn.QUEUE_TYPE, 201,
                     StaticColumn.TEAM_TYPE, 0
-                ),
-                Map.ofEntries
-                (
+                )),
+                new RawTeamHistoryHistoryData(Map.ofEntries(
                     entry
                     (
                         HistoryColumn.TIMESTAMP,
@@ -484,12 +499,11 @@ public class TeamGroupHistoryIT
 
                     entry(HistoryColumn.ID, List.of(1L, 1L, 1L)),
                     entry(HistoryColumn.SEASON, List.of(1, 1, 1))
-                )
+                ))
             ),
-            new TeamHistory
+            new TeamHistory<>
             (
-                Map.of
-                (
+                new RawTeamHistoryStaticData(Map.of(
                     StaticColumn.ID, 13L,
                     StaticColumn.SEASON, 2,
                     StaticColumn.LEGACY_ID, "1.11.1",
@@ -498,9 +512,8 @@ public class TeamGroupHistoryIT
 
                     StaticColumn.QUEUE_TYPE, 201,
                     StaticColumn.TEAM_TYPE, 0
-                ),
-                Map.ofEntries
-                (
+                )),
+                new RawTeamHistoryHistoryData(Map.ofEntries(
                     entry
                     (
                         HistoryColumn.TIMESTAMP,
@@ -528,12 +541,11 @@ public class TeamGroupHistoryIT
 
                     entry(HistoryColumn.ID, List.of(13L, 13L, 13L)),
                     entry(HistoryColumn.SEASON, List.of(2, 2, 2))
-                )
+                ))
             ),
-            new TeamHistory
+            new TeamHistory<>
             (
-                Map.of
-                (
+                new RawTeamHistoryStaticData(Map.of(
                     StaticColumn.ID, 25L,
                     StaticColumn.SEASON, 3,
                     StaticColumn.LEGACY_ID, "1.11.1",
@@ -542,10 +554,9 @@ public class TeamGroupHistoryIT
 
                     StaticColumn.QUEUE_TYPE, 201,
                     StaticColumn.TEAM_TYPE, 0
-                ),
+                )),
                 //current season team should be excluded. Snapshots only.
-                Map.ofEntries
-                (
+                new RawTeamHistoryHistoryData(Map.ofEntries(
                     entry
                     (
                         HistoryColumn.TIMESTAMP,
@@ -572,7 +583,7 @@ public class TeamGroupHistoryIT
 
                     entry(HistoryColumn.ID, List.of(25L, 25L)),
                     entry(HistoryColumn.SEASON, List.of(3, 3))
-                )
+                ))
             )
         );
     }
@@ -582,9 +593,8 @@ public class TeamGroupHistoryIT
     public void testDefaultFullHistory(GroupMode groupMode)
     throws Exception
     {
-        List<TeamHistory> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history")
+        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
+            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
                 .queryParam
                 (
                     "legacyUid",
@@ -627,9 +637,9 @@ public class TeamGroupHistoryIT
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
-            .withEqualsForFields(AssertionUtil::numberListEquals,"history.ID")
-            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.data.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.data.ID")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.data.ID")
             .isEqualTo(REFERENCE_GROUPS.get(groupMode));
     }
 
@@ -727,12 +737,17 @@ public class TeamGroupHistoryIT
         return sub;
     }
 
-    public static TeamHistory subList(TeamHistory history, int from, int to)
+    public static TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> subList
+    (
+        TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> history,
+        int from,
+        int to
+    )
     {
-        return new TeamHistory
+        return new TeamHistory<>
         (
             history.staticData(),
-            subList(history.history(), from, to)
+            new RawTeamHistoryHistoryData(subList(history.history().data(), from, to))
         );
     }
 
@@ -742,7 +757,7 @@ public class TeamGroupHistoryIT
     (
         OffsetDateTime from,
         OffsetDateTime to,
-        List<TeamHistory> expected
+        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> expected
     )
     throws Exception
     {
@@ -789,14 +804,15 @@ public class TeamGroupHistoryIT
             return;
         }
 
-        List<TeamHistory> found = objectMapper.readValue(resultActions
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
+            = objectMapper.readValue(resultActions
+                .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         found.sort(ID_COMPARATOR);
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
-            .withEqualsForFields(AssertionUtil::numberListEquals,"history.ID")
-            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.data.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.data.ID")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.data.ID")
             .isEqualTo(expected);
     }
 
@@ -812,9 +828,8 @@ public class TeamGroupHistoryIT
     throws Exception
     {
         boolean idSupported = groupMode.isSupported(StaticColumn.ID);
-        List<TeamHistory> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history")
+        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
+            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
                 .queryParam
                 (
                     "legacyUid",
@@ -855,15 +870,18 @@ public class TeamGroupHistoryIT
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
-            .withEqualsForFields(AssertionUtil::numberListEquals,"history.ID")
-            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.data.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.data.ID")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.data.ID")
             .isEqualTo(REFERENCE_GROUPS.get(groupMode).stream()
-                .map(h->new TeamHistory(
+                .map(h->new TeamHistory<>(
                     idSupported
-                        ? Map.of(StaticColumn.ID, h.staticData().get(StaticColumn.ID))
-                        : Map.of(),
-                    Map.of(column, h.history().get(column))))
+                        ? new RawTeamHistoryStaticData(Map.of(
+                            StaticColumn.ID,
+                            h.staticData().data().get(StaticColumn.ID)))
+                        : RawTeamHistoryStaticData.EMPTY,
+                    new RawTeamHistoryHistoryData(Map.of(column, h.history().data().get(column)))
+                ))
                 .toList()
             );
     }
@@ -881,9 +899,8 @@ public class TeamGroupHistoryIT
     public void testSingleStaticColumn(StaticColumn column, GroupMode groupMode)
     throws Exception
     {
-        List<TeamHistory> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history")
+        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
+            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
                 .queryParam
                 (
                     "legacyUid",
@@ -922,12 +939,16 @@ public class TeamGroupHistoryIT
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
-            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.data.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.data.ID")
             .isEqualTo(REFERENCE_GROUPS.get(groupMode).stream()
-                .map(h->new TeamHistory(
-                    Map.of(column, h.staticData().get(column)),
-                    Map.of(HistoryColumn.TIMESTAMP, h.history().get(HistoryColumn.TIMESTAMP))))
+                .map(h-> new TeamHistory<>(
+                    new RawTeamHistoryStaticData(Map.of(column, h.staticData().data().get(column))),
+                    new RawTeamHistoryHistoryData(Map.of(
+                        HistoryColumn.TIMESTAMP,
+                        h.history().data().get(HistoryColumn.TIMESTAMP)
+                    ))
+                ))
                 .toList()
             );
     }
@@ -1027,9 +1048,8 @@ public class TeamGroupHistoryIT
     public void testDefaultFullHistorySummary(GroupMode groupMode)
     throws Exception
     {
-        List<TeamHistorySummary> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history/summary")
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found =
+            objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
                 .queryParam
                 (
                     "legacyUid",
@@ -1072,7 +1092,7 @@ public class TeamGroupHistoryIT
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.data.ID")
             .isEqualTo(REFERENCE_SUMMARY_GROUPS.get(groupMode));
     }
 
@@ -1083,7 +1103,8 @@ public class TeamGroupHistoryIT
             .map(args->Arguments.of(
                 args.get()[0],
                 args.get()[1],
-                ((List<TeamHistory>)args.get()[2]).stream()
+                ((List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>>)args.get()[2])
+                    .stream()
                     .map(TeamGroupHistoryIT::toSummary)
                     .toList()
             ));
@@ -1095,7 +1116,7 @@ public class TeamGroupHistoryIT
     (
         OffsetDateTime from,
         OffsetDateTime to,
-        List<TeamHistorySummary> expected
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> expected
     )
     throws Exception
     {
@@ -1140,12 +1161,13 @@ public class TeamGroupHistoryIT
             resultActions.andExpect(content().string(""));
             return;
         }
-        List<TeamHistorySummary> found = objectMapper.readValue(resultActions
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found
+            = objectMapper.readValue(resultActions
+                .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         if(found.size() > 1) found.sort(ID_SUMMARY_COMPARATOR);
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.data.ID")
             .isEqualTo(expected);
     }
 
@@ -1161,9 +1183,8 @@ public class TeamGroupHistoryIT
     throws Exception
     {
         boolean idSupported = groupMode.isSupported(StaticColumn.ID);
-        List<TeamHistorySummary> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history/summary")
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found =
+            objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
                 .queryParam
                 (
                     "legacyUid",
@@ -1204,13 +1225,15 @@ public class TeamGroupHistoryIT
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.data.ID")
             .isEqualTo(REFERENCE_SUMMARY_GROUPS.get(groupMode).stream()
-                .map(h->new TeamHistorySummary(
+                .map(h->new TeamHistorySummary<>(
                     idSupported
-                        ? Map.of(StaticColumn.ID, h.staticData().get(StaticColumn.ID))
-                        : Map.of(),
-                    Map.of(column, h.summary().get(column))))
+                        ? new RawTeamHistoryStaticData(Map.of(
+                            StaticColumn.ID,
+                            h.staticData().data().get(StaticColumn.ID)))
+                        : RawTeamHistoryStaticData.EMPTY,
+                    new RawTeamHistorySummaryData(Map.of(column, h.summary().data().get(column)))))
                 .toList()
             );
     }
@@ -1220,9 +1243,8 @@ public class TeamGroupHistoryIT
     public void testSingleSummaryStaticColumn(StaticColumn column, GroupMode groupMode)
     throws Exception
     {
-        List<TeamHistorySummary> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history/summary")
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found =
+            objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
                 .queryParam
                 (
                     "legacyUid",
@@ -1261,11 +1283,13 @@ public class TeamGroupHistoryIT
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.data.ID")
             .isEqualTo(REFERENCE_SUMMARY_GROUPS.get(groupMode).stream()
-                .map(h->new TeamHistorySummary(
-                    Map.of(column, h.staticData().get(column)),
-                    Map.of(SummaryColumn.RATING_MIN, h.summary().get(SummaryColumn.RATING_MIN))))
+                .map(h->new TeamHistorySummary<>(
+                    new RawTeamHistoryStaticData(Map.of(column, h.staticData().data().get(column))),
+                    new RawTeamHistorySummaryData(Map.of(
+                        SummaryColumn.RATING_MIN,
+                        h.summary().data().get(SummaryColumn.RATING_MIN)))))
                 .toList()
             );
     }
@@ -1306,6 +1330,133 @@ public class TeamGroupHistoryIT
         mvc.perform(req)
             .andExpect(status().isBadRequest())
             .andExpect(content().string(Matchers.containsString(errorFragment)));
+    }
+
+    public static <T extends Number> T convert(Object val, Function<Number, T> converter)
+    {
+        return val == null ? null : converter.apply((Number) val);
+    }
+
+    public static <T extends Number> List<T> convert(List<?> vals, Function<Number, T> converter)
+    {
+        return vals.stream()
+            .map(v->(Number) v)
+            .map(n->n == null ? null : converter.apply(n))
+            .toList();
+    }
+
+    @Test
+    public void testHistoryConversion()
+    {
+        List<TeamHistory<ConvertedTeamHistoryStaticData, ConvertedTeamHistoryHistoryData>> converted
+            = teamHistoryDAO.find
+            (
+                Set.of(13L),
+                null, null,
+                EnumSet.allOf(StaticColumn.class), EnumSet.allOf(HistoryColumn.class),
+                GroupMode.TEAM
+            ).stream()
+                .map(TeamHistory::cast)
+                .map(typed->TeamHistory.convert(typed, sc2ConversionService))
+                .toList();
+        Map<HistoryColumn, List<?>> data = FULL_HISTORY.stream()
+            .filter(h->h.staticData().data().get(StaticColumn.ID).equals(13L))
+            .findAny()
+            .orElseThrow()
+            .history()
+            .data();
+        Assertions.assertThat(converted)
+            .usingRecursiveComparison()
+            .isEqualTo(List.of(
+                new TeamHistory<>
+                (
+                    new ConvertedTeamHistoryStaticData
+                    (
+                        13L,
+                        Region.EU,
+                        QueueType.LOTV_1V1,
+                        TeamType.ARRANGED,
+                        2,
+                        TeamLegacyId.trusted("1.11.1")
+                    ),
+                    new ConvertedTeamHistoryHistoryData
+                    (
+                        convert(data.get(HistoryColumn.TIMESTAMP), Number::longValue),
+                        convert(data.get(HistoryColumn.RATING), Number::intValue),
+                        convert(data.get(HistoryColumn.GAMES), Number::intValue),
+                        convert(data.get(HistoryColumn.WINS), Number::intValue),
+                        List.of
+                        (
+                            BaseLeague.LeagueType.BRONZE,
+                            BaseLeague.LeagueType.MASTER,
+                            BaseLeague.LeagueType.SILVER
+                        ),
+                        List.of
+                        (
+                            BaseLeagueTier.LeagueTierType.FIRST,
+                            BaseLeagueTier.LeagueTierType.SECOND,
+                            BaseLeagueTier.LeagueTierType.FIRST
+                        ),
+                        convert(data.get(HistoryColumn.DIVISION_ID), Number::intValue),
+                        convert(data.get(HistoryColumn.GLOBAL_RANK), Number::intValue),
+                        convert(data.get(HistoryColumn.REGION_RANK), Number::intValue),
+                        convert(data.get(HistoryColumn.LEAGUE_RANK), Number::intValue),
+                        convert(data.get(HistoryColumn.GLOBAL_TEAM_COUNT), Number::intValue),
+                        convert(data.get(HistoryColumn.REGION_TEAM_COUNT), Number::intValue),
+                        convert(data.get(HistoryColumn.LEAGUE_TEAM_COUNT), Number::intValue),
+                        convert(data.get(HistoryColumn.ID), Number::longValue),
+                        convert(data.get(HistoryColumn.SEASON), Number::intValue)
+                    )
+                )
+            ));
+    }
+    
+    @Test
+    public void testHistorySummaryConversion()
+    {
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> converted
+            = teamHistoryDAO.findSummary
+            (
+                Set.of(13L),
+                null, null,
+                EnumSet.allOf(StaticColumn.class), EnumSet.allOf(SummaryColumn.class),
+                GroupMode.TEAM
+            ).stream()
+                .map(TeamHistorySummary::cast)
+                .map(typed->TeamHistorySummary.convert(typed, sc2ConversionService))
+                .toList();
+        Map<SummaryColumn, ?> data = REFERENCE_SUMMARY_GROUPS.get(GroupMode.TEAM).stream()
+            .filter(h->h.staticData().data().get(StaticColumn.ID).equals(13L))
+            .findAny()
+            .orElseThrow()
+            .summary()
+            .data();
+        Assertions.assertThat(converted)
+            .usingRecursiveComparison()
+            .isEqualTo(List.of(
+                new TeamHistorySummary<>
+                (
+                    new ConvertedTeamHistoryStaticData
+                    (
+                        13L,
+                        Region.EU,
+                        QueueType.LOTV_1V1,
+                        TeamType.ARRANGED,
+                        2,
+                        TeamLegacyId.trusted("1.11.1")
+                    ),
+                    new TypedTeamHistorySummaryData
+                    (
+                        convert(data.get(SummaryColumn.GAMES), Number::intValue),
+                        convert(data.get(SummaryColumn.RATING_MIN), Number::intValue),
+                        convert(data.get(SummaryColumn.RATING_AVG), Number::doubleValue),
+                        convert(data.get(SummaryColumn.RATING_MAX), Number::intValue),
+                        convert(data.get(SummaryColumn.RATING_LAST), Number::intValue),
+                        convert(data.get(SummaryColumn.REGION_RANK_LAST), Number::intValue),
+                        convert(data.get(SummaryColumn.REGION_TEAM_COUNT_LAST), Number::intValue)
+                    )
+                )
+            ));
     }
 
 }

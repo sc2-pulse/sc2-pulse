@@ -4,11 +4,38 @@
 package com.nephest.battlenet.sc2.model.local.inner;
 
 import jakarta.validation.constraints.NotNull;
-import java.util.Map;
+import org.springframework.core.convert.ConversionService;
 
-public record TeamHistorySummary
+public record TeamHistorySummary<S extends TeamHistoryStaticData, U extends TeamHistorySummaryData>
 (
-    @NotNull Map<TeamHistoryDAO.StaticColumn, ?> staticData,
-    @NotNull Map<TeamHistoryDAO.SummaryColumn, ?> summary
+    @NotNull S staticData,
+    @NotNull U summary
 )
-{}
+{
+
+    public static TeamHistorySummary<TypedTeamHistoryStaticData, TypedTeamHistorySummaryData> cast
+    (
+        TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData> raw
+    )
+    {
+        return new TeamHistorySummary<>
+        (
+            TypedTeamHistoryStaticData.from(raw.staticData()),
+            TypedTeamHistorySummaryData.from(raw.summary())
+        );
+    }
+
+    public static TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData> convert
+    (
+        TeamHistorySummary<TypedTeamHistoryStaticData, TypedTeamHistorySummaryData> typed,
+        ConversionService conversionService
+    )
+    {
+        return new TeamHistorySummary<>
+        (
+            ConvertedTeamHistoryStaticData.from(typed.staticData(), conversionService),
+            typed.summary()
+        );
+    }
+
+}

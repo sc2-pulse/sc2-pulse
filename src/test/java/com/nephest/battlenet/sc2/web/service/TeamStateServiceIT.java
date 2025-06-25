@@ -33,6 +33,8 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateArchiveDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryHistoryData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistory;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
@@ -337,9 +339,8 @@ public class TeamStateServiceIT
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
 
-        List<TeamHistory> history = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history")
+        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history
+            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
                 .queryParam("teamId", String.valueOf(teamId))
                 .queryParam
                 (
@@ -362,7 +363,7 @@ public class TeamStateServiceIT
             )
                 .map(odt->minConversionService.convert(odt, Object.class))
                 .toList(),
-            history.get(0).history().get(TeamHistoryDAO.HistoryColumn.TIMESTAMP)
+            history.get(0).history().data().get(TeamHistoryDAO.HistoryColumn.TIMESTAMP)
         ));
 
         //remove all expect archive
@@ -377,9 +378,8 @@ public class TeamStateServiceIT
             (teamCount * 2 + 1), // + last timestamp
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
-        List<TeamHistory> history2 = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history")
+        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history2
+            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
                 .queryParam("teamId", String.valueOf(teamId))
                 .queryParam
                 (
@@ -402,7 +402,7 @@ public class TeamStateServiceIT
             )
                 .map(odt->minConversionService.convert(odt, Object.class))
                 .toList(),
-            history2.get(0).history().get(TeamHistoryDAO.HistoryColumn.TIMESTAMP)
+            history2.get(0).history().data().get(TeamHistoryDAO.HistoryColumn.TIMESTAMP)
         ));
     }
 

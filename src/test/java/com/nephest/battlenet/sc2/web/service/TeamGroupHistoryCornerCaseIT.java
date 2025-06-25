@@ -22,6 +22,9 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryHistoryData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistorySummaryData;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistory;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
@@ -128,9 +131,8 @@ public class TeamGroupHistoryCornerCaseIT
         OffsetDateTime oversteppedOdt = seasons.get(1).getEnd().plusMinutes(1);
         teamStateDAO.takeSnapshot(List.of(2L), oversteppedOdt);
 
-        List<TeamHistory> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history")
+        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
+            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
                 .queryParam("teamId", "2")
                 .queryParam
                 (
@@ -148,19 +150,18 @@ public class TeamGroupHistoryCornerCaseIT
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberListEquals,"history.data.TIMESTAMP")
             .isEqualTo(List.of(
-                new TeamHistory
+                new TeamHistory<>
                 (
-                    Map.of(),
-                    Map.ofEntries
-                    (
+                    RawTeamHistoryStaticData.EMPTY,
+                    new RawTeamHistoryHistoryData(Map.ofEntries(
                         entry
                         (
                             HistoryColumn.TIMESTAMP,
                             List.of(oversteppedOdt.toEpochSecond())
                         )
-                    )
+                    ))
                 )
             ));
     }
@@ -219,9 +220,8 @@ public class TeamGroupHistoryCornerCaseIT
         //as 6 games
         teamStateDAO.takeSnapshot(List.of(2L), seasons.get(1).getStart());
 
-        List<TeamHistorySummary> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history/summary")
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found
+            = objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
                 .queryParam
                 (
                     "legacyUid",
@@ -254,9 +254,10 @@ public class TeamGroupHistoryCornerCaseIT
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
-            .isEqualTo(List.of(new TeamHistorySummary(
-                Map.of(),
-                Map.of(TeamHistoryDAO.SummaryColumn.GAMES, 13) //1 + 0 + 3 + 3 + 6
+            .isEqualTo(List.of(new TeamHistorySummary<>(
+                RawTeamHistoryStaticData.EMPTY,
+                //1 + 0 + 3 + 3 + 6
+                new RawTeamHistorySummaryData(Map.of(TeamHistoryDAO.SummaryColumn.GAMES, 13))
             )));
     }
 
@@ -276,9 +277,8 @@ public class TeamGroupHistoryCornerCaseIT
         teamDAO.merge(Set.of(team1));
         teamStateDAO.takeSnapshot(List.of(1L), SeasonGenerator.DEFAULT_SEASON_START.plusHours(2));
 
-        List<TeamHistorySummary> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history/summary")
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found
+            = objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
                 .queryParam("teamId", "1")
                 .queryParam
                 (
@@ -291,7 +291,7 @@ public class TeamGroupHistoryCornerCaseIT
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
 
         //the technical snapshot is ignored, so 1 rating(0 + 1) is divided by 2 instead of 3
-        assertEquals(0.5d, found.get(0).summary().get(TeamHistoryDAO.SummaryColumn.RATING_AVG));
+        assertEquals(0.5d, found.get(0).summary().data().get(TeamHistoryDAO.SummaryColumn.RATING_AVG));
     }
 
 }

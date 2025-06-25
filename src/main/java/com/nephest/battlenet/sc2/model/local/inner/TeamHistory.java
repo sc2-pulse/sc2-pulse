@@ -1,27 +1,41 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.inner;
 
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Map;
+import org.springframework.core.convert.ConversionService;
 
-public record TeamHistory
+public record TeamHistory<S extends TeamHistoryStaticData, H extends TeamHistoryHistoryData>
 (
-    @NotNull Map<TeamHistoryDAO.StaticColumn, ?> staticData,
-    @NotNull Map<TeamHistoryDAO.HistoryColumn, List<?>> history
+    @NotNull S staticData,
+    @NotNull H history
 )
 {
 
-    public TeamHistory
+    public static TeamHistory<TypedTeamHistoryStaticData, TypedTeamHistoryHistoryData> cast
     (
-        @NotNull Map<TeamHistoryDAO.StaticColumn, ?> staticData,
-        @NotNull Map<TeamHistoryDAO.HistoryColumn, List<?>> history
+        TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> raw
     )
     {
-        this.staticData = staticData;
-        this.history = history;
+        return new TeamHistory<>
+        (
+            TypedTeamHistoryStaticData.from(raw.staticData()),
+            TypedTeamHistoryHistoryData.from(raw.history())
+        );
+    }
+
+    public static TeamHistory<ConvertedTeamHistoryStaticData, ConvertedTeamHistoryHistoryData> convert
+    (
+        TeamHistory<TypedTeamHistoryStaticData, TypedTeamHistoryHistoryData> typed,
+        ConversionService conversionService
+    )
+    {
+        return new TeamHistory<>
+        (
+            ConvertedTeamHistoryStaticData.from(typed.staticData(), conversionService),
+            ConvertedTeamHistoryHistoryData.from(typed.history(), conversionService)
+        );
     }
 
 }
