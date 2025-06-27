@@ -3,8 +3,6 @@
 
 package com.nephest.battlenet.sc2.model.local.inner;
 
-import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -564,6 +562,7 @@ public class TeamHistoryDAO
     private final LeagueDAO leagueDAO;
     private final NamedParameterJdbcTemplate template;
     private final ConversionService sc2StatsConversionService;
+    private final ConversionService minConversionService;
 
     @Autowired
     public TeamHistoryDAO
@@ -581,6 +580,7 @@ public class TeamHistoryDAO
         this.leagueDAO = leagueDAO;
         this.template = template;
         this.sc2StatsConversionService = sc2StatsConversionService;
+        this.minConversionService = minConversionService;
         initMappers(sc2StatsConversionService, minConversionService);
     }
 
@@ -1120,10 +1120,10 @@ public class TeamHistoryDAO
 
         history.forEach(h->{
             List<Integer> divisionIds = (List<Integer>) h.history().get(HistoryColumn.DIVISION_ID);
-            List<BaseLeagueTier.LeagueTierType> historyTiers = expandTiers
+            List<Object> historyTiers = expandTiers
                 ? new ArrayList<>(divisionIds.size())
                 : List.of();
-            List<BaseLeague.LeagueType> historyLeagues = expandLeagues
+            List<Object> historyLeagues = expandLeagues
                 ? new ArrayList<>(divisionIds.size())
                 : List.of();
             for(Integer id : divisionIds)
@@ -1131,11 +1131,13 @@ public class TeamHistoryDAO
                 Division currentDivision = divisions.get(id);
                 LeagueTier currentTier = tiers.get(currentDivision.getTierId());
 
-                if(expandTiers) historyTiers.add(currentTier.getType());
+                if(expandTiers) historyTiers
+                    .add(minConversionService.convert(currentTier.getType(), Object.class));
                 if(expandLeagues)
                 {
                     League currentLeague = leagues.get(currentTier.getLeagueId());
-                    historyLeagues.add(currentLeague.getType());
+                    historyLeagues
+                        .add(minConversionService.convert(currentLeague.getType(), Object.class));
                 }
 
             }
