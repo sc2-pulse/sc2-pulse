@@ -250,7 +250,8 @@ implements BasicEntityOperations<Team>
         + "SELECT * FROM updated "
         + "UNION "
         + "SELECT * FROM inserted";
-    private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
+    private static final String FIND_BY_IDS_QUERY
+        = "SELECT " + STD_SELECT + "FROM team WHERE id IN(:ids)";
 
     private static final String FIND_IDS_BY_IDS =
         """
@@ -601,8 +602,15 @@ implements BasicEntityOperations<Team>
 
     public Optional<Team> findById(long id)
     {
-        MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
-        return Optional.ofNullable(template.query(FIND_BY_ID_QUERY, params, getStdExtractor()));
+        return findByIds(Set.of(id)).stream().findAny();
+    }
+
+    public List<Team> findByIds(Set<Long> ids)
+    {
+        if(ids.isEmpty()) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", ids);
+        return template.query(FIND_BY_IDS_QUERY, params, getStdRowMapper());
     }
 
     public List<Long> findIdsByIds(Set<Long> ids, Integer fromSeason, Integer toSeason)

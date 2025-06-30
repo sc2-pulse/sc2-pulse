@@ -361,4 +361,45 @@ public class StandardDataReadonlyIT
         assertTrue(memberQueues.stream().allMatch(queue->queue == team.getQueueType()));
     }
 
+    @Test
+    public void testFindTeamsByIds()
+    {
+        Assertions.assertThat(teamDAO.findByIds(Set.of(1L, 2L)).stream().sorted(Team.NATURAL_ID_COMPARATOR))
+            .usingRecursiveComparison()
+            .isEqualTo(List.of(
+                new Team
+                (
+                    1L, 1,
+                    Region.US,
+                    new BaseLeague
+                    (
+                        BaseLeague.LeagueType.BRONZE,
+                        QueueType.WOL_1V1,
+                        TeamType.ARRANGED
+                    ),
+                    BaseLeagueTier.LeagueTierType.FIRST,
+                    TeamLegacyId.trusted("1.0."),
+                    1,
+                    0L, 0, 1, 2, 3,
+                    SeasonGenerator.DEFAULT_SEASON_START, null, SeasonGenerator.DEFAULT_SEASON_START
+                ),
+                new Team
+                (
+                    2L, 1,
+                    Region.US,
+                    new BaseLeague
+                    (
+                        BaseLeague.LeagueType.BRONZE,
+                        QueueType.WOL_1V1,
+                        TeamType.ARRANGED
+                    ),
+                    BaseLeagueTier.LeagueTierType.FIRST,
+                    TeamLegacyId.trusted("1.10."),
+                    1,
+                    1L, 1, 2, 3, 4,
+                    SeasonGenerator.DEFAULT_SEASON_START, null, SeasonGenerator.DEFAULT_SEASON_START
+                )
+            ));
+    }
+
 }
