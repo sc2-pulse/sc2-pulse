@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Division;
@@ -23,6 +24,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamIT;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -66,9 +69,16 @@ public class LegacySearchIT
     @Autowired @Qualifier("sc2StatsConversionService")
     private ConversionService conversionService;
 
-    public static final TeamLegacyId LEGACY_ID_1 = TeamLegacyId.trusted("99999");
-    public static final TeamLegacyId LEGACY_ID_2 = TeamLegacyId.trusted("999999");
-    public static final TeamLegacyId LEGACY_ID_3 = TeamLegacyId.trusted("9999999");
+    public static final TeamLegacyId LEGACY_ID_1 = TeamLegacyId.standard(
+        LongStream.range(99999, 100003)
+            .mapToObj(id->new TeamLegacyIdEntry(1, id, Race.TERRAN))
+            .toList());
+    public static final TeamLegacyId LEGACY_ID_2 = TeamLegacyId.standard(List.of(
+        new TeamLegacyIdEntry(1, 999999L, Race.TERRAN)
+    ));
+    public static final TeamLegacyId LEGACY_ID_3 = TeamLegacyId.standard(List.of(
+        new TeamLegacyIdEntry(1, 9999999L, Race.TERRAN)
+    ));
     public static OffsetDateTime ODT;
 
     @BeforeAll

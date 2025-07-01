@@ -3,10 +3,13 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.config.openapi.TeamLegacyUids;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -26,6 +29,7 @@ public class TeamGroupController
 {
 
     public static final int HISTORY_TEAM_COUNT_MAX = 1200;
+    public static final int LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX = 100;
 
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
@@ -43,6 +47,19 @@ public class TeamGroupController
     public ResponseEntity<?> getLadderTeams(@TeamGroup Set<Long> teamIds)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findTeamsByIds(teamIds));
+    }
+
+    @GetMapping("/team/last/full")
+    public ResponseEntity<?> getLastLadderTeams
+    (
+        @RequestParam("legacyUid")
+        @TeamLegacyUids
+        @Valid
+        @Size(max = LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX)
+        Set<TeamLegacyUid> legacyUids
+    )
+    {
+        return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findLegacyTeams(legacyUids, false));
     }
 
     private static Optional<ResponseEntity<Object>> getHistoryParametersError

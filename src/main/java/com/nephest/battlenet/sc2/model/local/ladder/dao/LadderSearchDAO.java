@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import jakarta.validation.Valid;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -47,8 +48,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
+import org.springframework.validation.annotation.Validated;
 
 @Repository
+@Validated
 public class LadderSearchDAO
 {
 
@@ -542,11 +545,12 @@ public class LadderSearchDAO
             .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAMS_EXTRACTOR);
     }
 
-    public List<LadderTeam> findLegacyTeams(Set<TeamLegacyUid> ids, boolean all)
+    public List<LadderTeam> findLegacyTeams(@Valid Set<TeamLegacyUid> ids, boolean all)
     {
         if(ids.isEmpty()) return new ArrayList<>();
 
         List<Object[]> legacyUids = ids.stream()
+            .flatMap(TeamLegacyUid::expandRaceWildcards)
             .map(id->new Object[]{
                 conversionService.convert(id.getQueueType(), Integer.class),
                 conversionService.convert(id.getTeamType(), Integer.class),

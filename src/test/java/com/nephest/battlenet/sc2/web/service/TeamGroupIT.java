@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
@@ -33,6 +34,7 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.web.controller.TeamGroupController;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -43,6 +45,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
@@ -51,12 +54,16 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -356,11 +363,29 @@ public class TeamGroupIT
             .andExpect(status().isBadRequest());
     }
 
-    @Test
-    public void whenLegacyUidSizeIsExceeded_thenBadRequest()
+    public static Stream<Arguments> whenLegacyUidSizeIsExceeded_thenBadRequest()
+    {
+        return Stream.of
+        (
+            Arguments.of
+            (
+                "/api/team/group/flat",
+                TeamGroupArgumentResolver.LEGACY_UIDS_MAX + 1
+            ),
+            Arguments.of
+            (
+                "/api/team/group/team/last/full",
+                TeamGroupController.LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX + 1
+            )
+        );
+    }
+
+    @MethodSource
+    @ParameterizedTest
+    public void whenLegacyUidSizeIsExceeded_thenBadRequest(String url, int count)
     throws Exception
     {
-        String[] longIdList = LongStream.range(0, TeamGroupArgumentResolver.LEGACY_UIDS_MAX + 1)
+        String[] longIdList = LongStream.range(0, count)
             .boxed()
             .map(l->new TeamLegacyUid(
                 QueueType.LOTV_1V1,
@@ -370,7 +395,7 @@ public class TeamGroupIT
             )
             .map(uid->conversionService.convert(uid, String.class))
             .toArray(String[]::new);
-        mvc.perform(get("/api/team/group/flat").queryParam("legacyUid", longIdList))
+        mvc.perform(get(url).queryParam("legacyUid", longIdList))
             .andExpect(status().isBadRequest());
     }
 
@@ -416,11 +441,21 @@ public class TeamGroupIT
             .andExpect(status().isBadRequest());
     }
 
-    @Test
-    public void whenWildCardLegacyUidWithMultiplePlayers_thenBadRequest()
+    public static Stream<Arguments> legacyUidValidationUrls()
+    {
+        return Stream.of
+        (
+            Arguments.of("/api/team/group/flat"),
+            Arguments.of("/api/team/group/team/last/full")
+        );
+    }
+
+    @MethodSource("legacyUidValidationUrls")
+    @ParameterizedTest
+    public void whenWildCardLegacyUidWithMultiplePlayers_thenBadRequest(String url)
     throws Exception
     {
-        mvc.perform(get("/api/team/group/flat")
+        mvc.perform(get(url)
             .queryParam
             (
                 "legacyUid",
@@ -438,11 +473,12 @@ public class TeamGroupIT
             .andExpect(status().isBadRequest());
     }
 
-    @Test
-    public void whenLegacyUidWithInvalidIdEntryCount_thenBadRequest()
+    @MethodSource("legacyUidValidationUrls")
+    @ParameterizedTest
+    public void whenLegacyUidWithInvalidIdEntryCount_thenBadRequest(String url)
     throws Exception
     {
-        mvc.perform(get("/api/team/group/flat")
+        mvc.perform(get(url)
             .queryParam
             (
                 "legacyUid",
@@ -457,6 +493,79 @@ public class TeamGroupIT
                 ).toPulseString()
             ))
             .andExpect(status().isBadRequest());
+    }
+
+
+    public static Stream<Arguments> testGetLastLadderTeams()
+    {
+        return Stream.of
+        (
+            Arguments.of(Set.of(
+                TeamLegacyId.standard(List.of(
+                    new TeamLegacyIdEntry(1, 0L, Race.TERRAN)
+                )),
+                TeamLegacyId.standard(List.of(
+                    new TeamLegacyIdEntry(1, 3L, Race.TERRAN)
+                )),
+                TeamLegacyId.standard(List.of(
+                    new TeamLegacyIdEntry(1, 3L, Race.PROTOSS)
+                ))
+            )),
+            Arguments.of(Set.of(
+                TeamLegacyId.standard(List.of(
+                    new TeamLegacyIdEntry(1, 0L, true)
+                )),
+                TeamLegacyId.standard(List.of(
+                    new TeamLegacyIdEntry(1, 3L, true)
+                ))
+            ))
+        );
+    }
+
+    @MethodSource
+    @ParameterizedTest
+    public void testGetLastLadderTeams(Set<TeamLegacyId> ids)
+    throws Exception
+    {
+        List<LadderTeam> found = objectMapper.readValue(mvc.perform(
+            get("/api/team/group/team/last/full")
+                .queryParam
+                (
+                    "legacyUid",
+                    ids.stream()
+                        .map(id->conversionService.convert(
+                            new TeamLegacyUid
+                            (
+                                QueueType.LOTV_1V1,
+                                TeamType.ARRANGED,
+                                Region.EU,
+                                id
+                            ),
+                            String.class
+                        )).toArray(String[]::new)
+                )
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        found.sort(Team.NATURAL_ID_COMPARATOR);
+        Assertions.assertThat(found)
+            .usingRecursiveComparison()
+            .isEqualTo
+            (
+                List.of
+                (
+                    LADDER_TEAMS.get(1),
+                    LADDER_TEAMS.get(TeamGroupArgumentResolver.TEAMS_MAX - 1),
+                    LADDER_TEAMS.get(TeamGroupArgumentResolver.TEAMS_MAX)
+                )
+            );
+    }
+
+    @Test
+    public void whenCallingGetLastLadderTeamEndpointWithoutGroupParameters_thenReturn400ErrorCode()
+    throws Exception
+    {
+        mvc.perform(get("/api/team/group/team/last/full")).andExpect(status().isBadRequest());
     }
 
 }
