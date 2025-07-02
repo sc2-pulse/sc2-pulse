@@ -1,28 +1,44 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
 
 import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
+import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistorySummaryData;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.web.service.SearchService;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.object.entity.Message;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -45,24 +61,48 @@ public class Summary1v1Command
     (
         LadderCharacterDAO.SearchType.CLAN_TAG, 10
     );
-    public static final Comparator<PlayerCharacterSummary> DEFAULT_COMPARATOR =
-        Comparator.comparing(PlayerCharacterSummary::getRatingLast).reversed();
+    public static final Comparator<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> DEFAULT_COMPARATOR =
+        Comparator.comparing(s->s.summary().ratingLast(), Comparator.reverseOrder());
 
-    private final PlayerCharacterSummaryDAO summaryDAO;
+    public static final Set<TeamHistoryDAO.StaticColumn> STATIC_HISTORY_COLUMNS
+        = Collections.unmodifiableSet(EnumSet.of(
+            TeamHistoryDAO.StaticColumn.QUEUE_TYPE,
+            TeamHistoryDAO.StaticColumn.TEAM_TYPE,
+            TeamHistoryDAO.StaticColumn.REGION,
+            TeamHistoryDAO.StaticColumn.LEGACY_ID
+    ));
+    public static final Set<TeamHistoryDAO.SummaryColumn> SUMMARY_HISTORY_COLUMNS
+        = Collections.unmodifiableSet(EnumSet.of(
+            TeamHistoryDAO.SummaryColumn.GAMES,
+            TeamHistoryDAO.SummaryColumn.RATING_LAST,
+            TeamHistoryDAO.SummaryColumn.RATING_AVG,
+            TeamHistoryDAO.SummaryColumn.RATING_MAX
+    ));
+
+    private final TeamDAO teamDAO;
+    private final LadderSearchDAO ladderSearchDAO;
+    private final TeamHistoryDAO teamHistoryDAO;
     private final SearchService searchService;
     private final DiscordBootstrap discordBootstrap;
+    private final ConversionService sc2ConversionService;
 
     @Autowired
     public Summary1v1Command
     (
-        PlayerCharacterSummaryDAO summaryDAO,
+        TeamDAO teamDAO,
+        LadderSearchDAO ladderSearchDAO,
+        TeamHistoryDAO teamHistoryDAO,
         SearchService searchService,
-        DiscordBootstrap discordBootstrap
+        DiscordBootstrap discordBootstrap,
+        @Qualifier("sc2StatsConversionService") ConversionService sc2ConversionService
     )
     {
-        this.summaryDAO = summaryDAO;
+        this.teamDAO = teamDAO;
+        this.ladderSearchDAO = ladderSearchDAO;
+        this.teamHistoryDAO = teamHistoryDAO;
         this.searchService = searchService;
         this.discordBootstrap = discordBootstrap;
+        this.sc2ConversionService = sc2ConversionService;
     }
 
     public Mono<Message> handle
@@ -111,36 +151,86 @@ public class Summary1v1Command
         LadderCharacterDAO.SearchType searchType = LadderCharacterDAO.SearchType.from(name);
         int maxLines = MAX_LINES.getOrDefault(searchType, DiscordBootstrap.DEFAULT_LINES);
 
-        Map<Long, LadderTeamMember> characters = searchService.findDistinctCharacters(name).stream()
+        List<LadderTeamMember> characters =
+            searchService.findDistinctCharacters(name).stream()
             .filter(generateCharacterFilter(searchType, region))
             .limit(race == null ? maxLines : CHARACTER_LIMIT)
-            .collect(Collectors.toMap(c->c.getMembers().getCharacter().getId(), LadderDistinctCharacter::getMembers));
+            .map(LadderDistinctCharacter::getMembers)
+            .toList();
         if(characters.isEmpty()) return null;
 
-        List<PlayerCharacterSummary> summaries = summaryDAO
-            .find
-                (
-                    characters.keySet().toArray(Long[]::new),
-                    SC2Pulse.offsetDateTime().minusDays(depth),
-                    race == null ? Race.EMPTY_RACE_ARRAY : new Race[]{race}
-                ).stream()
-            .sorted(DEFAULT_COMPARATOR)
-            .limit(maxLines)
-            .collect(Collectors.toList());
+        Set<TeamLegacyUid> uids = characters.stream()
+            .map(LadderTeamMember::getCharacter)
+            .map(c->new TeamLegacyUid(
+                QueueType.LOTV_1V1,
+                TeamType.ARRANGED,
+                c.getRegion(),
+                TeamLegacyId.standard(List.of(
+                    race == null
+                        ? new TeamLegacyIdEntry
+                            (
+                                c.getRealm(),
+                                c.getBattlenetId(),
+                                true
+                            )
+                        : new TeamLegacyIdEntry
+                            (
+                                c.getRealm(),
+                                c.getBattlenetId(),
+                                race
+                            )
+                ))
+            ))
+            .collect(Collectors.toSet());
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries
+            = teamHistoryDAO.findSummary
+            (
+                Set.copyOf(teamDAO.findIdsByLegacyUids(uids, null, null)),
+                SC2Pulse.offsetDateTime().minusDays(depth), null,
+                STATIC_HISTORY_COLUMNS, SUMMARY_HISTORY_COLUMNS,
+                TeamHistoryDAO.GroupMode.LEGACY_UID
+            ).stream()
+                .map(TeamHistorySummary::cast)
+                .map(c->TeamHistorySummary.convert(c, sc2ConversionService))
+                .sorted(DEFAULT_COMPARATOR)
+                .limit(maxLines)
+                .toList();
         if(summaries.isEmpty()) return null;
+
+        Map<TeamLegacyUid, LadderTeam> teams = ladderSearchDAO.findLegacyTeams
+        (
+            summaries.stream()
+                .map(s->new TeamLegacyUid(
+                    s.staticData().queueType(),
+                    s.staticData().teamType(),
+                    s.staticData().region(),
+                    s.staticData().legacyId()
+                ))
+                .collect(Collectors.toSet()),
+            false
+        )
+            .stream()
+            .collect(Collectors.toMap(LadderTeam::getLegacyUid, Function.identity()));
+        if(teams.isEmpty()) return null;
 
         StringBuilder description = new StringBuilder();
         appendHeader(description, name, depth, maxLines, region, race, additionalDescription)
             .append("\n\n");
         int gamesDigits = summaries.stream()
-            .mapToInt(PlayerCharacterSummary::getGames)
+            .mapToInt(s->s.summary().games())
             .map(MiscUtil::stringLength)
             .max()
             .orElseThrow();
-        for(PlayerCharacterSummary summary : summaries)
+        for(TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData> summary : summaries)
         {
-            LadderTeamMember member = characters.get(summary.getPlayerCharacterId());
-            appendSummary(description, summary, member, discordBootstrap, evt, gamesDigits)
+            TeamLegacyUid uid = new TeamLegacyUid
+            (
+                summary.staticData().queueType(),
+                summary.staticData().teamType(),
+                summary.staticData().region(),
+                summary.staticData().legacyId()
+            );
+            appendSummary(description, teams.get(uid), summary, discordBootstrap, evt, gamesDigits)
                 .append("\n\n");
             if(description.length() + CONTENT_LENGTH_OFFSET > DiscordBootstrap.MESSAGE_LENGTH_MAX)
             {
@@ -157,25 +247,29 @@ public class Summary1v1Command
     public static StringBuilder appendSummary
     (
         StringBuilder sb,
-        PlayerCharacterSummary summary,
-        LadderTeamMember member,
+        LadderTeam team,
+        TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData> summary,
         DiscordBootstrap discordBootstrap,
         ApplicationCommandInteractionEvent evt,
         long gamesDigits
     )
     {
-
+        LadderTeamMember member = team.getMembers().get(0);
         return sb.append(discordBootstrap.generateCharacterURL(member))
             .append("\n")
             .append(DiscordBootstrap.REGION_EMOJIS.get(member.getCharacter().getRegion()))
-            .append(" ").append(discordBootstrap.getLeagueEmojiOrName(evt, summary.getLeagueTypeLast()))
-            .append(" ").append(discordBootstrap.getRaceEmojiOrName(evt, summary.getRace()))
+            .append(" ").append(discordBootstrap.getLeagueEmojiOrName(evt, team.getLeagueType()))
+            .append(" ").append(discordBootstrap.getRaceEmojiOrName
+            (
+                evt,
+                summary.staticData().legacyId().getEntries().get(0).race())
+            )
             .append(" | **`")
-            .append(String.format("%" + gamesDigits + "d", summary.getGames()))
+            .append(String.format("%" + gamesDigits + "d", summary.summary().games()))
             .append("`** | **")
-            .append(summary.getRatingLast()).append("**")
-            .append("/*").append(summary.getRatingAvg())
-            .append("*/").append(summary.getRatingMax());
+            .append(team.getRating()).append("**")
+            .append("/*").append(Math.round(summary.summary().ratingAvg()))
+            .append("*/").append(summary.summary().ratingMax());
     }
 
     public static StringBuilder appendHeader

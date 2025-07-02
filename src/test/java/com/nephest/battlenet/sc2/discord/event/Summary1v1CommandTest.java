@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -6,28 +6,47 @@ package com.nephest.battlenet.sc2.discord.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.nephest.battlenet.sc2.config.CommonBeanConfig;
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.discord.DiscordTestUtil;
 import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistorySummaryData;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.SearchService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.spec.InteractionFollowupCreateMono;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,13 +56,20 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.convert.ConversionService;
 
 @ExtendWith(MockitoExtension.class)
 public class Summary1v1CommandTest
 {
 
     @Mock
-    private PlayerCharacterSummaryDAO summaryDAO;
+    private TeamDAO teamDAO;
+
+    @Mock
+    private LadderSearchDAO ladderSearchDAO;
+
+    @Mock
+    private TeamHistoryDAO teamHistoryDAO;
 
     @Mock
     private SearchService searchService;
@@ -65,12 +91,23 @@ public class Summary1v1CommandTest
 
     private Summary1v1Command cmd;
 
+    private final ConversionService sc2ConversionService
+        = new CommonBeanConfig().sc2StatsConversionService();
+
     @BeforeEach
     public void beforeEach()
     {
         when(evt.createFollowup()).thenReturn(followup);
         when(followup.withContent(anyString())).thenReturn(mock(InteractionFollowupCreateMono.class));
-        cmd = new Summary1v1Command(summaryDAO, searchService, discordBootstrap);
+        cmd = new Summary1v1Command
+        (
+            teamDAO,
+            ladderSearchDAO,
+            teamHistoryDAO,
+            searchService,
+            discordBootstrap,
+            sc2ConversionService
+        );
     }
 
     @ValueSource(strings = {"term", "`term`", "te`rm"})
@@ -89,7 +126,15 @@ public class Summary1v1CommandTest
             "emptyTerm", term
         );
 
-        verify(summaryDAO).find(any(), depthCaptor.capture(), eq(Race.TERRAN));
+        verify(teamHistoryDAO).findSummary
+        (
+            anySet(),
+            depthCaptor.capture(),
+            any(),
+            anySet(),
+            anySet(),
+            any()
+        );
         //verify correct depth, 10 seconds to run the test just in case
         assertTrue
         (
@@ -119,6 +164,67 @@ public class Summary1v1CommandTest
         assertEquals(sb.toString(), content);
     }
 
+    private List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> generateSummaries
+    (
+        int count
+    )
+    {
+        return IntStream.range(0, count)
+            .mapToObj(i->new TeamHistorySummary<>(
+                new RawTeamHistoryStaticData
+                (
+                    Map.of
+                    (
+                        TeamHistoryDAO.StaticColumn.QUEUE_TYPE, QueueType.LOTV_1V1.getId(),
+                        TeamHistoryDAO.StaticColumn.TEAM_TYPE, TeamType.ARRANGED.getId(),
+                        TeamHistoryDAO.StaticColumn.REGION, Region.EU.getId(),
+                        TeamHistoryDAO.StaticColumn.LEGACY_ID,
+                        TeamLegacyId.standard(List.of(
+                            new TeamLegacyIdEntry(0, (long) i, Race.TERRAN)
+                        )).getId()
+                    )
+                ),
+                new RawTeamHistorySummaryData
+                (
+                    Map.of
+                    (
+                        TeamHistoryDAO.SummaryColumn.GAMES, i == 3 ? 9999 : i,
+                        TeamHistoryDAO.SummaryColumn.RATING_LAST, i,
+                        TeamHistoryDAO.SummaryColumn.RATING_AVG, i * 2.0d,
+                        TeamHistoryDAO.SummaryColumn.RATING_MAX, i * 3
+                    )
+                )
+            ))
+            .toList();
+    }
+
+    private List<LadderTeam> generateTeams(List<LadderDistinctCharacter> characters)
+    {
+        return LongStream.range(0, characters.size())
+            .mapToObj(i->new LadderTeam(
+                i,
+                1,
+                Region.EU,
+                new BaseLeague
+                (
+                    BaseLeague.LeagueType.DIAMOND,
+                    QueueType.LOTV_1V1,
+                    TeamType.ARRANGED
+                ),
+                BaseLeagueTier.LeagueTierType.FIRST,
+                TeamLegacyId.standard(List.of(
+                    new TeamLegacyIdEntry(0, i, Race.TERRAN)
+                )),
+                1,
+                i,
+                1, 2, 3, 4,
+                null, null, null,
+                List.of(characters.get((int) i).getMembers()),
+                null
+            ))
+                .toList();
+    }
+
     private void stub(String term)
     {
         List<LadderDistinctCharacter> characters = new ArrayList<>();
@@ -133,23 +239,39 @@ public class Summary1v1CommandTest
         when(searchService.findDistinctCharacters("emptyTerm")).thenReturn(List.of());
         when(searchService.findDistinctCharacters(term)).thenReturn(characters);
 
-        List<PlayerCharacterSummary> summaries = new ArrayList<>();
-        for(int i = 0; i < 4; i++)
-            summaries.add
-            (
-                new PlayerCharacterSummary
-                (
-                    (long) i,
-                    Race.TERRAN,
-                    i == 3 ? 9999 : i,
-                    i * 2,
-                    i * 3,
-                    i,
-                    BaseLeague.LeagueType.DIAMOND,
-                    i
-                )
-            );
-        when(summaryDAO.find(eq(new Long[]{0L, 1L, 2L, 3L, 4L}), any(), eq(Race.TERRAN))).thenReturn(summaries);
+        List<TeamLegacyUid> uids = LongStream.range(0, 5)
+            .boxed()
+            .map(i-> new TeamLegacyUid(
+                QueueType.LOTV_1V1,
+                TeamType.ARRANGED,
+                Region.EU,
+                TeamLegacyId.standard(List.of(
+                    new TeamLegacyIdEntry(0, i, Race.TERRAN)
+                ))
+            ))
+            .toList();
+        List<Long> teamIds = List.of(1L);
+        when(teamDAO.findIdsByLegacyUids(Set.copyOf(uids), null, null))
+            .thenReturn(teamIds);
+        when(teamHistoryDAO.findSummary(
+            eq(Set.copyOf(teamIds)),
+            any(), isNull(),
+            eq(EnumSet.of(
+                TeamHistoryDAO.StaticColumn.QUEUE_TYPE,
+                TeamHistoryDAO.StaticColumn.TEAM_TYPE,
+                TeamHistoryDAO.StaticColumn.REGION,
+                TeamHistoryDAO.StaticColumn.LEGACY_ID
+            )),
+            eq(EnumSet.of(
+                TeamHistoryDAO.SummaryColumn.GAMES,
+                TeamHistoryDAO.SummaryColumn.RATING_LAST,
+                TeamHistoryDAO.SummaryColumn.RATING_AVG,
+                TeamHistoryDAO.SummaryColumn.RATING_MAX
+            )),
+            eq(TeamHistoryDAO.GroupMode.LEGACY_UID)
+        )).thenReturn(generateSummaries(4));
+        when(ladderSearchDAO.findLegacyTeams(Set.copyOf(uids.subList(0, 4)), false))
+            .thenReturn(generateTeams(characters.subList(0, 4)));
         when(discordBootstrap.getLeagueEmojiOrName(evt, BaseLeague.LeagueType.DIAMOND)).thenReturn("diamond");
         when(discordBootstrap.getRaceEmojiOrName(evt, Race.TERRAN)).thenReturn("terran");
         when(discordBootstrap.generateCharacterURL(any()))
