@@ -50,13 +50,10 @@ public class Summary1v1Command
 
     public static final String CMD_NAME = "1v1-summary";
     public static final int CHARACTER_LIMIT = 80;
-    public static final long DEFAULT_DEPTH = 120;
+    public static final long MAX_DEPTH = 36500L;
+    public static final long DEFAULT_DEPTH = MAX_DEPTH;
     public static final int CONTENT_LENGTH_OFFSET = 250;
     public static final String MESSAGE_WAS_TRIMMED = "*Message has been trimmed*";
-    public static final Map<LadderCharacterDAO.SearchType, Long> MAX_DEPTH = Map.of
-    (
-        LadderCharacterDAO.SearchType.BATTLE_TAG, 3600L
-    );
     public static final Map<LadderCharacterDAO.SearchType, Integer> MAX_LINES = Map.of
     (
         LadderCharacterDAO.SearchType.CLAN_TAG, 10

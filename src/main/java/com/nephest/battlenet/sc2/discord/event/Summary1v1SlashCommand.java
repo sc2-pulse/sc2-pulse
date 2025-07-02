@@ -7,7 +7,6 @@ import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.web.service.SearchService;
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -77,9 +76,10 @@ implements SlashCommand, AutoComplete
                 .build())
             .addOption(ApplicationCommandOptionData.builder()
                 .name("depth")
-                .description("Depth in days. Default and max is 120 days. Unlimited for BattleTags.")
+                .description("Depth in days")
                 .type(ApplicationCommandOption.Type.INTEGER.getValue())
                 .minValue(1.0)
+                .maxValue((double) Summary1v1Command.MAX_DEPTH)
                 .build());
     }
 
@@ -98,18 +98,16 @@ implements SlashCommand, AutoComplete
             .getArgument(evt, "region", v->conversionService.convert(v.asString(), Region.class), null);
         Race race = DiscordBootstrap
             .getArgument(evt, "race", v->conversionService.convert(v.asString(), Race.class), null);
-        LadderCharacterDAO.SearchType searchType = LadderCharacterDAO.SearchType.from(name);
-        long depth = getDepth(evt, searchType);
+        long depth = getDepth(evt);
 
         return summary1v1Command.handle(evt, region, race, depth, name);
     }
 
-    private long getDepth(ChatInputInteractionEvent evt, LadderCharacterDAO.SearchType searchType)
+    private long getDepth(ChatInputInteractionEvent evt)
     {
-        long maxDepth = Summary1v1Command.MAX_DEPTH.getOrDefault(searchType, Summary1v1Command.DEFAULT_DEPTH);
         long depth = DiscordBootstrap
-            .getArgument(evt, "depth", ApplicationCommandInteractionOptionValue::asLong, maxDepth);
-        if(depth < 1 || depth > maxDepth) depth = maxDepth;
+            .getArgument(evt, "depth", ApplicationCommandInteractionOptionValue::asLong, Summary1v1Command.MAX_DEPTH);
+        if(depth < 1 || depth > Summary1v1Command.MAX_DEPTH) depth = Summary1v1Command.MAX_DEPTH;
         return depth;
     }
 
