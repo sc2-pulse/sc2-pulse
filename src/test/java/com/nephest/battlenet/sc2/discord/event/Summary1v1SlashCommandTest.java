@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -14,10 +14,13 @@ import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandOption;
 import discord4j.discordjson.json.ApplicationCommandInteractionOptionData;
+import discord4j.discordjson.possible.Possible;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.ConversionService;
@@ -49,15 +52,17 @@ public class Summary1v1SlashCommandTest
         cmd = new Summary1v1SlashCommand(cmdd, conversionService, searchService);
     }
 
-    @Test
-    public void test()
+    @ValueSource(longs = 100L)
+    @NullSource
+    @ParameterizedTest
+    public void test(Long depth)
     {
-        stub();
+        stub(depth);
         cmd.handle(evt);
-        verify(cmdd).handle(evt, Region.EU, Race.TERRAN, 100, "term");
+        verify(cmdd).handle(evt, Region.EU, Race.TERRAN, depth, "term");
     }
 
-    private void stub()
+    private void stub(Long depth)
     {
         when(evt.getOption("name")).thenReturn(Optional.of(new ApplicationCommandInteractionOption(client,
             ApplicationCommandInteractionOptionData.builder()
@@ -84,7 +89,7 @@ public class Summary1v1SlashCommandTest
             ApplicationCommandInteractionOptionData.builder()
                 .name("depth")
                 .type(ApplicationCommandOption.Type.INTEGER.getValue())
-                .value("100")
+                .value(Possible.ofNullable(depth == null ? null : String.valueOf(depth)))
                 .build(),null, null)));
 
         when(conversionService.convert("EU", Region.class)).thenReturn(Region.EU);

@@ -79,7 +79,7 @@ implements SlashCommand, AutoComplete
                 .description("Depth in days")
                 .type(ApplicationCommandOption.Type.INTEGER.getValue())
                 .minValue(1.0)
-                .maxValue((double) Summary1v1Command.MAX_DEPTH)
+                .maxValue((double) Summary1v1Command.MAX_LIMITED_DEPTH)
                 .build());
     }
 
@@ -98,16 +98,18 @@ implements SlashCommand, AutoComplete
             .getArgument(evt, "region", v->conversionService.convert(v.asString(), Region.class), null);
         Race race = DiscordBootstrap
             .getArgument(evt, "race", v->conversionService.convert(v.asString(), Race.class), null);
-        long depth = getDepth(evt);
+        Long depth = getDepth(evt);
 
         return summary1v1Command.handle(evt, region, race, depth, name);
     }
 
-    private long getDepth(ChatInputInteractionEvent evt)
+    private Long getDepth(ChatInputInteractionEvent evt)
     {
-        long depth = DiscordBootstrap
+        Long depth = DiscordBootstrap
             .getArgument(evt, "depth", ApplicationCommandInteractionOptionValue::asLong, Summary1v1Command.MAX_DEPTH);
-        if(depth < 1 || depth > Summary1v1Command.MAX_DEPTH) depth = Summary1v1Command.MAX_DEPTH;
+        if(depth == null) return depth;
+
+        if(depth < 1 || depth > Summary1v1Command.MAX_LIMITED_DEPTH) depth = Summary1v1Command.MAX_DEPTH;
         return depth;
     }
 

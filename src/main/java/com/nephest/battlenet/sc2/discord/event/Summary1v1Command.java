@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.web.service.SearchService;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.object.entity.Message;
+import java.time.temporal.JulianFields;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -50,8 +51,10 @@ public class Summary1v1Command
 
     public static final String CMD_NAME = "1v1-summary";
     public static final int CHARACTER_LIMIT = 80;
-    public static final long MAX_DEPTH = 36500L;
-    public static final long DEFAULT_DEPTH = MAX_DEPTH;
+    public static final Long MAX_DEPTH = null;
+    public static final Long DEFAULT_DEPTH = MAX_DEPTH;
+    public static final long MAX_LIMITED_DEPTH =
+        JulianFields.JULIAN_DAY.range().getLargestMinimum() * -1;
     public static final int CONTENT_LENGTH_OFFSET = 250;
     public static final String MESSAGE_WAS_TRIMMED = "*Message has been trimmed*";
     public static final Map<LadderCharacterDAO.SearchType, Integer> MAX_LINES = Map.of
@@ -108,7 +111,7 @@ public class Summary1v1Command
         @Nullable String additionalDescription,
         Region region,
         Race race,
-        long depth,
+        @Nullable Long depth,
         String... names
     )
     {
@@ -128,7 +131,7 @@ public class Summary1v1Command
         ApplicationCommandInteractionEvent evt,
         Region region,
         Race race,
-        long depth,
+        @Nullable Long depth,
         String... names
     )
     {
@@ -141,7 +144,7 @@ public class Summary1v1Command
         String name,
         Region region,
         Race race,
-        long depth,
+        @Nullable Long depth,
         @Nullable String additionalDescription
     )
     {
@@ -183,7 +186,10 @@ public class Summary1v1Command
             = teamHistoryDAO.findSummary
             (
                 Set.copyOf(teamDAO.findIdsByLegacyUids(uids, null, null)),
-                SC2Pulse.offsetDateTime().minusDays(depth), null,
+                depth != null
+                    ? SC2Pulse.offsetDateTime().minusDays(depth)
+                    : null,
+                null,
                 STATIC_HISTORY_COLUMNS, SUMMARY_HISTORY_COLUMNS,
                 TeamHistoryDAO.GroupMode.LEGACY_UID
             ).stream()
@@ -273,7 +279,7 @@ public class Summary1v1Command
     (
         StringBuilder sb,
         String name,
-        long depth,
+        @Nullable Long depth,
         int lines,
         Region region,
         Race race,
@@ -287,11 +293,19 @@ public class Summary1v1Command
     }
 
     private static StringBuilder appendDescription
-    (StringBuilder sb, String name, long depth, int lines, Region region, Race race)
+    (StringBuilder sb, String name, @Nullable Long depth, int lines, Region region, Race race)
     {
         sb.append(DiscordBootstrap.sanitizeAndEscape(name)).append(", ");
         sb.append("*");
-        sb.append(depth).append(" days, Top ").append(lines);
+        if(depth != null)
+        {
+            sb.append(depth).append(" days");
+        }
+        else
+        {
+            sb.append("All time");
+        }
+        sb.append(", Top ").append(lines);
         if(region != null) sb.append(", ").append(region.getName());
         if(race != null) sb.append(", ").append(race.getName());
         sb.append("*");
@@ -316,7 +330,7 @@ public class Summary1v1Command
         @Nullable String additionalDescription,
         Region region,
         Race race,
-        long depth,
+        @Nullable Long depth,
         String... names
     )
     {

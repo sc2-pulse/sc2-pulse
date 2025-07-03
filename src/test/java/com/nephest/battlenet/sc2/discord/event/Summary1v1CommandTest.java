@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.discord.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
@@ -56,7 +57,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -115,9 +116,14 @@ public class Summary1v1CommandTest
         );
     }
 
-    @ValueSource(strings = {"term", "`term`", "te`rm"})
+    @CsvSource({
+        "term, 100",
+        "term,",
+        "`term`, 100",
+        "te`rm, 100"
+    })
     @ParameterizedTest
-    public void test(String term)
+    public void test(String term, Long depth)
     {
         stub(term);
 
@@ -127,7 +133,7 @@ public class Summary1v1CommandTest
             "Additional description",
             Region.EU,
             Race.TERRAN,
-            100,
+            depth,
             "emptyTerm", term
         );
 
@@ -141,12 +147,20 @@ public class Summary1v1CommandTest
             any()
         );
         //verify correct depth, 10 seconds to run the test just in case
-        assertTrue
-        (
-            SC2Pulse.offsetDateTime().minusDays(100).toEpochSecond()
-            - depthCaptor.getValue().toEpochSecond()
-            < 10
-        );
+        if(depth == null)
+        {
+            assertNull(depthCaptor.getValue());
+        }
+        else
+        {
+            assertTrue
+            (
+                SC2Pulse.offsetDateTime().minusDays(depth).toEpochSecond()
+                    - depthCaptor.getValue().toEpochSecond()
+                    < 10
+            );
+        }
+
 
         verify(followup).withContent(contentCaptor.capture());
         String content = contentCaptor.getValue();
@@ -155,7 +169,15 @@ public class Summary1v1CommandTest
         StringBuilder sb = new StringBuilder()
             .append("**1v1 Summary**\n")
             .append("Additional description\n")
-            .append("`term`, *100 days, Top 5, EU, Terran*\n**`Games`** | **last**/*avg*/max MMR\n\n");
+            .append("`term`, *");
+        if(depth == null)
+        {
+            sb.append("All time");
+        } else
+        {
+            sb.append(depth).append(" days");
+        }
+        sb.append(", Top 5, EU, Terran*\n**`Games`** | **last**/*avg*/max MMR\n\n");
         for(int i = 3; i > -1; i--)
         {
             sb.append(String.format(
@@ -294,7 +316,7 @@ public class Summary1v1CommandTest
             "Additional description",
             Region.EU,
             Race.TERRAN,
-            120,
+            120L,
             "name1", "name2"
         );
         verify(followup).withContent(contentCaptor.capture());
