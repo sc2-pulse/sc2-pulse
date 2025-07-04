@@ -309,7 +309,7 @@ public class Summary1v1Command
         Predicate<LadderDistinctCharacter> characterFilter =
             c->region == null || c.getMembers().getCharacter().getRegion() == region;
         if(searchType != LadderCharacterDAO.SearchType.BATTLE_TAG) characterFilter = characterFilter
-            .and(c->c.getPreviousStats() != null || c.getCurrentStats() != null);
+            .and(c->c.getPreviousStats().getRating() != null || c.getCurrentStats().getRating() != null);
         return characterFilter;
     }
 

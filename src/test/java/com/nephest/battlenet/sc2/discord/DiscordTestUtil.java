@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -40,7 +40,7 @@ public final class DiscordTestUtil
             proId, proName, proTeam,
             null,
             0, 0, 0, 0, 0,
-            null,
+            new LadderPlayerSearchStats(null, null, null),
             new LadderPlayerSearchStats(rating, 0, 0)
         );
     }

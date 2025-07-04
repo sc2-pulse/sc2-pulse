@@ -19,10 +19,13 @@ import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.discord.DiscordTestUtil;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
 import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistorySummaryData;
@@ -32,6 +35,7 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
@@ -45,6 +49,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -301,6 +306,57 @@ public class Summary1v1CommandTest
 
             + "**Not found**";
         assertEquals(expectedResult, contentCaptor.getValue());
+    }
+
+    @Test
+    public void whenNonBattleTagSearch_thenProfilesWithoutRecentStatsAreSkipped()
+    {
+        String searchTerm = "searchTerm";
+        //profiles with recent stats
+        List<LadderDistinctCharacter> characters = new ArrayList<>(3);
+        for(int i = 0; i < 2; i++) characters.add(DiscordTestUtil.createSimpleCharacter(
+            "tag#" + i, "name#" + i, (long) i, "proName" + i, "clan" + i, "proTeam" + i, Region.EU,
+            i, i
+        ));
+        //profile without recent stats must be skipped
+        characters.add(new LadderDistinctCharacter(
+            BaseLeague.LeagueType.GRANDMASTER,
+            0,
+            new Account(3L, Partition.GLOBAL, "tag#3"),
+            new PlayerCharacter(3L, 3L, Region.EU, 3L, 0, "name#3"),
+            null,
+            null, null, null,
+            null,
+            0, 0, 0, 0, 0,
+            new LadderPlayerSearchStats(null, null, null),
+            new LadderPlayerSearchStats(null, null, null)
+        ));
+        when(searchService.findDistinctCharacters(searchTerm)).thenReturn(characters);
+
+        //verify that legacyUids were generated from profiles with stats
+        when(teamDAO.findIdsByLegacyUids(
+            LongStream.range(0, 2)
+                .mapToObj(i->new TeamLegacyUid(
+                    QueueType.LOTV_1V1,
+                    TeamType.ARRANGED,
+                    Region.EU,
+                    TeamLegacyId.standard(List.of(new TeamLegacyIdEntry(0, i, Race.TERRAN)))
+                ))
+                .collect(Collectors.toSet()),
+            null,
+            null
+        ))
+            .thenReturn(List.of());
+
+        cmd.handle
+        (
+            evt,
+            "Additional description",
+            Region.EU,
+            Race.TERRAN,
+            100L,
+            searchTerm
+        );
     }
 
 }
