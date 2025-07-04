@@ -125,7 +125,7 @@ public class Summary1v1CommandTest
     @ParameterizedTest
     public void test(String term, Long depth)
     {
-        stub(term);
+        stub(term, depth);
 
         cmd.handle
         (
@@ -252,7 +252,7 @@ public class Summary1v1CommandTest
                 .toList();
     }
 
-    private void stub(String term)
+    private void stub(String term, Long depth)
     {
         List<LadderDistinctCharacter> characters = new ArrayList<>();
         for(int i = 0; i < 5; i++) characters.add(DiscordTestUtil.createSimpleCharacter(
@@ -278,8 +278,9 @@ public class Summary1v1CommandTest
             ))
             .toList();
         List<Long> teamIds = List.of(1L);
-        when(teamDAO.findIdsByLegacyUids(Set.copyOf(uids), null, null))
-            .thenReturn(teamIds);
+        when(teamDAO.findIdsByLegacyUids(
+            Set.copyOf(depth == null ? uids.subList(0, 4) : uids), null, null))
+                .thenReturn(teamIds);
         when(teamHistoryDAO.findSummary(
             eq(Set.copyOf(teamIds)),
             any(), isNull(),
@@ -297,8 +298,9 @@ public class Summary1v1CommandTest
             )),
             eq(TeamHistoryDAO.GroupMode.LEGACY_UID)
         )).thenReturn(generateSummaries(4));
-        when(ladderSearchDAO.findLegacyTeams(Set.copyOf(uids.subList(0, 4)), false))
-            .thenReturn(generateTeams(characters.subList(0, 4)));
+        when(ladderSearchDAO.findLegacyTeams(
+            Set.copyOf(depth == null ? uids : uids.subList(0, 4)), false))
+                .thenReturn(generateTeams(characters.subList(0, 4)));
         when(discordBootstrap.getLeagueEmojiOrName(evt, BaseLeague.LeagueType.DIAMOND)).thenReturn("diamond");
         when(discordBootstrap.getRaceEmojiOrName(evt, Race.TERRAN)).thenReturn("terran");
         when(discordBootstrap.generateCharacterURL(any()))

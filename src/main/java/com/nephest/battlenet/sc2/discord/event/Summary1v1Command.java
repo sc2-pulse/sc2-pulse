@@ -61,8 +61,10 @@ public class Summary1v1Command
     (
         LadderCharacterDAO.SearchType.CLAN_TAG, 10
     );
-    public static final Comparator<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> DEFAULT_COMPARATOR =
+    public static final Comparator<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> SUMMARY_COMPARATOR =
         Comparator.comparing(s->s.summary().ratingLast(), Comparator.reverseOrder());
+    public static final Comparator<LadderTeam> TEAM_COMPARATOR =
+        Comparator.comparing(LadderTeam::getRating, Comparator.reverseOrder());
 
     public static final Set<TeamHistoryDAO.StaticColumn> STATIC_HISTORY_COLUMNS
         = Collections.unmodifiableSet(EnumSet.of(
@@ -138,6 +140,87 @@ public class Summary1v1Command
         return handle(evt, null, region, race, depth, names);
     }
 
+    private SummaryData getData
+    (
+        Set<TeamLegacyUid> uids,
+        int maxLines
+    )
+    {
+        Map<TeamLegacyUid, LadderTeam> teams = ladderSearchDAO.findLegacyTeams(uids, false).stream()
+            .sorted(TEAM_COMPARATOR)
+            .limit(maxLines)
+            .collect(Collectors.toMap(LadderTeam::getLegacyUid, Function.identity()));
+        if(teams.isEmpty()) return null;
+
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries
+            = teamHistoryDAO.findSummary
+            (
+                Set.copyOf
+                (
+                    teamDAO.findIdsByLegacyUids
+                    (
+                        teams.values().stream()
+                            .map(LadderTeam::getLegacyUid)
+                            .collect(Collectors.toSet()),
+                        null, null
+                    )
+                ),
+                null, null,
+                STATIC_HISTORY_COLUMNS, SUMMARY_HISTORY_COLUMNS,
+                TeamHistoryDAO.GroupMode.LEGACY_UID
+            ).stream()
+                .map(TeamHistorySummary::cast)
+                .map(c->TeamHistorySummary.convert(c, sc2ConversionService))
+                .sorted(SUMMARY_COMPARATOR)
+                .toList();
+        if(summaries.isEmpty()) return null;
+
+        return new SummaryData(summaries, teams);
+    }
+
+    private SummaryData getData
+    (
+        Set<TeamLegacyUid> uids,
+        int maxLines,
+        @Nullable Long depth
+    )
+    {
+        if(depth == null) return getData(uids, maxLines);
+
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries
+            = teamHistoryDAO.findSummary
+                (
+                    Set.copyOf(teamDAO.findIdsByLegacyUids(uids, null, null)),
+                    SC2Pulse.offsetDateTime().minusDays(depth), null,
+                    STATIC_HISTORY_COLUMNS, SUMMARY_HISTORY_COLUMNS,
+                    TeamHistoryDAO.GroupMode.LEGACY_UID
+                ).stream()
+                    .map(TeamHistorySummary::cast)
+                    .map(c->TeamHistorySummary.convert(c, sc2ConversionService))
+                    .sorted(SUMMARY_COMPARATOR)
+                    .limit(maxLines)
+                    .toList();
+        if(summaries.isEmpty()) return null;
+
+        Map<TeamLegacyUid, LadderTeam> teams = ladderSearchDAO.findLegacyTeams
+        (
+            summaries.stream()
+                .map(s->new TeamLegacyUid(
+                    s.staticData().queueType(),
+                    s.staticData().teamType(),
+                    s.staticData().region(),
+                    s.staticData().legacyId()
+                ))
+                .collect(Collectors.toSet()),
+            false
+        )
+            .stream()
+            .collect(Collectors.toMap(LadderTeam::getLegacyUid, Function.identity()));
+        if(teams.isEmpty()) return null;
+
+        return new SummaryData(summaries, teams);
+    }
+
     private Mono<Message> handle
     (
         ApplicationCommandInteractionEvent evt,
@@ -182,49 +265,18 @@ public class Summary1v1Command
                 ))
             ))
             .collect(Collectors.toSet());
-        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries
-            = teamHistoryDAO.findSummary
-            (
-                Set.copyOf(teamDAO.findIdsByLegacyUids(uids, null, null)),
-                depth != null
-                    ? SC2Pulse.offsetDateTime().minusDays(depth)
-                    : null,
-                null,
-                STATIC_HISTORY_COLUMNS, SUMMARY_HISTORY_COLUMNS,
-                TeamHistoryDAO.GroupMode.LEGACY_UID
-            ).stream()
-                .map(TeamHistorySummary::cast)
-                .map(c->TeamHistorySummary.convert(c, sc2ConversionService))
-                .sorted(DEFAULT_COMPARATOR)
-                .limit(maxLines)
-                .toList();
-        if(summaries.isEmpty()) return null;
-
-        Map<TeamLegacyUid, LadderTeam> teams = ladderSearchDAO.findLegacyTeams
-        (
-            summaries.stream()
-                .map(s->new TeamLegacyUid(
-                    s.staticData().queueType(),
-                    s.staticData().teamType(),
-                    s.staticData().region(),
-                    s.staticData().legacyId()
-                ))
-                .collect(Collectors.toSet()),
-            false
-        )
-            .stream()
-            .collect(Collectors.toMap(LadderTeam::getLegacyUid, Function.identity()));
-        if(teams.isEmpty()) return null;
+        SummaryData summaryData = getData(uids, maxLines, depth);
+        if(summaryData == null) return null;
 
         StringBuilder description = new StringBuilder();
         appendHeader(description, name, depth, maxLines, region, race, additionalDescription)
             .append("\n\n");
-        int gamesDigits = summaries.stream()
+        int gamesDigits = summaryData.summaries().stream()
             .mapToInt(s->s.summary().games())
             .map(MiscUtil::stringLength)
             .max()
             .orElseThrow();
-        for(TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData> summary : summaries)
+        for(TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData> summary : summaryData.summaries())
         {
             TeamLegacyUid uid = new TeamLegacyUid
             (
@@ -233,7 +285,15 @@ public class Summary1v1Command
                 summary.staticData().region(),
                 summary.staticData().legacyId()
             );
-            appendSummary(description, teams.get(uid), summary, discordBootstrap, evt, gamesDigits)
+            appendSummary
+            (
+                description,
+                summaryData.teams().get(uid),
+                summary,
+                discordBootstrap,
+                evt,
+                gamesDigits
+            )
                 .append("\n\n");
             if(description.length() + CONTENT_LENGTH_OFFSET > DiscordBootstrap.MESSAGE_LENGTH_MAX)
             {
@@ -349,5 +409,12 @@ public class Summary1v1Command
             .toString();
         return evt.createFollowup().withContent(notFound);
     }
+
+    private record SummaryData
+    (
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries,
+        Map<TeamLegacyUid, LadderTeam> teams
+    )
+    {}
 
 }
