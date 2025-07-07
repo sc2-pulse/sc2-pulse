@@ -234,7 +234,8 @@ public class LadderSearchDAO
         + "INNER JOIN team_member ON team_member.team_id = team.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
-        + LADDER_SEARCH_TEAM_FROM_FULL_BODY;
+        + LADDER_SEARCH_TEAM_FROM_FULL_BODY
+        + "ORDER BY team.season, team.id";
 
     private static final String FIND_RECENTLY_ACTIVE_TEAMS =
         "WITH team_filter AS "
