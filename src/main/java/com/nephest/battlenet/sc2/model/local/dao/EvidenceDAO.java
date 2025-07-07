@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -31,7 +31,7 @@ public class EvidenceDAO
     private static final Logger LOG = LoggerFactory.getLogger(EvidenceDAO.class);
 
     public static final int ACTIVE_MOD_THRESHOLD_DAYS = 14;
-    public static final int HIDE_DENIED_EVIDENCE_DAYS = 30;
+    public static final int HIDE_DENIED_EVIDENCE_DAYS = 3;
     public static final int DENIED_EVIDENCE_TTL_DAYS = 180;
 
     public static final String STD_SELECT =
