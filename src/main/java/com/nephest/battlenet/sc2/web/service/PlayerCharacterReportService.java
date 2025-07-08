@@ -316,8 +316,8 @@ public class PlayerCharacterReportService
         playerCharacterReportDAO.updateStatus(from);
         evidenceDAO.evictRequiredVotesCache();
         evidenceDAO.getRequiredVotes();
-        playerCharacterReportDAO.removeExpired();
         evidenceDAO.removeExpired();
+        playerCharacterReportDAO.removeExpired();
     }
 
 }
