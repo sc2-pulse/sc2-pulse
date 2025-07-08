@@ -225,13 +225,20 @@ public class PlayerCharacterReportService
     public List<LadderPlayerCharacterReport> findReports()
     {
         List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findAll();
+        Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll(true).stream()
+            .collect(groupingBy(Evidence::getPlayerCharacterReportId));
+        /*TODO
+           This filter should be replaced by "confirmedOnly" or "excludeDenied" filter after
+           denied evidence visibility rework is complete.
+         */
+        reports.removeIf(r->!evidences.containsKey(r.getReport().getId()));
+        if(reports.isEmpty()) return reports;
+
         Map<Long, List<LadderTeamMember>> additionalMembers = ladderTeamMemberDAO.findByCharacterIds(reports.stream()
             .map(r->r.getReport().getAdditionalPlayerCharacterId())
             .filter(Objects::nonNull)
             .collect(Collectors.toSet())).stream()
                 .collect(groupingBy(m->m.getCharacter().getId()));
-        Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll(true).stream()
-            .collect(groupingBy(Evidence::getPlayerCharacterReportId));
         Map<Long, List<Account>> reporters = getReporters(evidences);
         Map<Integer, List<LadderEvidenceVote>> evidenceVotes = ladderEvidenceVoteDAO.findAll().stream()
             .collect(groupingBy(v->v.getVote().getEvidenceId()));
@@ -256,14 +263,21 @@ public class PlayerCharacterReportService
         if(characterIds.isEmpty()) return List.of();
 
         List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findByCharacterIds(characterIds);
+        Map<Integer, List<Evidence>> evidences = evidenceDAO
+            .findByReportIds(true, reports.stream().map(r->r.getReport().getId()).collect(Collectors.toSet())).stream()
+            .collect(groupingBy(Evidence::getPlayerCharacterReportId));
+        /*TODO
+           This filter should be replaced by "confirmedOnly" or "excludeDenied" filter after
+           denied evidence visibility rework is complete.
+         */
+        reports.removeIf(r->!evidences.containsKey(r.getReport().getId()));
+        if(reports.isEmpty()) return reports;
+
         Map<Long, List<LadderTeamMember>> additionalMembers = ladderTeamMemberDAO.findByCharacterIds(reports.stream()
             .map(r->r.getReport().getAdditionalPlayerCharacterId())
             .filter(Objects::nonNull)
             .collect(Collectors.toSet())).stream()
                 .collect(groupingBy(m->m.getCharacter().getId()));
-        Map<Integer, List<Evidence>> evidences = evidenceDAO
-            .findByReportIds(true, reports.stream().map(r->r.getReport().getId()).collect(Collectors.toSet())).stream()
-            .collect(groupingBy(Evidence::getPlayerCharacterReportId));
         Map<Long, List<Account>> reporters = getReporters(evidences);
         Map<Integer, List<LadderEvidenceVote>> evidenceVotes =
             ladderEvidenceVoteDAO.findByEvidenceIds(evidences.values().stream().flatMap(l->l.stream().map(Evidence::getId)).collect(Collectors.toSet())).stream()
