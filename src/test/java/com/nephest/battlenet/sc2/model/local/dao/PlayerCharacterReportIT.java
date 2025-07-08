@@ -699,20 +699,7 @@ public class PlayerCharacterReportIT
         assertEquals(6, reports.length);
         assertEquals(evidenceCountEnd + 1, evidenceDAO.findAll(true).size());
 
-        assertEquals
-        (
-            List.of(expiredEvidence.getPlayerCharacterReportId()),
-            evidenceDAO.removeExpired()
-        );
-        assertEquals
-        (
-            1,
-            playerCharacterReportDAO.removeEmpty(Set.of(
-                //should be removed because it's empty
-                expiredEvidence.getPlayerCharacterReportId(),
-                expiredConfirmedReport.getId() //should not be removed because it's not empty
-            ))
-        );
+        reportService.update(SC2Pulse.offsetDateTime());
         //expired and denied report and evidence are removed
         List<PlayerCharacterReport> endReports = playerCharacterReportDAO.getAll();
         List<Evidence> endEvidences = evidenceDAO.findAll(false);
