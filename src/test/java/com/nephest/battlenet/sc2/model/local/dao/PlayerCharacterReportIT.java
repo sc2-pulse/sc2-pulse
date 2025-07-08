@@ -681,11 +681,11 @@ public class PlayerCharacterReportIT
         PlayerCharacterReport expiredReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime()));
         PlayerCharacterReport expiredConfirmedReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 9L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             true, false,
-            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime()));
         Evidence expiredEvidence = evidenceDAO.create(
             new Evidence(null, expiredReport.getId(), null, localhost, "description asda",
             false, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),SC2Pulse.offsetDateTime()));
@@ -704,7 +704,15 @@ public class PlayerCharacterReportIT
             List.of(expiredEvidence.getPlayerCharacterReportId()),
             evidenceDAO.removeExpired()
         );
-        playerCharacterReportDAO.removeExpired();
+        assertEquals
+        (
+            1,
+            playerCharacterReportDAO.removeEmpty(Set.of(
+                //should be removed because it's empty
+                expiredEvidence.getPlayerCharacterReportId(),
+                expiredConfirmedReport.getId() //should not be removed because it's not empty
+            ))
+        );
         //expired and denied report and evidence are removed
         List<PlayerCharacterReport> endReports = playerCharacterReportDAO.getAll();
         List<Evidence> endEvidences = evidenceDAO.findAll(false);
@@ -955,7 +963,7 @@ public class PlayerCharacterReportIT
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime()));
         Evidence evidence = evidenceDAO.create(new Evidence(
             null, report.getId(), null, privateIp, "description asda",false,
             SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));

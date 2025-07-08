@@ -1,10 +1,9 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
-import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -21,8 +20,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PlayerCharacterReportDAO
 {
-
-    public static final int DENIED_REPORT_TTL_DAYS = 360;
 
     public static final String STD_SELECT =
         "player_character_report.id AS \"player_character_report.id\", "
@@ -105,10 +102,15 @@ public class PlayerCharacterReportDAO
         "WITH report_filter AS (SELECT * FROM unnest(:ids) AS id), "
         + UPDATE_STATUS_TAIL;
 
-    private static final String REMOVE_EXPIRED_QUERY =
-        "DELETE FROM player_character_report "
-        + "WHERE status = false "
-        + "AND status_change_timestamp < :from";
+    private static final String REMOVE_EMPTY_QUERY =
+        """
+        DELETE FROM player_character_report
+        USING player_character_report r
+        LEFT JOIN evidence ON evidence.player_character_report_id = r.id
+        WHERE r.id IN(:ids)
+        AND evidence.id IS NULL
+        AND player_character_report.id = r.id 
+        """;
 
     private static RowMapper<PlayerCharacterReport> STD_ROW_MAPPER;
 
@@ -185,11 +187,13 @@ public class PlayerCharacterReportDAO
         return template.update(UPDATE_STATUS_BY_IDS_QUERY, params);
     }
 
-    public int removeExpired()
+    public int removeEmpty(Set<Integer> ids)
     {
+        if(ids.isEmpty()) return 0;
+
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", SC2Pulse.offsetDateTime().minusDays(DENIED_REPORT_TTL_DAYS));
-        return template.update(REMOVE_EXPIRED_QUERY, params);
+            .addValue("ids", ids);
+        return template.update(REMOVE_EMPTY_QUERY, params);
     }
 
     private MapSqlParameterSource createParameterSource(PlayerCharacterReport report)

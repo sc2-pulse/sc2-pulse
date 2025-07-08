@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -81,15 +81,15 @@ public class PlayerCharacterReportDBIT
         PlayerCharacterReport report1 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime()));
         PlayerCharacterReport report2 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 2L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime()));
         PlayerCharacterReport report3 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 3L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime()));
 
         List<PlayerCharacterReport> reports = playerCharacterReportDAO.findByIdCursor(1, 2);
         assertEquals(2, reports.size());
@@ -105,7 +105,7 @@ public class PlayerCharacterReportDBIT
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime()));
         Evidence evidence1 = evidenceDAO.create(new Evidence(
             null, report.getId(), null, localhost, "description asda",false,
             SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));
