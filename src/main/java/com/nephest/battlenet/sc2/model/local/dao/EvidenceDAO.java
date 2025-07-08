@@ -162,7 +162,8 @@ public class EvidenceDAO
     private static final String REMOVE_EXPIRED_QUERY =
         "DELETE FROM evidence "
         + "WHERE status = false "
-        + "AND status_change_timestamp < :from";
+        + "AND status_change_timestamp < :from "
+        + "RETURNING player_character_report_id";
 
     private static final String NULLIFY_REPORTER_IPS_QUERY =
         "UPDATE evidence "
@@ -260,11 +261,11 @@ public class EvidenceDAO
         return template.update(UPDATE_STATUS_QUERY, params);
     }
 
-    public int removeExpired()
+    public List<Integer> removeExpired()
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("from", SC2Pulse.offsetDateTime().minusDays(DENIED_EVIDENCE_TTL_DAYS));
-        return template.update(REMOVE_EXPIRED_QUERY, params);
+        return template.query(REMOVE_EXPIRED_QUERY, params, DAOUtils.INT_MAPPER);
     }
 
     public int nullifyReporterIps(OffsetDateTime from)

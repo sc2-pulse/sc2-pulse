@@ -699,7 +699,11 @@ public class PlayerCharacterReportIT
         assertEquals(6, reports.length);
         assertEquals(evidenceCountEnd + 1, evidenceDAO.findAll(true).size());
 
-        evidenceDAO.removeExpired();
+        assertEquals
+        (
+            List.of(expiredEvidence.getPlayerCharacterReportId()),
+            evidenceDAO.removeExpired()
+        );
         playerCharacterReportDAO.removeExpired();
         //expired and denied report and evidence are removed
         List<PlayerCharacterReport> endReports = playerCharacterReportDAO.getAll();
