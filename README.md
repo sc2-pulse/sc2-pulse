@@ -58,8 +58,7 @@ mvn verify
 ```
 
 ### Selenium tests
-The Firefox is used in selenium tests because it is one of the major browsers that is available on all platforms and has an
-ESR version, which makes it easier to find a correct selenium driver for it. 
+Chrome is used in Selenium tests by default.
 
 You can change the browser by modifying the `selenium.driver` application property.
 
