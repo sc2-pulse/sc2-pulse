@@ -303,6 +303,8 @@ public class ExternalServiceIT
             .andExpect(resultMatcher)
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult[].class);
         Arrays.sort(result, Comparator.comparing(ExternalLinkResolveResult::playerCharacterId));
+        for(ExternalLinkResolveResult curResult : result)
+            curResult.links().sort(PlayerCharacterLink.NATURAL_ID_COMPARATOR);
         return result;
     }
 
@@ -394,6 +396,8 @@ public class ExternalServiceIT
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult[].class);
         Arrays.sort(result, Comparator.comparing(ExternalLinkResolveResult::playerCharacterId));
+        for(ExternalLinkResolveResult curResult : result)
+            curResult.links().sort(PlayerCharacterLink.NATURAL_ID_COMPARATOR);
         Assertions.assertThat(result)
             .usingRecursiveComparison()
             .isEqualTo(new ExternalLinkResolveResult[] {
