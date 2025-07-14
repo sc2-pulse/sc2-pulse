@@ -313,8 +313,15 @@ public class GeneralSeleniumIT
     {
         loadMainPage(driver, wait);
         clickAndWait(driver, wait, "#online-tab", "#online.show.active");
-        driver.findElement(By.cssSelector("#online-to"))
-            .sendKeys(SeasonGenerator.DEFAULT_SEASON_START.toLocalDate().plusDays(1).toString());
+        js.executeScript
+        (
+            "document.querySelector('#online-to').value="
+                + "'"
+                + SeasonGenerator.DEFAULT_SEASON_START
+                    .toLocalDate()
+                    .plusDays(1)
+                + "'"
+        );
         clickAndWait(driver, wait, "#form-online button[type=\"submit\"]", "#online-data:not(.d-none)");
         clickCanvases(driver, "#online-data");
         checkJsErrors();
