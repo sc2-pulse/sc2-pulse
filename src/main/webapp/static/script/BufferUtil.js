@@ -119,6 +119,15 @@ class BufferUtil
         return navigator.clipboard.writeText(str);
     }
 
+    static copyTeamLegacyUid(evt)
+    {
+        evt.preventDefault();
+        const str = Array.from(BufferUtil.teamBuffer.buffer.values())
+            .flatMap(team=>team.legacyUid)
+            .join(",");
+        return navigator.clipboard.writeText(str);
+    }
+
     static enhance()
     {
         document.querySelector("#team-buffer-clear").addEventListener("click", BufferUtil.clear);
@@ -127,6 +136,7 @@ class BufferUtil
         document.querySelector("#team-buffer-copy-character-id").addEventListener("click", BufferUtil.copyCharacterId);
         document.querySelector("#team-buffer-copy-legacy-id").addEventListener("click", BufferUtil.copyLegacyId);
         document.querySelector("#team-buffer-copy-character-race-id").addEventListener("click", BufferUtil.copyCharacterRaceId);
+        document.querySelector("#team-buffer-copy-team-legacy-uid").addEventListener("click", BufferUtil.copyTeamLegacyUid);
         document.querySelector("#team-buffer-copy-clan-id").addEventListener("click", BufferUtil.copyClanId);
     }
 
