@@ -100,25 +100,6 @@ class BufferUtil
         return navigator.clipboard.writeText(str);
     }
 
-    static copyLegacyId(evt)
-    {
-        evt.preventDefault();
-        const str = Array.from(BufferUtil.teamBuffer.buffer.values())
-            .map(t=>t.legacyId)
-            .join(",");
-        return navigator.clipboard.writeText(str);
-    }
-
-    static copyCharacterRaceId(evt)
-    {
-        evt.preventDefault();
-        const str = Array.from(BufferUtil.teamBuffer.buffer.values())
-            .flatMap(t=>t.members)
-            .map(m=>m.character.id + "" + TeamUtil.getFavoriteRace(m).code)
-            .join(",");
-        return navigator.clipboard.writeText(str);
-    }
-
     static copyTeamLegacyUid(evt)
     {
         evt.preventDefault();
@@ -134,8 +115,6 @@ class BufferUtil
         document.querySelector("#team-buffer-versus").addEventListener("click", VersusUtil.onVersusLinkClick);
         document.querySelector("#team-buffer-group").addEventListener("click", GroupUtil.onGroupLinkClick);
         document.querySelector("#team-buffer-copy-character-id").addEventListener("click", BufferUtil.copyCharacterId);
-        document.querySelector("#team-buffer-copy-legacy-id").addEventListener("click", BufferUtil.copyLegacyId);
-        document.querySelector("#team-buffer-copy-character-race-id").addEventListener("click", BufferUtil.copyCharacterRaceId);
         document.querySelector("#team-buffer-copy-team-legacy-uid").addEventListener("click", BufferUtil.copyTeamLegacyUid);
         document.querySelector("#team-buffer-copy-clan-id").addEventListener("click", BufferUtil.copyClanId);
     }
