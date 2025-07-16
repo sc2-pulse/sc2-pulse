@@ -10,11 +10,11 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.12</version>
+        <version>3.3.9</version>
     </parent>
   <groupId>com.nephest.battlenet.sc2</groupId>
   <artifactId>sc2-webapp</artifactId>
-  <version>1.63.0</version>
+  <version>1.62.0</version>
   <packaging>${packaging.type}</packaging>
 
   <name>SC2 Pulse</name>
@@ -60,14 +60,14 @@
     <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.18.0</version>
+        <version>5.16.0</version>
         <scope>test</scope>
     </dependency>
 
     <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-junit-jupiter</artifactId>
-        <version>5.18.0</version>
+        <version>5.16.0</version>
         <scope>test</scope>
     </dependency>
 
@@ -107,14 +107,14 @@
     <dependency>
         <groupId>io.github.bonigarcia</groupId>
         <artifactId>webdrivermanager</artifactId>
-        <version>5.8.0</version>
+        <version>6.1.0</version>
         <scope>test</scope>
     </dependency>
 
     <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.19.0</version>
+        <version>2.17.0</version>
         <scope>test</scope>
     </dependency>
 
@@ -176,27 +176,33 @@
     </dependency>
 
     <dependency>
+        <groupId>de.codecentric</groupId>
+        <artifactId>spring-boot-admin-starter-server</artifactId>
+        <version>3.4.2</version>
+    </dependency>
+
+    <dependency>
         <groupId>com.discord4j</groupId>
         <artifactId>discord4j-core</artifactId>
-        <version>3.2.8</version>
+        <version>3.3.0-RC2</version>
     </dependency>
 
     <dependency>
         <groupId>com.github.twitch4j</groupId>
         <artifactId>twitch4j</artifactId>
-        <version>1.25.0</version>
+        <version>1.24.0</version>
     </dependency>
 
       <dependency>
           <groupId>org.springdoc</groupId>
           <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-          <version>2.6.0</version>
+          <version>2.7.0-RC1</version>
       </dependency>
 
     <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>42.7.6</version>
+        <version>42.7.7</version>
     </dependency>
 
     <dependency>
@@ -214,7 +220,7 @@
     <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>bootstrap</artifactId>
-        <version>4.6.2</version>
+        <version>5.0.0</version>
     </dependency>
 
     <dependency>
@@ -262,7 +268,7 @@
     <dependency>
       <groupId>org.webjars.npm</groupId>
       <artifactId>luxon</artifactId>
-      <version>1.28.1</version>
+      <version>3.6.1</version>
     </dependency>
 
     <dependency>
@@ -323,6 +329,17 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-tomcat</artifactId>
                     <scope>provided</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-actuator</artifactId>
+                </dependency>
+
+                <dependency>
+                    <groupId>de.codecentric</groupId>
+                    <artifactId>spring-boot-admin-starter-client</artifactId>
+                    <version>3.3.12</version>
                 </dependency>
             </dependencies>
             <build>
@@ -415,7 +432,7 @@
       <plugins>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.4.1</version>
+          <version>3.3.2</version>
         </plugin>
         <!-- see http://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_war_packaging -->
         <plugin>
@@ -424,11 +441,11 @@
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.14.0</version>
+          <version>3.13.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.3</version>
+          <version>3.2.5</version>
         </plugin>
         <plugin>
           <artifactId>maven-war-plugin</artifactId>
@@ -436,11 +453,11 @@
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
-          <version>3.1.4</version>
+          <version>3.1.2</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.1.4</version>
+          <version>3.1.2</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -448,7 +465,7 @@
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.14.0</version>
+            <version>3.13.0</version>
             <configuration>
                 <release>17</release>
                 <parameters>true</parameters>
@@ -457,7 +474,7 @@
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.5.3</version>
+            <version>3.2.5</version>
             <configuration>
                 <trimStackTrace>false</trimStackTrace>
             </configuration>
@@ -465,7 +482,7 @@
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-failsafe-plugin</artifactId>
-            <version>3.5.3</version>
+            <version>3.2.5</version>
             <executions>
                 <execution>
                     <goals>
