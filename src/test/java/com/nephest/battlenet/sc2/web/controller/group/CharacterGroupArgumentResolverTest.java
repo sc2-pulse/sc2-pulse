@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller.group;
@@ -7,6 +7,8 @@ import static com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgum
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
+import com.nephest.battlenet.sc2.model.Region;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -29,7 +31,7 @@ public class CharacterGroupArgumentResolverTest
     {
         verifyBadRequest
         (
-            areIdsInvalid(Set.of(), Set.of(), Set.of(), Set.of()).orElseThrow(),
+            areIdsInvalid(Set.of(), Set.of(), Set.of(), Set.of(), Set.of()).orElseThrow(),
             "At least one group id is required"
         );
     }
@@ -43,7 +45,7 @@ public class CharacterGroupArgumentResolverTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            areIdsInvalid(bigCharacterSet, Set.of(), Set.of(), Set.of()).orElseThrow(),
+            areIdsInvalid(bigCharacterSet, Set.of(), Set.of(), Set.of(), Set.of()).orElseThrow(),
             "Max size of characters exceeded: " + CharacterGroupArgumentResolver.CHARACTERS_MAX
         );
     }
@@ -57,7 +59,7 @@ public class CharacterGroupArgumentResolverTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            areIdsInvalid(Set.of(), bigClanSet, Set.of(), Set.of()).orElseThrow(),
+            areIdsInvalid(Set.of(), bigClanSet, Set.of(), Set.of(), Set.of()).orElseThrow(),
             "Max size of clans exceeded: " + CharacterGroupArgumentResolver.CLANS_MAX
         );
     }
@@ -71,7 +73,7 @@ public class CharacterGroupArgumentResolverTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            areIdsInvalid(Set.of(), Set.of(), bigProPlayerSet, Set.of()).orElseThrow(),
+            areIdsInvalid(Set.of(), Set.of(), bigProPlayerSet, Set.of(), Set.of()).orElseThrow(),
             "Max size of pro players exceeded: " + CharacterGroupArgumentResolver.PRO_PLAYERS_MAX
         );
     }
@@ -85,8 +87,22 @@ public class CharacterGroupArgumentResolverTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            areIdsInvalid(Set.of(), Set.of(), Set.of(), bigAccountSet).orElseThrow(),
+            areIdsInvalid(Set.of(), Set.of(), Set.of(), bigAccountSet, Set.of()).orElseThrow(),
             "Max size of accounts exceeded: " + CharacterGroupArgumentResolver.ACCOUNTS_MAX
+        );
+    }
+
+    @Test
+    public void whenToonHandleSizeIsExceeded_thenBadRequest()
+    {
+        Set<PlayerCharacterNaturalId> bigToonHandleSet = LongStream
+            .range(0, CharacterGroupArgumentResolver.TOON_HANDLES_MAX + 1)
+            .mapToObj(l->PlayerCharacterNaturalId.of(Region.EU, 1, l))
+            .collect(Collectors.toSet());
+        verifyBadRequest
+        (
+            areIdsInvalid(Set.of(), Set.of(), Set.of(), Set.of(), bigToonHandleSet).orElseThrow(),
+            "Max size of toon handles exceeded: " + CharacterGroupArgumentResolver.TOON_HANDLES_MAX
         );
     }
 
@@ -109,7 +125,11 @@ public class CharacterGroupArgumentResolverTest
             .range(0, CharacterGroupArgumentResolver.ACCOUNTS_MAX)
             .boxed()
             .collect(Collectors.toSet());
-        assertTrue(areIdsInvalid(characterSet, clanSet, proPlayerSet, accountSet).isEmpty());
+        Set<PlayerCharacterNaturalId> toonHandleSet = LongStream
+            .range(0, CharacterGroupArgumentResolver.TOON_HANDLES_MAX)
+            .mapToObj(l->PlayerCharacterNaturalId.of(Region.EU, 1, l))
+            .collect(Collectors.toSet());
+        assertTrue(areIdsInvalid(characterSet, clanSet, proPlayerSet, accountSet, toonHandleSet).isEmpty());
     }
 
 }

@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.web.controller;
 import static com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver.areIdsInvalid;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
@@ -35,6 +36,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -95,14 +98,24 @@ public class GroupController
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
         @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds,
-        @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds
+        @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds,
+        @RequestParam(name = "toonHandle", required = false, defaultValue = "") Set<PlayerCharacterNaturalId> toonHandles
     )
     {
-        return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds)
+        return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
             .orElseGet(()->
             {
                 List<LadderDistinctCharacter> characters = ladderCharacterDAO
-                    .findDistinctCharactersByCharacterIds(characterIds);
+                    .findDistinctCharactersByCharacterIds
+                    (
+                        Stream.of
+                        (
+                            characterIds,
+                            playerCharacterDAO.findIdsByNaturalIds(toonHandles)
+                        )
+                            .flatMap(Collection::stream)
+                            .collect(Collectors.toSet())
+                    );
                 List<Clan> clans = clanDAO.findByIds(clanIds);
                 if(!clans.isEmpty()) clans.sort(CLAN_COMPARATOR);
                 List<LadderProPlayer> proPlayers = ladderProPlayerDAO
@@ -161,6 +174,7 @@ public class GroupController
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
         @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds,
         @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds,
+        @RequestParam(name = "toonHandle", required = false, defaultValue = "") Set<PlayerCharacterNaturalId> toonHandles,
         @RequestParam(name = "createdCursor", required = false) OffsetDateTime createdCursor,
         @RequestParam(name = "characterIdCursor", required = false, defaultValue = Long.MAX_VALUE + "") Long characterIdCursor,
         @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "") Integer limit
@@ -169,10 +183,10 @@ public class GroupController
         if(limit > CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
             return ResponseEntity.badRequest().body("Max page size exceeded: " + CLAN_MEMBER_EVENT_PAGE_SIZE_MAX);
         OffsetDateTime cCursor = createdCursor != null ? createdCursor : SC2Pulse.offsetDateTime();
-        return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds)
+        return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
             .orElseGet(()->ResponseEntity.of(ladderClanMemberEventDAO.find
             (
-                resolver.resolve(characterIds, Set.of(), proPlayerIds, accountIds),
+                resolver.resolve(characterIds, Set.of(), proPlayerIds, accountIds, toonHandles),
                 clanIds,
                 cCursor,
                 characterIdCursor,

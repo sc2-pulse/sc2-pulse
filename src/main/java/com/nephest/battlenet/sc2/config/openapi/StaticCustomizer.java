@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.config.openapi;
 
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.util.SpringUtil;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import java.util.Locale;
@@ -24,7 +25,13 @@ implements ParameterCustomizer
 
     public static final Map<Class<?>, Consumer<Parameter>> CLASS_CUSTOMIZERS = Map.of
     (
-        Locale.class, parameter->OpenApiUtil.getSchema(parameter).setType("string")
+        Locale.class, parameter->OpenApiUtil.getSchema(parameter).setType("string"),
+
+        PlayerCharacterNaturalId.class,
+        parameter->{
+            OpenApiUtil.getSchema(parameter).set$ref("ToonHandle");
+            parameter.setDescription(PlayerCharacterNaturalId.TOON_HANDLE_DESCRIPTION);
+        }
     );
 
     @Autowired

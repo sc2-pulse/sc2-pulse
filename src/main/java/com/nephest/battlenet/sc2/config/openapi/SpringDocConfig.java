@@ -4,6 +4,11 @@
 package com.nephest.battlenet.sc2.config.openapi;
 
 import com.nephest.battlenet.sc2.Application;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
+import com.nephest.battlenet.sc2.model.Region;
+import io.swagger.v3.core.converter.AnnotatedType;
+import io.swagger.v3.core.converter.ModelConverters;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
@@ -20,6 +25,21 @@ public class SpringDocConfig
     @Bean
     public OpenAPI customOpenAPI(@Autowired ServletContext servletContext) {
         return new OpenAPI()
+            .components(new Components()
+                .addSchemas
+                (
+                    "ToonHandle",
+                    ModelConverters.getInstance().resolveAsResolvedSchema(
+                            new AnnotatedType(PlayerCharacterNaturalId.class).resolveAsRef(false))
+                        .schema
+                        .type("string")
+                        .pattern(PlayerCharacterNaturalId.TOON_HANDLE_REGEXP)
+                        .description(PlayerCharacterNaturalId.TOON_HANDLE_DESCRIPTION)
+                        .example(
+                            PlayerCharacterNaturalId.of(Region.EU, 1, 3141896L).toToonHandle()
+                        )
+                )
+            )
             .addServersItem(new Server().url(servletContext.getContextPath()).description("local server"))
             .info(new Info()
                 .title("SC2 Pulse API")

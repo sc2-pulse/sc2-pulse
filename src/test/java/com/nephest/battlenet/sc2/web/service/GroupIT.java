@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -46,6 +47,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
@@ -155,37 +157,43 @@ public class GroupIT
                     String.valueOf(5L),
                     String.valueOf(15L)
                 )
+                .queryParam
+                (
+                    "toonHandle",
+                    PlayerCharacterNaturalId.of(Region.EU, 1, 220L).toToonHandle(),
+                    PlayerCharacterNaturalId.of(Region.EU, 1, 240L).toToonHandle()
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), Group.class);
 
-        assertEquals(2, result.getCharacters().size());
+        assertEquals(4, result.getCharacters().size());
         result.getCharacters().sort(Comparator.comparing(c->c.getMembers().getCharacter().getId()));
-        Assertions.assertThat(result.getCharacters().get(0))
-            .usingRecursiveComparison().isEqualTo(new LadderDistinctCharacter(
-                BaseLeague.LeagueType.BRONZE, 0,
-                new Account(1L, Partition.GLOBAL, "battletag#0"),
-                new PlayerCharacter(1L, 1L, Region.EU, 0L, 1, "character#0"),
-                initGroup.getClans().get(0),
-                null, null, null,
-                null,
-                null, null, null, 3, 3,
-                new LadderPlayerSearchStats(null, null, null),
-                new LadderPlayerSearchStats(0, 3, null)
-            ));
-        Assertions.assertThat(result.getCharacters().get(1))
-            .usingRecursiveComparison().isEqualTo(new LadderDistinctCharacter(
-                BaseLeague.LeagueType.BRONZE, 19,
-                new Account(20L, Partition.GLOBAL, "battletag#190"),
-                new PlayerCharacter(20L, 20L, Region.EU, 190L, 1, "character#190"),
-                null,
-                null, null, null,
-                null,
-                null, null, null, 60, 60,
-                new LadderPlayerSearchStats(null, null, null),
-                new LadderPlayerSearchStats(19, 60, null)
-            ));
+        Assertions.assertThat(result.getCharacters())
+            .usingRecursiveComparison()
+            .isEqualTo(IntStream.of(1, 20, 23, 25)
+                .mapToObj(i-> new LadderDistinctCharacter(
+                    BaseLeague.LeagueType.BRONZE, i - 1,
+                    new Account((long) i, Partition.GLOBAL, "battletag#" + ((i - 1) * 10)),
+                    new PlayerCharacter
+                    (
+                        (long) i,
+                        (long) i,
+                        Region.EU,
+                        (long) (i - 1) * 10,
+                        1,
+                        "character#" + ((i - 1) * 10)
+                    ),
+                    i == 1 ? initGroup.getClans().get(0) : null,
+                    null, null, null,
+                    null,
+                    null, null, null, 3 * i, 3 * i,
+                    new LadderPlayerSearchStats(null, null, null),
+                    new LadderPlayerSearchStats(i - 1, 3 * i, null)
+                ))
+                .toList()
+            );
 
         assertEquals(2, result.getClans().size());
         Assertions.assertThat(result.getClans().get(0))
@@ -237,12 +245,18 @@ public class GroupIT
                 "accountId",
                 String.valueOf(7)
             )
+            .queryParam
+            (
+                "toonHandle",
+                PlayerCharacterNaturalId.of(Region.EU, 1, 220L).toToonHandle(),
+                PlayerCharacterNaturalId.of(Region.EU, 1, 240L).toToonHandle()
+            )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), Long[].class);
         Arrays.sort(result);
-        Long[] expectedResult = new Long[]{1L, 2L, 7L, 11L, 12L, 20L};
+        Long[] expectedResult = new Long[]{1L, 2L, 7L, 11L, 12L, 20L, 23L, 25L};
         assertArrayEquals(expectedResult, result);
     }
 
@@ -379,6 +393,19 @@ public class GroupIT
             .map(String::valueOf)
             .toArray(String[]::new);
         mvc.perform(get("/api/group/flat").queryParam("accountId", longIdList))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void whenToonHandleSizeIsExceeded_thenBadRequest()
+    throws Exception
+    {
+        String[] longToonHandleList = LongStream
+            .range(0, CharacterGroupArgumentResolver.TOON_HANDLES_MAX + 1)
+            .mapToObj(l->PlayerCharacterNaturalId.of(Region.EU, 1, l))
+            .map(PlayerCharacterNaturalId::toToonHandle)
+            .toArray(String[]::new);
+        mvc.perform(get("/api/group/flat").queryParam("toonHandle", longToonHandleList))
             .andExpect(status().isBadRequest());
     }
 

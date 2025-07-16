@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller.group;
 
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -51,6 +52,16 @@ import java.lang.annotation.Target;
         (
             maxItems = CharacterGroupArgumentResolver.ACCOUNTS_MAX,
             schema = @Schema(type = "integer", format = "int64")
+        )
+    ),
+    @Parameter
+    (
+        in = ParameterIn.QUERY, name = "toonHandle",
+        description = PlayerCharacterNaturalId.TOON_HANDLE_DESCRIPTION,
+        array = @ArraySchema
+        (
+            maxItems = CharacterGroupArgumentResolver.TOON_HANDLES_MAX,
+            schema = @Schema(ref = "ToonHandle")
         )
     )
 })

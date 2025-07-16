@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller.group;
 
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
@@ -36,6 +37,7 @@ implements HandlerMethodArgumentResolver
     private static final MethodParameter CLAN_PARAMETER;
     private static final MethodParameter PRO_PLAYER_PARAMETER;
     private static final MethodParameter ACCOUNT_PARAMETER;
+    private static final MethodParameter TOON_HANDLE_PARAMETER;
     static
     {
         try
@@ -43,12 +45,13 @@ implements HandlerMethodArgumentResolver
             Method method = CharacterGroupArgumentResolver.class.getDeclaredMethod
             (
                 "getCharacterIdsDescriptor",
-                Set.class, Set.class, Set.class, Set.class
+                Set.class, Set.class, Set.class, Set.class, Set.class
             );
             CHARACTER_PARAMETER = new MethodParameter(method, 0);
             CLAN_PARAMETER = new MethodParameter(method, 1);
             PRO_PLAYER_PARAMETER = new MethodParameter(method, 2);
             ACCOUNT_PARAMETER = new MethodParameter(method, 3);
+            TOON_HANDLE_PARAMETER = new MethodParameter(method, 4);
         }
         catch (NoSuchMethodException e)
         {
@@ -60,6 +63,7 @@ implements HandlerMethodArgumentResolver
     public static final int CLANS_MAX = 20;
     public static final int PRO_PLAYERS_MAX = CHARACTERS_MAX / 10;
     public static final int ACCOUNTS_MAX = CHARACTERS_MAX;
+    public static final int TOON_HANDLES_MAX = CHARACTERS_MAX;
 
     private final RequestParamMethodArgumentResolver paramResolver
         = new RequestParamMethodArgumentResolver(true);
@@ -82,7 +86,8 @@ implements HandlerMethodArgumentResolver
         Set<Long> characterIds,
         Set<Integer> clanIds,
         Set<Long> proPlayerIds,
-        Set<Long> accountIds
+        Set<Long> accountIds,
+        Set<PlayerCharacterNaturalId> toonHandles
     )
     {
         String msg = null;
@@ -92,6 +97,7 @@ implements HandlerMethodArgumentResolver
                 && clanIds.isEmpty()
                 && proPlayerIds.isEmpty()
                 && accountIds.isEmpty()
+                && toonHandles.isEmpty()
         )
         {
             msg = "At least one group id is required";
@@ -110,6 +116,9 @@ implements HandlerMethodArgumentResolver
         } else if(accountIds.size() > ACCOUNTS_MAX)
         {
             msg = "Max size of accounts exceeded: " + ACCOUNTS_MAX;
+        } else if(toonHandles.size() > TOON_HANDLES_MAX)
+        {
+            msg = "Max size of toon handles exceeded: " + TOON_HANDLES_MAX;
         }
         return Optional.ofNullable(msg);
     }
@@ -119,10 +128,11 @@ implements HandlerMethodArgumentResolver
         Set<Long> characterIds,
         Set<Integer> clanIds,
         Set<Long> proPlayerIds,
-        Set<Long> accountIds
+        Set<Long> accountIds,
+        Set<PlayerCharacterNaturalId> toonHandles
     )
     {
-        return checkIds(characterIds, clanIds, proPlayerIds, accountIds)
+        return checkIds(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
             .map(error->ResponseEntity.badRequest().body(error));
     }
 
@@ -150,10 +160,13 @@ implements HandlerMethodArgumentResolver
             .resolveArgument(PRO_PLAYER_PARAMETER, mavContainer, webRequest, binderFactory);
         Set<Long> accountIds = (Set<Long>) paramResolver
             .resolveArgument(ACCOUNT_PARAMETER, mavContainer, webRequest, binderFactory);
-        String error = checkIds(characterIds, clanIds, proPlayerIds, accountIds).orElse(null);
+        Set<PlayerCharacterNaturalId> toonHandles = (Set<PlayerCharacterNaturalId>) paramResolver
+            .resolveArgument(TOON_HANDLE_PARAMETER, mavContainer, webRequest, binderFactory);
+        String error = checkIds(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
+            .orElse(null);
         if(error != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, error);
 
-        Set<Long> result = resolve(characterIds, clanIds, proPlayerIds, accountIds);
+        Set<Long> result = resolve(characterIds, clanIds, proPlayerIds, accountIds, toonHandles);
         CharacterGroup annotation = parameter.getParameterAnnotation(CharacterGroup.class);
         if(annotation.flatRequired() && result.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Flattened character group is empty");
@@ -171,7 +184,8 @@ implements HandlerMethodArgumentResolver
         Set<Long> characterIds,
         Set<Integer> clanIds,
         Set<Long> proPlayerIds,
-        Set<Long> accountIds
+        Set<Long> accountIds,
+        Set<PlayerCharacterNaturalId> toonHandles
     )
     {
         return Stream.of
@@ -179,7 +193,8 @@ implements HandlerMethodArgumentResolver
             characterIds,
             resolveClans(clanIds),
             resolveProPlayers(proPlayerIds),
-            resolveAccounts(accountIds)
+            resolveAccounts(accountIds),
+            resolveToonHandles(toonHandles)
         )
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
@@ -209,12 +224,18 @@ implements HandlerMethodArgumentResolver
         return new HashSet<>(playerCharacterDAO.findIdsByAccountIds(accountIds));
     }
 
+    private Set<Long> resolveToonHandles(Set<PlayerCharacterNaturalId> toonHandles)
+    {
+        return new HashSet<>(playerCharacterDAO.findIdsByNaturalIds(toonHandles));
+    }
+
     private void getCharacterIdsDescriptor
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
         @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds,
-        @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds
+        @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds,
+        @RequestParam(name = "toonHandle", required = false, defaultValue = "") Set<PlayerCharacterNaturalId> toonHandles
     )
     {
     }
