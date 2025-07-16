@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -421,6 +422,13 @@ public class PlayerCharacterDAO
         + "ORDER BY id DESC "
         + "LIMIT :limit";
 
+    private static final String FIND_IDS_BY_NATURAL_IDS =
+        """
+        SELECT id
+        FROM player_character
+        WHERE(region, realm, battlenet_id) IN(:ids)
+        """;
+
     private static final String FIND_IDS_BY_NAME_AND_REGION =
         "SELECT id "
         + "FROM player_character "
@@ -789,6 +797,21 @@ public class PlayerCharacterDAO
             .addValue("regions", regionIds)
             .addValue("limit", limit);
         return template.query(FIND_BY_UPDATED_AND_ID_MAX_EXCLUDED, params, getStdRowMapper());
+    }
+
+    public List<Long> findIdsByNaturalIds(Set<PlayerCharacterNaturalId> naturalIds)
+    {
+        if(naturalIds.isEmpty()) return List.of();
+
+        List<Object[]> sqlNaturalIds = naturalIds.stream()
+            .map(id->new Object[]{
+                conversionService.convert(id.getRegion(), Integer.class),
+                id.getRealm(),
+                id.getBattlenetId()
+            })
+            .toList();
+        MapSqlParameterSource params = new MapSqlParameterSource("ids", sqlNaturalIds);
+        return template.queryForList(FIND_IDS_BY_NATURAL_IDS, params, Long.class);
     }
 
     public List<Long> findIds

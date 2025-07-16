@@ -16,6 +16,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -770,6 +771,25 @@ public class PlayerCharacterDAOIT
             pc2.getId(),
             pc4.getId()
         ));
+    }
+
+    @Test
+    public void testFindIdsByNaturalIds()
+    {
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter pc1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 10L, 1, "name#1"));
+        PlayerCharacter pc2 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.US, 33L, 2, "name#2"));
+        PlayerCharacter pc3 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 11L, 1, "name#3"));
+        List<Long> found = playerCharacterDAO.findIdsByNaturalIds(Set.of(
+            pc1,
+            pc2,
+            PlayerCharacterNaturalId.of(Region.EU, 2, 2L)
+        ));
+        found.sort(Comparator.naturalOrder());
+        assertEquals(List.of(pc1.getId(), pc2.getId()), found);
     }
 
 }
