@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,12 +30,13 @@ public class VodController
     @Autowired
     private LadderMatchDAO ladderMatchDAO;
 
+    @Hidden
     @GetMapping
     ({
         "/twitch/search/{dateCursor}/{typeCursor}/{mapCursor}/{regionCursor}/{page}/{pageDiff}",
         "/twitch/search/{dateCursor}/{typeCursor}/{mapCursor}/{page}/{pageDiff}",
     })
-    public PagedSearchResult<List<LadderMatch>> getCharacterMatches
+    public PagedSearchResult<List<LadderMatch>> getCharacterMatchesLegacy
     (
         @PathVariable("dateCursor") String dateCursor,
         @PathVariable("typeCursor") BaseMatch.MatchType typeCursor,
@@ -65,6 +67,45 @@ public class VodController
             typeCursor,
             mapCursor,
             regionCursor == null ? Region.US : regionCursor,
+            page,
+            pageDiff
+        );
+    }
+
+    @GetMapping("/twitch/search")
+    public PagedSearchResult<List<LadderMatch>> getTwitchVods
+    (
+        @RequestParam(value = "dateCursor", required = false) OffsetDateTime dateCursor,
+        @RequestParam(value = "typeCursor", defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
+        @RequestParam(value = "mapCursor", defaultValue = "0") int mapCursor,
+        @RequestParam(value = "regionCursor", defaultValue = "US") Region regionCursor,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "pageDiff", defaultValue = "1") int pageDiff,
+        @RequestParam(value = "race", required = false) Race race,
+        @RequestParam(value = "versusRace", required = false) Race versusRace,
+        @RequestParam(value = "minRating", required = false) Integer minRating,
+        @RequestParam(value = "maxRating", required = false) Integer maxRating,
+        @RequestParam(value = "minDuration", required = false) Integer minDuration,
+        @RequestParam(value = "maxDuration", required = false) Integer maxDuration,
+        @RequestParam(value = "includeSubOnly", defaultValue = "false") boolean includeSubOnly,
+        @RequestParam(value = "map", required = false) Integer map
+    )
+    {
+        if(Math.abs(pageDiff) > 1)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page count is too big");
+
+        if(dateCursor == null) dateCursor = SC2Pulse.offsetDateTime();
+        return ladderMatchDAO.findTwitchVods
+        (
+            race, versusRace,
+            minRating, maxRating,
+            minDuration, maxDuration,
+            includeSubOnly,
+            map,
+            dateCursor,
+            typeCursor,
+            mapCursor,
+            regionCursor,
             page,
             pageDiff
         );

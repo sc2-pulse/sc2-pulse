@@ -153,8 +153,13 @@ class VersusUtil
 
     static loadNextMatchesModel(dateCursor, typeCursor, mapCursor, regionCursor, params)
     {
+        const allParams = new URLSearchParams(params);
+        allParams.append("dateCursor", dateCursor);
+        allParams.append("typeCursor", typeCursor);
+        allParams.append("mapCursor", mapCursor);
+        allParams.append("regionCursor", regionCursor);
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/versus/${dateCursor}/${typeCursor}/${mapCursor}/${regionCursor}/1/1/matches?${params.toString()}`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/versus/matches?${allParams.toString()}`))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 const searchResult = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.SEARCH);

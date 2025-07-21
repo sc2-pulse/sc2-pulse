@@ -23,7 +23,12 @@ class LadderUtil
 
     static chainLadderPromise(params, formParams, ratingCursor, idCursor, count, isLastPage = false)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/ladder/a/${ratingCursor}/${idCursor}/${count}?` + formParams;
+        const allParams = new URLSearchParams(params.form);
+        allParams.append("ratingCursor", ratingCursor);
+        allParams.append("idCursor", idCursor);
+        allParams.append("count", count);
+
+        const request = `${ROOT_CONTEXT_PATH}api/ladder/a?` + allParams.toString();
         const ladderPromise = Session.beforeRequest()
         .then(n=>fetch(request))
         .then(Session.verifyJsonResponse)

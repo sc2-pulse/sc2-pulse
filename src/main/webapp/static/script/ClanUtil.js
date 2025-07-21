@@ -9,6 +9,11 @@ class ClanUtil
         const searchParams = new URLSearchParams("?" + formParams);
         if(!cursorValue) cursorValue = searchParams.get(pageDiff < 0 ? cursor.minParamName : cursor.maxParamName)
             || pageDiff < 0 ? CLAN_MIN_ADDITIONAL_CURSOR_FILTER : CLAN_MAX_ADDITIONAL_CURSOR_FILTER;
+        searchParams.append("cursor", cursor.fullName);
+        searchParams.append("cursorValue", cursorValue);
+        searchParams.append("idCursor", idCursor);
+        searchParams.append("page", page);
+        searchParams.append("pageDiff", pageDiff);
 
         const previousData = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
         const params =
@@ -32,7 +37,7 @@ class ClanUtil
         const byTagOrName = tagOrName && tagOrName.length > 0;
         const request = byTagOrName
             ? `${ROOT_CONTEXT_PATH}api/clan/tag-or-name?term=${encodeURIComponent(tagOrName)}`
-            : `${ROOT_CONTEXT_PATH}api/clan/cursor/${cursor.fullName}/${cursorValue}/${idCursor}/${page}/${pageDiff}?${formParams}`;
+            : `${ROOT_CONTEXT_PATH}api/clan/cursor?${searchParams.toString()}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)

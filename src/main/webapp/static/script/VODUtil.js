@@ -6,7 +6,10 @@ class VODUtil
 
     static getMatches(params, dateCursor, mapCursor)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/vod/twitch/search/${dateCursor}/_1V1/${mapCursor}/0/1?${params.toString()}`;
+        const cursorParams = new URLSearchParams(params);
+        cursorParams.append("dateCursor", dateCursor);
+        cursorParams.append("mapCursor", mapCursor);
+        const request = `${ROOT_CONTEXT_PATH}api/vod/twitch/search?${cursorParams.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(Session.verifyJsonResponse);

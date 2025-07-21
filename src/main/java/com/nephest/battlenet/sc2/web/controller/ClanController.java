@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -33,8 +33,9 @@ public class ClanController
     @Autowired
     private ClanDAO clanDAO;
 
+    @Hidden
     @GetMapping("/cursor/{cursor}/{cursorValue}/{idCursor}/{page}/{pageDiff}")
-    public PagedSearchResult<List<Clan>> findByCursor
+    public PagedSearchResult<List<Clan>> findByCursorLegacy
     (
         @PathVariable("cursor") ClanDAO.Cursor cursor,
         @PathVariable("cursorValue") double cursorValue,
@@ -50,6 +51,40 @@ public class ClanController
         @RequestParam(name="region", required = false) Region region
     )
     {
+        return clanDAO.findByCursor
+        (
+            cursor, cursorValue, idCursor,
+            minActiveMembers, maxActiveMembers,
+            minGamesPerActiveMemberPerDay, maxGamesPerActiveMemberPerDay,
+            minAvgRating, maxAvgRating,
+            region,
+            page, pageDiff
+        );
+    }
+
+    @GetMapping("/cursor")
+    public PagedSearchResult<List<Clan>> findByCursor
+    (
+        @RequestParam("cursor") ClanDAO.Cursor cursor,
+        @RequestParam(value = "cursorValue", required = false) Double cursorValue,
+        @RequestParam(value = "idCursor", required = false) Integer idCursor,
+        @RequestParam(value = "page", required = false) Integer page,
+        @RequestParam(value = "pageDiff", defaultValue = "1") int pageDiff,
+        @RequestParam(name="minActiveMembers", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) int minActiveMembers,
+        @RequestParam(name="maxActiveMembers", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) int maxActiveMembers,
+        @RequestParam(name="minGamesPerActiveMemberPerDay", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) double minGamesPerActiveMemberPerDay,
+        @RequestParam(name="maxGamesPerActiveMemberPerDay", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) double maxGamesPerActiveMemberPerDay,
+        @RequestParam(name="minAvgRating", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) int minAvgRating,
+        @RequestParam(name="maxAvgRating", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) int maxAvgRating,
+        @RequestParam(name="region", required = false) Region region
+    )
+    {
+        boolean desc = pageDiff > 0;
+        if(cursorValue == null) cursorValue = desc
+            ? (double) MAX_ADDITIONAL_CURSOR_FILTER
+            : (double) MIN_ADDITIONAL_CURSOR_FILTER;
+        if(idCursor == null) idCursor = desc ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+        if(page == null) page = desc ? 0 : Integer.MAX_VALUE;
         return clanDAO.findByCursor
         (
             cursor, cursorValue, idCursor,

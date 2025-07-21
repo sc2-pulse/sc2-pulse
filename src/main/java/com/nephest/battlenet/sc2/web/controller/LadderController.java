@@ -21,6 +21,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import com.nephest.battlenet.sc2.web.service.MapService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -54,8 +55,9 @@ public class LadderController
     @Autowired
     private MapService mapService;
 
+    @Hidden
     @GetMapping("/a/{ratingCursor}/{idCursor}/{count}")
-    public PagedSearchResult<List<LadderTeam>> getLadder
+    public PagedSearchResult<List<LadderTeam>> getLadderLegacy
         (
             @PathVariable("ratingCursor") long ratingCursor,
             @PathVariable("idCursor") long idCursor,
@@ -79,6 +81,64 @@ public class LadderController
     {
         if(Math.abs(count) > PAGE_COUNT_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page count is too big");
+
+        Set<Region> regions = EnumSet.noneOf(Region.class);
+        if(us) regions.add(Region.US);
+        if(eu) regions.add(Region.EU);
+        if(kr) regions.add(Region.KR);
+        if(cn) regions.add(Region.CN);
+
+        Set<LeagueType> leagues = EnumSet.noneOf(LeagueType.class);
+        if(bronze) leagues.add(LeagueType.BRONZE);
+        if(silver) leagues.add(LeagueType.SILVER);
+        if(gold) leagues.add(LeagueType.GOLD);
+        if(platinum) leagues.add(LeagueType.PLATINUM);
+        if(diamond) leagues.add(LeagueType.DIAMOND);
+        if(master) leagues.add(LeagueType.MASTER);
+        if(grandmaster) leagues.add(LeagueType.GRANDMASTER);
+        return ladderSearch.find
+        (
+            season,
+            regions,
+            leagues,
+            queue,
+            teamType,
+            page,
+            ratingCursor,
+            idCursor,
+            count
+        );
+    }
+
+    @GetMapping("/a")
+    public PagedSearchResult<List<LadderTeam>> getLadder
+    (
+        @RequestParam(value = "ratingCursor", required = false) Long ratingCursor,
+        @RequestParam(value = "idCursor", required = false) Long idCursor,
+        @RequestParam(value = "count", defaultValue = "1") int count,
+        @RequestParam("season") int season,
+        @RequestParam("queue") QueueType queue,
+        @RequestParam("team-type") TeamType teamType,
+        @RequestParam(name = "page", required = false) Integer page,
+        @RequestParam(name = "us", required = false) boolean us,
+        @RequestParam(name = "eu", required = false) boolean eu,
+        @RequestParam(name = "kr", required = false) boolean kr,
+        @RequestParam(name = "cn", required = false) boolean cn,
+        @RequestParam(name = "bro", required = false) boolean bronze,
+        @RequestParam(name = "sil", required = false) boolean silver,
+        @RequestParam(name = "gol", required = false) boolean gold,
+        @RequestParam(name = "pla", required = false) boolean platinum,
+        @RequestParam(name = "dia", required = false) boolean diamond,
+        @RequestParam(name = "mas", required = false) boolean master,
+        @RequestParam(name = "gra", required = false) boolean grandmaster
+    )
+    {
+        if(Math.abs(count) > PAGE_COUNT_MAX)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page count is too big");
+        boolean desc = count > 0;
+        if(ratingCursor == null) ratingCursor = desc ? Long.MAX_VALUE : Long.MIN_VALUE;
+        if(idCursor == null) idCursor = desc ? Long.MAX_VALUE : Long.MIN_VALUE;
+        if(page == null) page = desc ? 0 : Integer.MAX_VALUE;
 
         Set<Region> regions = EnumSet.noneOf(Region.class);
         if(us) regions.add(Region.US);
