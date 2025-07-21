@@ -296,10 +296,10 @@ public class VersusIT
         Set<TeamLegacyUid> teams1,
         Integer[] clans2,
         Set<TeamLegacyUid> teams2,
-        OffsetDateTime dateAnchor,
-        BaseMatch.MatchType typeAnchor,
-        int mapAnchor,
-        Region regionAnchor,
+        OffsetDateTime dateCursor,
+        BaseMatch.MatchType typeCursor,
+        int mapCursor,
+        Region regionCursor,
         int page,
         int pageDiff,
         BaseMatch.MatchType type,
@@ -325,10 +325,10 @@ public class VersusIT
                     : get
                     (
                         "/api/versus"
-                            + "/{dateAnchor}/{typeAnchor}/{mapAnchor}/{regionAnchor}"
+                            + "/{dateCursor}/{typeCursor}/{mapCursor}/{regionCursor}"
                             + "/{page}/{pageDiff}/matches"
                             + "?type=" + mvcConversionService.convert(type, String.class) + sb,
-                            dateAnchor, typeAnchor, mapAnchor, regionAnchor,
+                            dateCursor, typeCursor, mapCursor, regionCursor,
                             page, pageDiff,
                             type
                     )

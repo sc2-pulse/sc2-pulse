@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -50,10 +50,10 @@ public class VersusService
         Set<TeamLegacyUid> teams1,
         Integer[] clans2,
         Set<TeamLegacyUid> teams2,
-        OffsetDateTime dateAnchor,
-        BaseMatch.MatchType typeAnchor,
-        int mapAnchor,
-        Region regionAnchor,
+        OffsetDateTime dateCursor,
+        BaseMatch.MatchType typeCursor,
+        int mapCursor,
+        Region regionCursor,
         int page,
         int pageDiff,
         BaseMatch.MatchType... types
@@ -63,7 +63,7 @@ public class VersusService
         (
             clans1, teams1,
             clans2, teams2,
-            dateAnchor, typeAnchor, mapAnchor, regionAnchor,
+            dateCursor, typeCursor, mapCursor, regionCursor,
             page, pageDiff,
             types
         );

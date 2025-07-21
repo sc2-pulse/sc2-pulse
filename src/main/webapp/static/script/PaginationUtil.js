@@ -96,8 +96,8 @@ class PaginationUtil
             new Pagination(
                 ".pagination-ladder",
                 [
-                    {name: "rating-anchor", min: 0, max: 99999, getter: (t)=>t.rating},
-                    {name: "id-anchor", min: 0, max: 1, getter: (t)=>t.id}
+                    {name: "rating-cursor", min: 0, max: 99999, getter: (t)=>t.rating},
+                    {name: "id-cursor", min: 0, max: 1, getter: (t)=>t.id}
                 ],
                 LadderUtil.ladderPaginationPageClick)
         );

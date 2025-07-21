@@ -237,13 +237,13 @@ class HistoryUtil
         {
             case "ladder":
                 LadderUtil.restoreLadderFormState(document.getElementById("form-ladder"), params);
-                const ratingAnchor = params.get("ratingAnchor"); params.delete("ratingAnchor");
-                const idAnchor = params.get("idAnchor"); params.delete("idAnchor");
+                const ratingCursor = params.get("ratingCursor"); params.delete("ratingCursor");
+                const idCursor = params.get("idCursor"); params.delete("idCursor");
                 const count = params.get("count"); params.delete("count");
                 const formParams = params.toString();
                 scrollTo = "generated-info-all";
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
-                promises.push(LadderUtil.updateLadder(formParams, ratingAnchor, idAnchor, count));
+                promises.push(LadderUtil.updateLadder(formParams, ratingCursor, idCursor, count));
                 promises.push(StatsUtil.updateQueueStats(formParams));
                 promises.push(StatsUtil.updateLadderStats(formParams));
                 promises.push(StatsUtil.updateLeagueBounds(formParams));

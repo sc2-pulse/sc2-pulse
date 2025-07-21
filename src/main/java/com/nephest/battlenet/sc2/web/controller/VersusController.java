@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -87,15 +87,15 @@ public class VersusController
 
     @GetMapping
     ({
-        "/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}/matches",
-        "/{dateAnchor}/{typeAnchor}/{mapAnchor}/{regionAnchor}/{page}/{pageDiff}/matches",
+        "/{dateCursor}/{typeCursor}/{mapCursor}/{page}/{pageDiff}/matches",
+        "/{dateCursor}/{typeCursor}/{mapCursor}/{regionCursor}/{page}/{pageDiff}/matches",
     })
     public PagedSearchResult<List<LadderMatch>> getVersusMatches
     (
-        @PathVariable("dateAnchor") String dateAnchor,
-        @PathVariable("typeAnchor") BaseMatch.MatchType typeAnchor,
-        @PathVariable("mapAnchor") int mapAnchor,
-        @PathVariable(name = "regionAnchor", required = false) Region regionAnchor,
+        @PathVariable("dateCursor") String dateCursor,
+        @PathVariable("typeCursor") BaseMatch.MatchType typeCursor,
+        @PathVariable("mapCursor") int mapCursor,
+        @PathVariable(name = "regionCursor", required = false) Region regionCursor,
         @PathVariable("page") int page,
         @PathVariable("pageDiff") int pageDiff,
         @RequestParam(name = "clan1", defaultValue = "") Integer[] clans1,
@@ -111,8 +111,8 @@ public class VersusController
         (
             clans1, teams1,
             clans2, teams2,
-            SC2Pulse.offsetDateTime(OffsetDateTime.parse(dateAnchor)), typeAnchor, mapAnchor,
-            regionAnchor != null ? regionAnchor : Region.US,
+            SC2Pulse.offsetDateTime(OffsetDateTime.parse(dateCursor)), typeCursor, mapCursor,
+            regionCursor != null ? regionCursor : Region.US,
             page, pageDiff, types
         );
     }

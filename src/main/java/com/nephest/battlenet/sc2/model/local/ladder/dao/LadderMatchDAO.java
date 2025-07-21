@@ -117,7 +117,7 @@ public class LadderMatchDAO
             + "id "
             + "FROM participant_filter "
             + "INNER JOIN match USING(date, type, map_id, region) "
-            + "WHERE (date, type, map_id, region) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor, :regionAnchor) "
+            + "WHERE (date, type, map_id, region) %1$s (:dateCursor, :typeCursor, :mapIdCursor, :regionCursor) "
             + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) "
             + "ORDER BY date %2$s, type %2$s, map_id %2$s, region %2$s "
             + "LIMIT :limit"
@@ -137,7 +137,7 @@ public class LadderMatchDAO
             + "SELECT id "
             + "FROM match "
             + "WHERE vod = true "
-            + "AND (date, type, map_id, region) < (:dateAnchor, :typeAnchor, :mapIdAnchor, :regionAnchor) "
+            + "AND (date, type, map_id, region) < (:dateCursor, :typeCursor, :mapIdCursor, :regionCursor) "
             + "AND (:mapId::integer IS NULL OR map_id = :mapId) "
             + "AND (:minDuration::integer IS NULL OR duration >= :minDuration) "
             + "AND (:maxDuration::integer IS NULL OR duration <= :maxDuration) "
@@ -251,7 +251,7 @@ public class LadderMatchDAO
         String.format
         (
             VERSUS_FILTER_TEMPLATE,
-            "AND (date, type, map_id, match.region) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor, :regionAnchor) "
+            "AND (date, type, map_id, match.region) %1$s (:dateCursor, :typeCursor, :mapIdCursor, :regionCursor) "
             + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) ",
             "%2$s",
             "LIMIT :limit"
@@ -393,9 +393,9 @@ public class LadderMatchDAO
     public PagedSearchResult<List<LadderMatch>> findMatchesByCharacterId
     (
         long characterId,
-        OffsetDateTime dateAnchor,
-        BaseMatch.MatchType typeAnchor,
-        int mapAnchor,
+        OffsetDateTime dateCursor,
+        BaseMatch.MatchType typeCursor,
+        int mapCursor,
         int page,
         int pageDiff,
         BaseMatch.MatchType... types
@@ -404,9 +404,9 @@ public class LadderMatchDAO
         return findMatchesByCharacterIds
         (
             Set.of(characterId),
-            dateAnchor,
-            typeAnchor,
-            mapAnchor,
+            dateCursor,
+            typeCursor,
+            mapCursor,
             Region.US,
             page,
             pageDiff,
@@ -418,10 +418,10 @@ public class LadderMatchDAO
     public PagedSearchResult<List<LadderMatch>> findMatchesByCharacterIds
     (
         Set<Long> characterIds,
-        OffsetDateTime dateAnchor,
-        BaseMatch.MatchType typeAnchor,
-        int mapAnchor,
-        Region regionAnchor,
+        OffsetDateTime dateCursor,
+        BaseMatch.MatchType typeCursor,
+        int mapCursor,
+        Region regionCursor,
         int page,
         int pageDiff,
         int limit,
@@ -435,7 +435,7 @@ public class LadderMatchDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", characterIds)
             .addValue("limit", limit);
-        addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, regionAnchor, types, params);
+        addMatchCursorParams(dateCursor, typeCursor, mapCursor, regionCursor, types, params);
 
         String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
@@ -449,10 +449,10 @@ public class LadderMatchDAO
         Integer minDuration, Integer maxDuration,
         boolean includeSubOnly,
         Integer mapId,
-        OffsetDateTime dateAnchor,
-        BaseMatch.MatchType typeAnchor,
-        int mapAnchor,
-        Region regionAnchor,
+        OffsetDateTime dateCursor,
+        BaseMatch.MatchType typeCursor,
+        int mapCursor,
+        Region regionCursor,
         int page,
         int pageDiff
     )
@@ -483,7 +483,7 @@ public class LadderMatchDAO
             .addValue("limit", getResultsPerPage());
         addMatchCursorParams
         (
-            dateAnchor, typeAnchor, mapAnchor, regionAnchor,
+            dateCursor, typeCursor, mapCursor, regionCursor,
             new BaseMatch.MatchType[]{BaseMatch.MatchType._1V1},
             params
         );
@@ -493,19 +493,19 @@ public class LadderMatchDAO
 
     private MapSqlParameterSource addMatchCursorParams
     (
-        OffsetDateTime dateAnchor,
-        BaseMatch.MatchType typeAnchor,
-        int mapAnchor,
-        Region regionAnchor,
+        OffsetDateTime dateCursor,
+        BaseMatch.MatchType typeCursor,
+        int mapCursor,
+        Region regionCursor,
         BaseMatch.MatchType[] types,
         MapSqlParameterSource params
     )
     {
         return params
-            .addValue("dateAnchor", dateAnchor)
-            .addValue("typeAnchor", conversionService.convert(typeAnchor, Integer.class))
-            .addValue("mapIdAnchor", mapAnchor)
-            .addValue("regionAnchor", conversionService.convert(regionAnchor, Integer.class))
+            .addValue("dateCursor", dateCursor)
+            .addValue("typeCursor", conversionService.convert(typeCursor, Integer.class))
+            .addValue("mapIdCursor", mapCursor)
+            .addValue("regionCursor", conversionService.convert(regionCursor, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))
             .addValue("types", Arrays.stream(types)
@@ -540,10 +540,10 @@ public class LadderMatchDAO
         Set<TeamLegacyUid> teams1,
         Integer[] clans2,
         Set<TeamLegacyUid> teams2,
-        OffsetDateTime dateAnchor,
-        BaseMatch.MatchType typeAnchor,
-        int mapAnchor,
-        Region regionAnchor,
+        OffsetDateTime dateCursor,
+        BaseMatch.MatchType typeCursor,
+        int mapCursor,
+        Region regionCursor,
         int page,
         int pageDiff,
         BaseMatch.MatchType... types
@@ -559,7 +559,7 @@ public class LadderMatchDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("limit", getResultsPerPage());
         addVersusParams(clans1, teams1, clans2, teams2, params);
-        addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, regionAnchor, types, params);
+        addMatchCursorParams(dateCursor, typeCursor, mapCursor, regionCursor, types, params);
         String q = forward ? FIND_VERSUS_MATCHES : FIND_VERSUS_MATCHES_REVERSED;
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);

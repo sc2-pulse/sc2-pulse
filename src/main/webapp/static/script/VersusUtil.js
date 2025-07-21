@@ -151,10 +151,10 @@ class VersusUtil
             .catch(error => Session.onPersonalException(error));
     }
 
-    static loadNextMatchesModel(dateAnchor, typeAnchor, mapAnchor, regionAnchor, params)
+    static loadNextMatchesModel(dateCursor, typeCursor, mapCursor, regionCursor, params)
     {
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/versus/${dateAnchor}/${typeAnchor}/${mapAnchor}/${regionAnchor}/1/1/matches?${params.toString()}`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/versus/${dateCursor}/${typeCursor}/${mapCursor}/${regionCursor}/1/1/matches?${params.toString()}`))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 const searchResult = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.SEARCH);

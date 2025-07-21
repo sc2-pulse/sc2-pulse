@@ -31,15 +31,15 @@ public class VodController
 
     @GetMapping
     ({
-        "/twitch/search/{dateAnchor}/{typeAnchor}/{mapAnchor}/{regionAnchor}/{page}/{pageDiff}",
-        "/twitch/search/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}",
+        "/twitch/search/{dateCursor}/{typeCursor}/{mapCursor}/{regionCursor}/{page}/{pageDiff}",
+        "/twitch/search/{dateCursor}/{typeCursor}/{mapCursor}/{page}/{pageDiff}",
     })
     public PagedSearchResult<List<LadderMatch>> getCharacterMatches
     (
-        @PathVariable("dateAnchor") String dateAnchor,
-        @PathVariable("typeAnchor") BaseMatch.MatchType typeAnchor,
-        @PathVariable("mapAnchor") int mapAnchor,
-        @PathVariable(value = "regionAnchor", required = false) Region regionAnchor,
+        @PathVariable("dateCursor") String dateCursor,
+        @PathVariable("typeCursor") BaseMatch.MatchType typeCursor,
+        @PathVariable("mapCursor") int mapCursor,
+        @PathVariable(value = "regionCursor", required = false) Region regionCursor,
         @PathVariable("page") int page,
         @PathVariable("pageDiff") int pageDiff,
         @RequestParam(value = "race", required = false) Race race,
@@ -61,10 +61,10 @@ public class VodController
             minDuration, maxDuration,
             includeSubOnly,
             map,
-            SC2Pulse.offsetDateTime(OffsetDateTime.parse(dateAnchor)),
-            typeAnchor,
-            mapAnchor,
-            regionAnchor == null ? Region.US : regionAnchor,
+            SC2Pulse.offsetDateTime(OffsetDateTime.parse(dateCursor)),
+            typeCursor,
+            mapCursor,
+            regionCursor == null ? Region.US : regionCursor,
             page,
             pageDiff
         );

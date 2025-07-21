@@ -4,21 +4,21 @@
 class VODUtil
 {
 
-    static getMatches(params, dateAnchor, mapAnchor)
+    static getMatches(params, dateCursor, mapCursor)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/vod/twitch/search/${dateAnchor}/_1V1/${mapAnchor}/0/1?${params.toString()}`;
+        const request = `${ROOT_CONTEXT_PATH}api/vod/twitch/search/${dateCursor}/_1V1/${mapCursor}/0/1?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(Session.verifyJsonResponse);
     }
 
-    static updateModel(params, dateAnchor = Util.currentISODateTimeString(), mapAnchor = 0)
+    static updateModel(params, dateCursor = Util.currentISODateTimeString(), mapCursor = 0)
     {
         if(params.get("minDuration")) params.set("minDuration", params.get("minDuration") * 60);
         if(params.get("maxDuration")) params.set("maxDuration", params.get("maxDuration") * 60);
-        return VODUtil.getMatches(params, dateAnchor, mapAnchor)
+        return VODUtil.getMatches(params, dateCursor, mapCursor)
             .then(json=>{
-                if(mapAnchor == 0) {
+                if(mapCursor == 0) {
                     Model.DATA.get(VIEW.VOD_SEARCH).set(VIEW_DATA.SEARCH, json);
                 } else {
                     const data = Model.DATA.get(VIEW.VOD_SEARCH).get(VIEW_DATA.SEARCH);
@@ -48,10 +48,10 @@ class VODUtil
         return Promise.resolve();
     }
 
-    static update(params, dateAnchor = Util.currentISODateTimeString(), mapAnchor = 0)
+    static update(params, dateCursor = Util.currentISODateTimeString(), mapCursor = 0)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return VODUtil.updateModel(params, dateAnchor, mapAnchor)
+        return VODUtil.updateModel(params, dateCursor, mapCursor)
             .then(VODUtil.updateView)
             .then(e=>{
                 Util.setGeneratingStatus(STATUS.SUCCESS);

@@ -16,14 +16,14 @@ class LadderUtil
         ]);
     }
 
-    static updateLadderModel(params, formParams, ratingAnchor = 99999, idAnchor = 0, count = 1)
+    static updateLadderModel(params, formParams, ratingCursor = 99999, idCursor = 0, count = 1)
     {
-        return LadderUtil.chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count);
+        return LadderUtil.chainLadderPromise(params, formParams, ratingCursor, idCursor, count);
     }
 
-    static chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count, isLastPage = false)
+    static chainLadderPromise(params, formParams, ratingCursor, idCursor, count, isLastPage = false)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/ladder/a/${ratingAnchor}/${idAnchor}/${count}?` + formParams;
+        const request = `${ROOT_CONTEXT_PATH}api/ladder/a/${ratingCursor}/${idCursor}/${count}?` + formParams;
         const ladderPromise = Session.beforeRequest()
         .then(n=>fetch(request))
         .then(Session.verifyJsonResponse)
@@ -34,7 +34,7 @@ class LadderUtil
                 params.count = count;
                 if(count < 1) return LadderUtil.setLastOrCurrentLadder(params, json);
 
-                return LadderUtil.chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count, true)
+                return LadderUtil.chainLadderPromise(params, formParams, ratingCursor, idCursor, count, true)
             }
 
              return new Promise((res, rej)=>{
@@ -84,18 +84,18 @@ class LadderUtil
         document.getElementById("generated-info-all").classList.remove("d-none");
     }
 
-    static updateLadder(formParams, ratingAnchor = 99999, idAnchor = 0, count = 1)
+    static updateLadder(formParams, ratingCursor = 99999, idCursor = 0, count = 1)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         const params =
         {
             form: formParams,
-            ratingAnchor: ratingAnchor,
-            idAnchor: idAnchor,
+            ratingCursor: ratingCursor,
+            idCursor: idCursor,
             count: count
         };
 
-        return LadderUtil.updateLadderModel(params, formParams, ratingAnchor, idAnchor, count)
+        return LadderUtil.updateLadderModel(params, formParams, ratingCursor, idCursor, count)
             .then(e => {
                 const searchParams = new URLSearchParams(e.form);
                 searchParams.append("type", "ladder");
@@ -173,8 +173,8 @@ class LadderUtil
         LadderUtil.updateLadder
         (
             formParams,
-            evt.target.getAttribute("data-page-rating-anchor"),
-            evt.target.getAttribute("data-page-id-anchor"),
+            evt.target.getAttribute("data-page-rating-cursor"),
+            evt.target.getAttribute("data-page-id-cursor"),
             evt.target.getAttribute("data-page-count")
         ).then(e=>Util.scrollIntoViewById(evt.target.getAttribute("href").substring(1)));
     }

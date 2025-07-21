@@ -246,15 +246,15 @@ public class CharacterController
     @Hidden
     @GetMapping
     ({
-        "/{id}/matches/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}",
-        "/{id}/matches/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}/{types}"
+        "/{id}/matches/{dateCursor}/{typeCursor}/{mapCursor}/{page}/{pageDiff}",
+        "/{id}/matches/{dateCursor}/{typeCursor}/{mapCursor}/{page}/{pageDiff}/{types}"
     })
     public PagedSearchResult<List<LadderMatch>> getCharacterMatchesLegacy
     (
         @PathVariable("id") long id,
-        @PathVariable("dateAnchor") String dateAnchor,
-        @PathVariable("typeAnchor") BaseMatch.MatchType typeAnchor,
-        @PathVariable("mapAnchor") int mapAnchor,
+        @PathVariable("dateCursor") String dateCursor,
+        @PathVariable("typeCursor") BaseMatch.MatchType typeCursor,
+        @PathVariable("mapCursor") int mapCursor,
         @PathVariable("page") int page,
         @PathVariable("pageDiff") int pageDiff,
         @PathVariable(name = "types", required = false) BaseMatch.MatchType[] types
@@ -266,9 +266,9 @@ public class CharacterController
         return ladderMatchDAO.findMatchesByCharacterId
         (
             id,
-            SC2Pulse.offsetDateTime(OffsetDateTime.parse(dateAnchor)),
-            typeAnchor,
-            mapAnchor,
+            SC2Pulse.offsetDateTime(OffsetDateTime.parse(dateCursor)),
+            typeCursor,
+            mapCursor,
             page,
             pageDiff,
             types

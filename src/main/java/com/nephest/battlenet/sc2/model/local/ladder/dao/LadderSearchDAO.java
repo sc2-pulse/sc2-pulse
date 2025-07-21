@@ -130,21 +130,21 @@ public class LadderSearchDAO
             + "AND confirmed_cheater_report.status = true "
         + "ORDER BY team.rating DESC, team.id DESC";
 
-    private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =
+    private static final String FIND_TEAM_MEMBERS_CURSOR_FORMAT =
         "SELECT "
         + FIND_TEAM_MEMBERS_BASE
 
         + LADDER_SEARCH_TEAM_FROM_WHERE
-        + "AND (team.rating, team.id) %2$s (:ratingAnchor, :idAnchor) "
+        + "AND (team.rating, team.id) %2$s (:ratingCursor, :idCursor) "
 
         + "ORDER BY team.rating %1$s, team.id %1$s "
         + "OFFSET :offset LIMIT :limit";
 
-    private static final String FIND_TEAM_MEMBERS_ANCHOR_QUERY =
-        String.format(FIND_TEAM_MEMBERS_ANCHOR_FORMAT, "DESC", "<");
+    private static final String FIND_TEAM_MEMBERS_CURSOR_QUERY =
+        String.format(FIND_TEAM_MEMBERS_CURSOR_FORMAT, "DESC", "<");
 
-    private static final String FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY =
-        String.format(FIND_TEAM_MEMBERS_ANCHOR_FORMAT, "ASC", ">");
+    private static final String FIND_TEAM_MEMBERS_CURSOR_REVERSED_QUERY =
+        String.format(FIND_TEAM_MEMBERS_CURSOR_FORMAT, "ASC", ">");
 
     private static final String FIND_CHARACTER_TEAM_MEMBERS_TAIL =
         "SELECT "
@@ -435,7 +435,7 @@ public class LadderSearchDAO
         return teams;
     }
 
-    public PagedSearchResult<List<LadderTeam>> findAnchored
+    public PagedSearchResult<List<LadderTeam>> find
     (
         int season,
         Set<Region> regions,
@@ -443,8 +443,8 @@ public class LadderSearchDAO
         QueueType queueType,
         TeamType teamType,
         long page,
-        long ratingAnchor,
-        long idAnchor,
+        long ratingCursor,
+        long idCursor,
         int pageDiff
     )
     {
@@ -457,12 +457,14 @@ public class LadderSearchDAO
             LadderUtil.createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType)
                 .addValue("offset", offset)
                 .addValue("limit", limit)
-                .addValue("ratingAnchor", ratingAnchor)
-                .addValue("idAnchor", idAnchor)
+                .addValue("ratingCursor", ratingCursor)
+                .addValue("idCursor", idCursor)
                 .addValue("cheaterReportType", conversionService
                     .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
 
-        String q = forward ? FIND_TEAM_MEMBERS_ANCHOR_QUERY : FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY;
+        String q = forward
+            ? FIND_TEAM_MEMBERS_CURSOR_QUERY
+            : FIND_TEAM_MEMBERS_CURSOR_REVERSED_QUERY;
         List<LadderTeam> teams = template
             .query(q, params, LADDER_TEAMS_EXTRACTOR);
         if(!forward) Collections.reverse(teams);

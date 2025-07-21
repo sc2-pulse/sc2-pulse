@@ -219,11 +219,11 @@ public class LadderSearchDAOIT
     //skip masters league for test
     @CsvSource({"1, 279", "2, 199", "3, 159", "4, 119", "5, 79", "6, 39"})
     @ParameterizedTest
-    public void test4v4LadderAnchor(int page, int teamId)
+    public void test4v4LadderCursor(int page, int teamId)
     {
         int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
         search.setResultsPerPage(leagueTeamCount);
-        PagedSearchResult<List<LadderTeam>> result = search.findAnchored
+        PagedSearchResult<List<LadderTeam>> result = search.find
         (
             DEFAULT_SEASON_ID,
             EnumSet.copyOf(REGIONS),
@@ -238,7 +238,7 @@ public class LadderSearchDAOIT
         verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId, true);
 
         //reversed
-        PagedSearchResult<List<LadderTeam>> resultReversed = search.findAnchored
+        PagedSearchResult<List<LadderTeam>> resultReversed = search.find
         (
             DEFAULT_SEASON_ID,
             EnumSet.copyOf(REGIONS),
@@ -254,11 +254,11 @@ public class LadderSearchDAOIT
     }
 
     @Test
-    public void test4v4LadderAnchorMultiplePages()
+    public void test4v4LadderCursorMultiplePages()
     {
         int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
         search.setResultsPerPage(leagueTeamCount);
-        PagedSearchResult<List<LadderTeam>> result = search.findAnchored
+        PagedSearchResult<List<LadderTeam>> result = search.find
         (
             DEFAULT_SEASON_ID,
             EnumSet.copyOf(REGIONS),
@@ -272,7 +272,7 @@ public class LadderSearchDAOIT
         verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, 3, 159, true);
 
         //reversed
-        PagedSearchResult<List<LadderTeam>> resultReversed = search.findAnchored
+        PagedSearchResult<List<LadderTeam>> resultReversed = search.find
         (
             DEFAULT_SEASON_ID,
             EnumSet.copyOf(REGIONS),

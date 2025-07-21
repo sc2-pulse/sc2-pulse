@@ -362,7 +362,7 @@ public class PlayerCharacterDAO
 
         + "WHERE team.season = :season AND team.region IS NOT NULL AND team.league_type IS NOT NULL "
         + "AND team.queue_type = :queueType AND team.team_type = :teamType "
-        + "AND (team.rating, team.id) < (:ratingAnchor, :idAnchor) "
+        + "AND (team.rating, team.id) < (:ratingCursor, :idCursor) "
 
         + "ORDER BY team.rating DESC, team.id DESC, player_character.id DESC "
         + "LIMIT :limit";
@@ -729,8 +729,8 @@ public class PlayerCharacterDAO
             .addValue("queueType", conversionService.convert(queueType, Integer.class))
             .addValue("teamType", conversionService.convert(teamType, Integer.class))
             .addValue("limit", count)
-            .addValue("idAnchor", bookmark != null ? bookmark[1] : 0L)
-            .addValue("ratingAnchor", bookmark != null ? bookmark[0] : 99999L);
+            .addValue("idCursor", bookmark != null ? bookmark[1] : 0L)
+            .addValue("ratingCursor", bookmark != null ? bookmark[0] : 99999L);
         return template.query(FIND_TOP_PLAYER_CHARACTERS, params, BOOKMARKED_STD_ROW_EXTRACTOR);
     }
 

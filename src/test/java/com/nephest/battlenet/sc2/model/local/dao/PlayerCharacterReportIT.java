@@ -376,7 +376,7 @@ public class PlayerCharacterReportIT
 
         //verify ladder status
         //verify cheater flag
-        PagedSearchResult<List<LadderTeam>> teamNoFlag = ladderSearchDAO.findAnchored
+        PagedSearchResult<List<LadderTeam>> teamNoFlag = ladderSearchDAO.find
         (
             SeasonGenerator.DEFAULT_SEASON_ID,
             Set.of(Region.EU),
@@ -430,7 +430,7 @@ public class PlayerCharacterReportIT
 
         //verify ladder integration
         //verify cheater flag
-        PagedSearchResult<List<LadderTeam>> teams = ladderSearchDAO.findAnchored
+        PagedSearchResult<List<LadderTeam>> teams = ladderSearchDAO.find
         (
             SeasonGenerator.DEFAULT_SEASON_ID,
             Set.of(Region.EU),

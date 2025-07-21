@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -54,11 +54,11 @@ public class LadderController
     @Autowired
     private MapService mapService;
 
-    @GetMapping("/a/{ratingAnchor}/{idAnchor}/{count}")
-    public PagedSearchResult<List<LadderTeam>> getLadderAnchored
+    @GetMapping("/a/{ratingCursor}/{idCursor}/{count}")
+    public PagedSearchResult<List<LadderTeam>> getLadder
         (
-            @PathVariable("ratingAnchor") long ratingAnchor,
-            @PathVariable("idAnchor") long idAnchor,
+            @PathVariable("ratingCursor") long ratingCursor,
+            @PathVariable("idCursor") long idCursor,
             @PathVariable("count") int count,
             @RequestParam("season") int season,
             @RequestParam("queue") QueueType queue,
@@ -94,7 +94,7 @@ public class LadderController
         if(diamond) leagues.add(LeagueType.DIAMOND);
         if(master) leagues.add(LeagueType.MASTER);
         if(grandmaster) leagues.add(LeagueType.GRANDMASTER);
-        return ladderSearch.findAnchored
+        return ladderSearch.find
         (
             season,
             regions,
@@ -102,8 +102,8 @@ public class LadderController
             queue,
             teamType,
             page,
-            ratingAnchor,
-            idAnchor,
+            ratingCursor,
+            idCursor,
             count
         );
     }
