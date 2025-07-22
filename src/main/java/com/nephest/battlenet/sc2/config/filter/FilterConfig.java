@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.filter;
@@ -72,6 +72,16 @@ public class FilterConfig
             "/api/my/*",
             "/api/character/report/*"
         );
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<CursorParameterRedirectFilter> anchorParameterRedirectFilter()
+    {
+        FilterRegistrationBean<CursorParameterRedirectFilter> registrationBean
+            = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new CursorParameterRedirectFilter());
+        registrationBean.addUrlPatterns("/");
         return registrationBean;
     }
 
