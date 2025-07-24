@@ -6,7 +6,7 @@ package com.nephest.battlenet.sc2.model.blizzard;
 public final class BlizzardTestUtil
 {
 
-    public static final BlizzardKey DEFAULT_ACCOUNT_KEY = new BlizzardKey
+    public static final BlizzardAccountKey DEFAULT_ACCOUNT_KEY = new BlizzardAccountKey
     (
         """
         https://eu.api.blizzard.com/data/sc2/character\

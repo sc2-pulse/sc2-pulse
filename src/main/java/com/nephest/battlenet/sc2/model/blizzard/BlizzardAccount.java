@@ -18,7 +18,7 @@ extends BaseAccount
     private Long id;
 
     @Valid @NotNull
-    private BlizzardKey key;
+    private BlizzardAccountKey key;
 
     public BlizzardAccount(){}
 
@@ -26,7 +26,7 @@ extends BaseAccount
     (
         Long id,
         String battleTag,
-        BlizzardKey key
+        BlizzardAccountKey key
     )
     {
         super(battleTag);
@@ -44,12 +44,12 @@ extends BaseAccount
         return id;
     }
 
-    public BlizzardKey getKey()
+    public BlizzardAccountKey getKey()
     {
         return key;
     }
 
-    public void setKey(BlizzardKey key)
+    public void setKey(BlizzardAccountKey key)
     {
         this.key = key;
     }
