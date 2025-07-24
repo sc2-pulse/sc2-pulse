@@ -25,15 +25,22 @@ public class DiscriminatedTagTest
     }
 
     @Test
+    public void testParseLongDiscriminator()
+    {
+        DiscriminatedTag tag = DiscriminatedTag.parse("tag#" + Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, tag.discriminator());
+    }
+
+    @Test
     public void testUniqueness()
     {
         TestUtil.testUniqueness
         (
-            new DiscriminatedTag("tag1", 1),
-            new DiscriminatedTag("tag1", 1),
+            new DiscriminatedTag("tag1", 1L),
+            new DiscriminatedTag("tag1", 1L),
 
-            new DiscriminatedTag("tag2", 1),
-            new DiscriminatedTag("tag1", 2),
+            new DiscriminatedTag("tag2", 1L),
+            new DiscriminatedTag("tag1", 2L),
             new DiscriminatedTag(null, null)
         );
     }
@@ -42,15 +49,15 @@ public class DiscriminatedTagTest
     {
         return Stream.of
         (
-            Arguments.of(new DiscriminatedTag("tag1", 1), new DiscriminatedTag("tag1", 1), 0),
+            Arguments.of(new DiscriminatedTag("tag1", 1L), new DiscriminatedTag("tag1", 1L), 0),
 
-            Arguments.of(new DiscriminatedTag("tag2", 1), new DiscriminatedTag("tag1", 1), 1),
-            Arguments.of(new DiscriminatedTag("tag1", 2), new DiscriminatedTag("tag1", 1), 1),
+            Arguments.of(new DiscriminatedTag("tag2", 1L), new DiscriminatedTag("tag1", 1L), 1),
+            Arguments.of(new DiscriminatedTag("tag1", 2L), new DiscriminatedTag("tag1", 1L), 1),
 
-            Arguments.of(new DiscriminatedTag("tag0", 1), new DiscriminatedTag("tag1", 1), -1),
-            Arguments.of(new DiscriminatedTag("tag1", 0), new DiscriminatedTag("tag1", 1), -1),
+            Arguments.of(new DiscriminatedTag("tag0", 1L), new DiscriminatedTag("tag1", 1L), -1),
+            Arguments.of(new DiscriminatedTag("tag1", 0L), new DiscriminatedTag("tag1", 1L), -1),
 
-            Arguments.of(new DiscriminatedTag(null, null), new DiscriminatedTag("tag1", 1), 1)
+            Arguments.of(new DiscriminatedTag(null, null), new DiscriminatedTag("tag1", 1L), 1)
         );
     }
 
