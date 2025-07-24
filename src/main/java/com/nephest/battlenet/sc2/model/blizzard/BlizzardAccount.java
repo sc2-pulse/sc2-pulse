@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.blizzard;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nephest.battlenet.sc2.model.BaseAccount;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
@@ -16,16 +17,21 @@ extends BaseAccount
     @NotNull
     private Long id;
 
+    @Valid @NotNull
+    private BlizzardKey key;
+
     public BlizzardAccount(){}
 
     public BlizzardAccount
     (
         Long id,
-        String battleTag
+        String battleTag,
+        BlizzardKey key
     )
     {
         super(battleTag);
         this.id = id;
+        this.key = key;
     }
 
     public void setId(Long id)
@@ -36,6 +42,16 @@ extends BaseAccount
     public Long getId()
     {
         return id;
+    }
+
+    public BlizzardKey getKey()
+    {
+        return key;
+    }
+
+    public void setKey(BlizzardKey key)
+    {
+        this.key = key;
     }
 
 }
