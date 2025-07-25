@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,8 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
@@ -68,6 +71,9 @@ public class BlizzardOidcUserServiceTest
 
     @Mock
     private OidcUserService oidcUserService;
+
+    @Captor
+    private ArgumentCaptor<PlayerCharacter> characterCaptor;
 
     private BlizzardOidcUserService service;
 
@@ -140,19 +146,26 @@ public class BlizzardOidcUserServiceTest
     @Test
     public void whenAccountDoesntExistAndLoadingByBlizzardProfileHasFailed_thenMerge()
     {
-        Account expectedResult = new Account(1L, PARTITION, BATTLE_TAG);
-        when(accountDAO.merge(expectedResult)).thenReturn(expectedResult);
-        when(accountDAO.find(PARTITION, BATTLE_TAG)).thenReturn(Optional.empty());
-        when(api.getPlayerCharacters(Region.EU, ID)).thenReturn(Flux.just(
+        List<BlizzardFullPlayerCharacter> bChars = List.of
+        (
             new BlizzardFullPlayerCharacter(10L, 1, "name#1", Region.EU),
             new BlizzardFullPlayerCharacter(11L, 1, "name#2", Region.US),
             new BlizzardFullPlayerCharacter(12L, 1, "name#3", Region.KR)
-        ));
+        );
+        Account expectedResult = new Account(1L, PARTITION, BATTLE_TAG);
+        List<PlayerCharacter> characters = bChars.stream()
+            .map(bChar->PlayerCharacter.of(expectedResult, bChar.getRegion(), bChar))
+            .toList();
+        when(accountDAO.merge(expectedResult)).thenReturn(expectedResult);
+        when(accountDAO.find(PARTITION, BATTLE_TAG)).thenReturn(Optional.empty());
+        when(api.getPlayerCharacters(Region.EU, ID)).thenReturn(Flux.fromIterable(bChars));
         when(playerCharacterDAO.find(any(), anyInt(), anyLong()))
             .thenReturn(Optional.empty());
 
         assertEquals(expectedResult, ((BlizzardOidcUser) service.loadUser(null)).getAccount());
         verify(accountDAO).merge(argThat(a->a.equals(expectedResult)));
+        verify(playerCharacterDAO, times(characters.size())).merge(characterCaptor.capture());
+        assertEquals(characters, characterCaptor.getAllValues());
     }
 
     @Test
