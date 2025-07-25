@@ -7,7 +7,6 @@ import static com.nephest.battlenet.sc2.web.service.DiscordService.DB_CURSOR_BAT
 import static com.nephest.battlenet.sc2.web.service.DiscordService.USER_UPDATE_BATCH_SIZE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -274,7 +273,7 @@ public class DiscordServiceTest
         ApplicationRoleConnection connection = connectionArgumentCaptor.getValue();
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
         assertEquals(tag, connection.getPlatformUsername());
-        assertNull(connection.getMetadata());
+        assertEquals(Map.of("rating_to", "0"), connection.getMetadata());
 
         //members in all guilds are dropped
         verify(rolesSlashCommand).updateRoles

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.connection;
@@ -90,13 +90,33 @@ public class ApplicationRoleConnection
         );
     }
 
-    public static ApplicationRoleConnection empty(String name)
+    private static ConnectionMetaData getLastRatingMetaData
+    (
+        Map<PulseConnectionParameter, List<ConnectionMetaData>> parameters
+    )
     {
+        if(parameters.isEmpty()) throw new IllegalArgumentException("Parameters expected");
+
+        List<ConnectionMetaData> ratingMetaData = parameters.get(PulseConnectionParameter.RATING);
+        if (ratingMetaData == null || ratingMetaData.isEmpty())
+            throw new IllegalArgumentException("Rating parameters expected");
+
+        return ratingMetaData.get(ratingMetaData.size() - 1);
+    }
+
+
+    public static ApplicationRoleConnection empty
+    (
+        String name,
+        Map<PulseConnectionParameter, List<ConnectionMetaData>> parameters
+    )
+    {
+        ConnectionMetaData ratingMetaData = getLastRatingMetaData(parameters);
         return new ApplicationRoleConnection
         (
             DEFAULT_PLATFORM_NAME,
             name,
-            null
+            Map.of(ratingMetaData.getKey(), "0")
         );
     }
 
