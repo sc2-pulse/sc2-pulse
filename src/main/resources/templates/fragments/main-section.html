@@ -387,16 +387,26 @@
 </section>
 <div th:fragment="login">
     <ul class="d-flex flex-center-wrap-gap list-unstyled">
-        <li th:each="region : ${@environment.getProperty('com.nephest.battlenet.sc2.ladder.regions').split(',')}">
-            <a
-                    class="btn btn-outline-primary"
-                    href="#"
-                    th:href="@{|/oauth2/authorization/sc2-lg-${region.toLowerCase()}|}"
-                    th:text="|BattleNet ${region}|"
-            >
-                BattleNet
-            </a>
-        </li>
+        <th:block th:with="activeRegions=${@environment.getProperty('com.nephest.battlenet.sc2.ladder.regions').split(',')}">
+            <li th:if="${#arrays.contains(activeRegions, 'US') or #arrays.contains(activeRegions, 'EU') or #arrays.contains(activeRegions, 'KR')}">
+                <a
+                        class="btn btn-outline-primary"
+                        href="#"
+                        th:href="@{/oauth2/authorization/sc2-lg-us}"
+                >
+                    BattleNet Global
+                </a>
+            </li>
+            <li th:if="${#arrays.contains(activeRegions, 'CN')}">
+                <a
+                        class="btn btn-outline-primary"
+                        href="#"
+                        th:href="@{/oauth2/authorization/sc2-lg-cn}"
+                >
+                    BattleNet CN
+                </a>
+            </li>
+        </th:block>
     </ul>
     <ul class="d-inline-block">
         <li>Easy access to your stats</li>
