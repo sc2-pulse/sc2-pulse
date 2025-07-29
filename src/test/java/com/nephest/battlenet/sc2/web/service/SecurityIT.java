@@ -67,6 +67,7 @@ public class SecurityIT
     @CsvSource
     ({
         "GET, /verify/discord, 401",
+        "GET, /verify/discord/linked-roles, 401",
         "GET, /settings/advanced, 401",
     })
     public void testNotAuthenticatedSecurity(String method, String path, int status)

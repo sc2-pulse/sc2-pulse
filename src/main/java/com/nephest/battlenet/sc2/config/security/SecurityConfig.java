@@ -108,7 +108,7 @@ public class SecurityConfig
                 .requestMatchers
                 (
                     "/api/my/**",
-                    "/verify/*"
+                    "/verify/**"
                 ).authenticated()
                 .requestMatchers
                 (
