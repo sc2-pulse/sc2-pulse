@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.Startup;
 import com.nephest.battlenet.sc2.config.openapi.EnumPropertyCustomizer;
 import com.nephest.battlenet.sc2.config.openapi.SpringDocConfig;
 import com.nephest.battlenet.sc2.config.security.BlizzardOidcUserService;
+import com.nephest.battlenet.sc2.config.security.DelegatingAuthorizationRequestResolver;
 import com.nephest.battlenet.sc2.config.security.DiscordOauth2UserService;
 import com.nephest.battlenet.sc2.config.security.SecurityBeanConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
@@ -47,6 +48,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Application.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SecurityConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SecurityBeanConfig.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DelegatingAuthorizationRequestResolver.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DiscordOauth2UserService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DiscordBootstrap.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SpringDocConfig.class),
