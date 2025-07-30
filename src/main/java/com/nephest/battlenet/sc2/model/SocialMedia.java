@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
@@ -112,10 +112,14 @@ implements Identifiable
 
         for(SocialMedia media : SocialMedia.values())
         {
-            if(media.getLaxUserUrlPattern() != null && media.getLaxUserUrlPattern().matcher(url).matches())
+            if(media.getLaxUserUrlPattern() != null)
+            {
+                if(media.getLaxUserUrlPattern().matcher(url).matches()) return media;
+            }
+            else if(media.getBaseUserUrl() != null && url.startsWith(media.getBaseUserUrl()))
+            {
                 return media;
-
-            if(media.getBaseUserUrl() != null && url.startsWith(media.getBaseUserUrl())) return media;
+            }
         }
 
 

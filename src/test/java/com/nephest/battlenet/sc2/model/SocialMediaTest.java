@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
@@ -52,6 +52,22 @@ public class SocialMediaTest
     public void testFromLaxUserUrl(String url, SocialMedia expectedResult)
     {
         assertEquals(expectedResult, SocialMedia.fromLaxUserUrl(url));
+    }
+
+    @CsvSource
+    ({
+        "battlenet:://starcraft/profile/2/4379857489798174891"
+            + "battlenet:://starcraft/profile/2/4379857489798174891, BATTLE_NET",
+    })
+    @ParameterizedTest
+    public void whenLaxUserPatternIsAvailableAndFails_thenReturnUnknown
+    (
+        String url,
+        SocialMedia socialMedia
+    )
+    {
+        assertEquals(socialMedia, SocialMedia.fromBaseUserUrlPrefix(url));
+        assertEquals(SocialMedia.UNKNOWN, SocialMedia.fromLaxUserUrl(url));
     }
 
     @CsvSource
