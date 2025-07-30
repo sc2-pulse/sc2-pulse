@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -28,7 +26,6 @@ extends SavedRequestAwareAuthenticationSuccessHandler
 {
 
     public static final String DEFAULT_SUCCESS_URL = "/?#personal-characters";
-    public static final String DISCORD_APP_URL = "https://discord.com/app";
     public static final String ACCOUNT_VERIFICATION_VIEW_NAME = "account-verification-result";
 
     private final DiscordService discordService;
@@ -105,19 +102,16 @@ extends SavedRequestAwareAuthenticationSuccessHandler
             .fromUrlString(rawState, discordStateKeyLength);
         if(!state.getFlags().contains(DiscordOauth2State.Flag.LINKED_ROLE)) return;
 
-        response.setStatus(HttpStatus.TEMPORARY_REDIRECT.value());
-        response.setHeader(HttpHeaders.LOCATION, DISCORD_APP_URL);
         try
         {
             viewResolver.resolveViewName(ACCOUNT_VERIFICATION_VIEW_NAME, request.getLocale())
                 .render(Map.of("statusCode", response.getStatus()), request, response);
+            response.flushBuffer();
         }
         catch (Exception e)
         {
-            response.flushBuffer();
             throw new ServletException(e);
         }
-        response.flushBuffer();
     }
 
     private void updateDiscordOauth2Data(AccountOauth2User<? extends OAuth2User> user)

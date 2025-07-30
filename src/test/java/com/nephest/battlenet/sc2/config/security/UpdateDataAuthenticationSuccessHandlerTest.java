@@ -98,13 +98,12 @@ public class UpdateDataAuthenticationSuccessHandlerTest
 
         assertEquals
         (
-            forward ? HttpStatus.TEMPORARY_REDIRECT.value() : HttpStatus.FOUND.value(),
+            forward ? HttpStatus.OK.value() : HttpStatus.FOUND.value(),
             response.getStatus()
         );
-        assertEquals
+        if(!forward) assertEquals
         (
-            forward ? UpdateDataAuthenticationSuccessHandler.DISCORD_APP_URL
-                : UpdateDataAuthenticationSuccessHandler.DEFAULT_SUCCESS_URL,
+            UpdateDataAuthenticationSuccessHandler.DEFAULT_SUCCESS_URL,
             response.getHeader(HttpHeaders.LOCATION)
         );
         verify(view, times(forward ? 1 : 0))
