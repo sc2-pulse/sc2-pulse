@@ -4,12 +4,14 @@
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -73,14 +75,12 @@ public class VodController
     }
 
     @GetMapping("/twitch/search")
-    public PagedSearchResult<List<LadderMatch>> getTwitchVods
+    public CursorNavigableResult<List<LadderMatch>> getTwitchVods
     (
         @RequestParam(value = "dateCursor", required = false) OffsetDateTime dateCursor,
         @RequestParam(value = "typeCursor", defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
         @RequestParam(value = "mapCursor", defaultValue = "0") int mapCursor,
         @RequestParam(value = "regionCursor", defaultValue = "US") Region regionCursor,
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "pageDiff", defaultValue = "1") int pageDiff,
         @RequestParam(value = "race", required = false) Race race,
         @RequestParam(value = "versusRace", required = false) Race versusRace,
         @RequestParam(value = "minRating", required = false) Integer minRating,
@@ -91,11 +91,8 @@ public class VodController
         @RequestParam(value = "map", required = false) Integer map
     )
     {
-        if(pageDiff != 1)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "pageDiff must be 1");
-
         if(dateCursor == null) dateCursor = SC2Pulse.offsetDateTime();
-        return ladderMatchDAO.findTwitchVods
+        return new CursorNavigableResult<>(ladderMatchDAO.findTwitchVods
         (
             race, versusRace,
             minRating, maxRating,
@@ -106,9 +103,9 @@ public class VodController
             typeCursor,
             mapCursor,
             regionCursor,
-            page,
-            pageDiff
-        );
+            2,
+            1
+        ).getResult(), new CursorNavigation(null, null));
     }
 
 }

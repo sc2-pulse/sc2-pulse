@@ -20,6 +20,7 @@ import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
@@ -300,8 +301,7 @@ public class VersusIT
         BaseMatch.MatchType typeCursor,
         int mapCursor,
         Region regionCursor,
-        int page,
-        int pageDiff,
+        SortingOrder sortingOrder,
         BaseMatch.MatchType type,
         String resourceType,
         TypeReference<T> typeReference
@@ -343,8 +343,11 @@ public class VersusIT
                             "regionCursor",
                             mvcConversionService.convert(regionCursor, String.class)
                         )
-                        .queryParam("page", String.valueOf(page))
-                        .queryParam("pageDiff", String.valueOf(pageDiff))
+                        .queryParam
+                        (
+                            "sortingOrder",
+                            mvcConversionService.convert(sortingOrder, String.class)
+                        )
             )
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -367,7 +370,7 @@ public class VersusIT
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
             OffsetDateTime.MAX, BaseMatch.MatchType._1V1, 0, Region.US,
-            0, 1,
+            SortingOrder.DESC,
             BaseMatch.MatchType._1V1,
             "common",
             new TypeReference<>(){}
@@ -380,7 +383,7 @@ public class VersusIT
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
             OffsetDateTime.MAX, BaseMatch.MatchType._1V1, 0, Region.US,
-            0, 1,
+            SortingOrder.DESC,
             BaseMatch.MatchType._1V1,
             "summary",
             new TypeReference<>(){}
@@ -392,7 +395,7 @@ public class VersusIT
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
             OffsetDateTime.MAX, BaseMatch.MatchType._1V1, 0, Region.US,
-            0, 1,
+            SortingOrder.DESC,
             BaseMatch.MatchType._1V1,
             "matches",
             new TypeReference<>(){}
@@ -405,7 +408,7 @@ public class VersusIT
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
             mMatch.getDate(), mMatch.getType(), mMatch.getMapId(), mMatch.getRegion(),
-            1, 1,
+            SortingOrder.DESC,
             BaseMatch.MatchType._1V1,
             "matches",
             new TypeReference<>(){}
@@ -418,7 +421,7 @@ public class VersusIT
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
             mMatch2.getDate(), mMatch2.getType(), mMatch2.getMapId(), mMatch2.getRegion(),
-            2, 1,
+            SortingOrder.DESC,
             BaseMatch.MatchType._1V1,
             "matches",
             new TypeReference<>(){}
@@ -430,7 +433,7 @@ public class VersusIT
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
             mMatch2.getDate(), mMatch2.getType(), mMatch2.getMapId(), mMatch2.getRegion(),
-            2, -1,
+            SortingOrder.ASC,
             BaseMatch.MatchType._1V1,
             "matches",
             new TypeReference<>(){}

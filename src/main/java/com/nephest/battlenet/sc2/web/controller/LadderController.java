@@ -5,9 +5,11 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
+import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderLeagueStats;
@@ -19,6 +21,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.web.service.MapService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -111,15 +114,14 @@ public class LadderController
     }
 
     @GetMapping("/a")
-    public PagedSearchResult<List<LadderTeam>> getLadder
+    public CursorNavigableResult<List<LadderTeam>> getLadder
     (
         @RequestParam(value = "ratingCursor", required = false) Long ratingCursor,
         @RequestParam(value = "idCursor", required = false) Long idCursor,
-        @RequestParam(value = "count", defaultValue = "1") int count,
+        @RequestParam(value = "sortingOrder", defaultValue = "DESC") SortingOrder sortingOrder,
         @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
-        @RequestParam(name = "page", required = false) Integer page,
         @RequestParam(name = "us", required = false) boolean us,
         @RequestParam(name = "eu", required = false) boolean eu,
         @RequestParam(name = "kr", required = false) boolean kr,
@@ -133,12 +135,12 @@ public class LadderController
         @RequestParam(name = "gra", required = false) boolean grandmaster
     )
     {
-        if(Math.abs(count) > PAGE_COUNT_MAX)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page count is too big");
-        boolean desc = count > 0;
-        if(ratingCursor == null) ratingCursor = desc ? Long.MAX_VALUE : Long.MIN_VALUE;
-        if(idCursor == null) idCursor = desc ? Long.MAX_VALUE : Long.MIN_VALUE;
-        if(page == null) page = desc ? 0 : Integer.MAX_VALUE;
+        if(ratingCursor == null) ratingCursor = sortingOrder == SortingOrder.DESC
+            ? Long.MAX_VALUE
+            : Long.MIN_VALUE;
+        if(idCursor == null) idCursor = sortingOrder == SortingOrder.DESC
+            ? Long.MAX_VALUE
+            : Long.MIN_VALUE;
 
         Set<Region> regions = EnumSet.noneOf(Region.class);
         if(us) regions.add(Region.US);
@@ -154,18 +156,17 @@ public class LadderController
         if(diamond) leagues.add(LeagueType.DIAMOND);
         if(master) leagues.add(LeagueType.MASTER);
         if(grandmaster) leagues.add(LeagueType.GRANDMASTER);
-        return ladderSearch.find
-        (
+        return new CursorNavigableResult<>(ladderSearch.find(
             season,
             regions,
             leagues,
             queue,
             teamType,
-            page,
+            2,
             ratingCursor,
             idCursor,
-            count
-        );
+            sortingOrder == SortingOrder.DESC ? 1 : -1
+        ).getResult(), new CursorNavigation(null, null));
     }
 
     @GetMapping("/stats/queue/{queueType}/{teamType}")

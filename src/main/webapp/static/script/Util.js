@@ -16,17 +16,16 @@ class Util
         return s;
     }
 
-    static getFormData(page = 0, form)
+    static getFormData(form)
     {
         if(!form) form = document.getElementById("form-ladder");
         const fd = new FormData(form);
-        if (page >= 0) fd.set("page", page);
         return fd;
     }
 
-    static getFormParameters(page = 0, form)
+    static getFormParameters(form)
     {
-        return Util.urlencodeFormData(Util.getFormData(page, form));
+        return Util.urlencodeFormData(Util.getFormData(form));
     }
 
     static mapToUrlSearchParams(map)

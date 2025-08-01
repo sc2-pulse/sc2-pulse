@@ -144,7 +144,25 @@ class PaginationUtil
         return r;
     }
 
+    static createCursorMeta(isEmpty, isFirstPage, sortingOrder)
+    {
+        return {
+            page: isEmpty
+                ? sortingOrder == SORTING_ORDER.ASC
+                    ? PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER
+                    : PaginationUtil.CURSOR_DISABLED_NEXT_PAGE_NUMBER
+                : isFirstPage
+                    ? PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER
+                    : PaginationUtil.CURSOR_PAGE_NUMBER,
+            pageDiff: sortingOrder == SORTING_ORDER.DESC ? 1 : -1,
+            isLastPage: isEmpty && sortingOrder == SORTING_ORDER.DESC
+        };
+    }
+
 }
 
-PaginationUtil.PAGINATION_SIDE_BUTTON_COUNT = 4;
+PaginationUtil.PAGINATION_SIDE_BUTTON_COUNT = 0;
+PaginationUtil.CURSOR_PAGE_NUMBER = 2;
+PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER = 1;
+PaginationUtil.CURSOR_DISABLED_NEXT_PAGE_NUMBER = 3;
 PaginationUtil.PAGINATIONS = new Map();

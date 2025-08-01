@@ -16,69 +16,41 @@ class LadderUtil
         ]);
     }
 
-    static updateLadderModel(params, formParams, ratingCursor = 99999, idCursor = 0, count = 1)
+    static updateLadderModel(params, formParams, ratingCursor = 99999, idCursor = 0, sortingOrder = SORTING_ORDER.DESC)
     {
-        return LadderUtil.chainLadderPromise(params, formParams, ratingCursor, idCursor, count);
+        return LadderUtil.chainLadderPromise(params, formParams, ratingCursor, idCursor, sortingOrder);
     }
 
-    static chainLadderPromise(params, formParams, ratingCursor, idCursor, count, isLastPage = false)
+    static chainLadderPromise(params, formParams, ratingCursor, idCursor, sortingOrder = SORTING_ORDER.DESC)
     {
         const allParams = new URLSearchParams(params.form);
         allParams.append("ratingCursor", ratingCursor);
         allParams.append("idCursor", idCursor);
-        allParams.append("count", count);
+        allParams.append("sortingOrder", sortingOrder.fullName);
 
         const request = `${ROOT_CONTEXT_PATH}api/ladder/a?` + allParams.toString();
         const ladderPromise = Session.beforeRequest()
         .then(n=>fetch(request))
         .then(Session.verifyJsonResponse)
         .then(json => {
-            json.meta.isLastPage = isLastPage;
+            json.meta = {page: ratingCursor == 99999
+                ? PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER
+                : PaginationUtil.CURSOR_PAGE_NUMBER};
             if(json.result.length == 0) {
-                count--;
-                params.count = count;
-                if(count < 1) return LadderUtil.setLastOrCurrentLadder(params, json);
-
-                return LadderUtil.chainLadderPromise(params, formParams, ratingCursor, idCursor, count, true)
+                const searchData = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH);
+                if(searchData) {
+                    searchData.meta.page = sortingOrder == SORTING_ORDER.DESC
+                        ? PaginationUtil.CURSOR_DISABLED_NEXT_PAGE_NUMBER
+                        : PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER;
+                    if(sortingOrder == SORTING_ORDER.DESC) searchData.meta.isLastPage = true;
+                    return Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.VAR);
+                }
             }
-
-             return new Promise((res, rej)=>{
-                Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.SEARCH, json);
-                Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.VAR, params);
-                res(params);})
-        });
-         return ladderPromise;
-    }
-
-    static setLastOrCurrentLadder(params, json)
-    {
-        const data = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH);
-        const dataParams = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.VAR);
-        if(data != null)
-        {
-            const dataSearchParams = new URLSearchParams(dataParams.form);
-            const searchParams = new URLSearchParams(params.form);
-            dataSearchParams.delete("page");
-            searchParams.delete("page");
-            if(dataSearchParams.toString() == searchParams.toString())
-            {
-                Object.assign(params,  dataParams);
-                data.meta.isLastPage = true;
-            }
-            else
-            {
-                params.count++;
-                Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.SEARCH, json);
-                Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.VAR, params);
-            }
-        }
-        else
-        {
-            params.count++;
             Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.SEARCH, json);
             Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.VAR, params);
-        }
-        return params;
+            return params;
+        });
+         return ladderPromise;
     }
 
     static updateLadderView()
@@ -89,7 +61,7 @@ class LadderUtil
         document.getElementById("generated-info-all").classList.remove("d-none");
     }
 
-    static updateLadder(formParams, ratingCursor = 99999, idCursor = 0, count = 1)
+    static updateLadder(formParams, ratingCursor = 99999, idCursor = 0, sortingOrder = SORTING_ORDER.DESC)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         const params =
@@ -97,14 +69,16 @@ class LadderUtil
             form: formParams,
             ratingCursor: ratingCursor,
             idCursor: idCursor,
-            count: count
+            sortingOrder: sortingOrder.fullName
         };
 
-        return LadderUtil.updateLadderModel(params, formParams, ratingCursor, idCursor, count)
+        return LadderUtil.updateLadderModel(params, formParams, ratingCursor, idCursor, sortingOrder)
             .then(e => {
                 const searchParams = new URLSearchParams(e.form);
                 searchParams.append("type", "ladder");
-                for(const [param, val] of Object.entries(params)) if(param != "form") searchParams.append(param, val);
+                searchParams.append("idCursor", e.idCursor);
+                searchParams.append("ratingCursor", e.ratingCursor);
+                searchParams.append("sortingOrder", e.sortingOrder);
                 const stringParams = searchParams.toString();
 
                 LadderUtil.updateLadderView();
@@ -174,13 +148,13 @@ class LadderUtil
     static ladderPaginationPageClick(evt)
     {
         evt.preventDefault();
-        const formParams = Util.getFormParameters(evt.target.getAttribute("data-page-number"));
+        const formParams = Util.getFormParameters();
         LadderUtil.updateLadder
         (
             formParams,
             evt.target.getAttribute("data-page-rating-cursor"),
             evt.target.getAttribute("data-page-id-cursor"),
-            evt.target.getAttribute("data-page-count")
+            evt.target.getAttribute("data-page-count") > 0 ? SORTING_ORDER.DESC : SORTING_ORDER.ASC
         ).then(e=>Util.scrollIntoViewById(evt.target.getAttribute("href").substring(1)));
     }
 

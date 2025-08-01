@@ -1,11 +1,11 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
 
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.inner.VersusSummary;
-
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.util.List;
 
 public class Versus
@@ -18,7 +18,7 @@ public class Versus
     private List<Clan> clansGroup2;
 
     private VersusSummary summary;
-    private PagedSearchResult<List<LadderMatch>> matches;
+    private CursorNavigableResult<List<LadderMatch>> matches;
 
     public Versus(){}
 
@@ -29,7 +29,7 @@ public class Versus
         List<LadderTeam> teamsGroup2,
         List<Clan> clansGroup2,
         VersusSummary summary,
-        PagedSearchResult<List<LadderMatch>> matches
+        CursorNavigableResult<List<LadderMatch>> matches
     )
     {
         this.teamsGroup1 = teamsGroup1;
@@ -90,12 +90,12 @@ public class Versus
         this.summary = summary;
     }
 
-    public PagedSearchResult<List<LadderMatch>> getMatches()
+    public CursorNavigableResult<List<LadderMatch>> getMatches()
     {
         return matches;
     }
 
-    public void setMatches(PagedSearchResult<List<LadderMatch>> matches)
+    public void setMatches(CursorNavigableResult<List<LadderMatch>> matches)
     {
         this.matches = matches;
     }

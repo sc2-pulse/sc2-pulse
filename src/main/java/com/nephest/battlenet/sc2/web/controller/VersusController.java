@@ -5,7 +5,9 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.config.openapi.TeamLegacyUids;
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.inner.VersusSummary;
@@ -14,6 +16,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.Versus;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.web.service.VersusService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
@@ -120,14 +123,13 @@ public class VersusController
     }
 
     @GetMapping("/matches")
-    public PagedSearchResult<List<LadderMatch>> getVersusMatches
+    public CursorNavigableResult<List<LadderMatch>> getVersusMatches
     (
         @RequestParam(value = "dateCursor", required = false) OffsetDateTime dateCursor,
         @RequestParam(value = "typeCursor", defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
         @RequestParam(value = "mapCursor", defaultValue = "0") int mapCursor,
         @RequestParam(value = "regionCursor", defaultValue = "US") Region regionCursor,
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "pageDiff", defaultValue = "1") int pageDiff,
+        @RequestParam(value = "sortingOrder", defaultValue = "DESC") SortingOrder sortingOrder,
         @RequestParam(name = "clan1", defaultValue = "") Integer[] clans1,
         @RequestParam(name = "team1", defaultValue = "") @TeamLegacyUids Set<TeamLegacyUid> teams1,
         @RequestParam(name = "clan2", defaultValue = "") Integer[] clans2,
@@ -137,19 +139,19 @@ public class VersusController
     )
     {
         checkVersusSize(clans1, teams1, clans2, teams2);
-        boolean desc = pageDiff > 0;
-        if(dateCursor == null) dateCursor = desc ? SC2Pulse.offsetDateTime() : OffsetDateTime.MIN;
+        if(dateCursor == null) dateCursor = sortingOrder == SortingOrder.DESC
+            ? SC2Pulse.offsetDateTime()
+            : OffsetDateTime.MIN;
 
-        return ladderMatchDAO.findVersusMatches
-        (
+        return new CursorNavigableResult<>(ladderMatchDAO.findVersusMatches(
             clans1, teams1,
             clans2, teams2,
             dateCursor,
             typeCursor,
             mapCursor,
             regionCursor,
-            page, pageDiff, types
-        );
+            2, sortingOrder == SortingOrder.DESC ? 1 : -1, types
+        ).getResult(), new CursorNavigation(null, null));
     }
 
     private void checkVersusSize

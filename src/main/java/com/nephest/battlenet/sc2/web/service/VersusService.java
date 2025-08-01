@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
@@ -12,10 +13,10 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
-import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.Versus;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -59,20 +60,20 @@ public class VersusService
         BaseMatch.MatchType... types
     )
     {
-        PagedSearchResult<List<LadderMatch>> matches = ladderMatchDAO.findVersusMatches
-        (
-            clans1, teams1,
-            clans2, teams2,
-            dateCursor, typeCursor, mapCursor, regionCursor,
-            page, pageDiff,
-            types
-        );
+        CursorNavigableResult<List<LadderMatch>> matches
+            = new CursorNavigableResult<>(ladderMatchDAO.findVersusMatches(
+                clans1, teams1,
+                clans2, teams2,
+                dateCursor, typeCursor, mapCursor, regionCursor,
+                page, pageDiff,
+                types
+        ).getResult(), new CursorNavigation(null, null));
         return new Versus
         (
-            findTeams(teams1, matches.getResult()),
-            findClans(Set.copyOf(Arrays.asList(clans1)), matches.getResult()),
-            findTeams(teams2, matches.getResult()),
-            findClans(Set.copyOf(Arrays.asList(clans2)), matches.getResult()),
+            findTeams(teams1, matches.result()),
+            findClans(Set.copyOf(Arrays.asList(clans1)), matches.result()),
+            findTeams(teams2, matches.result()),
+            findClans(Set.copyOf(Arrays.asList(clans2)), matches.result()),
             ladderMatchDAO.getVersusSummary(clans1, teams1, clans2, teams2, types),
             matches
         );

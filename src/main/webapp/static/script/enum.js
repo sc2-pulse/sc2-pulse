@@ -453,3 +453,9 @@ const SOCIAL_MEDIA = Object.freeze
         order: 11
     })
 });
+
+const SORTING_ORDER = Object.freeze
+({
+    ASC: Object.freeze({code:1, name: "ascending", fullName: "ASC", textContent: "Ascending", order: 1}),
+    DESC: Object.freeze({code:2, name: "descending", fullName: "DESC", textContent: "Descending", order: 2})
+});

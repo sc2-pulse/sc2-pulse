@@ -239,11 +239,12 @@ class HistoryUtil
                 LadderUtil.restoreLadderFormState(document.getElementById("form-ladder"), params);
                 const ratingCursor = params.get("ratingCursor"); params.delete("ratingCursor");
                 const idCursor = params.get("idCursor"); params.delete("idCursor");
-                const count = params.get("count"); params.delete("count");
+                const sortingOrder = EnumUtil.enumOfFullName(params.get("sortingOrder"), SORTING_ORDER);
+                params.delete("sortingOrder");
                 const formParams = params.toString();
                 scrollTo = "generated-info-all";
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
-                promises.push(LadderUtil.updateLadder(formParams, ratingCursor, idCursor, count));
+                promises.push(LadderUtil.updateLadder(formParams, ratingCursor, idCursor, sortingOrder));
                 promises.push(StatsUtil.updateQueueStats(formParams));
                 promises.push(StatsUtil.updateLadderStats(formParams));
                 promises.push(StatsUtil.updateLeagueBounds(formParams));
@@ -278,7 +279,9 @@ class HistoryUtil
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 lazyPromises.push(e=>FormUtil.setFormState(document.querySelector("#form-search-clan"), params));
                 promises.push(HistoryUtil.callWithArguments(
-                    (p, reqParams)=>ClanUtil.updateClanSearch(p, reqParams[0], reqParams[1], reqParams[2], reqParams[3], reqParams[4]),
+                    (p, reqParams)=>ClanUtil.updateClanSearch(
+                        p,
+                        reqParams[0], reqParams[1], reqParams[2], EnumUtil.enumOfFullName(reqParams[3], SORTING_ORDER)),
                     params,
                     ClanUtil.REQUIRED_CURSOR_PARAMETERS
                 ));

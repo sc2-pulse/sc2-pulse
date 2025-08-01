@@ -14,8 +14,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.Clan;
-import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -221,47 +222,56 @@ public class ClanSearchIT
     throws Exception
     {
         //normal, first page
-        PagedSearchResult<List<Clan>> result = objectMapper.readValue(mvc.perform(
+        CursorNavigableResult<List<Clan>> result = objectMapper.readValue(mvc.perform(
             get("/api/clan/cursor")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max + 1))
                 .queryParam("idCursor", String.valueOf(max + 1))
-                .queryParam("page", "0")
-                .queryParam("pageDiff", "1")
+                .queryParam
+                (
+                    "sortingOrder",
+                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
 
-        assertEquals(ClanDAO.PAGE_SIZE, result.getResult().size());
+        assertEquals(ClanDAO.PAGE_SIZE, result.result().size());
         for(int i = 0; i < ClanDAO.PAGE_SIZE; i++)
-            assertEquals(clanCount - i, result.getResult().get(i).getId());
+            assertEquals(clanCount - i, result.result().get(i).getId());
 
         //reversed, last page
-        PagedSearchResult<List<Clan>> reversedResult = objectMapper.readValue(mvc.perform(
+        CursorNavigableResult<List<Clan>> reversedResult = objectMapper.readValue(mvc.perform(
             get("/api/clan/cursor")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(min - 1))
                 .queryParam("idCursor", String.valueOf(min - 1))
-                .queryParam("page", "2")
-                .queryParam("pageDiff", "-1")
+                .queryParam
+                (
+                    "sortingOrder",
+                    mvcConversionService.convert(SortingOrder.ASC, String.class)
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
 
-        assertEquals(ClanDAO.PAGE_SIZE, reversedResult.getResult().size());
+        assertEquals(ClanDAO.PAGE_SIZE, reversedResult.result().size());
         for(int i = 0; i < ClanDAO.PAGE_SIZE; i++)
-            assertEquals(ClanDAO.PAGE_SIZE - i, reversedResult.getResult().get(i).getId());
+            assertEquals(ClanDAO.PAGE_SIZE - i, reversedResult.result().get(i).getId());
 
         //filtered by active member count
-        PagedSearchResult<List<Clan>> filteredByActiveMembersResult = objectMapper.readValue(mvc.perform(
+        CursorNavigableResult<List<Clan>> filteredByActiveMembersResult = objectMapper.readValue(mvc.perform(
             get("/api/clan/cursor")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
-                .queryParam("page", "0")
-                .queryParam("pageDiff", "1")
+                .queryParam
+                (
+                    "sortingOrder",
+                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                )
                 .queryParam("minActiveMembers", "10")
                 .queryParam("maxActiveMembers", "19")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -269,18 +279,21 @@ public class ClanSearchIT
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
 
-        assertEquals(10, filteredByActiveMembersResult.getResult().size());
-        for(int i = 0; i < filteredByActiveMembersResult.getResult().size(); i++)
-            assertEquals(19 - i, filteredByActiveMembersResult.getResult().get(i).getId());
+        assertEquals(10, filteredByActiveMembersResult.result().size());
+        for(int i = 0; i < filteredByActiveMembersResult.result().size(); i++)
+            assertEquals(19 - i, filteredByActiveMembersResult.result().get(i).getId());
 
         //filtered by active avg rating
-        PagedSearchResult<List<Clan>> filteredByAvgRatingResult = objectMapper.readValue(mvc.perform(
+        CursorNavigableResult<List<Clan>> filteredByAvgRatingResult = objectMapper.readValue(mvc.perform(
             get("/api/clan/cursor")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
-                .queryParam("page", "0")
-                .queryParam("pageDiff", "1")
+                .queryParam
+                (
+                    "sortingOrder",
+                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                )
                 .queryParam("minAvgRating", "10")
                 .queryParam("maxAvgRating", "19")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -288,40 +301,46 @@ public class ClanSearchIT
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
 
-        assertEquals(10, filteredByAvgRatingResult.getResult().size());
-        for(int i = 0; i < filteredByAvgRatingResult.getResult().size(); i++)
-            assertEquals(18 - i, filteredByAvgRatingResult.getResult().get(i).getId());
+        assertEquals(10, filteredByAvgRatingResult.result().size());
+        for(int i = 0; i < filteredByAvgRatingResult.result().size(); i++)
+            assertEquals(18 - i, filteredByAvgRatingResult.result().get(i).getId());
 
         //filtered by region
         Region[] regions = Region.values();
-        PagedSearchResult<List<Clan>> filteredByRegion = objectMapper.readValue(mvc.perform(
+        CursorNavigableResult<List<Clan>> filteredByRegion = objectMapper.readValue(mvc.perform(
             get("/api/clan/cursor")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
-                .queryParam("page", "0")
-                .queryParam("pageDiff", "1")
+                .queryParam
+                (
+                    "sortingOrder",
+                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                )
                 .queryParam("region", mvcConversionService.convert(Region.EU, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
 
-        assertEquals(CLAN_COUNT / regions.length, filteredByRegion.getResult().size());
+        assertEquals(CLAN_COUNT / regions.length, filteredByRegion.result().size());
 
         int euIx = Arrays.binarySearch(regions, Region.EU);
         int firstId = CLAN_COUNT - (regions.length - euIx) + 1;
-        for(int i = 0; i < filteredByRegion.getResult().size(); i++)
-            assertEquals(firstId - i * regions.length, filteredByRegion.getResult().get(i).getId());
+        for(int i = 0; i < filteredByRegion.result().size(); i++)
+            assertEquals(firstId - i * regions.length, filteredByRegion.result().get(i).getId());
 
         //filtered by all
-        PagedSearchResult<List<Clan>> filteredByAllResult = objectMapper.readValue(mvc.perform(
+        CursorNavigableResult<List<Clan>> filteredByAllResult = objectMapper.readValue(mvc.perform(
             get("/api/clan/cursor")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
-                .queryParam("page", "0")
-                .queryParam("pageDiff", "1")
+                .queryParam
+                (
+                    "sortingOrder",
+                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                )
                 .queryParam("minActiveMembers", "10")
                 .queryParam("maxActiveMembers", "19")
                 .queryParam("minAvgRating", "10")
@@ -332,10 +351,10 @@ public class ClanSearchIT
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
 
-        assertEquals(3, filteredByAllResult.getResult().size());
+        assertEquals(3, filteredByAllResult.result().size());
         int firstAllId = 18;
-        for(int i = 0; i < filteredByAllResult.getResult().size(); i++)
-            assertEquals(firstAllId - i * regions.length, filteredByAllResult.getResult().get(i).getId());
+        for(int i = 0; i < filteredByAllResult.result().size(); i++)
+            assertEquals(firstAllId - i * regions.length, filteredByAllResult.result().get(i).getId());
     }
 
 }

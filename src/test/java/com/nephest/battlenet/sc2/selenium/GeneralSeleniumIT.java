@@ -291,11 +291,11 @@ public class GeneralSeleniumIT
         //pagination
         clickAndWait(driver, wait,
             "#ladder-top li.page-item:not(.disabled) a[data-page-count=\"1\"]",
-            "#ladder-top li.page-item.disabled a[data-page-count=\"0\"][data-page-number=\"2\"]");
+            "tr[data-team-id='180']");
         //back
         clickAndWait(driver, wait,
             "#ladder-top li.page-item:not(.disabled) a[data-page-count=\"-1\"]",
-            "#ladder-top li.page-item.disabled a[data-page-count=\"0\"][data-page-number=\"1\"]");
+            "tr[data-team-id='280']");
 
         //character
         clickAndWait(driver, wait, "#ladder a.player-link", "#player-info.modal.show");
