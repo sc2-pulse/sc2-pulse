@@ -103,10 +103,10 @@ class PaginationUtil
         );
     }
 
-    static createPagination(container, sidePageCount, anchor)
+    static createPagination(container, sidePageCount, anchor, mainPage = false)
     {
         let i;
-        const pageCount = sidePageCount * 2 + 1 + 2 + 2;
+        const pageCount = sidePageCount * 2 + (mainPage ? 1 : 0) + 2 + 2;
         for (i = 0; i < pageCount; i++)
         {
             container.appendChild(PaginationUtil.createPaginationPage(1, "", anchor));
