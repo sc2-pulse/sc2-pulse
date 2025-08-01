@@ -91,8 +91,8 @@ public class VodController
         @RequestParam(value = "map", required = false) Integer map
     )
     {
-        if(Math.abs(pageDiff) > 1)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page count is too big");
+        if(pageDiff != 1)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "pageDiff must be 1");
 
         if(dateCursor == null) dateCursor = SC2Pulse.offsetDateTime();
         return ladderMatchDAO.findTwitchVods

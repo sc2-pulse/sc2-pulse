@@ -137,7 +137,8 @@ public class VersusController
     )
     {
         checkVersusSize(clans1, teams1, clans2, teams2);
-        if(dateCursor == null) dateCursor = SC2Pulse.offsetDateTime();
+        boolean desc = pageDiff > 0;
+        if(dateCursor == null) dateCursor = desc ? SC2Pulse.offsetDateTime() : OffsetDateTime.MIN;
 
         return ladderMatchDAO.findVersusMatches
         (

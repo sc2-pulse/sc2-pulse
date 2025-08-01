@@ -457,7 +457,7 @@ public class LadderMatchDAO
         int pageDiff
     )
     {
-        if(Math.abs(pageDiff) != 1) throw new IllegalArgumentException("Invalid page diff");
+        if(pageDiff != 1) throw new IllegalArgumentException("Invalid page diff");
         long finalPage = page + pageDiff;
 
         String raceStr = Stream.of(race, versusRace)
