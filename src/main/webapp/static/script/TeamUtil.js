@@ -97,9 +97,7 @@ class TeamUtil
     {
         const rank = teamIx == -1
             ? "-"
-            : searchResult.meta != null
-                ? Util.NUMBER_FORMAT.format(Util.calculateRank(searchResult, teamIx))
-                : (!Util.isUndefinedRank(team.globalRank) ? Util.NUMBER_FORMAT.format(team.globalRank) : "-");
+            : (!Util.isUndefinedRank(team.globalRank) ? Util.NUMBER_FORMAT.format(team.globalRank) : "-");
         const topPercentage = teamIx == -1
             ? "-"
             : searchResult.meta != null
