@@ -6,9 +6,11 @@ package com.nephest.battlenet.sc2.config.filter;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.web.service.GlobalContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
 
 @Configuration
 public class FilterConfig
@@ -76,11 +78,14 @@ public class FilterConfig
     }
 
     @Bean
-    public FilterRegistrationBean<CursorParameterRedirectFilter> anchorParameterRedirectFilter()
+    public FilterRegistrationBean<CursorParameterRedirectFilter> anchorParameterRedirectFilter
+    (
+        @Qualifier("mvcConversionService") ConversionService mvcConversionService
+    )
     {
         FilterRegistrationBean<CursorParameterRedirectFilter> registrationBean
             = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new CursorParameterRedirectFilter());
+        registrationBean.setFilter(new CursorParameterRedirectFilter(mvcConversionService));
         registrationBean.addUrlPatterns("/");
         return registrationBean;
     }

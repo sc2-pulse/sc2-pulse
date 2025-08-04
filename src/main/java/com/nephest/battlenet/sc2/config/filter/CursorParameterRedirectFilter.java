@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -13,22 +14,77 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
+import org.springframework.core.convert.ConversionService;
 
 public class CursorParameterRedirectFilter
 implements Filter
 {
 
     public static final String MARKER_PARAMETER_NAME = "type";
-    public static final String MARKER_PARAMETER_VALUE = "ladder";
-    public static final Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> PARAMETER_OVERRIDES =
-        Map.of
+    private final Map<String, Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>>> parameterOverrides;
+
+
+    public CursorParameterRedirectFilter(ConversionService conversionService)
+    {
+        parameterOverrides = Map.of
+        (
+            "ladder",
+            createLadderOverrides(conversionService),
+
+            "clan-search",
+            createClanOverrides(conversionService)
+        );
+    }
+
+    private static String[] convertCountValuesToSortingOrderValues
+    (
+        String [] countValues,
+        ConversionService conversionService
+    )
+    {
+        if(countValues == null) return null;
+        if(countValues.length == 0) return new String[0];
+
+        return Arrays.stream(countValues)
+            .filter(Objects::nonNull)
+            .map(Integer::parseInt)
+            .map(intVal->conversionService.convert(
+                intVal > 0 ? SortingOrder.DESC : SortingOrder.ASC, String.class))
+            .toArray(String[]::new);
+    }
+
+    private static Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> createLadderOverrides
+    (
+        ConversionService conversionService
+    )
+    {
+        return Map.of
         (
             "idAnchor", param->Map.entry("idCursor", param.getValue()),
-            "ratingAnchor", param->Map.entry("ratingCursor", param.getValue())
+            "ratingAnchor", param->Map.entry("ratingCursor", param.getValue()),
+            "count", param->Map.entry(
+                "sortingOrder",
+                convertCountValuesToSortingOrderValues(param.getValue(), conversionService))
         );
+    }
+
+    private static Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> createClanOverrides
+    (
+        ConversionService conversionService
+    )
+    {
+        return Map.of
+        (
+            "pageDiff", param->Map.entry(
+                "sortingOrder",
+                convertCountValuesToSortingOrderValues(param.getValue(), conversionService))
+        );
+    }
 
     @Override
     public void doFilter
@@ -61,19 +117,20 @@ implements Filter
         if(params.isEmpty()) return null;
 
         String markerParameterValue = httpReq.getParameter(MARKER_PARAMETER_NAME);
-        if
-        (
-            markerParameterValue == null
-                || !markerParameterValue.equals(MARKER_PARAMETER_VALUE)
-        ) return null;
-        if(Collections.disjoint(params.keySet(), PARAMETER_OVERRIDES.keySet())) return null;
+        if(markerParameterValue == null) return null;
+
+        Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> typeParameterOverrides
+            = parameterOverrides.get(markerParameterValue);
+        if(typeParameterOverrides == null) return null;
+
+        if(Collections.disjoint(params.keySet(), typeParameterOverrides.keySet())) return null;
 
 
         StringBuilder sb = new StringBuilder(httpReq.getRequestURL()).append("?");
         String prefix = "";
         for(Map.Entry<String, String[]> param : params.entrySet())
         {
-            Map.Entry<String, String[]> newParam = PARAMETER_OVERRIDES
+            Map.Entry<String, String[]> newParam = typeParameterOverrides
                 .getOrDefault(param.getKey(), Function.identity())
                 .apply(param);
             if(newParam == null) continue;
