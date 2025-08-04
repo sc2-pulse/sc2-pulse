@@ -324,14 +324,27 @@ public class VersusIT
                     )
                     : get
                     (
-                        "/api/versus"
-                            + "/{dateCursor}/{typeCursor}/{mapCursor}/{regionCursor}"
-                            + "/{page}/{pageDiff}/matches"
-                            + "?type=" + mvcConversionService.convert(type, String.class) + sb,
-                            dateCursor, typeCursor, mapCursor, regionCursor,
-                            page, pageDiff,
-                            type
+                        "/api/versus/matches"
+                            + "?type=" + mvcConversionService.convert(type, String.class) + sb
                     )
+                        .queryParam
+                        (
+                            "dateCursor",
+                            mvcConversionService.convert(dateCursor, String.class)
+                        )
+                        .queryParam
+                        (
+                            "typeCursor",
+                            mvcConversionService.convert(typeCursor, String.class)
+                        )
+                        .queryParam("mapCursor", String.valueOf(mapCursor))
+                        .queryParam
+                        (
+                            "regionCursor",
+                            mvcConversionService.convert(regionCursor, String.class)
+                        )
+                        .queryParam("page", String.valueOf(page))
+                        .queryParam("pageDiff", String.valueOf(pageDiff))
             )
                 .contentType(MediaType.APPLICATION_JSON)
         )
