@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.CollectionVar;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.web.util.RateLimitData;
 import io.netty.channel.ChannelOption;
@@ -549,6 +550,16 @@ public class WebServiceUtil
         return map.isEmpty()
             ? ResponseEntity.notFound().build()
             : ResponseEntity.ok(map);
+    }
+
+    public static <T extends Collection<?>> ResponseEntity<Object> notFoundIfEmpty
+    (
+        CursorNavigableResult<T> result
+    )
+    {
+        return result.result().isEmpty()
+            ? ResponseEntity.notFound().build()
+            : ResponseEntity.ok(result);
     }
 
     public static <T> ResponseEntity<T> notFoundIfNull(T t)
