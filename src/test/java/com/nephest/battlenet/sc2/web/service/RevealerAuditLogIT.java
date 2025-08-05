@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.AccountSecurityContextFactory;
@@ -31,6 +32,7 @@ import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -72,7 +74,7 @@ public class RevealerAuditLogIT
     private ConversionService mvcConversionService;
 
     private static OffsetDateTime BEFORE_ALL;
-    private static final AuditLogEntry[] USER1_ENTRIES = new AuditLogEntry[]{
+    private static final List<AuditLogEntry> USER1_ENTRIES = List.of(
         new AuditLogEntry
         (
             5L,
@@ -95,7 +97,7 @@ public class RevealerAuditLogIT
             null,
             1L
         )
-    };
+    );
 
     @BeforeAll
     public static void beforeAll
@@ -181,7 +183,7 @@ public class RevealerAuditLogIT
     public void testCursorNavigation()
     throws Exception
     {
-        AuditLogEntry[] entries1 = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<List<AuditLogEntry>> result1 = objectMapper.readValue(mvc.perform
         (
             get("/api/reveal/log")
                 .param("limit", "2")
@@ -189,31 +191,31 @@ public class RevealerAuditLogIT
                 .with(csrf())
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), AuditLogEntry[].class);
-        for(AuditLogEntry entry : entries1)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        for(AuditLogEntry entry : result1.result())
             assertTrue(entry.getCreated().isAfter(BEFORE_ALL));
-        Assertions.assertThat(entries1)
+        Assertions.assertThat(result1.result())
             .usingRecursiveComparison()
             .ignoringFields("created")
             .isEqualTo(USER1_ENTRIES);
 
-        AuditLogEntry[] entries2 = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<List<AuditLogEntry>> result2 = objectMapper.readValue(mvc.perform
         (
             get("/api/reveal/log")
                 .param("limit", "1")
-                .param("createdCursor", entries1[1].getCreated().toString())
-                .param("idCursor", String.valueOf(entries1[1].getId()))
+                .param("createdCursor", result1.result().get(1).getCreated().toString())
+                .param("idCursor", String.valueOf(result1.result().get(1).getId()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf())
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), AuditLogEntry[].class);
-        for(AuditLogEntry entry : entries2)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        for(AuditLogEntry entry : result2.result())
             assertTrue(entry.getCreated().isAfter(BEFORE_ALL));
-        Assertions.assertThat(entries2)
+        Assertions.assertThat(result2.result())
             .usingRecursiveComparison()
             .ignoringFields("created")
-            .isEqualTo(new AuditLogEntry[]{
+            .isEqualTo(List.of(
                 new AuditLogEntry
                 (
                     3L,
@@ -226,7 +228,7 @@ public class RevealerAuditLogIT
                     null,
                     null
                 )
-            });
+            ));
     }
 
     @Test
@@ -243,7 +245,7 @@ public class RevealerAuditLogIT
     public void testExcludeSystemAuthorFilter()
     throws Exception
     {
-        AuditLogEntry[] entries1 = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<List<AuditLogEntry>> result1 = objectMapper.readValue(mvc.perform
         (
             get("/api/reveal/log")
                 .param("excludeSystemAuthor", "true")
@@ -251,10 +253,10 @@ public class RevealerAuditLogIT
                 .with(csrf())
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), AuditLogEntry[].class);
-        for(AuditLogEntry entry : entries1)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        for(AuditLogEntry entry : result1.result())
             assertTrue(entry.getCreated().isAfter(BEFORE_ALL));
-        Assertions.assertThat(entries1)
+        Assertions.assertThat(result1.result())
             .usingRecursiveComparison()
             .ignoringFields("created")
             .isEqualTo(USER1_ENTRIES);
@@ -274,7 +276,7 @@ public class RevealerAuditLogIT
     public void testAuthorAccountIdFilter()
     throws Exception
     {
-        AuditLogEntry[] entries1 = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<List<AuditLogEntry>> result1 = objectMapper.readValue(mvc.perform
         (
             get("/api/reveal/log")
                 .param("authorAccountId", "1")
@@ -282,10 +284,10 @@ public class RevealerAuditLogIT
                 .with(csrf())
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), AuditLogEntry[].class);
-        for(AuditLogEntry entry : entries1)
+            .andReturn().getResponse().getContentAsString(),  new TypeReference<>(){});
+        for(AuditLogEntry entry : result1.result())
             assertTrue(entry.getCreated().isAfter(BEFORE_ALL));
-        Assertions.assertThat(entries1)
+        Assertions.assertThat(result1.result())
             .usingRecursiveComparison()
             .ignoringFields("created")
             .isEqualTo(USER1_ENTRIES);
@@ -305,7 +307,7 @@ public class RevealerAuditLogIT
     public void testActionFilter()
     throws Exception
     {
-        AuditLogEntry[] entries1 = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<List<AuditLogEntry>> result1 = objectMapper.readValue(mvc.perform
         (
             get("/api/reveal/log")
                 .param
@@ -317,13 +319,13 @@ public class RevealerAuditLogIT
                 .with(csrf())
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), AuditLogEntry[].class);
-        for(AuditLogEntry entry : entries1)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        for(AuditLogEntry entry : result1.result())
             assertTrue(entry.getCreated().isAfter(BEFORE_ALL));
-        Assertions.assertThat(entries1)
+        Assertions.assertThat(result1.result())
             .usingRecursiveComparison()
             .ignoringFields("created")
-            .isEqualTo(new AuditLogEntry[]{USER1_ENTRIES[0]});
+            .isEqualTo(List.of(USER1_ENTRIES.get(0)));
     }
 
     @Test
@@ -340,7 +342,7 @@ public class RevealerAuditLogIT
     public void testAccountIdFilter()
     throws Exception
     {
-        AuditLogEntry[] entries1 = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<List<AuditLogEntry>> result1 = objectMapper.readValue(mvc.perform
         (
             get("/api/reveal/log")
                 .param("accountId", "5")
@@ -348,10 +350,10 @@ public class RevealerAuditLogIT
                 .with(csrf())
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), AuditLogEntry[].class);
-        for(AuditLogEntry entry : entries1)
+            .andReturn().getResponse().getContentAsString(),  new TypeReference<>(){});
+        for(AuditLogEntry entry : result1.result())
             assertTrue(entry.getCreated().isAfter(BEFORE_ALL));
-        Assertions.assertThat(entries1)
+        Assertions.assertThat(result1.result())
             .usingRecursiveComparison()
             .ignoringFields("created")
             .isEqualTo(USER1_ENTRIES);

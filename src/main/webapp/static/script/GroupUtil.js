@@ -216,7 +216,7 @@ class GroupUtil
 
     static getMatches(params)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/group/match?${params.toString()}`;
+        const request = `${ROOT_CONTEXT_PATH}api/group/match/cursor?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
@@ -250,14 +250,14 @@ class GroupUtil
         const params = GroupUtil.createMatchesParams(matches, varModel, matchType);
         return GroupUtil.getMatches(params)
             .then(matchesResponse=>{
-                if(!matchesResponse) {
+                if(!matchesResponse || matchesResponse.result.length == 0) {
                     return {status: LOADING_STATUS.COMPLETE};
                 }
                 Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = matches
-                    ? matches.concat(matchesResponse)
-                    : matchesResponse;
-                GroupUtil.updateMatchesView(container, matchesResponse);
-                return {data: matchesResponse, status: LOADING_STATUS.NONE};
+                    ? matches.concat(matchesResponse.result)
+                    : matchesResponse.result;
+                GroupUtil.updateMatchesView(container, matchesResponse.result);
+                return {data: matchesResponse.result, status: LOADING_STATUS.NONE};
             });
     }
 

@@ -1925,11 +1925,11 @@ class CharacterUtil
         if(mapCursor) params.append("mapCursor", mapCursor);
         return GroupUtil.getMatches(params)
             .then(matches => {
-                if(matches) {
+                if(matches?.result?.length > 0) {
                     const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-                    commonCharacter.matches = commonCharacter.matches ? commonCharacter.matches.concat(matches) : matches;
+                    commonCharacter.matches = commonCharacter.matches ? commonCharacter.matches.concat(matches.result) : matches.result;
                 }
-                return matches;
+                return matches?.result;
             });
     }
 

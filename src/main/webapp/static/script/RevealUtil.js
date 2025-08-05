@@ -237,8 +237,8 @@ class RevealUtil
         }
         return RevealUtil.getLog(null, character.accountId, null, AUDIT_LOG_ACTION.INSERT)
             .then(log=>{
-                if(!log) return null;
-                const entry = log.find(l=>l.table == "pro_player_account");
+                if(!log || log.result.length == 0) return null;
+                const entry = log.result.find(l=>l.table == "pro_player_account");
                 if(!entry) return null;
                 if(!entry.authorAccountId) return [entry, null];
 
@@ -439,11 +439,11 @@ class RevealUtil
             action != "ALL" ? EnumUtil.enumOfFullName(action, AUDIT_LOG_ACTION) : null,
             revealer == "EXCLUDE_SYSTEM"
         )
-            .then(entries=>{
-                if(!entries) return {data: null, status: LOADING_STATUS.COMPLETE};
+            .then(log=>{
+                if(!log || log.result.length == 0) return {data: null, status: LOADING_STATUS.COMPLETE};
 
                 const container = document.querySelector("#reveal-log-entries");
-                return RevealUtil.fillLogModel(entries)
+                return RevealUtil.fillLogModel(log.result)
                     .then(ets=>{
                         ets.map(entry=>RevealUtil.renderLogEntry(entry, model))
                             .forEach(l=>container.appendChild(l));

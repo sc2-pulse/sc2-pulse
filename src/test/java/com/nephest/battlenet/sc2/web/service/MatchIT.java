@@ -59,6 +59,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -546,11 +547,11 @@ public class MatchIT
 
         List<LadderMatch> matches4v4 = WebServiceTestUtil.getObject
         (
-            mvc, objectMapper, new TypeReference<>(){},
-            "/api/group/match"
+            mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
+            "/api/group/match/cursor"
                 + "?characterId=" + allCharIds
                 + "&type=_4V4"
-        );
+        ).result();
         assertEquals(1, matches4v4.size());
         assertEquals(match4v4, matches4v4.get(0).getMatch());
         assertEquals(8, matches4v4.get(0).getParticipants().size());
@@ -567,15 +568,15 @@ public class MatchIT
             matches4v4.stream().map(LadderMatch::getMatch).collect(Collectors.toList()),
             WebServiceTestUtil.getObject
             (
-                mvc, objectMapper, new TypeReference<List<LadderMatch>>(){},
-                "/api/group/match"
+                mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
+                "/api/group/match/cursor"
                     + "?characterId=" + allCharIds
                     + "&type=_4V4"
-            ).stream().map(LadderMatch::getMatch).collect(Collectors.toList())
+            ).result().stream().map(LadderMatch::getMatch).collect(Collectors.toList())
         );
         mvc.perform
         (
-            get("/api/group/match")
+            get("/api/group/match/cursor")
                 .queryParam("characterId", String.valueOf(charEu1.getId()))
                 .queryParam("type", BaseMatch.MatchType._1V1.toString())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -584,11 +585,11 @@ public class MatchIT
 
         List<LadderMatch> matches2v2 = WebServiceTestUtil.getObject
         (
-            mvc, objectMapper, new TypeReference<>(){},
-            "/api/group/match"
+            mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
+            "/api/group/match/cursor"
                 + "?characterId=" + allCharIds
                 + "&type=_2V2"
-        );
+        ).result();
         assertEquals(1, matches2v2.size());
         assertEquals(match2v2, matches2v2.get(0).getMatch());
         assertEquals(4, matches2v2.get(0).getParticipants().size());
@@ -611,12 +612,12 @@ public class MatchIT
 
         List<LadderMatch> matches1v1 = WebServiceTestUtil.getObject
         (
-            mvc, objectMapper, new TypeReference<>(){},
-            "/api/group/match"
+            mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
+            "/api/group/match/cursor"
                 + "?characterId=" + charKr1.getId()
                 + "&dateCursor=" + SC2Pulse.offsetDateTime()
                     .plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1)
-        );
+        ).result();
         assertEquals(6, matches1v1.size());
         assertEquals(match1v1_3, matches1v1.get(0).getMatch());
         assertEquals(2, matches1v1.get(0).getParticipants().size());
@@ -702,10 +703,10 @@ public class MatchIT
 
         List<LadderMatch> matches1v1_2 = WebServiceTestUtil.getObject
         (
-            mvc, objectMapper, new TypeReference<>(){},
-            "/api/group/match"
+            mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
+            "/api/group/match/cursor"
                 + "?characterId=" + charEu9.getId()
-        );
+        ).result();
         assertEquals(1, matches1v1_2.size());
         assertEquals(match1v1_4, matches1v1_2.get(0).getMatch());
         assertEquals(2, matches1v1_2.get(0).getParticipants().size());
@@ -828,11 +829,11 @@ public class MatchIT
 
         List<LadderMatch> matches = WebServiceTestUtil.getObject
         (
-            mvc, objectMapper, new TypeReference<>(){},
-            "/api/group/match"
+            mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
+            "/api/group/match/cursor"
                 + "?characterId=" + charEu1.getId()
                 + "&dateCursor=" + now.plusSeconds(1)
-        );
+        ).result();
 
         assertEquals(300 - MatchDAO.DURATION_OFFSET, matches.get(0).getMatch().getDuration());
         assertEquals(1, matches.get(1).getMatch().getDuration());
@@ -884,11 +885,11 @@ public class MatchIT
 
         List<LadderMatch> matches = WebServiceTestUtil.getObject
         (
-            mvc, objectMapper, new TypeReference<>(){},
-            "/api/group/match"
+            mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
+            "/api/group/match/cursor"
                 + "?characterId=1"
                 + "&dateCursor=" + now.plusSeconds(1)
-        );
+        ).result();
         assertEquals(10, matches.size());
         verifyRatingChange(matches.get(0), 5);
         verifyRatingChange(matches.get(1), null);

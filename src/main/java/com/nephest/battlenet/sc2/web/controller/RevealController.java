@@ -1,15 +1,17 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.config.security.AccountUser;
+import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.local.AuditLogEntry;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.dao.AuditLogEntryDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.web.service.ProPlayerForm;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
@@ -97,16 +99,16 @@ public class RevealController
     )
     {
         if(createdCursor == null) createdCursor = SC2Pulse.offsetDateTime();
-        return WebServiceUtil.notFoundIfEmpty(auditLogEntryDAO.findRevealerLog
-        (
-            limit,
-            excludeSystemAuthor,
-            authorAccountId,
-            action,
-            createdCursor,
-            idCursor,
-            accountId
-        ));
+        return WebServiceUtil.notFoundIfEmpty(new CursorNavigableResult<>(
+            auditLogEntryDAO.findRevealerLog(
+                limit,
+                excludeSystemAuthor,
+                authorAccountId,
+                action,
+                createdCursor,
+                idCursor,
+                accountId
+            ), new CursorNavigation(null, null)));
     }
 
 }
