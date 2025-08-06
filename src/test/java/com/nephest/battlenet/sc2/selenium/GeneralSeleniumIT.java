@@ -708,6 +708,11 @@ public class GeneralSeleniumIT
         }
     }
 
+    public static void scrollToTop()
+    {
+        js.executeScript("window.scrollTo(0, 0);");
+    }
+
     public static void scrollTo(WebDriver driver, WebElement element)
     {
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
@@ -726,6 +731,7 @@ public class GeneralSeleniumIT
             && !container.getAttribute("class").contains("loading-error")
         )
         {
+            scrollToTop();
             scrollTo(driver, loadingIndicators);
             ExpectedCondition<Boolean> contentLoaded = ExpectedConditions.or
             (
