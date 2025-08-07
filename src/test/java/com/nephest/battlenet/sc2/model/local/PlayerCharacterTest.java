@@ -46,7 +46,7 @@ public class PlayerCharacterTest
         "2, false"
     })
     @ParameterizedTest
-    public void testIsFakeDiscriminator(Integer discriminator, boolean expected)
+    public void testIsFakeDiscriminator(Long discriminator, boolean expected)
     {
         assertEquals(expected, PlayerCharacter.isFakeDiscriminator(discriminator));
     }

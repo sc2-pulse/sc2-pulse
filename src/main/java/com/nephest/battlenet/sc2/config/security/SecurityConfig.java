@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -22,6 +22,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -54,6 +55,9 @@ public class SecurityConfig
 
     @Autowired @Qualifier("rateLimitedOAuth2AuthorizationCodeClient")
     OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> oAuth2AuthorizationCodeClient;
+
+    @Autowired @Qualifier("delegatingAuthorizationRequestResolver")
+    private OAuth2AuthorizationRequestResolver delegatingAuthorizationRequestResolver;
 
     @Autowired
     private Environment environment;
@@ -104,7 +108,7 @@ public class SecurityConfig
                 .requestMatchers
                 (
                     "/api/my/**",
-                    "/verify/*"
+                    "/verify/**"
                 ).authenticated()
                 .requestMatchers
                 (
@@ -123,7 +127,9 @@ public class SecurityConfig
                 .userInfoEndpoint(userInfoEndpoint->
                     userInfoEndpoint.userService(registrationDelegatingOauth2UserService))
                 .tokenEndpoint(tokenEndpoint->
-                    tokenEndpoint.accessTokenResponseClient(oAuth2AuthorizationCodeClient)))
+                    tokenEndpoint.accessTokenResponseClient(oAuth2AuthorizationCodeClient))
+                .authorizationEndpoint(c->
+                    c.authorizationRequestResolver(delegatingAuthorizationRequestResolver)))
             .rememberMe(rememberMe->rememberMe
                 .key(rememberMeKey)
                 .alwaysRemember(true)

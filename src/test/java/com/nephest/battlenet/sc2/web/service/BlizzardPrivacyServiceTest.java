@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -38,6 +38,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTestUtil;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -527,7 +528,7 @@ public class BlizzardPrivacyServiceTest
         BlizzardTeamMember member = new BlizzardTeamMember
         (
             new BlizzardPlayerCharacter(1L, 1, "name2#1"), new BlizzardTeamMemberRace[0],
-            new BlizzardAccount(1L, "btag1")
+            new BlizzardAccount(1L, "btag1", BlizzardTestUtil.DEFAULT_ACCOUNT_KEY)
         );
         member.setClan(new BlizzardClan(1L, "tag", "clanName"));
         return Flux.just

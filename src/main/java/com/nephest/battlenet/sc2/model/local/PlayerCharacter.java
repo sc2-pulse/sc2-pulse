@@ -26,7 +26,7 @@ implements java.io.Serializable, PlayerCharacterNaturalId
         Comparator.comparing(PlayerCharacter::getRegion)
             .thenComparing(PlayerCharacter::getRealm)
             .thenComparing(PlayerCharacter::getBattlenetId);
-    public static final int FAKE_DISCRIMINATOR = 1;
+    public static final long FAKE_DISCRIMINATOR = 1;
     public static final String DISCRIMINATOR_DELIMITER = "#";
 
     private Long id;
@@ -79,7 +79,7 @@ implements java.io.Serializable, PlayerCharacterNaturalId
         );
     }
 
-    public static boolean isFakeDiscriminator(Integer discriminator)
+    public static boolean isFakeDiscriminator(Long discriminator)
     {
         return discriminator != null && discriminator == FAKE_DISCRIMINATOR;
     }

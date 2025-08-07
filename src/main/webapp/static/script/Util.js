@@ -505,8 +505,10 @@ class Util
                     const infiniteScrollElem = container.querySelector(":scope .indicator-loading-scroll-infinite");
                     if(infiniteScrollElem
                         && ElementUtil.isElementVisible(infiniteScrollElem)
-                        && ElementUtil.isElementInViewport(infiniteScrollElem))
-                            return Util.doLoad(container, lazyPromise, showErrors);
+                        && ElementUtil.rectContainsRect(
+                            ElementUtil.getInfiniteScrollViewportRect(),
+                            infiniteScrollElem.getBoundingClientRect()))
+                                return Util.doLoad(container, lazyPromise, showErrors);
                 }
                 return result;
             })

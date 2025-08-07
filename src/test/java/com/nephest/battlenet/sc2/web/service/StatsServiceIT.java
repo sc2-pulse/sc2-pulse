@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -6,9 +6,12 @@ package com.nephest.battlenet.sc2.web.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -24,7 +27,10 @@ import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccountKey;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadderLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadderLeagueKey;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
@@ -34,15 +40,22 @@ import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.dao.FastTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import javax.sql.DataSource;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -64,6 +77,7 @@ public class StatsServiceIT
 
     private StatsService statsService;
     private TeamDAO teamDAO;
+    private FastTeamDAO fastTeamDAO;
 
     @Autowired
     private StatsService realStatsService;
@@ -92,6 +106,7 @@ public class StatsServiceIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
         teamDAO = mock(TeamDAO.class);
+        fastTeamDAO = mock(FastTeamDAO.class);
         statsService = new StatsService
         (
             null,
@@ -101,7 +116,7 @@ public class StatsServiceIT
             null,
             null,
             teamDAO,
-            null,
+            fastTeamDAO,
             null,
             null,
             null,
@@ -116,7 +131,7 @@ public class StatsServiceIT
             null,
             validator,
             dbExecutorService,
-            null,
+            mock(ClanService.class),
             null
         );
         StatsService nss = mock(StatsService.class);
@@ -136,15 +151,7 @@ public class StatsServiceIT
     @Test
     public void testInvalidTeam()
     {
-        BlizzardTeam noBattletagTeam = new BlizzardTeam();
-        BlizzardAccount account = new BlizzardAccount(1L, null); //null battletag
-        BlizzardPlayerCharacter character = new BlizzardPlayerCharacter(1L, 1, "name#123");
-        noBattletagTeam.setWins(1);
-        noBattletagTeam.setMembers(new BlizzardTeamMember[]{new BlizzardTeamMember(
-            character,
-            new BlizzardTeamMemberRace[]{new BlizzardTeamMemberRace(Race.PROTOSS, 1)},
-            account)
-        });
+        BlizzardTeam noBattletagTeam = getBlizzardTeam(null, null);
 
         statsService.updateTeams(new BlizzardLadder(new BlizzardTeam[]{noBattletagTeam}, null),
             mock(Season.class),
@@ -152,6 +159,54 @@ public class StatsServiceIT
             mock(LeagueTier.class), mock(Division.class));
 
         verify(teamDAO, never()).merge(any());
+    }
+
+    @CsvSource
+    ({
+        "tag#1234, https://eu.api.blizzard.com/data/sc2/character/tag-asdf/5678, true",
+        "tag#1234#5678, https://eu.api.blizzard.com/data/sc2/character/tag-1234/5678, true",
+
+        "tag#1234#5678, https://eu.api.blizzard.com/data/sc2/character/tag-asdf/5678, false"
+    })
+    @ParameterizedTest
+    public void testAccountValidation(String btag, String keyHref, boolean isValid)
+    {
+        BlizzardTeam team = getBlizzardTeam(btag, new BlizzardAccountKey(keyHref));
+
+        BlizzardLadderLeague league = new BlizzardLadderLeague();
+        BlizzardLadderLeagueKey key = new BlizzardLadderLeagueKey();
+        key.setSeasonId(1);
+        key.setLeagueId(BaseLeague.LeagueType.BRONZE);
+        key.setQueueId(QueueType.LOTV_1V1);
+        key.setTeamType(TeamType.ARRANGED);
+        league.setLeagueKey(key);
+
+        when(fastTeamDAO.merge(anySet())).thenReturn(Set.of());
+        statsService.updateTeams(new BlizzardLadder(new BlizzardTeam[]{team}, league),
+            mock(Season.class),
+            new League(1, 1, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            mock(LeagueTier.class), mock(Division.class));
+
+        verify(fastTeamDAO, isValid ? times(1) : never()).merge(any());
+    }
+
+    private static @NotNull BlizzardTeam getBlizzardTeam(String btag, BlizzardAccountKey key)
+    {
+        BlizzardTeam noBattletagTeam = new BlizzardTeam();
+        BlizzardAccount account = new BlizzardAccount(1L, btag, key);
+        BlizzardPlayerCharacter character = new BlizzardPlayerCharacter(1L, 1, "name#123");
+        noBattletagTeam.setWins(1);
+        noBattletagTeam.setRating(1L);
+        noBattletagTeam.setJoined(SC2Pulse.instant().minusSeconds(3600));
+        noBattletagTeam.setId(BigInteger.ONE);
+        noBattletagTeam.setMembers(new BlizzardTeamMember[] {
+            new BlizzardTeamMember(
+                character,
+                new BlizzardTeamMemberRace[] {new BlizzardTeamMemberRace(Race.PROTOSS, 1)},
+                account
+            )
+        });
+        return noBattletagTeam;
     }
 
     @Test

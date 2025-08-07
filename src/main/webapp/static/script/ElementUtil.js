@@ -595,14 +595,53 @@ class ElementUtil
         return enqueuedTask;
     }
 
+    static getViewportRect()
+    {
+        const rect = {
+            x: 0,
+            y: 0,
+            width: (window.innerWidth || document.documentElement.clientWidth),
+            height: (window.innerHeight || document.documentElement.clientHeight),
+            top: 0,
+            left: 0
+        };
+        rect.bottom = rect.y + rect.height;
+        rect.right = rect.x + rect.width;
+        Object.freeze(rect);
+        return rect;
+    }
+
+    static getInfiniteScrollViewportRect()
+    {
+        const viewportRect = ElementUtil.getViewportRect();
+        const rect = {
+            x: viewportRect.x,
+            y: viewportRect.height * ElementUtil.INFINITE_SCROLL_VIEWPORT_Y_MARGIN * -1,
+            width: viewportRect.width,
+            height: viewportRect.height + viewportRect.height * ElementUtil.INFINITE_SCROLL_VIEWPORT_Y_MARGIN * 2,
+            left: 0,
+            right: viewportRect.right
+        }
+        rect.top = rect.y;
+        rect.bottom = rect.y + rect.height;
+        Object.freeze(rect);
+        return rect;
+    }
+
+    static rectContainsRect(outer, inner)
+    {
+        return inner.top >= outer.top
+           && inner.left >= outer.left
+           && inner.bottom <= outer.bottom
+           && inner.right <= outer.right;
+    }
+
     static isElementInViewport(el)
     {
+        const viewportRect = ElementUtil.getViewportRect();
         const rect = el.getBoundingClientRect();
 
-        return rect.top >= 0
-            && rect.left >= 0
-            && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
-            && rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        return ElementUtil.rectContainsRect(viewportRect, rect);
     }
 
     static isElementVisible(el)
@@ -752,5 +791,6 @@ ElementUtil.AFTER_CLONE_ELEMENT = new Map([["dynamic-clone-element", ElementUtil
 ElementUtil.NEGATION_PREFIX = "neg-";
 ElementUtil.INPUT_TIMEOUT = 1000;
 ElementUtil.MANUAL_TOOLTIP_TIMEOUT = 1000;
-ElementUtil.INFINITE_SCROLL_OPTIONS = {rootMargin: "10% 0px"};
+ElementUtil.INFINITE_SCROLL_VIEWPORT_Y_MARGIN = 0.1;
+ElementUtil.INFINITE_SCROLL_OPTIONS = {rootMargin: (ElementUtil.INFINITE_SCROLL_VIEWPORT_Y_MARGIN * 100) + "% 0px"};
 ElementUtil.NEW_FLAG_DURATION = 60 * 60 * 24 * 14 * 1000;

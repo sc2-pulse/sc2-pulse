@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.sql.DataSource;
@@ -265,7 +266,7 @@ public class DiscordIT
         ApplicationRoleConnection connection = connectionArgumentCaptor.getValue();
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
         assertEquals(BATTLE_TAG, connection.getPlatformUsername());
-        assertNull(connection.getMetadata());
+        assertEquals(Map.of("rating_to", "0"), connection.getMetadata());
         mono.getT2().block();
         mono2.getT2().block();
     }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -356,7 +356,11 @@ public class DiscordService
                     pulseConnectionParameters.getParameters(),
                     conversionService
                 )
-            : ApplicationRoleConnection.empty(accountDAO.findByIds(Set.of(accountId)).get(0).getBattleTag());
+            : ApplicationRoleConnection.empty
+            (
+                accountDAO.findByIds(Set.of(accountId)).get(0).getBattleTag(),
+                pulseConnectionParameters.getParameters()
+            );
 
         return Flux.concat
         (

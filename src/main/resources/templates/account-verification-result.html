@@ -1,0 +1,34 @@
+<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: layout(~{::title}, _, ~{::div}, _, false)}">
+<head>
+    <title>Account verification status</title>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: error(~{::h1}, ~{::section})}">
+    <h1>Success</h1>
+    <section>
+        <p>
+            Your account <span sec:authorize="isAuthenticated()" sec:authentication="principal.account.battleTag"></span>
+            has been verified successfully.
+        </p>
+        <aside class="text-secondary"><p>Close this window if you are using the browser Discord client.</p></aside>
+        <aside>
+            <a href="https://discord.com/app" rel="noopener" target="_blank">Back to native Discord app</a>
+        </aside>
+        <script>
+            document.querySelector("a[href='https://discord.com/app']")
+                .addEventListener("click", ()=>window.setTimeout(()=>window.close(), 1000));
+        </script>
+        <script th:if="${statusCode >= 300 and statusCode < 400}">
+            window.setTimeout(()=>window.close(), 1000);
+        </script>
+    </section>
+</div>
+</body>
+</html>

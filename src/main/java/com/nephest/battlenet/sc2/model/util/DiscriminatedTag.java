@@ -11,7 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public record DiscriminatedTag(String tag, Integer discriminator)
+public record DiscriminatedTag(String tag, Long discriminator)
 implements Comparable<DiscriminatedTag>
 {
 
@@ -25,7 +25,7 @@ implements Comparable<DiscriminatedTag>
     (
         @NotBlank String str,
         @NotBlank String delimiter,
-        Function<Integer, Integer> discriminatorTransformer
+        Function<Long, Long> discriminatorTransformer
     )
     {
         String[] split = str.split(delimiter);
@@ -33,7 +33,7 @@ implements Comparable<DiscriminatedTag>
         (
             split[0],
             split.length == 2
-                ? discriminatorTransformer.apply(Integer.parseInt(split[1]))
+                ? discriminatorTransformer.apply(Long.parseLong(split[1]))
                 : null
         );
     }
