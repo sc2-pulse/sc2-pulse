@@ -115,10 +115,15 @@
              th:utext="${@supporterService.getSponsoredLink()}">
         </div>
         <div class="container sponsor-mobile-container"
-             th:if="${not @supporterService.getSponsoredImageLinks().isEmpty() and showAds == true}">
+             th:if="${(not @supporterService.getSponsoredImageLinks().isEmpty() or not @supporterService.getFriendImageLinks().isEmpty()) and showAds == true}">
             <th:block th:each="sponsorRightEntry : ${@supporterService.getSponsoredImageLinks().entrySet()}">
                 <a th:href="${sponsorRightEntry.getValue()}" target="_blank" rel="noopener sponsored" class="text-break d-inline-block mb-3 mr-3">
                     <img th:src="@{|/static/icon/sponsor/${sponsorRightEntry.getKey()}|}" th:alt="${sponsorRightEntry.getValue()}">
+                </a>
+            </th:block>
+            <th:block th:each="friendRightEntry : ${@supporterService.getFriendImageLinks().entrySet()}">
+                <a th:href="${friendRightEntry.getValue()}" target="_blank" rel="noopener" class="text-break d-inline-block mb-3">
+                    <img th:src="@{|/static/icon/sponsor/${friendRightEntry.getKey()}|}" th:alt="${friendRightEntry.getValue()}">
                 </a>
             </th:block>
         </div>
@@ -144,15 +149,27 @@
     <div id="section-side-right" class="section-side">
         <div id="sponsor-desktop-right-container"
              class="sponsor-desktop-side-container"
-             th:if="${not @supporterService.getSponsoredImageLinks().isEmpty() and showAds == true}">
-            <div id="sponsor-desktop-right" class="dd-block sponsor-desktop-side" >
-                <h2 class="mb-3 text-break">Sponsors</h2>
-                <th:block th:each="sponsorRightEntry : ${@supporterService.getSponsoredImageLinks().entrySet()}">
-                    <a th:href="${sponsorRightEntry.getValue()}" target="_blank" rel="noopener sponsored" class="text-break d-inline-block mb-3">
-                        <img th:src="@{|/static/icon/sponsor/${sponsorRightEntry.getKey()}|}" th:alt="${sponsorRightEntry.getValue()}">
-                    </a>
-                    <br/>
-                </th:block>
+             th:if="${(not @supporterService.getSponsoredImageLinks().isEmpty() or not @supporterService.getFriendImageLinks().isEmpty()) and showAds == true}">
+            <div id="sponsor-desktop-right" class="dd-block sponsor-desktop-side"
+            >
+                <section th:if="${not @supporterService.getSponsoredImageLinks().isEmpty()}">
+                    <h2 class="mb-3 text-break">Sponsors</h2>
+                    <th:block th:each="sponsorRightEntry : ${@supporterService.getSponsoredImageLinks().entrySet()}">
+                        <a th:href="${sponsorRightEntry.getValue()}" target="_blank" rel="noopener sponsored" class="text-break d-inline-block mb-3">
+                            <img th:src="@{|/static/icon/sponsor/${sponsorRightEntry.getKey()}|}" th:alt="${sponsorRightEntry.getValue()}">
+                        </a>
+                        <br/>
+                    </th:block>
+                </section>
+                <section th:if="${not @supporterService.getFriendImageLinks().isEmpty()}">
+                    <h2 class="mb-3 text-break">Friends</h2>
+                    <th:block th:each="friendRightEntry : ${@supporterService.getFriendImageLinks().entrySet()}">
+                        <a th:href="${friendRightEntry.getValue()}" target="_blank" rel="noopener" class="text-break d-inline-block mb-3">
+                            <img th:src="@{|/static/icon/sponsor/${friendRightEntry.getKey()}|}" th:alt="${friendRightEntry.getValue()}">
+                        </a>
+                        <br/>
+                    </th:block>
+                </section>
             </div>
         </div>
     </div>

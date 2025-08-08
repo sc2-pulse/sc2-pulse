@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -39,6 +39,7 @@ public class SupporterService
     private final List<String> sponsoredT2Links;
     private final List<String> patrons;
     private final Map<String, String> sponsoredImageLinks;
+    private final Map<String, String> friendImageLinks;
     private final Object supporterWriteBlock = new Object();
 
     @Autowired @Lazy
@@ -53,7 +54,8 @@ public class SupporterService
         @Value("${com.nephest.battlenet.sc2.sponsor.link:#{''}}") String sponsoredLink,
         @Value("${com.nephest.battlenet.sc2.sponsor.t2:#{''}}") List<String> sponsorsT2,
         @Value("${com.nephest.battlenet.sc2.sponsor.t2.link:#{''}}") List<String> sponsoredT2Links,
-        @Value("#{${com.nephest.battlenet.sc2.sponsor.img:{:}}}") Map<String, String> sponsoredImageLinks
+        @Value("#{${com.nephest.battlenet.sc2.sponsor.img:{:}}}") Map<String, String> sponsoredImageLinks,
+        @Value("#{${com.nephest.battlenet.sc2.friend.img:{:}}}") Map<String, String> friendImageLinks
     )
     {
         initVars(varDAO);
@@ -65,6 +67,7 @@ public class SupporterService
         this.patrons = Stream.concat(Stream.of(supporters.getValue(), sponsorsT2).flatMap(Collection::stream), Stream.of(sponsor))
             .collect(Collectors.toCollection(CopyOnWriteArrayList::new));
         this.sponsoredImageLinks = sponsoredImageLinks;
+        this.friendImageLinks = friendImageLinks;
     }
 
     private void initVars(VarDAO varDAO)
@@ -195,6 +198,11 @@ public class SupporterService
     public Map<String, String> getSponsoredImageLinks()
     {
         return sponsoredImageLinks;
+    }
+
+    public Map<String, String> getFriendImageLinks()
+    {
+        return friendImageLinks;
     }
 
 }
