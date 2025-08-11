@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -49,8 +49,15 @@ public class LadderStatsDAO
         + "INNER JOIN season ON league.season_id = season.id "
 
         + "WHERE "
-        + "season.region IN (:regions) "
-        + "AND league.type IN (:leagueTypes) "
+        + "( "
+            + "array_length(:regions::smallint[], 1) IS NULL "
+            + "OR season.region = ANY(:regions::smallint[]) "
+        + ") "
+        + "AND "
+        + "( "
+            + "array_length(:leagueTypes::smallint[], 1) IS NULL "
+            + "OR league.type = ANY(:leagueTypes::smallint[]) "
+        + ") "
         + "AND league.queue_type=:queueType "
         + "AND league.team_type=:teamType ";
 
@@ -70,8 +77,16 @@ public class LadderStatsDAO
 
         + "WHERE "
         + "season.battlenet_id=:seasonId "
-        + "AND season.region IN (:regions) "
-        + "AND league.type IN (:leagueTypes) "
+        + "AND "
+        + "( "
+            + "array_length(:regions::smallint[], 1) IS NULL "
+            + "OR season.region = ANY(:regions::smallint[]) "
+        + ") "
+        + "AND "
+        + "( "
+            + "array_length(:leagueTypes::smallint[], 1) IS NULL "
+            + "OR league.type = ANY(:leagueTypes::smallint[]) "
+        + ") "
         + "AND league.queue_type=:queueType "
         + "AND league.team_type=:teamType "
         + "AND COALESCE(league_tier.type, -1) != -1 ";

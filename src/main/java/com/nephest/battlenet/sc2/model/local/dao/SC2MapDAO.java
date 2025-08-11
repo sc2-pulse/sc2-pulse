@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -72,10 +72,18 @@ public class SC2MapDAO
             + "INNER JOIN league ON map_stats.league_id = league.id "
             + "INNER JOIN season ON league.season_id = season.id "
             + "WHERE season.battlenet_id = :seasonId "
-            + "AND season.region IN (:regions) "
+            + "AND "
+            + "( "
+                + "array_length(:regions::smallint[], 1) IS NULL "
+                + "OR season.region = ANY(:regions::smallint[]) "
+            + ") "
             + "AND league.queue_type = :queueType "
             + "AND league.team_type = :teamType "
-            + "AND league.type IN (:leagueTypes)"
+            + "AND "
+            + "( "
+                + "array_length(:leagueTypes::smallint[], 1) IS NULL "
+                + "OR league.type = ANY(:leagueTypes::smallint[]) "
+            + ") "
         + ") "
         + "SELECT " + STD_SELECT
         + "FROM map_filter "

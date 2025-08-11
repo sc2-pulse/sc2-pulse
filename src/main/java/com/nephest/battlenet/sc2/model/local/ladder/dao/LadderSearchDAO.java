@@ -94,8 +94,16 @@ public class LadderSearchDAO
     private static final String LADDER_SEARCH_TEAM_WHERE =
         "WHERE "
         + "team.season=:seasonId "
-        + "AND team.region IN (:regions) "
-        + "AND team.league_type IN (:leagueTypes) "
+        + "AND "
+        + "( "
+            + "array_length(:regions::smallint[], 1) IS NULL "
+            + "OR team.region = ANY(:regions::smallint[]) "
+        + ") "
+        + "AND "
+        + "( "
+            + "array_length(:leagueTypes::smallint[], 1) IS NULL "
+            + "OR team.league_type = ANY(:leagueTypes::smallint[]) "
+        + ") "
         + "AND team.queue_type=:queueType "
         + "AND team.team_type=:teamType ";
     private static final String LADDER_SEARCH_TEAM_FROM_WHERE =

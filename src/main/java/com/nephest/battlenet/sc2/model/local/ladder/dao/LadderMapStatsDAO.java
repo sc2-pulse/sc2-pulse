@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -41,10 +41,18 @@ public class LadderMapStatsDAO
         + "FROM season "
         + "INNER JOIN league ON season.id = league.season_id "
         + "WHERE season.battlenet_id = :seasonId "
-        + "AND season.region IN (:regions) "
+        + "AND "
+        + "( "
+            + "array_length(:regions::smallint[], 1) IS NULL "
+            + "OR season.region = ANY(:regions::smallint[]) "
+        + ") "
         + "AND league.queue_type = :queueType "
         + "AND league.team_type = :teamType "
-        + "AND league.type IN (:leagueTypes)";
+        + "AND "
+        + "( "
+            + "array_length(:leagueTypes::smallint[], 1) IS NULL "
+            + "OR league.type = ANY(:leagueTypes::smallint[]) "
+        + ") ";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;

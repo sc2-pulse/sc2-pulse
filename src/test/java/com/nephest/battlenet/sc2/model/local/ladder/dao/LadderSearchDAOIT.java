@@ -43,6 +43,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -51,12 +52,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -251,6 +255,35 @@ public class LadderSearchDAOIT
             -1
         );
         verifyLadder(resultReversed, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId, true);
+    }
+
+    @CsvSource({"1, 279", "2, 239", "3, 199", "4, 159", "5, 119", "6, 79", "7, 39"})
+    @ParameterizedTest
+    public void test4v4LadderNoRegionAndLeagueFilters(int page, int teamId)
+    {
+        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
+        search.setResultsPerPage(leagueTeamCount);
+        PagedSearchResult<List<LadderTeam>> result = search.find
+        (
+            DEFAULT_SEASON_ID,
+            Set.of(),
+            Set.of(),
+            QUEUE_TYPE,
+            TEAM_TYPE,
+            page - 1,
+            //team id is zero based in generator, but actual db id is 1 based. + 2 to offset that
+            teamId, teamId + 2,
+            1
+        );
+        verifyLadder
+        (
+            result,
+            QUEUE_TYPE, TEAM_TYPE, TIER_TYPE,
+            //no filters = everything is accepted
+            Arrays.asList(Region.values()),
+            Arrays.asList(BaseLeague.LeagueType.values()),
+            page, teamId, true
+        );
     }
 
     @Test
@@ -469,23 +502,41 @@ public class LadderSearchDAOIT
         }
     }
 
-    @Test
-    public void test4v4LeagueStats()
+    public static Stream<Arguments> regionAndLeagueFilters()
+    {
+        return Stream.of
+        (
+            Arguments.of(Set.copyOf(REGIONS), LEAGUES_SET),
+            Arguments.of(Set.of(), Set.of())
+        );
+    }
+
+    @MethodSource("regionAndLeagueFilters")
+    @ParameterizedTest
+    public void test4v4LeagueStats
+    (
+        Set<Region> regions,
+        Set<BaseLeague.LeagueType> leagues
+    )
     {
         Map<Integer, MergedLadderSearchStatsResult> statsMap = ladderStatsDAO.findStats
         (
-            Set.of(Region.values()),
-            LEAGUES_SET,
+            regions,
+            leagues,
             QUEUE_TYPE,
             TEAM_TYPE
         );
         assertEquals(3, statsMap.size());
 
-        int teamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
-        int regionTeamCount = SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
+        Set<Region> actualRegions = regions.isEmpty() ? EnumSet.allOf(Region.class) : regions;
+        Set<BaseLeague.LeagueType> actualLeagues = leagues.isEmpty()
+            ? EnumSet.allOf(BaseLeague.LeagueType.class)
+            : leagues;
+        int teamCount = actualRegions.size() * actualLeagues.size() * TEAMS_PER_LEAGUE;
+        int regionTeamCount = actualLeagues.size() * TEAMS_PER_LEAGUE;
         int regionGamesPlayed = (regionTeamCount + regionTeamCount * 2 + regionTeamCount * 3 + regionTeamCount * 4)
             * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
-        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
+        int leagueTeamCount = actualRegions.size() * TEAMS_PER_LEAGUE;
         int leagueGamesPlayed = (leagueTeamCount + leagueTeamCount * 2 + leagueTeamCount * 3 + leagueTeamCount * 4)
             * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         List<Integer> sortedSeasons = statsMap.keySet().stream().sorted().collect(Collectors.toList());
@@ -493,13 +544,13 @@ public class LadderSearchDAOIT
         for(int i = 0; i < statsMap.size() - 1; i++)
         {
             MergedLadderSearchStatsResult stats = statsMap.get(sortedSeasons.get(i));
-            for(Region region : REGIONS)
+            for(Region region : actualRegions)
             {
 
                 assertEquals(regionTeamCount, stats.getRegionTeamCount().get(region));
                 assertEquals(regionGamesPlayed, stats.getRegionGamesPlayed().get(region));
             }
-            for(BaseLeague.LeagueType league : SEARCH_LEAGUES)
+            for(BaseLeague.LeagueType league : actualLeagues)
             {
                 assertEquals(leagueTeamCount, stats.getLeagueTeamCount().get(league));
                 assertEquals(leagueGamesPlayed, stats.getLeagueGamesPlayed().get(league));
@@ -553,14 +604,31 @@ public class LadderSearchDAOIT
 
     }
 
-    @Test
-    public void testLeagueTierBounds()
+    @MethodSource("regionAndLeagueFilters")
+    @ParameterizedTest
+    public void testLeagueTierBounds
+    (
+        Set<Region> regions,
+        Set<BaseLeague.LeagueType> leagues
+    )
     {
         Map<Region, Map<BaseLeague.LeagueType, Map<BaseLeagueTier.LeagueTierType, Integer[]>>> bounds =
-            ladderStatsDAO.findLeagueBounds(DEFAULT_SEASON_ID, Set.of(Region.values()), LEAGUES_SET, QUEUE_TYPE, TEAM_TYPE);
-        for(Region region : Region.values())
+            ladderStatsDAO.findLeagueBounds
+            (
+                DEFAULT_SEASON_ID,
+                regions,
+                leagues,
+                QUEUE_TYPE,
+                TEAM_TYPE
+            );
+
+        Set<Region> actualRegions = regions.isEmpty() ? EnumSet.allOf(Region.class) : regions;
+        Set<BaseLeague.LeagueType> actualLeagues = leagues.isEmpty()
+            ? EnumSet.allOf(BaseLeague.LeagueType.class)
+            : leagues;
+        for(Region region : actualRegions)
         {
-            for(BaseLeague.LeagueType leagueType : LEAGUES_SET)
+            for(BaseLeague.LeagueType leagueType : actualLeagues)
             {
                 Integer[] curBounds = bounds.get(region).get(leagueType).get(TIER_TYPE);
                 assertEquals(2, curBounds.length);
