@@ -12,7 +12,7 @@
                             (season=${currentSeason},queue=${queueType.toString()},team-type=${teamType.toString()}
                             ,us='true',eu='true',kr='true',cn='true'
                             ,bro='true',sil='true',gol='true',pla='true',dia='true',mas='true',gra='true'
-                            ,page='0',type='ladder',ratingCursor='99999',idCursor='0',count='1')}"></loc>
+                            ,type='ladder',ratingCursor='99999',idCursor='0',sortingOrder='DESC')}"></loc>
                             <changefreq>daily</changefreq>
                         </url>
                     </th:block>

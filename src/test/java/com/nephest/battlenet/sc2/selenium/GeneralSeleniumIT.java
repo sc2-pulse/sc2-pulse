@@ -271,7 +271,7 @@ public class GeneralSeleniumIT
             + "&team-type=ARRANGED"
             + "&us=true&eu=true&kr=true&cn=true"
             + "&bro=true&sil=true&gol=true&pla=true&dia=true&mas=true&gra=true"
-            + "&page=0&type=ladder&ratingCursor=99999&idCursor=0&count=1";
+            + "&type=ladder&ratingCursor=99999&idCursor=0&sortingOrder=DESC";
         url = url.replaceAll("&", "&amp;");
         driver.get(root + "/sitemap.xml");
         //xml document with XPath locator doesn't work, using text match instead
