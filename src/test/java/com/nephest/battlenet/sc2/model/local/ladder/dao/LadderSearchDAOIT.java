@@ -298,8 +298,35 @@ public class LadderSearchDAOIT
         boolean cursor
     )
     {
-        long expectedTeamCount = (long) REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
-        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
+        verifyLadder
+        (
+            result,
+            queueType,
+            teamType,
+            tierType,
+            REGIONS,
+            SEARCH_LEAGUES,
+            page,
+            teamId,
+            cursor
+        );
+    }
+
+    private void verifyLadder
+    (
+        PagedSearchResult<List<LadderTeam>> result,
+        QueueType queueType,
+        TeamType teamType,
+        BaseLeagueTier.LeagueTierType tierType,
+        List<Region> regions,
+        List<BaseLeague.LeagueType> leagues,
+        int page,
+        int teamId,
+        boolean cursor
+    )
+    {
+        long expectedTeamCount = (long) regions.size() * leagues.size() * TEAMS_PER_LEAGUE;
+        int leagueTeamCount = regions.size() * TEAMS_PER_LEAGUE;
 
         //validate meta
         assertEquals(cursor ? null : expectedTeamCount, result.getMeta().getTotalCount());
@@ -314,9 +341,9 @@ public class LadderSearchDAOIT
         {
             LadderTeam team = result.getResult().get(i);
             //DESC order
-            Region expectedRegion = REGIONS.get((REGIONS.size() - 1 - i / TEAMS_PER_LEAGUE % TEAMS_PER_LEAGUE % REGIONS.size()));
+            Region expectedRegion = regions.get((regions.size() - 1 - i / TEAMS_PER_LEAGUE % TEAMS_PER_LEAGUE % regions.size()));
             assertEquals(expectedRegion, team.getRegion());
-            BaseLeague.LeagueType expectedLeagueType = SEARCH_LEAGUES.get(SEARCH_LEAGUES.size() - 1 - pagedIx / leagueTeamCount % leagueTeamCount % SEARCH_LEAGUES.size());
+            BaseLeague.LeagueType expectedLeagueType = leagues.get(leagues.size() - 1 - pagedIx / leagueTeamCount % leagueTeamCount % leagues.size());
             assertEquals(expectedLeagueType, team.getLeague().getType());
             assertEquals(queueType, team.getLeague().getQueueType());
             assertEquals(teamType, team.getLeague().getTeamType());
@@ -329,7 +356,7 @@ public class LadderSearchDAOIT
                 .find(Set.of(TeamLegacyUid.of(team))).stream()
                 .findAny()
                 .orElseThrow();
-            verifyTeamState(team, state, 1);
+            verifyTeamState(team, state, 1, regions);
             //validate members
             //no reason to sort members in query, sorting manually for testing
             team.getMembers().sort(Comparator.comparing(m->m.getCharacter().getBattlenetId()));
@@ -347,7 +374,13 @@ public class LadderSearchDAOIT
         }
     }
 
-    private void verifyTeamState(LadderTeam team, LadderTeamState state, int seasonOrdinal)
+    private void verifyTeamState
+    (
+        LadderTeam team,
+        LadderTeamState state,
+        int seasonOrdinal,
+        List<Region> regions
+    )
     {
         long expectedGlobalRank = (TEAMS_TOTAL - team.getId() + 1) / seasonOrdinal;
         long expectedGlobalLeagueRank =
@@ -359,7 +392,7 @@ public class LadderSearchDAOIT
         long expectedRegionRank =
             (((TEAMS_TOTAL - team.getId()) / TEAMS_PER_LEAGUE_REGION) * TEAMS_PER_LEAGUE //prev region ranks
             + expectedGlobalLeagueRank //cur region ranks
-            - (long) (REGIONS.size() - 1 - REGIONS.indexOf(team.getRegion())) * TEAMS_PER_LEAGUE) //region offset
+            - (long) (regions.size() - 1 - regions.indexOf(team.getRegion())) * TEAMS_PER_LEAGUE) //region offset
             / seasonOrdinal;
 
         assertEquals(expectedGlobalRank, (long) team.getGlobalRank());
