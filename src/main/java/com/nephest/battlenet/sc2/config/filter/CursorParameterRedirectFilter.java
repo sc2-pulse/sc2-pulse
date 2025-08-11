@@ -127,14 +127,16 @@ implements Filter
 
 
         StringBuilder sb = new StringBuilder(httpReq.getRequestURL()).append("?");
+        boolean overriden = false;
         String prefix = "";
         for(Map.Entry<String, String[]> param : params.entrySet())
         {
-            Map.Entry<String, String[]> newParam = typeParameterOverrides
-                .getOrDefault(param.getKey(), Function.identity())
-                .apply(param);
+            Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>> override
+                = typeParameterOverrides.get(param.getKey());
+            Map.Entry<String, String[]> newParam = override != null ? override.apply(param) : param;
             if(newParam == null) continue;
 
+            if(override != null) overriden = true;
             if(newParam.getValue().length == 0)
             {
                 sb.append(prefix).append(newParam.getKey());
@@ -152,7 +154,7 @@ implements Filter
                 }
             }
         }
-        return sb.toString();
+        return overriden ? sb.toString() : null;
     }
 
 }
