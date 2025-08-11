@@ -269,8 +269,9 @@ public class GeneralSeleniumIT
             + "?season=" + SeasonGenerator.DEFAULT_SEASON_ID
             + "&queue=LOTV_1V1"
             + "&team-type=ARRANGED"
-            + "&us=true&eu=true&kr=true&cn=true"
-            + "&bro=true&sil=true&gol=true&pla=true&dia=true&mas=true&gra=true"
+            + "&region=US&region=EU&region=KR&region=CN"
+            + "&league=BRONZE&league=SILVER&league=GOLD&league=PLATINUM&league=DIAMOND"
+            + "&league=MASTER&league=GRANDMASTER"
             + "&type=ladder&ratingCursor=99999&idCursor=0&sortingOrder=DESC";
         url = url.replaceAll("&", "&amp;");
         driver.get(root + "/sitemap.xml");

@@ -263,7 +263,8 @@ public class AccountFollowingIT
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"refchar2#123\",\"id\":282,"
             + "\"accountId\":1,\"region\":\"EU\",\"battlenetId\":9999},"
             + "\"account\":{\"partition\":\"GLOBAL\",\"battleTag\":\"refaccount#123\"}}]}]\n";
-        String url = "/api/my/following/ladder?season=2&queue=LOTV_4V4&team-type=ARRANGED&eu=true&bro=true";
+        String url = "/api/my/following/ladder?season=2&queue=LOTV_4V4&team-type=ARRANGED"
+            + "&region=EU&league=BRONZE";
         mvc.perform(get(url).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().json(expectedResult))

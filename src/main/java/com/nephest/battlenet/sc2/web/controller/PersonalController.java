@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -25,7 +25,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.service.AccountFollowingService;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import io.swagger.v3.oas.annotations.Hidden;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -144,33 +143,10 @@ public class PersonalController
         @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
-        @RequestParam(name = "us", required = false) boolean us,
-        @RequestParam(name = "eu", required = false) boolean eu,
-        @RequestParam(name = "kr", required = false) boolean kr,
-        @RequestParam(name = "cn", required = false) boolean cn,
-        @RequestParam(name = "bro", required = false) boolean bronze,
-        @RequestParam(name = "sil", required = false) boolean silver,
-        @RequestParam(name = "gol", required = false) boolean gold,
-        @RequestParam(name = "pla", required = false) boolean platinum,
-        @RequestParam(name = "dia", required = false) boolean diamond,
-        @RequestParam(name = "mas", required = false) boolean master,
-        @RequestParam(name = "gra", required = false) boolean grandmaster
+        @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
+        @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues
     )
     {
-        Set<Region> regions = EnumSet.noneOf(Region.class);
-        if(us) regions.add(Region.US);
-        if(eu) regions.add(Region.EU);
-        if(kr) regions.add(Region.KR);
-        if(cn) regions.add(Region.CN);
-
-        Set<BaseLeague.LeagueType> leagues = EnumSet.noneOf(BaseLeague.LeagueType.class);
-        if(bronze) leagues.add(BaseLeague.LeagueType.BRONZE);
-        if(silver) leagues.add(BaseLeague.LeagueType.SILVER);
-        if(gold) leagues.add(BaseLeague.LeagueType.GOLD);
-        if(platinum) leagues.add(BaseLeague.LeagueType.PLATINUM);
-        if(diamond) leagues.add(BaseLeague.LeagueType.DIAMOND);
-        if(master) leagues.add(BaseLeague.LeagueType.MASTER);
-        if(grandmaster) leagues.add(BaseLeague.LeagueType.GRANDMASTER);
         return ladderSearchDAO.findFollowingTeams
         (
             user.getAccount().getId(),

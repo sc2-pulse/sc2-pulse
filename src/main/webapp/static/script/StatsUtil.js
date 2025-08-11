@@ -196,7 +196,7 @@ class StatsUtil
 
     static updateLadderStatsGlobalModel(formParams)
     {
-        const request = ROOT_CONTEXT_PATH + "api/ladder/stats?" + formParams;
+        const request = ROOT_CONTEXT_PATH + "api/ladder/stats/v1?" + formParams;
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
@@ -205,12 +205,7 @@ class StatsUtil
 
     static updateLadderStatsSeasonModel(urlParams)
     {
-        const regions = [];
-        for(const region of Object.values(REGION)) if(urlParams.has(region.name)) regions.push(region.name.toUpperCase());
-        const leagues = [];
-        for(const league of Object.values(LEAGUE)) if(urlParams.has(league.shortName)) leagues.push(league.name.toUpperCase());
-
-        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/league/${urlParams.get('season')}/${urlParams.get('queue')}/${urlParams.get('team-type')}/${regions.join(',')}/${leagues.join(',')}`;
+        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/league/${urlParams.get('season')}/${urlParams.get('queue')}/${urlParams.get('team-type')}/${urlParams.getAll("region").join(',')}/${urlParams.getAll("league").join(',')}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
@@ -503,7 +498,7 @@ class StatsUtil
 
     static updateLeagueBoundsModel(formParams)
     {
-        const request = ROOT_CONTEXT_PATH + "api/ladder/league/bounds?" + formParams;
+        const request = ROOT_CONTEXT_PATH + "api/ladder/league/bounds/v1?" + formParams;
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)

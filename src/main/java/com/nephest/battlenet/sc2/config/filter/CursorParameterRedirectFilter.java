@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SortingOrder;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -16,9 +18,11 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.springframework.core.convert.ConversionService;
 
 public class CursorParameterRedirectFilter
@@ -58,19 +62,58 @@ implements Filter
             .toArray(String[]::new);
     }
 
+    private static <T extends Enum<T>> Stream<Map.Entry<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>>> convertEnumBooleanParameters
+    (
+        Class<T> enumm,
+        Function<String, String> nameFunction,
+        String convertedName,
+        ConversionService conversionService
+    )
+    {
+        return Arrays.stream(enumm.getEnumConstants())
+            .map(e->Map.entry(
+                nameFunction.apply(e.name()),
+                param->Arrays.stream(param.getValue())
+                    .anyMatch(p->p != null && p.equals("true"))
+                        ? Map.entry(convertedName,
+                            new String[]{conversionService.convert(e, String.class)})
+                        : null
+            ));
+    }
+
     private static Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> createLadderOverrides
     (
         ConversionService conversionService
     )
     {
-        return Map.of
-        (
+        Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> overrides =
+        new HashMap<>(Map.of(
             "idAnchor", param->Map.entry("idCursor", param.getValue()),
             "ratingAnchor", param->Map.entry("ratingCursor", param.getValue()),
             "count", param->Map.entry(
                 "sortingOrder",
                 convertCountValuesToSortingOrderValues(param.getValue(), conversionService))
-        );
+        ));
+        Stream.of
+        (
+            convertEnumBooleanParameters
+            (
+                Region.class,
+                name->name.substring(0, 2).toLowerCase(),
+                "region",
+                conversionService
+            ),
+            convertEnumBooleanParameters
+            (
+                BaseLeague.LeagueType.class,
+                name->name.substring(0, 3).toLowerCase(),
+                "league",
+                conversionService
+            )
+        )
+            .flatMap(Function.identity())
+            .forEach(e->overrides.put(e.getKey(), e.getValue()));
+        return Collections.unmodifiableMap(overrides);
     }
 
     private static Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> createClanOverrides

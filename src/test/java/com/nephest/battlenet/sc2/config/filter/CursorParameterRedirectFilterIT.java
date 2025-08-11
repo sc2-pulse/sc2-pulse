@@ -8,10 +8,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
@@ -70,7 +76,7 @@ public class CursorParameterRedirectFilterIT
     }
 
     @Test
-    public void whenAnchorParameter_thenMovedPermanently()
+    public void testLadderParameters()
     throws Exception
     {
         mvc.perform
@@ -79,6 +85,20 @@ public class CursorParameterRedirectFilterIT
                 .queryParam("idAnchor", "anchorValueAnchor")
                 .queryParam("ratingAnchor", "1")
                 .queryParam("ratingAnchor", "%")
+
+                .queryParam("us", "true")
+                .queryParam("eu", "true")
+                .queryParam("kr", "true")
+                .queryParam("cn", "true")
+
+                .queryParam("bro", "true")
+                .queryParam("sil", "true")
+                .queryParam("gol", "true")
+                .queryParam("pla", "true")
+                .queryParam("dia", "true")
+                .queryParam("mas", "true")
+                .queryParam("gra", "true")
+
                 .queryParam("otherParam", "otherVal")
                 .queryParam("emptyParam", "")
                 .contentType(MediaType.TEXT_HTML)
@@ -87,17 +107,48 @@ public class CursorParameterRedirectFilterIT
             .andExpect(header().string(
                 "Location",
                 Matchers.allOf(
-                    Matchers.startsWith("http://localhost/?"),
-                    Matchers.containsString("type=ladder"),
-                    Matchers.containsString("idCursor=anchorValueAnchor"),
-                    Matchers.containsString("ratingCursor=1"),
-                    Matchers.containsString("ratingCursor=%25"),
-                    Matchers.containsString("otherParam=otherVal"),
-                    Matchers.containsString("emptyParam")
+                    Stream.of
+                    (
+                        Stream.of
+                        (
+                            Matchers.startsWith("http://localhost/?"),
+                            Matchers.containsString("type=ladder"),
+                            Matchers.containsString("idCursor=anchorValueAnchor"),
+                            Matchers.containsString("ratingCursor=1"),
+                            Matchers.containsString("ratingCursor=%25"),
+                            Matchers.containsString("otherParam=otherVal"),
+                            Matchers.containsString("emptyParam")
+                        ),
+                        Arrays.stream(Region.values())
+                            .map(r->"region=" + mvcConversionService.convert(r, String.class))
+                            .map(Matchers::containsString),
+                        Arrays.stream(BaseLeague.LeagueType.values())
+                            .map(l->"league=" + mvcConversionService.convert(l, String.class))
+                            .map(Matchers::containsString)
+                    ).flatMap(Function.identity())
+                        .collect(Collectors.toList())
                 )))
             .andReturn();
 
 
+    }
+
+    @CsvSource
+    ({
+        "us",
+        "bro"
+    })
+    @ParameterizedTest
+    public void whenBooleanParameterIsNotTrue_thenNoRedirect(String parameterName)
+    throws Exception
+    {
+        mvc.perform
+        (
+            get("/").queryParam("type", "ladder")
+                .queryParam(parameterName, "false", "qwerty", "")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
     }
 
     @CsvSource

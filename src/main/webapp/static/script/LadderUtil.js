@@ -203,7 +203,7 @@ class LadderUtil
         ElementUtil.changeInputValue(form.querySelector("#" + form.id + "-team-type-picker"), params.get("team-type"));
         for(const entry of params.entries())
         {
-            const checkbox = form.querySelector("#" + form.id + "-" + entry[0] + '[type="checkbox"]');
+            const checkbox = form.querySelector("#" + form.id + "-" + entry[1] + '[type="checkbox"]');
             if(checkbox != null) ElementUtil.changeInputValue(checkbox, true);
         }
     }

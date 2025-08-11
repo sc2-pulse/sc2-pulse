@@ -122,17 +122,8 @@ public class LadderController
         @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
-        @RequestParam(name = "us", required = false) boolean us,
-        @RequestParam(name = "eu", required = false) boolean eu,
-        @RequestParam(name = "kr", required = false) boolean kr,
-        @RequestParam(name = "cn", required = false) boolean cn,
-        @RequestParam(name = "bro", required = false) boolean bronze,
-        @RequestParam(name = "sil", required = false) boolean silver,
-        @RequestParam(name = "gol", required = false) boolean gold,
-        @RequestParam(name = "pla", required = false) boolean platinum,
-        @RequestParam(name = "dia", required = false) boolean diamond,
-        @RequestParam(name = "mas", required = false) boolean master,
-        @RequestParam(name = "gra", required = false) boolean grandmaster
+        @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
+        @RequestParam(value = "league", defaultValue = "") Set<LeagueType> leagues
     )
     {
         if(ratingCursor == null) ratingCursor = sortingOrder == SortingOrder.DESC
@@ -142,20 +133,6 @@ public class LadderController
             ? Long.MAX_VALUE
             : Long.MIN_VALUE;
 
-        Set<Region> regions = EnumSet.noneOf(Region.class);
-        if(us) regions.add(Region.US);
-        if(eu) regions.add(Region.EU);
-        if(kr) regions.add(Region.KR);
-        if(cn) regions.add(Region.CN);
-
-        Set<LeagueType> leagues = EnumSet.noneOf(LeagueType.class);
-        if(bronze) leagues.add(LeagueType.BRONZE);
-        if(silver) leagues.add(LeagueType.SILVER);
-        if(gold) leagues.add(LeagueType.GOLD);
-        if(platinum) leagues.add(LeagueType.PLATINUM);
-        if(diamond) leagues.add(LeagueType.DIAMOND);
-        if(master) leagues.add(LeagueType.MASTER);
-        if(grandmaster) leagues.add(LeagueType.GRANDMASTER);
         return new CursorNavigableResult<>(ladderSearch.find(
             season,
             regions,
@@ -179,8 +156,9 @@ public class LadderController
         return ladderStatsDAO.findQueueStats(queueType, teamType);
     }
 
+    @Hidden
     @GetMapping("/stats")
-    public Map<Integer, MergedLadderSearchStatsResult> getLadderStats
+    public Map<Integer, MergedLadderSearchStatsResult> getLadderStatsLegacy
     (
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
@@ -218,6 +196,18 @@ public class LadderController
             queue,
             teamType
         );
+    }
+
+    @GetMapping("/stats/v1")
+    public Map<Integer, MergedLadderSearchStatsResult> getLadderStats
+    (
+        @RequestParam("queue") QueueType queue,
+        @RequestParam("team-type") TeamType teamType,
+        @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
+        @RequestParam(value = "league", defaultValue = "") Set<LeagueType> leagues
+    )
+    {
+        return ladderStatsDAO.findStats(regions, leagues, queue, teamType);
     }
 
     @GetMapping("/stats/bundle")
@@ -288,8 +278,9 @@ public class LadderController
         ));
     }
 
+    @Hidden
     @GetMapping("/league/bounds")
-    public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> getLadderLeagueBounds
+    public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> getLadderLeagueBoundsLegacy
     (
         @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
@@ -329,6 +320,19 @@ public class LadderController
             queue,
             teamType
         );
+    }
+
+    @GetMapping("/league/bounds/v1")
+    public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> getLadderLeagueBounds
+    (
+            @RequestParam("season") int season,
+            @RequestParam("queue") QueueType queue,
+            @RequestParam("team-type") TeamType teamType,
+            @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
+            @RequestParam(value = "league", defaultValue = "") Set<LeagueType> leagues
+        )
+    {
+        return ladderStatsDAO.findLeagueBounds(season, regions, leagues, queue, teamType);
     }
 
 }
