@@ -141,7 +141,7 @@ public class CursorParameterRedirectFilterIT
         "bro"
     })
     @ParameterizedTest
-    public void whenBooleanParameterIsNotTrue_thenNoRedirect(String parameterName)
+    public void whenBooleanParameterIsNotTrue_thenRemoveIt(String parameterName)
     throws Exception
     {
         mvc.perform
@@ -149,7 +149,14 @@ public class CursorParameterRedirectFilterIT
             get("/").queryParam("type", "ladder")
                 .queryParam(parameterName, "false", "qwerty", "")
         )
-            .andExpect(status().isOk())
+            .andExpect(status().isMovedPermanently())
+            .andExpect(header().string(
+                "Location",
+                Matchers.allOf(
+                    Matchers.startsWith("http://localhost/?"),
+                    Matchers.containsString("type=ladder"),
+                    Matchers.not(Matchers.containsString(parameterName))
+                )))
             .andReturn();
     }
 
