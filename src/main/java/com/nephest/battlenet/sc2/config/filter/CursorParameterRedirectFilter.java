@@ -35,10 +35,15 @@ implements Filter
 
     public CursorParameterRedirectFilter(ConversionService conversionService)
     {
+        Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>>
+            ladderOverrides = createLadderOverrides(conversionService);
         parameterOverrides = Map.of
         (
             "ladder",
-            createLadderOverrides(conversionService),
+            ladderOverrides,
+
+            "following-ladder",
+            ladderOverrides,
 
             "clan-search",
             createClanOverrides(conversionService)

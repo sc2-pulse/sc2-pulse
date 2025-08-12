@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -75,13 +76,14 @@ public class CursorParameterRedirectFilterIT
         }
     }
 
-    @Test
-    public void testLadderParameters()
+    @ValueSource(strings = {"ladder", "following-ladder"})
+    @ParameterizedTest
+    public void testLadderParameters(String type)
     throws Exception
     {
         mvc.perform
         (
-            get("/").queryParam("type", "ladder")
+            get("/").queryParam("type", type)
                 .queryParam("idAnchor", "anchorValueAnchor")
                 .queryParam("ratingAnchor", "1")
                 .queryParam("ratingAnchor", "%")
@@ -112,7 +114,7 @@ public class CursorParameterRedirectFilterIT
                         Stream.of
                         (
                             Matchers.startsWith("http://localhost/?"),
-                            Matchers.containsString("type=ladder"),
+                            Matchers.containsString("type=" + type),
                             Matchers.containsString("idCursor=anchorValueAnchor"),
                             Matchers.containsString("ratingCursor=1"),
                             Matchers.containsString("ratingCursor=%25"),
