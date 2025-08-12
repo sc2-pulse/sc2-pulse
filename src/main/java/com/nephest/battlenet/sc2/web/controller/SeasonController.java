@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderSeasonState;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSeasonStateDAO;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +33,9 @@ public class SeasonController
     @Autowired
     private SeasonDAO seasonDAO;
 
+    @Hidden
     @GetMapping("/list")
-    public List<Season> getSeasons()
+    public List<Season> getSeasonsLegacy()
     {
         return ladderSearch.findSeasonList();
     }
@@ -44,6 +46,11 @@ public class SeasonController
         return seasonDAO.findListByBattlenetId(season);
     }
 
+    /*TODO
+        This should be public once the underlying syntax is improved. The endpoint itself is not
+        deprecated.
+     */
+    @Hidden
     @GetMapping("/state/{to}/{period}")
     public List<LadderSeasonState> getState(@PathVariable("to") OffsetDateTime to, @PathVariable("period") Period period)
     {

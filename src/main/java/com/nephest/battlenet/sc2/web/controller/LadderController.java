@@ -210,8 +210,9 @@ public class LadderController
         return ladderStatsDAO.findStats(regions, leagues, queue, teamType);
     }
 
+    @Hidden
     @GetMapping("/stats/bundle")
-    public Map<QueueType, Map<TeamType, Map<Integer, MergedLadderSearchStatsResult>>> getLadderStatsBundle()
+    public Map<QueueType, Map<TeamType, Map<Integer, MergedLadderSearchStatsResult>>> getLadderStatsBundleLegacy()
     {
         return ladderStatsDAO.findStats();
     }
@@ -229,12 +230,13 @@ public class LadderController
         return ladderStatsDAO.findLeagueStats(season, List.of(regions), List.of(leagues), queue, teamType);
     }
 
+    @Hidden
     @GetMapping
     ({
         "/stats/map/{season}/{queueType}/{teamType}/{regions}/{leagues}",
         "/stats/map/{season}/{queueType}/{teamType}/{regions}/{leagues}/{mapId}"
     })
-    public LadderMapStats getLadderMapStats
+    public LadderMapStats getLadderMapStatsLegacy
     (
         @PathVariable("season") Integer season,
         @PathVariable("queueType") QueueType queue,

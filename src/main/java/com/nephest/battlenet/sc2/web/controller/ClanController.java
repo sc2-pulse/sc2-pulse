@@ -105,8 +105,9 @@ public class ClanController
         return clanDAO.findByTag(tag);
     }
 
+    @Hidden
     @GetMapping("/tag")
-    public List<Clan> findByTag(@RequestParam("term") String tag)
+    public List<Clan> findByTagLegacy2(@RequestParam("term") String tag)
     {
         return clanDAO.findByTag(tag);
     }
