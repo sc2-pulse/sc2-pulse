@@ -95,6 +95,7 @@ implements Filter
         new HashMap<>(Map.of(
             "idAnchor", param->Map.entry("idCursor", param.getValue()),
             "ratingAnchor", param->Map.entry("ratingCursor", param.getValue()),
+            "page", param->null,
             "count", param->Map.entry(
                 "sortingOrder",
                 convertCountValuesToSortingOrderValues(param.getValue(), conversionService))
@@ -128,6 +129,7 @@ implements Filter
     {
         return Map.of
         (
+            "page", param->null,
             "pageDiff", param->Map.entry(
                 "sortingOrder",
                 convertCountValuesToSortingOrderValues(param.getValue(), conversionService))

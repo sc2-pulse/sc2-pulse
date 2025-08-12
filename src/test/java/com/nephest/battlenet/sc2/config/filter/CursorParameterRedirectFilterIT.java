@@ -171,7 +171,7 @@ public class CursorParameterRedirectFilterIT
         "clan-search, pageDiff, -1, ASC"
     })
     @ParameterizedTest
-    public void testSortingOrder
+    public void testPaginationRedirection
     (
         String type,
         String pageCountParameterName,
@@ -183,6 +183,7 @@ public class CursorParameterRedirectFilterIT
         mvc.perform
         (
             get("/").queryParam("type", type)
+                .queryParam("page", "1")
                 .queryParam(pageCountParameterName, String.valueOf(count), null)
                 .queryParam("otherParam", "otherVal")
                 .contentType(MediaType.TEXT_HTML)
@@ -193,6 +194,7 @@ public class CursorParameterRedirectFilterIT
                 Matchers.allOf(
                     Matchers.startsWith("http://localhost/?"),
                     Matchers.containsString("type=" + type),
+                    Matchers.not(Matchers.containsString("page=1")),
                     Matchers.containsString
                     (
                         "sortingOrder="
