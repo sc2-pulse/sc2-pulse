@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.IdField;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -55,8 +56,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -100,6 +103,9 @@ public class GroupIT
 
     @Autowired
     private JdbcTemplate template;
+
+    @Autowired @Qualifier("mvcConversionService")
+    private ConversionService mvcConversionService;
 
 
     @BeforeEach
@@ -223,7 +229,8 @@ public class GroupIT
         Group group = init();
         Long[] result = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/flat")
+            get("/api/characters")
+            .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
             .queryParam
             (
                 "characterId",
@@ -309,7 +316,8 @@ public class GroupIT
     public void whenIdsAreEmpty_thenBadRequest()
     throws Exception
     {
-        mvc.perform(get("/api/group/flat"))
+        mvc.perform(get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class)))
             .andExpect(status().isBadRequest());
     }
 
@@ -321,7 +329,9 @@ public class GroupIT
             .boxed()
             .map(String::valueOf)
             .toArray(String[]::new);
-        mvc.perform(get("/api/group/flat").queryParam("characterId", longIdList))
+        mvc.perform(get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("characterId", longIdList))
             .andExpect(status().isBadRequest());
     }
 
@@ -346,7 +356,9 @@ public class GroupIT
             .map(i->new ClanMember(i, clan.getId()))
             .collect(Collectors.toSet());
         clanMemberDAO.merge(members);
-        mvc.perform(get("/api/group/flat").queryParam("clanId", "1"))
+        mvc.perform(get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("clanId", "1"))
             .andExpect(status().isBadRequest());
     }
 
@@ -358,7 +370,9 @@ public class GroupIT
             .boxed()
             .map(String::valueOf)
             .toArray(String[]::new);
-        mvc.perform(get("/api/group/flat").queryParam("clanId", longIdList))
+        mvc.perform(get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("clanId", longIdList))
             .andExpect(status().isBadRequest());
     }
 
@@ -380,7 +394,9 @@ public class GroupIT
             .boxed()
             .map(String::valueOf)
             .toArray(String[]::new);
-        mvc.perform(get("/api/group/flat").queryParam("proPlayerId", longIdList))
+        mvc.perform(get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("proPlayerId", longIdList))
             .andExpect(status().isBadRequest());
     }
 
@@ -392,7 +408,9 @@ public class GroupIT
             .boxed()
             .map(String::valueOf)
             .toArray(String[]::new);
-        mvc.perform(get("/api/group/flat").queryParam("accountId", longIdList))
+        mvc.perform(get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("accountId", longIdList))
             .andExpect(status().isBadRequest());
     }
 
@@ -405,7 +423,9 @@ public class GroupIT
             .mapToObj(l->PlayerCharacterNaturalId.of(Region.EU, 1, l))
             .map(PlayerCharacterNaturalId::toToonHandle)
             .toArray(String[]::new);
-        mvc.perform(get("/api/group/flat").queryParam("toonHandle", longToonHandleList))
+        mvc.perform(get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("toonHandle", longToonHandleList))
             .andExpect(status().isBadRequest());
     }
 

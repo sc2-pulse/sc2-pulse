@@ -51,7 +51,7 @@ public class FilterConfig
     {
         FilterRegistrationBean<DefaultCacheFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new DefaultCacheFilter());
-        registrationBean.addUrlPatterns("/api/character/search/suggestions");
+        registrationBean.addUrlPatterns("/api/characters/suggestions");
         return registrationBean;
     }
 

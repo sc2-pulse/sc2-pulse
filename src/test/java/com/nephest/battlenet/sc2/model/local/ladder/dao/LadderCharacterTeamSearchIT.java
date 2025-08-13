@@ -29,7 +29,7 @@ import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import com.nephest.battlenet.sc2.web.controller.GroupController;
+import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -164,7 +164,7 @@ public class LadderCharacterTeamSearchIT
 
         List<LadderTeam> teams = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -198,7 +198,7 @@ public class LadderCharacterTeamSearchIT
     {
         List<LadderTeam> teams = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("season", "1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -229,7 +229,7 @@ public class LadderCharacterTeamSearchIT
     {
         List<LadderTeam> teams = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("queue", QueueType.LOTV_4V4.toString())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -266,7 +266,7 @@ public class LadderCharacterTeamSearchIT
             .toArray(String[]::new);
         List<LadderTeam> teams = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", charIds)
                 .param("season", "1")
                 .param("queue", mvcConversionService.convert(QueueType.LOTV_1V1, String.class))
@@ -293,7 +293,7 @@ public class LadderCharacterTeamSearchIT
     {
         List<LadderTeam> teams = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("limit", "1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -307,14 +307,14 @@ public class LadderCharacterTeamSearchIT
             assertTrue(teams.get(0).getMembers().stream().anyMatch(m->m.getCharacter().equals(character)));
     }
 
-    @ValueSource(ints = {-1, 0, GroupController.SINGLE_CHARACTER_TEAM_LIMIT + 1})
+    @ValueSource(ints = {-1, 0, CharacterController.SINGLE_CHARACTER_TEAM_LIMIT + 1})
     @ParameterizedTest
     public void whenSingleCharacterTeamLimitIsNotInValidRange_thenBadRequest(int limit)
     throws Exception
     {
         mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("limit", String.valueOf(limit))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -322,14 +322,14 @@ public class LadderCharacterTeamSearchIT
             .andExpect(status().isBadRequest());
     }
 
-    @ValueSource(ints = {-1, 0, GroupController.TEAM_LIMIT + 1})
+    @ValueSource(ints = {-1, 0, CharacterController.TEAM_LIMIT + 1})
     @ParameterizedTest
     public void whenTeamLimitIsNotInValidRange_thenBadRequest(int limit)
     throws Exception
     {
         mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("characterId", String.valueOf(characters[1].getId()))
                 .param("season", "1")
@@ -346,7 +346,7 @@ public class LadderCharacterTeamSearchIT
     {
         List<LadderTeam> teams = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("characterId", String.valueOf(characters[2].getId()))
                 .param("season", "1")
@@ -370,7 +370,7 @@ public class LadderCharacterTeamSearchIT
     {
         mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("characterId", String.valueOf(characters[2].getId()))
                 .param("queue", QueueType.LOTV_1V1.toString())
@@ -385,7 +385,7 @@ public class LadderCharacterTeamSearchIT
     {
         mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("characterId", String.valueOf(characters[2].getId()))
                 .param("season", "1")
@@ -402,7 +402,7 @@ public class LadderCharacterTeamSearchIT
     {
         mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("characterId", String.valueOf(characters[2].getId()))
                 .param("season", "1")
@@ -417,7 +417,7 @@ public class LadderCharacterTeamSearchIT
     {
         mvc.perform
         (
-            get("/api/group/team")
+            get("/api/character-teams")
                 .param("characterId", String.valueOf(characters[0].getId()))
                 .param("characterId", String.valueOf(characters[2].getId()))
                 .param("season", "1")

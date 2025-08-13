@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
+import com.nephest.battlenet.sc2.model.IdField;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
@@ -107,7 +108,8 @@ public class CharacterIdSearchIT
         Arrays.stream(chars).forEach(playerCharacterDAO::merge);
         Long[] ids = objectMapper.readValue(mvc.perform
         (
-            get("/api/character/search/advanced")
+            get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
                 .queryParam("name", "name1")
                 .queryParam("caseSensitive", String.valueOf(caseSensitive))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -139,7 +141,8 @@ public class CharacterIdSearchIT
         Arrays.stream(chars).forEach(playerCharacterDAO::merge);
         Long[] ids = objectMapper.readValue(mvc.perform
         (
-            get("/api/character/search/advanced")
+            get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
                 .queryParam("name", "name1")
                 .queryParam
                 (
@@ -174,7 +177,8 @@ public class CharacterIdSearchIT
         );
         Long[] ids = objectMapper.readValue(mvc.perform
         (
-            get("/api/character/search/advanced")
+            get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
                 .queryParam("name", "character")
                 .queryParam("season", "1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -205,7 +209,8 @@ public class CharacterIdSearchIT
         );
         Long[] ids = objectMapper.readValue(mvc.perform
         (
-            get("/api/character/search/advanced")
+            get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
                 .queryParam("name", "character")
                 .queryParam
                 (
@@ -232,24 +237,13 @@ public class CharacterIdSearchIT
     }
 
     @Test
-    public void whenNoNameParameter_thenBadRequest()
-    throws Exception
-    {
-        mvc.perform
-        (
-            get("/api/character/search/advanced")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isBadRequest());
-    }
-
-    @Test
     public void whenFakeName_thenBadRequest()
     throws Exception
     {
         mvc.perform
         (
-            get("/api/character/search/advanced")
+            get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("name", BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME)
         )
@@ -262,7 +256,8 @@ public class CharacterIdSearchIT
     {
         mvc.perform
         (
-            get("/api/character/search/advanced")
+            get("/api/characters")
+                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("name", "name")
                 .queryParam("season", "1", "2")

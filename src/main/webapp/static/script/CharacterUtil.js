@@ -316,8 +316,9 @@ class CharacterUtil
     static loadAdditionalCharacterLinks(id)
     {
         return Session.beforeRequest()
-           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${encodeURIComponent(id)}/links/additional`))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 500]));
+           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character-links?characterId=${encodeURIComponent(id)}`))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 500]))
+           .then(links=>links ? links[0] : links);
     }
 
     static updateAdditionalCharacterLinksModel(id)
@@ -1795,7 +1796,7 @@ class CharacterUtil
 
     static updateCharacterSearchModel(name)
     {
-        const request = ROOT_CONTEXT_PATH + "api/character/search?term=" + encodeURIComponent(name);
+        const request = ROOT_CONTEXT_PATH + "api/characters?query=" + encodeURIComponent(name);
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
@@ -2473,7 +2474,7 @@ class CharacterUtil
     {
         const reqTimestamp = Date.now();
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/search/suggestions?term=${encodeURIComponent(term)}`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/characters/suggestions?query=${encodeURIComponent(term)}`))
             .then(Session.verifyResponse)
             .then(resp=>Promise.all([resp.json(), Promise.resolve(reqTimestamp)]));
     }

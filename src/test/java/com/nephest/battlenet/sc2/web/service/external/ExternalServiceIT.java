@@ -291,7 +291,7 @@ public class ExternalServiceIT
     {
         ExternalLinkResolveResult[] result = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/character/link")
+            get("/api/character-links")
                 .queryParam
                 (
                     "characterId",
@@ -379,7 +379,7 @@ public class ExternalServiceIT
     {
         ExternalLinkResolveResult[] result = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/character/link")
+            get("/api/character-links")
                 .queryParam
                 (
                     "characterId",
@@ -444,8 +444,8 @@ public class ExternalServiceIT
     {
         LadderDistinctCharacter[] characterFound = objectMapper.readValue(mvc.perform
         (
-            get("/api/character/search")
-                .queryParam("term", prefix + "profile/2/4771787010354446336")
+            get("/api/characters")
+                .queryParam("query", prefix + "profile/2/4771787010354446336")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())

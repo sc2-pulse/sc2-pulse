@@ -92,14 +92,14 @@ public class LadderSearchIndependentEmptyIT
             Arguments.of
             (
                 (Function<PlayerCharacter, MockHttpServletRequestBuilder>) playerCharacter->
-                    get("/api/group/character/full")
+                    get("/api/characters")
                         .queryParam("characterId", String.valueOf(playerCharacter.getId()))
             ),
             Arguments.of
             (
                 (Function<PlayerCharacter, MockHttpServletRequestBuilder>) playerCharacter->
-                    get("/api/character/search")
-                        .queryParam("term", playerCharacter.getDiscriminatedTag().tag())
+                    get("/api/characters")
+                        .queryParam("query", playerCharacter.getDiscriminatedTag().tag())
             )
         );
     }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.dao;
@@ -146,7 +146,7 @@ public class StandardAPIReadonlyIT
             mvc,
             objectMapper,
             new TypeReference<>(){},
-            "/api/group/character/full?characterId=1,2"
+            "/api/characters?characterId=1,2"
         );
         Arrays.sort(characters, Comparator.comparing(c->c.getMembers().getCharacter().getId()));
 

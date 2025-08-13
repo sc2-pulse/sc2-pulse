@@ -3,6 +3,9 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import static com.nephest.battlenet.sc2.web.controller.CharacterController.MATCH_PAGE_SIZE_MAX;
+import static com.nephest.battlenet.sc2.web.controller.CharacterController.SINGLE_CHARACTER_TEAM_LIMIT;
+import static com.nephest.battlenet.sc2.web.controller.CharacterController.TEAM_LIMIT;
 import static com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver.areIdsInvalid;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
@@ -56,9 +59,6 @@ public class GroupController
 
     public static final int CLAN_MEMBER_EVENT_PAGE_SIZE = 30;
     public static final int CLAN_MEMBER_EVENT_PAGE_SIZE_MAX = 100;
-    public static final int MATCH_PAGE_SIZE_MAX = 100;
-    public static final int TEAM_LIMIT = CharacterGroupArgumentResolver.CHARACTERS_MAX * 5;
-    public static final int SINGLE_CHARACTER_TEAM_LIMIT = 3000;
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
@@ -134,15 +134,17 @@ public class GroupController
             });
     }
 
+    @Hidden
     @GetMapping("/character/full") @CharacterGroup
-    public ResponseEntity<Object> getFullPlayerCharacters(@CharacterGroup Set<Long> characterIds)
+    public ResponseEntity<Object> getFullPlayerCharactersLegacy(@CharacterGroup Set<Long> characterIds)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
             .findDistinctCharactersByCharacterIds(characterIds));
     }
 
+    @Hidden
     @GetMapping("/character/link") @CharacterGroup
-    public ResponseEntity<?> getExternalLinks
+    public ResponseEntity<?> getExternalLinksLegacy
     (
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "type", defaultValue = "") Set<SocialMedia> types
@@ -227,8 +229,9 @@ public class GroupController
         );
     }
 
+    @Hidden
     @GetMapping("/match/cursor") @CharacterGroup
-    public ResponseEntity<?> getMatchHistory
+    public ResponseEntity<?> getMatchHistoryLegacy2
     (
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "dateCursor", required = false) OffsetDateTime dateCursor,
@@ -255,6 +258,7 @@ public class GroupController
         );
     }
 
+    @Hidden
     @Operation
     (
         description = "If multiple characters(flattened) are used, then you must supply 1 season "
@@ -262,7 +266,7 @@ public class GroupController
             + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
     )
     @GetMapping("/team") @CharacterGroup
-    public ResponseEntity<?> getTeams
+    public ResponseEntity<?> getTeamsLegacy
     (
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "season", required = false, defaultValue = "") Set<Integer> seasons,
@@ -289,8 +293,9 @@ public class GroupController
             .findCharacterTeams(characterIds, seasons, queues, races, limit));
     }
 
+    @Hidden
     @GetMapping("/flat") @CharacterGroup
-    public ResponseEntity<Object> getCharacterIds(@CharacterGroup Set<Long> characterIds)
+    public ResponseEntity<Object> getCharacterIdsLegacy(@CharacterGroup Set<Long> characterIds)
     {
         return WebServiceUtil.notFoundIfEmpty(characterIds);
     }

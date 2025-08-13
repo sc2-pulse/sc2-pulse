@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -118,13 +118,13 @@ public class SearchServiceIT
         }
     }
 
-    private String[] getSuggestions(String term)
+    private String[] getSuggestions(String query)
     throws Exception
     {
         return objectMapper.readValue(mvc.perform
         (
-            get("/api/character/search/suggestions")
-                .queryParam("term", term)
+            get("/api/characters/suggestions")
+                .queryParam("query", query)
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf())
         )

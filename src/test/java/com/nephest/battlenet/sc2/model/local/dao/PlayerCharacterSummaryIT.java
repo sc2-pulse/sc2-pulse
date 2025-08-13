@@ -30,7 +30,7 @@ import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import com.nephest.battlenet.sc2.web.controller.CharacterController;
+import com.nephest.battlenet.sc2.web.controller.CharacterControllerLegacy;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -306,7 +306,7 @@ public class PlayerCharacterSummaryIT
     {
         mvc.perform
         (
-            get("/api/character/1,2/summary/1v1/" + CharacterController.SUMMARY_DEPTH_MAX + 1)
+            get("/api/character/1,2/summary/1v1/" + CharacterControllerLegacy.SUMMARY_DEPTH_MAX + 1)
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isBadRequest())
@@ -315,11 +315,11 @@ public class PlayerCharacterSummaryIT
         .andReturn();
 
         String longList = Stream.generate(()->"1")
-            .limit(CharacterController.SUMMARY_IDS_MAX + 1)
+            .limit(CharacterControllerLegacy.SUMMARY_IDS_MAX + 1)
             .collect(Collectors.joining(","));
         mvc.perform
         (
-            get("/api/character/{ids}/summary/1v1/" + CharacterController.SUMMARY_DEPTH_MAX,  longList)
+            get("/api/character/{ids}/summary/1v1/" + CharacterControllerLegacy.SUMMARY_DEPTH_MAX,  longList)
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isBadRequest())
@@ -335,7 +335,7 @@ public class PlayerCharacterSummaryIT
     {
         mvc.perform
         (
-            get("/api/character/1/summary/1v1/" + CharacterController.SUMMARY_DEPTH_MAX + 1)
+            get("/api/character/1/summary/1v1/" + CharacterControllerLegacy.SUMMARY_DEPTH_MAX + 1)
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk());

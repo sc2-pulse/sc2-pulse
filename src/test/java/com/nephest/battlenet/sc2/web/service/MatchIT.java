@@ -548,7 +548,7 @@ public class MatchIT
         List<LadderMatch> matches4v4 = WebServiceTestUtil.getObject
         (
             mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
-            "/api/group/match/cursor"
+            "/api/character-matches"
                 + "?characterId=" + allCharIds
                 + "&type=_4V4"
         ).result();
@@ -569,14 +569,14 @@ public class MatchIT
             WebServiceTestUtil.getObject
             (
                 mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
-                "/api/group/match/cursor"
+                "/api/character-matches"
                     + "?characterId=" + allCharIds
                     + "&type=_4V4"
             ).result().stream().map(LadderMatch::getMatch).collect(Collectors.toList())
         );
         mvc.perform
         (
-            get("/api/group/match/cursor")
+            get("/api/character-matches")
                 .queryParam("characterId", String.valueOf(charEu1.getId()))
                 .queryParam("type", BaseMatch.MatchType._1V1.toString())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -586,7 +586,7 @@ public class MatchIT
         List<LadderMatch> matches2v2 = WebServiceTestUtil.getObject
         (
             mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
-            "/api/group/match/cursor"
+            "/api/character-matches"
                 + "?characterId=" + allCharIds
                 + "&type=_2V2"
         ).result();
@@ -613,7 +613,7 @@ public class MatchIT
         List<LadderMatch> matches1v1 = WebServiceTestUtil.getObject
         (
             mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
-            "/api/group/match/cursor"
+            "/api/character-matches"
                 + "?characterId=" + charKr1.getId()
                 + "&dateCursor=" + SC2Pulse.offsetDateTime()
                     .plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1)
@@ -704,7 +704,7 @@ public class MatchIT
         List<LadderMatch> matches1v1_2 = WebServiceTestUtil.getObject
         (
             mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
-            "/api/group/match/cursor"
+            "/api/character-matches"
                 + "?characterId=" + charEu9.getId()
         ).result();
         assertEquals(1, matches1v1_2.size());
@@ -830,7 +830,7 @@ public class MatchIT
         List<LadderMatch> matches = WebServiceTestUtil.getObject
         (
             mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
-            "/api/group/match/cursor"
+            "/api/character-matches"
                 + "?characterId=" + charEu1.getId()
                 + "&dateCursor=" + now.plusSeconds(1)
         ).result();
@@ -886,7 +886,7 @@ public class MatchIT
         List<LadderMatch> matches = WebServiceTestUtil.getObject
         (
             mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
-            "/api/group/match/cursor"
+            "/api/character-matches"
                 + "?characterId=1"
                 + "&dateCursor=" + now.plusSeconds(1)
         ).result();

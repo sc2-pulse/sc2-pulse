@@ -140,7 +140,7 @@ class GroupUtil
 
     static getTeams(params)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/group/team?${params.toString()}`;
+        const request = `${ROOT_CONTEXT_PATH}api/character-teams?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
@@ -195,7 +195,7 @@ class GroupUtil
 
     static getCharacters(groupParams)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/group/character/full?${groupParams.toString()}`;
+        const request = `${ROOT_CONTEXT_PATH}api/characters?${groupParams.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
@@ -216,7 +216,7 @@ class GroupUtil
 
     static getMatches(params)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/group/match/cursor?${params.toString()}`;
+        const request = `${ROOT_CONTEXT_PATH}api/character-matches?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
@@ -348,7 +348,7 @@ class GroupUtil
 
     static getLinks(params)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/group/character/link?${params.toString()}`;
+        const request = `${ROOT_CONTEXT_PATH}api/character-links?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 500]));

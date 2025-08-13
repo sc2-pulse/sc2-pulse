@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -281,8 +281,8 @@ public class ClanIT
 
         LadderDistinctCharacter[] chars = objectMapper.readValue(mvc.perform
         (
-            get("/api/character/search")
-                .queryParam("term", "[" + clan.getTag() + "]")
+            get("/api/characters")
+                .queryParam("query", "[" + clan.getTag() + "]")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
