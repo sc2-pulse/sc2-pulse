@@ -28,7 +28,7 @@ class LadderUtil
         allParams.append("idCursor", idCursor);
         allParams.append("sortingOrder", sortingOrder.fullName);
 
-        const request = `${ROOT_CONTEXT_PATH}api/ladder/a?` + allParams.toString();
+        const request = `${ROOT_CONTEXT_PATH}api/teams?` + allParams.toString();
         const ladderPromise = Session.beforeRequest()
         .then(n=>fetch(request))
         .then(Session.verifyJsonResponse)

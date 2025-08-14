@@ -3,7 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import static com.nephest.battlenet.sc2.web.controller.TeamGroupController.HISTORY_TEAM_COUNT_MAX;
+import static com.nephest.battlenet.sc2.web.controller.TeamController.HISTORY_TEAM_COUNT_MAX;
 import static java.util.Map.entry;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -594,7 +594,7 @@ public class TeamGroupHistoryIT
     throws Exception
     {
         List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
-            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
+            = objectMapper.readValue(mvc.perform(get("/api/team-histories")
                 .queryParam
                 (
                     "legacyUid",
@@ -763,7 +763,7 @@ public class TeamGroupHistoryIT
     {
         ResultActions resultActions = mvc.perform
         (
-            get("/api/team/group/history")
+            get("/api/team-histories")
                 .queryParam
                 (
                     "legacyUid",
@@ -829,7 +829,7 @@ public class TeamGroupHistoryIT
     {
         boolean idSupported = groupMode.isSupported(StaticColumn.ID);
         List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
-            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
+            = objectMapper.readValue(mvc.perform(get("/api/team-histories")
                 .queryParam
                 (
                     "legacyUid",
@@ -900,7 +900,7 @@ public class TeamGroupHistoryIT
     throws Exception
     {
         List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
-            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
+            = objectMapper.readValue(mvc.perform(get("/api/team-histories")
                 .queryParam
                 (
                     "legacyUid",
@@ -1029,7 +1029,7 @@ public class TeamGroupHistoryIT
     public void verifyHistoryParameterValidation(String errorFragment, Map<String, Object> parameters)
     throws Exception
     {
-        MockHttpServletRequestBuilder req = get("/api/team/group/history")
+        MockHttpServletRequestBuilder req = get("/api/team-histories")
             .contentType(MediaType.APPLICATION_JSON);
         for(Map.Entry<String, Object> entry : parameters.entrySet())
             req = req.queryParam
@@ -1049,7 +1049,7 @@ public class TeamGroupHistoryIT
     throws Exception
     {
         List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found =
-            objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
+            objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
                 .queryParam
                 (
                     "legacyUid",
@@ -1122,7 +1122,7 @@ public class TeamGroupHistoryIT
     {
         ResultActions resultActions = mvc.perform
         (
-            get("/api/team/group/history/summary")
+            get("/api/team-history-summaries")
                 .queryParam
                 (
                     "legacyUid",
@@ -1184,7 +1184,7 @@ public class TeamGroupHistoryIT
     {
         boolean idSupported = groupMode.isSupported(StaticColumn.ID);
         List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found =
-            objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
+            objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
                 .queryParam
                 (
                     "legacyUid",
@@ -1244,7 +1244,7 @@ public class TeamGroupHistoryIT
     throws Exception
     {
         List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found =
-            objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
+            objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
                 .queryParam
                 (
                     "legacyUid",
@@ -1318,7 +1318,7 @@ public class TeamGroupHistoryIT
     )
     throws Exception
     {
-        MockHttpServletRequestBuilder req = get("/api/team/group/history/summary")
+        MockHttpServletRequestBuilder req = get("/api/team-history-summaries")
             .contentType(MediaType.APPLICATION_JSON);
         for(Map.Entry<String, Object> entry : parameters.entrySet())
             req = req.queryParam

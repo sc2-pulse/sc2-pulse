@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static com.nephest.battlenet.sc2.web.controller.TeamController.LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.IdField;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
@@ -34,7 +36,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import com.nephest.battlenet.sc2.web.controller.TeamGroupController;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -81,9 +82,7 @@ public class TeamGroupIT
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    @Qualifier("mvcConversionService")
-    private ConversionService conversionService;
+    private static ConversionService conversionService;
 
     private static final List<LadderTeam> LADDER_TEAMS = new ArrayList<>();
 
@@ -95,7 +94,8 @@ public class TeamGroupIT
         @Autowired TeamMemberDAO teamMemberDAO,
         @Autowired PopulationStateDAO populationStateDAO,
         @Autowired LeagueStatsDAO leagueStatsDAO,
-        @Autowired SeasonGenerator seasonGenerator
+        @Autowired SeasonGenerator seasonGenerator,
+        @Autowired @Qualifier("mvcConversionService") ConversionService conversionService
     )
     throws SQLException
     {
@@ -105,6 +105,7 @@ public class TeamGroupIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
             init(teamDAO, teamMemberDAO, populationStateDAO, leagueStatsDAO, seasonGenerator);
         }
+        TeamGroupIT.conversionService = conversionService;
     }
 
     private static void init
@@ -223,7 +224,8 @@ public class TeamGroupIT
     @Test
     public void testFlat() throws Exception
     {
-        Long[] ids = objectMapper.readValue(mvc.perform(get("/api/team/group/flat")
+        Long[] ids = objectMapper.readValue(mvc.perform(get("/api/teams")
+            .queryParam("field", conversionService.convert(IdField.ID, String.class))
             .queryParam
             (
                 "legacyUid",
@@ -274,7 +276,8 @@ public class TeamGroupIT
     public void testFlatWildcardRace()
     throws Exception
     {
-        Long[] ids = objectMapper.readValue(mvc.perform(get("/api/team/group/flat")
+        Long[] ids = objectMapper.readValue(mvc.perform(get("/api/teams")
+            .queryParam("field", conversionService.convert(IdField.ID, String.class))
             .queryParam
             (
                 "legacyUid",
@@ -308,7 +311,7 @@ public class TeamGroupIT
     public void testGetLadderTeams()
     throws Exception
     {
-        LadderTeam[] teams = objectMapper.readValue(mvc.perform(get("/api/team/group/team/full")
+        LadderTeam[] teams = objectMapper.readValue(mvc.perform(get("/api/teams")
             .queryParam
             (
                 "legacyUid",
@@ -347,7 +350,8 @@ public class TeamGroupIT
     public void whenIdsAreEmpty_thenBadRequest()
     throws Exception
     {
-        mvc.perform(get("/api/team/group/flat"))
+        mvc.perform(get("/api/teams")
+                .queryParam("field", conversionService.convert(IdField.ID, String.class)))
             .andExpect(status().isBadRequest());
     }
 
@@ -359,7 +363,9 @@ public class TeamGroupIT
             .boxed()
             .map(String::valueOf)
             .toArray(String[]::new);
-        mvc.perform(get("/api/team/group/flat").queryParam("teamId", longIdList))
+        mvc.perform(get("/api/teams")
+            .queryParam("field", conversionService.convert(IdField.ID, String.class))
+            .queryParam("teamId", longIdList))
             .andExpect(status().isBadRequest());
     }
 
@@ -369,13 +375,13 @@ public class TeamGroupIT
         (
             Arguments.of
             (
-                "/api/team/group/flat",
+                "/api/teams?field=" + conversionService.convert(IdField.ID, String.class),
                 TeamGroupArgumentResolver.LEGACY_UIDS_MAX + 1
             ),
             Arguments.of
             (
-                "/api/team/group/team/last/full",
-                TeamGroupController.LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX + 1
+                "/api/teams?last",
+                LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX + 1
             )
         );
     }
@@ -404,7 +410,8 @@ public class TeamGroupIT
     throws Exception
     {
 
-        mvc.perform(get("/api/team/group/flat")
+        mvc.perform(get("/api/teams")
+            .queryParam("field", conversionService.convert(IdField.ID, String.class))
             .queryParam
             (
                 "legacyUid",
@@ -445,8 +452,8 @@ public class TeamGroupIT
     {
         return Stream.of
         (
-            Arguments.of("/api/team/group/flat"),
-            Arguments.of("/api/team/group/team/last/full")
+            Arguments.of("/api/teams?field=" + conversionService.convert(IdField.ID, String.class)),
+            Arguments.of("/api/teams?last")
         );
     }
 
@@ -528,7 +535,8 @@ public class TeamGroupIT
     throws Exception
     {
         List<LadderTeam> found = objectMapper.readValue(mvc.perform(
-            get("/api/team/group/team/last/full")
+            get("/api/teams")
+                .queryParam("last", "")
                 .queryParam
                 (
                     "legacyUid",
@@ -565,7 +573,7 @@ public class TeamGroupIT
     public void whenCallingGetLastLadderTeamEndpointWithoutGroupParameters_thenReturn400ErrorCode()
     throws Exception
     {
-        mvc.perform(get("/api/team/group/team/last/full")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/teams?last")).andExpect(status().isBadRequest());
     }
 
 }

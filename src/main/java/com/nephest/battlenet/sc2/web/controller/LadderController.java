@@ -113,8 +113,9 @@ public class LadderController
         );
     }
 
+    @Hidden
     @GetMapping("/a")
-    public CursorNavigableResult<List<LadderTeam>> getLadder
+    public CursorNavigableResult<List<LadderTeam>> getLadderLegacy
     (
         @RequestParam(value = "ratingCursor", required = false) Long ratingCursor,
         @RequestParam(value = "idCursor", required = false) Long idCursor,

@@ -679,7 +679,7 @@ class TeamUtil
     static getTeams(params)
     {
         return Session.beforeRequest()
-           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/team?${params.toString()}`))
+           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/teams?${params.toString()}`))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
@@ -807,7 +807,7 @@ class TeamUtil
         const params = TeamUtil.createHistoryParams(ids, legacyUids, groupBy, from, to);
         if(staticColumns) staticColumns.forEach(c=>params.append("static", c.fullName));
         if(historyColumns) historyColumns.forEach(h=>params.append("history", h.fullName));
-        const request = ROOT_CONTEXT_PATH + "api/team/group/history?" + params.toString();
+        const request = ROOT_CONTEXT_PATH + "api/team-histories?" + params.toString();
 
         return Session.beforeRequest()
             .then(n=>fetch(request))
@@ -819,7 +819,7 @@ class TeamUtil
         const params = TeamUtil.createHistoryParams(ids, legacyUids, groupBy, from, to);
         if(staticColumns) staticColumns.forEach(c=>params.append("static", c.fullName));
         if(summaryColumns) summaryColumns.forEach(s=>params.append("summary", s.fullName));
-        const request = ROOT_CONTEXT_PATH + "api/team/group/history/summary?" + params.toString();
+        const request = ROOT_CONTEXT_PATH + "api/team-history-summaries?" + params.toString();
 
         return Session.beforeRequest()
             .then(n=>fetch(request))
@@ -829,7 +829,7 @@ class TeamUtil
     static getTeamGroup(ids, legacyUids, fromSeason, toSeason)
     {
         const params = TeamUtil.createTeamGroupBaseParams(ids, legacyUids, fromSeason, toSeason);
-        const request = ROOT_CONTEXT_PATH + "api/team/group/team/full?" + params.toString();
+        const request = ROOT_CONTEXT_PATH + "api/teams?" + params.toString();
 
         return Session.beforeRequest()
             .then(n=>fetch(request))

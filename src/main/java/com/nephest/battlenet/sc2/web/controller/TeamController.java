@@ -5,102 +5,80 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.config.openapi.TeamLegacyUids;
 import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.CursorNavigation;
+import com.nephest.battlenet.sc2.model.IdField;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.SortingOrder;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
-import com.nephest.battlenet.sc2.model.local.ladder.common.CommonTeamHistory;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
-import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import java.time.Duration;
-import java.util.HashMap;
+import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/api/team")
+@RequestMapping("/api")
 public class TeamController
 {
 
     public static final int RECENT_TEAMS_LIMIT = 250;
     public static final Duration RECENT_TEAMS_OFFSET = Duration.ofMinutes(60);
-
-    @Autowired
-    private LadderTeamStateDAO ladderTeamStateDAO;
+    public static final int HISTORY_TEAM_COUNT_MAX = 1200;
+    public static final int LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX = 100;
 
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
 
     @Autowired
-    private TeamDAO teamDAO;
+    private TeamHistoryDAO teamHistoryDAO;
 
-    @Autowired @Qualifier("sc2StatsConversionService")
-    private ConversionService conversionService;
-
-    @Autowired @Qualifier("mvcConversionService")
-    private ConversionService mvcConversionService;
-
-    @Hidden
-    @GetMapping("/history/common")
-    public Map<String, CommonTeamHistory> getCommonHistoryLegacy
-    (@RequestParam("legacyUid") @TeamLegacyUids Set<TeamLegacyUid> ids)
+    private static Optional<ResponseEntity<Object>> getHistoryParametersError
+    (
+        Set<TeamHistoryDAO.StaticColumn> staticColumns,
+        TeamHistoryDAO.GroupMode groupMode,
+        OffsetDateTime from,
+        OffsetDateTime to
+    )
     {
-        if(ids == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "legacyUid parameter not found");
+        ResponseEntity<Object> result = null;
+        if(from != null && to != null && !from.isBefore(to))
+            result = ResponseEntity.of(ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "'from' parameter must be before 'to' parameter"))
+                .build();
+        if(staticColumns.stream().anyMatch(c->!groupMode.isSupported(c)))
+            result = ResponseEntity.of(ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "Some static columns are not supported by the group mode"))
+                .build();
 
-        List<LadderTeamState> states = ladderTeamStateDAO.find(ids);
-        List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(ids, true);
-        return groupCommonHistory(ids, states, teams);
+        return Optional.ofNullable(result);
     }
 
-    private Map<String, CommonTeamHistory> groupCommonHistory
-    (Set<TeamLegacyUid> ids, List<LadderTeamState> states, List<LadderTeam> teams)
-    {
-        Map<String, CommonTeamHistory> result = new HashMap<>();
-
-        for(TeamLegacyUid id : ids)
-        {
-            List<LadderTeam> filteredTeams = teams.stream()
-                .filter(t->t.getQueueType() == id.getQueueType()
-                    && t.getRegion() == id.getRegion()
-                    && t.getLegacyId().equals(id.getId()))
-                .collect(Collectors.toList());
-            Set<Long> teamIds = filteredTeams.stream().map(LadderTeam::getId).collect(Collectors.toSet());
-            List<LadderTeamState> filteredStates = states.stream()
-                .filter(s->teamIds.contains(s.getTeamState().getTeamId()))
-                .collect(Collectors.toList());
-
-            teams.removeAll(filteredTeams);
-            states.removeAll(filteredStates);
-
-            result.put(mvcConversionService.convert(id, String.class), new CommonTeamHistory(filteredTeams, filteredStates));
-        }
-
-        return result;
-    }
-
-    @GetMapping("")
-    public ResponseEntity<?> getRecentTeams
+    @GetMapping(value = "/teams", params = "recent")
+    public ResponseEntity<?> getTeams
     (
         @RequestParam("queue") QueueType queueType,
         @RequestParam("league") BaseLeague.LeagueType league,
@@ -127,6 +105,99 @@ public class TeamController
             region,
             limit
         ));
+    }
+
+    @GetMapping("/teams") @TeamGroup
+    public ResponseEntity<?> getTeams
+    (
+        @TeamGroup Set<Long> teamIds,
+        @RequestParam(value = "field", required = false) IdField idField
+    )
+    {
+        return idField != null
+            ? WebServiceUtil.notFoundIfEmpty(teamIds)
+            : WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findTeamsByIds(teamIds));
+    }
+
+    @GetMapping(value = "/teams", params = "last")
+    public ResponseEntity<?> getLastTeams
+    (
+        @RequestParam("legacyUid")
+        @TeamLegacyUids
+        @Valid
+        @Size(max = LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX)
+        Set<TeamLegacyUid> legacyUids
+    )
+    {
+        return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findLegacyTeams(legacyUids, false));
+    }
+
+    @GetMapping(value = "/teams", params = {"queue", "season"})
+    public CursorNavigableResult<List<LadderTeam>> getLadders
+    (
+        @RequestParam(value = "ratingCursor", required = false) Long ratingCursor,
+        @RequestParam(value = "idCursor", required = false) Long idCursor,
+        @RequestParam(value = "sortingOrder", defaultValue = "DESC") SortingOrder sortingOrder,
+        @RequestParam("season") int season,
+        @RequestParam("queue") QueueType queue,
+        @RequestParam("team-type") TeamType teamType,
+        @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
+        @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues
+    )
+    {
+        if(ratingCursor == null) ratingCursor = sortingOrder == SortingOrder.DESC
+            ? Long.MAX_VALUE
+            : Long.MIN_VALUE;
+        if(idCursor == null) idCursor = sortingOrder == SortingOrder.DESC
+            ? Long.MAX_VALUE
+            : Long.MIN_VALUE;
+
+        return new CursorNavigableResult<>(ladderSearchDAO.find(
+            season,
+            regions,
+            leagues,
+            queue,
+            teamType,
+            2,
+            ratingCursor,
+            idCursor,
+            sortingOrder == SortingOrder.DESC ? 1 : -1
+        ).getResult(), new CursorNavigation(null, null));
+    }
+
+    @GetMapping("/team-histories") @TeamGroup
+    public ResponseEntity<Object> getHistories
+    (
+        @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
+        @RequestParam("history") Set<TeamHistoryDAO.HistoryColumn> historyColumns,
+        @RequestParam(value = "static", defaultValue = "") Set<TeamHistoryDAO.StaticColumn> staticColumns,
+        @RequestParam(value = "groupBy", defaultValue = TeamHistoryDAO.GroupMode.NAMES.TEAM)
+        TeamHistoryDAO.GroupMode groupMode,
+        @RequestParam(value = "from", required = false) OffsetDateTime from,
+        @RequestParam(value = "to", required = false) OffsetDateTime to
+    )
+    {
+
+        return getHistoryParametersError(staticColumns, groupMode, from , to)
+            .orElseGet(()->WebServiceUtil.notFoundIfEmpty(
+                teamHistoryDAO.find(teamIds, from, to, staticColumns, historyColumns, groupMode)));
+    }
+
+    @GetMapping("/team-history-summaries") @TeamGroup
+    public ResponseEntity<Object> getHistorySummaries
+    (
+        @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
+        @RequestParam("summary") Set<TeamHistoryDAO.SummaryColumn> summaryColumns,
+        @RequestParam(value = "static", defaultValue = "") Set<TeamHistoryDAO.StaticColumn> staticColumns,
+        @RequestParam(value = "groupBy", defaultValue = TeamHistoryDAO.GroupMode.NAMES.TEAM)
+        TeamHistoryDAO.GroupMode groupMode,
+        @RequestParam(value = "from", required = false) OffsetDateTime from,
+        @RequestParam(value = "to", required = false) OffsetDateTime to
+    )
+    {
+        return getHistoryParametersError(staticColumns, groupMode, from , to)
+            .orElseGet(()->WebServiceUtil.notFoundIfEmpty(
+                teamHistoryDAO.findSummary(teamIds, from, to, staticColumns, summaryColumns, groupMode)));
     }
 
 }

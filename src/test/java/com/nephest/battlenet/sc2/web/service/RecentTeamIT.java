@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -78,8 +78,9 @@ public class RecentTeamIT
     {
         RecentTeamIT.cs = cs;
         RecentTeamIT.jdbc = jdbc;
-        urlStart1v1 = "/api/team?queue=" + cs.convert(QueueType.LOTV_1V1, String.class)
-            + "&league=" + cs.convert(BaseLeague.LeagueType.GOLD, String.class);
+        urlStart1v1 = "/api/teams?queue=" + cs.convert(QueueType.LOTV_1V1, String.class)
+            + "&league=" + cs.convert(BaseLeague.LeagueType.GOLD, String.class)
+            + "&recent=true";
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
@@ -180,8 +181,9 @@ public class RecentTeamIT
             Arguments.of(urlStart1v1 + "&limit=" + (TeamController.RECENT_TEAMS_LIMIT + 1)),
             Arguments.of
             (
-                "/api/team?queue=" + cs.convert(QueueType.LOTV_2V2, String.class)
+                "/api/teams?queue=" + cs.convert(QueueType.LOTV_2V2, String.class)
                     + "&league=" + cs.convert(BaseLeague.LeagueType.GOLD, String.class)
+                    + "&recent=true"
                     + "?race=" + cs.convert(Race.TERRAN, String.class)
             )
         );
@@ -251,8 +253,9 @@ public class RecentTeamIT
         (
             get
             (
-                "/api/team?queue=" + cs.convert(QueueType.LOTV_2V2, String.class)
+                "/api/teams?queue=" + cs.convert(QueueType.LOTV_2V2, String.class)
                     + "&league=" + cs.convert(BaseLeague.LeagueType.BRONZE, String.class)
+                    + "&recent=true"
                     + "&limit=1"
             )
                 .contentType(MediaType.APPLICATION_JSON)

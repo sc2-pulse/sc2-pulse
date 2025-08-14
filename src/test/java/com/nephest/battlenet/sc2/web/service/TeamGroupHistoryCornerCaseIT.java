@@ -132,7 +132,7 @@ public class TeamGroupHistoryCornerCaseIT
         teamStateDAO.takeSnapshot(List.of(2L), oversteppedOdt);
 
         List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
-            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
+            = objectMapper.readValue(mvc.perform(get("/api/team-histories")
                 .queryParam("teamId", "2")
                 .queryParam
                 (
@@ -221,7 +221,7 @@ public class TeamGroupHistoryCornerCaseIT
         teamStateDAO.takeSnapshot(List.of(2L), seasons.get(1).getStart());
 
         List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found
-            = objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
+            = objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
                 .queryParam
                 (
                     "legacyUid",
@@ -278,7 +278,7 @@ public class TeamGroupHistoryCornerCaseIT
         teamStateDAO.takeSnapshot(List.of(1L), SeasonGenerator.DEFAULT_SEASON_START.plusHours(2));
 
         List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found
-            = objectMapper.readValue(mvc.perform(get("/api/team/group/history/summary")
+            = objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
                 .queryParam("teamId", "1")
                 .queryParam
                 (

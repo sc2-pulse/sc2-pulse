@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
@@ -23,13 +24,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Hidden
 @RestController
 @RequestMapping("/api/team/group")
-public class TeamGroupController
+public class TeamGroupControllerLegacy
 {
 
-    public static final int HISTORY_TEAM_COUNT_MAX = 1200;
-    public static final int LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX = 100;
+    private static final int HISTORY_TEAM_COUNT_MAX = TeamController.HISTORY_TEAM_COUNT_MAX;
+    private static final int LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX
+        = TeamController.LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX;
 
     @Autowired
     private LadderSearchDAO ladderSearchDAO;

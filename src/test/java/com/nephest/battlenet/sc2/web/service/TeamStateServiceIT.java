@@ -340,7 +340,7 @@ public class TeamStateServiceIT
         );
 
         List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history
-            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
+            = objectMapper.readValue(mvc.perform(get("/api/team-histories")
                 .queryParam("teamId", String.valueOf(teamId))
                 .queryParam
                 (
@@ -379,7 +379,7 @@ public class TeamStateServiceIT
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
         List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history2
-            = objectMapper.readValue(mvc.perform(get("/api/team/group/history")
+            = objectMapper.readValue(mvc.perform(get("/api/team-histories")
                 .queryParam("teamId", String.valueOf(teamId))
                 .queryParam
                 (
