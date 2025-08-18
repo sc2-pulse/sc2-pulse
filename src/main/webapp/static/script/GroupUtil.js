@@ -301,7 +301,7 @@ class GroupUtil
 
     static getClanHistory(params)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/group/clan/history?${params.toString()}`;
+        const request = `${ROOT_CONTEXT_PATH}api/clan-histories?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));

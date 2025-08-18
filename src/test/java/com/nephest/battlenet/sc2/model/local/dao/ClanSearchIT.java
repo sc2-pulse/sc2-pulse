@@ -151,7 +151,7 @@ public class ClanSearchIT
     {
 
         Clan[] clansByTag = WebServiceTestUtil
-            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/clan" + (CLAN_COUNT - 1));
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clans?query=clan" + (CLAN_COUNT - 1));
         assertEquals(1, clansByTag.length);
         Clan clan = clansByTag[0];
         Assertions.assertThat(clan).usingRecursiveComparison().isEqualTo(new Clan(
@@ -161,12 +161,12 @@ public class ClanSearchIT
 
 
         Clan[] clansByName = WebServiceTestUtil
-            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/nAmE");
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clans?query=nAmE");
         assertEquals(CLAN_COUNT, clansByName.length);
 
         //LIKE search must be used only for names that are at least 3 characters long.
         Clan[] clansByShortName = WebServiceTestUtil
-            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/na");
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clans?query=na");
         assertEquals(0, clansByShortName.length);
     }
 
@@ -176,8 +176,8 @@ public class ClanSearchIT
     {
         Clan[] clansByTag = objectMapper.readValue(mvc.perform
         (
-            get("/api/clan/tag-or-name")
-                .queryParam("term", "cL")
+            get("/api/clans")
+                .queryParam("query", "cL")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
@@ -199,8 +199,8 @@ public class ClanSearchIT
     {
         Clan[] clansByTag = objectMapper.readValue(mvc.perform
         (
-            get("/api/clan/tag-or-name")
-                .queryParam("term", "C")
+            get("/api/clans")
+                .queryParam("query", "C")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
@@ -223,7 +223,7 @@ public class ClanSearchIT
     {
         //normal, first page
         CursorNavigableResult<List<Clan>> result = objectMapper.readValue(mvc.perform(
-            get("/api/clan/cursor")
+            get("/api/clans")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max + 1))
                 .queryParam("idCursor", String.valueOf(max + 1))
@@ -243,7 +243,7 @@ public class ClanSearchIT
 
         //reversed, last page
         CursorNavigableResult<List<Clan>> reversedResult = objectMapper.readValue(mvc.perform(
-            get("/api/clan/cursor")
+            get("/api/clans")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(min - 1))
                 .queryParam("idCursor", String.valueOf(min - 1))
@@ -263,7 +263,7 @@ public class ClanSearchIT
 
         //filtered by active member count
         CursorNavigableResult<List<Clan>> filteredByActiveMembersResult = objectMapper.readValue(mvc.perform(
-            get("/api/clan/cursor")
+            get("/api/clans")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
@@ -285,7 +285,7 @@ public class ClanSearchIT
 
         //filtered by active avg rating
         CursorNavigableResult<List<Clan>> filteredByAvgRatingResult = objectMapper.readValue(mvc.perform(
-            get("/api/clan/cursor")
+            get("/api/clans")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
@@ -308,7 +308,7 @@ public class ClanSearchIT
         //filtered by region
         Region[] regions = Region.values();
         CursorNavigableResult<List<Clan>> filteredByRegion = objectMapper.readValue(mvc.perform(
-            get("/api/clan/cursor")
+            get("/api/clans")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
@@ -332,7 +332,7 @@ public class ClanSearchIT
 
         //filtered by all
         CursorNavigableResult<List<Clan>> filteredByAllResult = objectMapper.readValue(mvc.perform(
-            get("/api/clan/cursor")
+            get("/api/clans")
                 .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))

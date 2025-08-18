@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.web.controller;
 import static com.nephest.battlenet.sc2.web.controller.CharacterController.MATCH_PAGE_SIZE_MAX;
 import static com.nephest.battlenet.sc2.web.controller.CharacterController.SINGLE_CHARACTER_TEAM_LIMIT;
 import static com.nephest.battlenet.sc2.web.controller.CharacterController.TEAM_LIMIT;
+import static com.nephest.battlenet.sc2.web.controller.ClanController.CLAN_MEMBER_EVENT_PAGE_SIZE;
+import static com.nephest.battlenet.sc2.web.controller.ClanController.CLAN_MEMBER_EVENT_PAGE_SIZE_MAX;
 import static com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver.areIdsInvalid;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
@@ -56,9 +58,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/group")
 public class GroupController
 {
-
-    public static final int CLAN_MEMBER_EVENT_PAGE_SIZE = 30;
-    public static final int CLAN_MEMBER_EVENT_PAGE_SIZE_MAX = 100;
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
@@ -172,8 +171,9 @@ public class GroupController
                             : HttpStatus.NOT_FOUND;
     }
 
+    @Hidden
     @GetMapping("/clan/history")
-    public ResponseEntity<?> geClanMemberHistory
+    public ResponseEntity<?> geClanMemberHistoryLegacy
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,

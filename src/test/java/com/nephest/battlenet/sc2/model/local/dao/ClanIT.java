@@ -294,7 +294,7 @@ public class ClanIT
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/clan/history")
+            get("/api/clan-histories")
                 .queryParam("clanId", String.valueOf(clan.getId()))
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -364,7 +364,7 @@ public class ClanIT
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/clan/history")
+            get("/api/clan-histories")
                 .queryParam("characterId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -457,7 +457,7 @@ public class ClanIT
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/clan/history")
+            get("/api/clan-histories")
                 .queryParam
                 (
                     "characterId",

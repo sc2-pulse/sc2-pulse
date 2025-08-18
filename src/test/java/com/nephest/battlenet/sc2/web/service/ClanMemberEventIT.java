@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -157,7 +157,7 @@ public class ClanMemberEventIT
 
         LadderClanMemberEvents evts1 = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/clan/history")
+            get("/api/clan-histories")
                 .queryParam
                 (
                     "characterId",
@@ -220,7 +220,7 @@ public class ClanMemberEventIT
         //next page
         LadderClanMemberEvents evts2 = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/clan/history")
+            get("/api/clan-histories")
                 .queryParam
                 (
                     "characterId",
@@ -317,7 +317,7 @@ public class ClanMemberEventIT
         //next page, empty
         mvc.perform
         (
-            get("/api/group/clan/history")
+            get("/api/clan-histories")
                 .queryParam
                 (
                     "characterId",
@@ -370,7 +370,7 @@ public class ClanMemberEventIT
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/clan/history")
+            get("/api/clan-histories")
                 .queryParam
                 (
                     "characterId",
@@ -424,7 +424,7 @@ public class ClanMemberEventIT
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/clan/history")
+            get("/api/clan-histories")
                 .queryParam
                 (
                     "characterId",
@@ -478,7 +478,7 @@ public class ClanMemberEventIT
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
-            get("/api/group/clan/history")
+            get("/api/clan-histories")
                 .queryParam
                 (
                     "clanId",
