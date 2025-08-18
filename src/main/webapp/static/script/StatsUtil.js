@@ -45,9 +45,10 @@ class StatsUtil
     static updateQueueStatsModel(formParams)
     {
         const params = new URLSearchParams(formParams);
-        const queueType = EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT);
-        const teamType = EnumUtil.enumOfFullName(params.get("team-type"), TEAM_TYPE);
-        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/queue/${queueType.fullName}/${teamType.fullName}`;
+        const webParams = new URLSearchParams();
+        webParams.append("queueType", EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT).fullName);
+        webParams.append("teamType", EnumUtil.enumOfFullName(params.get("team-type"), TEAM_TYPE).fullName);
+        const request = `${ROOT_CONTEXT_PATH}api/stats/player-base?${webParams.toString()}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
@@ -196,7 +197,7 @@ class StatsUtil
 
     static updateLadderStatsGlobalModel(formParams)
     {
-        const request = ROOT_CONTEXT_PATH + "api/ladder/stats/v1?" + formParams;
+        const request = ROOT_CONTEXT_PATH + "api/stats/activity?" + formParams;
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
@@ -612,7 +613,7 @@ class StatsUtil
         urlParams.set("tier", tier.fullName);
         crossTier.forEach(ct=>urlParams.append("crossTier", ct));
         races.forEach(race=>urlParams.append("race", race.fullName));
-        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/map/film?${urlParams.toString()}`;
+        const request = `${ROOT_CONTEXT_PATH}api/stats/balance-reports?${urlParams.toString()}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));

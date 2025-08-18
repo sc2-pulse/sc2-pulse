@@ -147,8 +147,9 @@ public class LadderController
         ).getResult(), new CursorNavigation(null, null));
     }
 
+    @Hidden
     @GetMapping("/stats/queue/{queueType}/{teamType}")
-    public List<QueueStats> getQueueStats
+    public List<QueueStats> getQueueStatsLegacy
     (
         @PathVariable("queueType") QueueType queueType,
         @PathVariable("teamType") TeamType teamType
@@ -199,8 +200,9 @@ public class LadderController
         );
     }
 
+    @Hidden
     @GetMapping("/stats/v1")
-    public Map<Integer, MergedLadderSearchStatsResult> getLadderStats
+    public Map<Integer, MergedLadderSearchStatsResult> getLadderStatsLegacy
     (
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
@@ -218,6 +220,11 @@ public class LadderController
         return ladderStatsDAO.findStats();
     }
 
+    /*TODO
+        This should be public once the underlying syntax is improved. The endpoint itself is not
+        deprecated.
+     */
+    @Hidden
     @GetMapping("/stats/league/{season}/{queueType}/{teamType}/{regions}/{leagues}")
     public List<LadderLeagueStats> getLadderLeagueStats
     (
@@ -250,8 +257,9 @@ public class LadderController
         return ladderMapStatsDAO.find(season, List.of(regions), List.of(leagues), queue, teamType, mapId);
     }
 
+    @Hidden
     @GetMapping("/stats/map/film")
-    public ResponseEntity<LadderMapStatsFilm> getLadderMapStatsFilm
+    public ResponseEntity<LadderMapStatsFilm> getLadderMapStatsFilmLegacy
     (
         @RequestParam("season") int season,
         @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
