@@ -37,11 +37,7 @@ public class FilterConfig
         FilterRegistrationBean<SeasonCacheFilter> registrationBean = new FilterRegistrationBean<>();
 
         registrationBean.setFilter(new SeasonCacheFilter(seasonDAO, globalContext.getActiveRegions()));
-        registrationBean.addUrlPatterns
-        (
-            "/api/season/list",
-            "/api/season/list/all"
-        );
+        registrationBean.addUrlPatterns("/api/seasons");
 
         return registrationBean;
     }

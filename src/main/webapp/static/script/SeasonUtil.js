@@ -21,7 +21,7 @@ class SeasonUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/season/list/all"))
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/seasons"))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 SeasonUtil.updateSeasons(json);

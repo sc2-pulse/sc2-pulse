@@ -499,7 +499,7 @@ class StatsUtil
 
     static updateLeagueBoundsModel(formParams)
     {
-        const request = ROOT_CONTEXT_PATH + "api/ladder/league/bounds/v1?" + formParams;
+        const request = ROOT_CONTEXT_PATH + "api/tier-thresholds?" + formParams;
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)

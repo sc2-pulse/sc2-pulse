@@ -50,14 +50,16 @@ public class RevealedController
         return proPlayerDAO.findAll();
     }
 
+    @Hidden
     @GetMapping("/player/{ids}/full")
-    public ResponseEntity<Object> getLadderProPlayers(@PathVariable("ids") Set<Long> ids)
+    public ResponseEntity<Object> getLadderProPlayersLegacy(@PathVariable("ids") Set<Long> ids)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderProPlayerDAO.findByIds(ids));
     }
 
+    @Hidden
     @GetMapping("/stream")
-    public ResponseEntity<?> getStreams
+    public ResponseEntity<?> getStreamsLegacy
     (
         @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services,
         @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting,

@@ -333,8 +333,9 @@ public class LadderController
         );
     }
 
+    @Hidden
     @GetMapping("/league/bounds/v1")
-    public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> getLadderLeagueBounds
+    public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> getLadderLeagueBoundsLegacy
     (
             @RequestParam("season") int season,
             @RequestParam("queue") QueueType queue,

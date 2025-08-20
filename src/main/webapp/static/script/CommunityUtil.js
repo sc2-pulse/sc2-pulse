@@ -173,7 +173,7 @@ class CommunityUtil
             lax
         );
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream?${params.toString()}`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/streams?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 500]))
     }
 

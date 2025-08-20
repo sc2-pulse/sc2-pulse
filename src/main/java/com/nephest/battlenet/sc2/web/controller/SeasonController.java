@@ -40,8 +40,9 @@ public class SeasonController
         return ladderSearch.findSeasonList();
     }
 
+    @Hidden
     @GetMapping("/list/all")
-    public List<Season> getAllSeasons(@RequestParam(name = "season", required = false) Integer season)
+    public List<Season> getAllSeasonsLegacy(@RequestParam(name = "season", required = false) Integer season)
     {
         return seasonDAO.findListByBattlenetId(season);
     }

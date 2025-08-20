@@ -315,7 +315,7 @@ public class CommunityVideoStreamIT
         
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(sorting, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -383,7 +383,7 @@ public class CommunityVideoStreamIT
 
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.RATING, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -416,7 +416,7 @@ public class CommunityVideoStreamIT
 
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.RATING, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -451,7 +451,7 @@ public class CommunityVideoStreamIT
 
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.TOP_PERCENT_REGION, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -537,7 +537,7 @@ public class CommunityVideoStreamIT
 
         CommunityStreamResult streams1 = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("service", conversionService.convert(SocialMedia.BILIBILI, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -574,7 +574,7 @@ public class CommunityVideoStreamIT
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam("identifiedOnly", "true")
@@ -604,7 +604,7 @@ public class CommunityVideoStreamIT
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam
@@ -640,7 +640,7 @@ public class CommunityVideoStreamIT
         teamMemberDAO.create(new TeamMember(1L, 2L, 0, 1, 2, 0));
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam
                 (
                     "race",
@@ -667,7 +667,7 @@ public class CommunityVideoStreamIT
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam("language", "en-US", "zh")
@@ -725,7 +725,7 @@ public class CommunityVideoStreamIT
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam("ratingMin", "2")
@@ -755,7 +755,7 @@ public class CommunityVideoStreamIT
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam("ratingMax", "1")
@@ -778,7 +778,7 @@ public class CommunityVideoStreamIT
     {
         mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("ratingMin", "2")
                 .queryParam("ratingMax", "1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -793,7 +793,7 @@ public class CommunityVideoStreamIT
         init(5);
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam("limit", "3")
@@ -841,7 +841,7 @@ public class CommunityVideoStreamIT
 
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam("limitPlayer", "3")
@@ -920,7 +920,7 @@ public class CommunityVideoStreamIT
         );
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam
@@ -1038,7 +1038,7 @@ public class CommunityVideoStreamIT
 
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
-            get("/api/revealed/stream")
+            get("/api/streams")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())

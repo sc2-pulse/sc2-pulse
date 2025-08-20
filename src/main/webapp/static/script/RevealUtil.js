@@ -198,9 +198,10 @@ class RevealUtil
 
     static getPlayer(id)
     {
-        return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/player/${id}/full`))
-            .then(Session.verifyJsonResponse);
+        const params = new URLSearchParams();
+        params.append("proPlayerId", id);
+        return GroupUtil.getGroup(params)
+            .then(group=>group?.proPlayers?.[0]);
     }
 
     static getLog

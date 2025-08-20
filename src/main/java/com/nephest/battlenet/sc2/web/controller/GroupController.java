@@ -89,13 +89,11 @@ public class GroupController
     @Autowired
     private CharacterGroupArgumentResolver resolver;
 
-    private static final Comparator<Clan> CLAN_COMPARATOR = Comparator
-        .comparing(Clan::getActiveMembers, Comparator.nullsLast(Comparator.reverseOrder()))
-        .thenComparing(Clan::getMembers, Comparator.nullsLast(Comparator.reverseOrder()))
-        .thenComparing(Clan::getId);
+    private static final Comparator<Clan> CLAN_COMPARATOR = MiscController.CLAN_COMPARATOR;
 
+    @Hidden
     @GetMapping
-    public ResponseEntity<?> getGroup
+    public ResponseEntity<?> getGroupLegacy
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,

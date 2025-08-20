@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -95,7 +95,7 @@ public class SC2MetaServiceIT
 
         mvc.perform
         (
-            get("/api/meta/patch")
+            get("/api/patches")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isNotFound())
@@ -115,7 +115,7 @@ public class SC2MetaServiceIT
 
         List<LadderPatch> foundPatches2 = objectMapper.readValue(mvc.perform
         (
-            get("/api/meta/patch")
+            get("/api/patches")
                 .queryParam
                 (
                     "buildMin",

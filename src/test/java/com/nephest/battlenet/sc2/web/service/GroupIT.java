@@ -138,7 +138,7 @@ public class GroupIT
 
         Group result = objectMapper.readValue(mvc.perform
         (
-            get("/api/group")
+            get("/api/entities")
                 .queryParam
                 (
                     "characterId",

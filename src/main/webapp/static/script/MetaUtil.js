@@ -6,7 +6,7 @@ class MetaUtil
 
     static getPatches(buildMin)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/meta/patch?buildMin=${encodeURIComponent(buildMin)}`;
+        const request = `${ROOT_CONTEXT_PATH}api/patches?buildMin=${encodeURIComponent(buildMin)}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));

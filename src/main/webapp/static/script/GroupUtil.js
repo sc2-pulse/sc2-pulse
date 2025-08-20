@@ -13,7 +13,7 @@ class GroupUtil
            cachedResult = cached.cached;
            if(groupParams.size == 0) return Promise.resolve(cachedResult);
         }
-        const request = `${ROOT_CONTEXT_PATH}api/group?${groupParams.toString()}`;
+        const request = `${ROOT_CONTEXT_PATH}api/entities?${groupParams.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]))
