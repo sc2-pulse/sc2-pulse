@@ -14,6 +14,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
 import jakarta.servlet.ServletContext;
+import org.springdoc.core.customizers.RouterOperationCustomizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,6 +57,21 @@ public class SpringDocConfig
                     stats; you direct a corresponding user to give us explicit permission to share
                     their original upstream data with you.
                     """));
+    }
+
+    @Bean
+    public RouterOperationCustomizer parameterPathRouterOperationCustomizer()
+    {
+        return (routerOperation, handlerMethod) ->
+        {
+            if(routerOperation.getParams().length > 0)
+                routerOperation.setPath
+                (
+                    routerOperation.getPath()
+                        + "?" + String.join("&", routerOperation.getParams())
+                );
+            return routerOperation;
+        };
     }
 
 }
