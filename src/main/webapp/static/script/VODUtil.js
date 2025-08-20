@@ -9,7 +9,8 @@ class VODUtil
         const cursorParams = new URLSearchParams(params);
         cursorParams.append("dateCursor", dateCursor);
         cursorParams.append("mapCursor", mapCursor);
-        const request = `${ROOT_CONTEXT_PATH}api/vod/twitch/search?${cursorParams.toString()}`;
+        cursorParams.append("vod", "");
+        const request = `${ROOT_CONTEXT_PATH}api/matches?${cursorParams.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
            .then(Session.verifyJsonResponse);
