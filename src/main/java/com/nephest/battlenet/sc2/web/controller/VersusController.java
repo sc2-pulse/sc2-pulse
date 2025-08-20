@@ -31,6 +31,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+/*TODO
+    This should be public once the underlying syntax is improved. The endpoint itself is not
+    deprecated.
+ */
+@Hidden
 @RestController
 @RequestMapping("/api/versus")
 public class VersusController

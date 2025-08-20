@@ -44,6 +44,11 @@ public class RevealedController
     @Autowired
     private CommunityService communityService;
 
+    /*TODO
+        This should be public once the underlying syntax is improved. The endpoint itself is not
+        deprecated.
+     */
+    @Hidden
     @GetMapping("/players")
     public List<ProPlayer> getPlayers()
     {
