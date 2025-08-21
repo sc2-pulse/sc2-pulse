@@ -3,7 +3,6 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -27,9 +26,12 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,6 +94,13 @@ public class CharacterIdSearchIT
         }
     }
 
+    public static PlayerCharacter fromId(Long id)
+    {
+        PlayerCharacter character = new PlayerCharacter();
+        character.setId(id);
+        return character;
+    }
+
     @ValueSource(booleans = {true, false})
     @ParameterizedTest
     public void testFindByName(boolean caseSensitive)
@@ -106,7 +115,7 @@ public class CharacterIdSearchIT
             new PlayerCharacter(null, acc.getId(), Region.EU, 4L, 1, "name2#1")
         };
         Arrays.stream(chars).forEach(playerCharacterDAO::merge);
-        Long[] ids = objectMapper.readValue(mvc.perform
+        PlayerCharacter[] result = objectMapper.readValue(mvc.perform
         (
             get("/api/characters")
                 .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
@@ -115,14 +124,17 @@ public class CharacterIdSearchIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), Long[].class);
-        Long[] expectedIds = IntStream.range(0, caseSensitive ? 2 : 3)
+            .andReturn().getResponse().getContentAsString(), PlayerCharacter[].class);
+        PlayerCharacter[] expectedResult = IntStream.range(0, caseSensitive ? 2 : 3)
             .boxed()
             .map(i->chars[i])
             .map(PlayerCharacter::getId)
-            .toArray(Long[]::new);
-        Arrays.sort(ids);
-        assertArrayEquals(expectedIds, ids);
+            .map(CharacterIdSearchIT::fromId)
+            .toArray(PlayerCharacter[]::new);
+        Arrays.sort(result, Comparator.comparing(PlayerCharacter::getId));
+        Assertions.assertThat(result)
+            .usingRecursiveComparison()
+            .isEqualTo(expectedResult);
     }
 
     @Test
@@ -139,7 +151,7 @@ public class CharacterIdSearchIT
             new PlayerCharacter(null, acc.getId(), Region.KR, 5L, 1, "name3#1"),
         };
         Arrays.stream(chars).forEach(playerCharacterDAO::merge);
-        Long[] ids = objectMapper.readValue(mvc.perform
+        PlayerCharacter[] ids = objectMapper.readValue(mvc.perform
         (
             get("/api/characters")
                 .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
@@ -152,8 +164,10 @@ public class CharacterIdSearchIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), Long[].class);
-        assertArrayEquals(new Long[]{chars[2].getId()}, ids);
+            .andReturn().getResponse().getContentAsString(), PlayerCharacter[].class);
+        Assertions.assertThat(ids)
+            .usingRecursiveComparison()
+            .isEqualTo(new PlayerCharacter[]{fromId(chars[2].getId())});
     }
 
     @Test
@@ -175,7 +189,7 @@ public class CharacterIdSearchIT
             BaseLeagueTier.LeagueTierType.FIRST,
             1
         );
-        Long[] ids = objectMapper.readValue(mvc.perform
+        PlayerCharacter[] ids = objectMapper.readValue(mvc.perform
         (
             get("/api/characters")
                 .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
@@ -184,8 +198,10 @@ public class CharacterIdSearchIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), Long[].class);
-        assertArrayEquals(new Long[]{1L}, ids);
+            .andReturn().getResponse().getContentAsString(), PlayerCharacter[].class);
+        Assertions.assertThat(ids)
+            .usingRecursiveComparison()
+            .isEqualTo(new PlayerCharacter[]{fromId(1L)});
     }
 
     @Test
@@ -207,7 +223,7 @@ public class CharacterIdSearchIT
             BaseLeagueTier.LeagueTierType.FIRST,
             1
         );
-        Long[] ids = objectMapper.readValue(mvc.perform
+        PlayerCharacter[] ids = objectMapper.readValue(mvc.perform
         (
             get("/api/characters")
                 .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
@@ -221,19 +237,22 @@ public class CharacterIdSearchIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), Long[].class);
-        Arrays.sort(ids);
-        assertArrayEquals
-        (
-            new Long[]
-            {
-                1L, //s1 1v1
-                2L, 3L, //s1 2v2
-                7L, //s2 1v1
-                8L, 9L //s2 2v2
-            },
-            ids
-        );
+            .andReturn().getResponse().getContentAsString(), PlayerCharacter[].class);
+        Arrays.sort(ids, Comparator.comparing(PlayerCharacter::getId));
+        Assertions.assertThat(ids)
+            .usingRecursiveComparison()
+            .isEqualTo
+            (
+                LongStream.of
+                (
+                    1L, //s1 1v1
+                    2L, 3L, //s1 2v2
+                    7L, //s2 1v1
+                    8L, 9L //s2 2v2
+                )
+                    .mapToObj(CharacterIdSearchIT::fromId)
+                    .toArray(PlayerCharacter[]::new)
+            );
     }
 
     @Test

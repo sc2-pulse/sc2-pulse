@@ -221,10 +221,18 @@ public class TeamGroupIT
         }
     }
 
+    public static LadderTeam fromId(Long id)
+    {
+        LadderTeam team = new LadderTeam();
+        team.setId(id);
+        team.setPopulationState(new PopulationState());
+        return team;
+    }
+
     @Test
     public void testFlat() throws Exception
     {
-        Long[] ids = objectMapper.readValue(mvc.perform(get("/api/teams")
+        LadderTeam[] result = objectMapper.readValue(mvc.perform(get("/api/teams")
             .queryParam("field", conversionService.convert(IdField.ID, String.class))
             .queryParam
             (
@@ -261,22 +269,32 @@ public class TeamGroupIT
             .queryParam("fromSeason", "2")
             .queryParam("toSeason", String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)))
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), Long[].class);
-        Arrays.sort(ids);
-        Long[] expectedResult = Stream.concat
+            .andReturn().getResponse().getContentAsString(), LadderTeam[].class);
+        Arrays.sort(result, Comparator.comparing(LadderTeam::getId));
+        Long[] expectedIds = Stream.concat
         (
             LongStream.rangeClosed(2, TeamGroupArgumentResolver.TEAMS_MAX - 2).boxed(),
             Stream.of((long) TeamGroupArgumentResolver.TEAMS_MAX)
         )
             .toArray(Long[]::new);
-        assertArrayEquals(expectedResult, ids);
+        Assertions.assertThat(result[0])
+            .usingRecursiveComparison()
+            .ignoringFields("legacyUid")
+            .isEqualTo(fromId(expectedIds[0]));
+        assertArrayEquals
+        (
+            expectedIds,
+            Arrays.stream(result)
+                .map(LadderTeam::getId)
+                .toArray(Long[]::new)
+        );
     }
 
     @Test
     public void testFlatWildcardRace()
     throws Exception
     {
-        Long[] ids = objectMapper.readValue(mvc.perform(get("/api/teams")
+        Long[] ids = Arrays.stream(objectMapper.readValue(mvc.perform(get("/api/teams")
             .queryParam("field", conversionService.convert(IdField.ID, String.class))
             .queryParam
             (
@@ -294,7 +312,9 @@ public class TeamGroupIT
                 )
             ))
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), Long[].class);
+            .andReturn().getResponse().getContentAsString(), LadderTeam[].class))
+            .map(LadderTeam::getId)
+            .toArray(Long[]::new);
         Arrays.sort(ids);
         assertArrayEquals
         (

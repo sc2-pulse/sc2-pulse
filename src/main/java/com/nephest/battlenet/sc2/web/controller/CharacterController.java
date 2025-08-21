@@ -8,6 +8,7 @@ import static com.nephest.battlenet.sc2.web.service.SearchService.ID_SEARCH_MAX_
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.IdField;
+import com.nephest.battlenet.sc2.model.IdProjection;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
@@ -83,7 +84,7 @@ public class CharacterController
     )
     {
         return idField != null
-            ? WebServiceUtil.notFoundIfEmpty(characterIds)
+            ? WebServiceUtil.notFoundIfEmpty(characterIds.stream().map(IdProjection::new).toList())
             : WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
                 .findDistinctCharactersByCharacterIds(characterIds));
     }
@@ -103,7 +104,10 @@ public class CharacterController
         if(seasons.size() > 1 && queues.size() > 1) return ResponseEntity.badRequest()
             .body("1 season x queues or x seasons 1 queue are supported");
         return WebServiceUtil.notFoundIfEmpty(searchService
-            .findIds(name, caseSensitive, region, seasons, queues));
+            .findIds(name, caseSensitive, region, seasons, queues)
+            .stream()
+            .map(IdProjection::new)
+            .toList());
     }
 
     @GetMapping(value = "/characters", params = "query")

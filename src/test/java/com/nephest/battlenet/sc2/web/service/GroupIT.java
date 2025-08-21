@@ -3,7 +3,6 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -227,7 +226,7 @@ public class GroupIT
     public void testGetCharacterIds() throws Exception
     {
         Group group = init();
-        Long[] result = objectMapper.readValue(mvc.perform
+        PlayerCharacter[] result = objectMapper.readValue(mvc.perform
         (
             get("/api/characters")
             .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
@@ -261,10 +260,14 @@ public class GroupIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), Long[].class);
-        Arrays.sort(result);
-        Long[] expectedResult = new Long[]{1L, 2L, 7L, 11L, 12L, 20L, 23L, 25L};
-        assertArrayEquals(expectedResult, result);
+            .andReturn().getResponse().getContentAsString(), PlayerCharacter[].class);
+        Arrays.sort(result, Comparator.comparing(PlayerCharacter::getId));
+        PlayerCharacter[] expectedResult = LongStream.of(1L, 2L, 7L, 11L, 12L, 20L, 23L, 25L)
+            .mapToObj(CharacterIdSearchIT::fromId)
+            .toArray(PlayerCharacter[]::new);
+        Assertions.assertThat(result)
+            .usingRecursiveComparison()
+            .isEqualTo(expectedResult);
     }
 
     private Group init()

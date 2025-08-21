@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.config.openapi.TeamLegacyUids;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.IdField;
+import com.nephest.battlenet.sc2.model.IdProjection;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
@@ -115,7 +116,7 @@ public class TeamController
     )
     {
         return idField != null
-            ? WebServiceUtil.notFoundIfEmpty(teamIds)
+            ? WebServiceUtil.notFoundIfEmpty(teamIds.stream().map(IdProjection::new).toList())
             : WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findTeamsByIds(teamIds));
     }
 
