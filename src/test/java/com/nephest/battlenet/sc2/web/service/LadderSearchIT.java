@@ -281,7 +281,7 @@ public class LadderSearchIT
                         .toArray(String[]::new)
                 )
                 .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
-                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam("teamType", mvcConversionService.convert(TEAM_TYPE, String.class))
                 .queryParam
                 (
                     "after",
@@ -321,7 +321,7 @@ public class LadderSearchIT
                         .toArray(String[]::new)
                 )
                 .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
-                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam("teamType", mvcConversionService.convert(TEAM_TYPE, String.class))
                 .queryParam
                 (
                     "before",
@@ -352,7 +352,7 @@ public class LadderSearchIT
             get("/api/teams")
                 .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
                 .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
-                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam("teamType", mvcConversionService.convert(TEAM_TYPE, String.class))
                 .queryParam
                 (
                     "after",
@@ -391,7 +391,7 @@ public class LadderSearchIT
             get("/api/teams")
                 .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
                 .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
-                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam("teamType", mvcConversionService.convert(TEAM_TYPE, String.class))
                 .queryParam
                 (
                     "after",
@@ -424,7 +424,7 @@ public class LadderSearchIT
             get("/api/teams")
                 .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
                 .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
-                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam("teamType", mvcConversionService.convert(TEAM_TYPE, String.class))
                 .queryParam
                 (
                     "after",
@@ -453,7 +453,7 @@ public class LadderSearchIT
             get("/api/teams")
                 .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
                 .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
-                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam("teamType", mvcConversionService.convert(TEAM_TYPE, String.class))
                 .queryParam
                 (
                     "before",

@@ -268,7 +268,7 @@ public class GeneralSeleniumIT
         String url = webContextUtil.getPublicUrl()
             + "?season=" + SeasonGenerator.DEFAULT_SEASON_ID
             + "&queue=LOTV_1V1"
-            + "&team-type=ARRANGED"
+            + "&teamType=ARRANGED"
             + "&region=US&region=EU&region=KR&region=CN"
             + "&league=BRONZE&league=SILVER&league=GOLD&league=PLATINUM&league=DIAMOND"
             + "&league=MASTER&league=GRANDMASTER"

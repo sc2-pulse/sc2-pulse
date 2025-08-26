@@ -47,7 +47,7 @@ class StatsUtil
         const params = new URLSearchParams(formParams);
         const webParams = new URLSearchParams();
         webParams.append("queueType", EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT).fullName);
-        webParams.append("teamType", EnumUtil.enumOfFullName(params.get("team-type"), TEAM_TYPE).fullName);
+        webParams.append("teamType", EnumUtil.enumOfFullName(params.get("teamType"), TEAM_TYPE).fullName);
         const request = `${ROOT_CONTEXT_PATH}api/stats/player-base?${webParams.toString()}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))
@@ -206,7 +206,7 @@ class StatsUtil
 
     static updateLadderStatsSeasonModel(urlParams)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/league/${urlParams.get('season')}/${urlParams.get('queue')}/${urlParams.get('team-type')}/${urlParams.getAll("region").join(',')}/${urlParams.getAll("league").join(',')}`;
+        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/league/${urlParams.get('season')}/${urlParams.get('queue')}/${urlParams.get('teamType')}/${urlParams.getAll("region").join(',')}/${urlParams.getAll("league").join(',')}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
@@ -975,7 +975,7 @@ class StatsUtil
             urlParams.get("season"),
             regions,
             EnumUtil.enumOfFullName(urlParams.get("queue"), TEAM_FORMAT),
-            EnumUtil.enumOfFullName(urlParams.get("team-type"), TEAM_TYPE),
+            EnumUtil.enumOfFullName(urlParams.get("teamType"), TEAM_TYPE),
             leagueAndTiers,
             crossTier,
             races

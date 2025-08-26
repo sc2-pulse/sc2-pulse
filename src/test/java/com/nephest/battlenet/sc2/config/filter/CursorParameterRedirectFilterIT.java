@@ -104,6 +104,8 @@ public class CursorParameterRedirectFilterIT
                 .queryParam("mas", "true")
                 .queryParam("gra", "true")
 
+                .queryParam("team-type", "ARRANGED")
+
                 .queryParam("otherParam", "otherVal")
                 .queryParam("otherParam", "%")
                 .queryParam("emptyParam", "")
@@ -119,6 +121,7 @@ public class CursorParameterRedirectFilterIT
                         (
                             Matchers.startsWith("http://localhost/?"),
                             Matchers.containsString("type=" + type),
+                            Matchers.containsString("teamType=ARRANGED"),
                             Matchers.containsString("otherParam=otherVal"),
                             Matchers.containsString("otherParam=%25"),
                             Matchers.containsString("emptyParam")

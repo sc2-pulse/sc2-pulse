@@ -119,7 +119,8 @@ implements Filter
                     .map(order->new SortParameter("rating", order))
                     .map(SortParameter::toPrefixedString)
                     .toArray(String[]::new)
-            )
+            ),
+            "team-type", params->Map.entry("teamType", params.get("team-type"))
         ));
         Stream.of
         (

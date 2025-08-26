@@ -92,7 +92,7 @@ class LadderUtil
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString() + "#ladder-top");
                 Session.currentSeason = searchParams.get("season");
                 Session.currentTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
-                Session.currentTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
+                Session.currentTeamType = EnumUtil.enumOfName(searchParams.get("teamType"), TEAM_TYPE);
                 Session.currentSearchParams = stringParams;
             })
             .catch(error => Session.onPersonalException(error));
@@ -145,7 +145,7 @@ class LadderUtil
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString() + "#personal-following");
                 Session.currentPersonalSeasonSeason = searchParams.get("season");
                 Session.currentPersonalTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
-                Session.currentPersonalTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
+                Session.currentPersonalTeamType = EnumUtil.enumOfName(searchParams.get("teamType"), TEAM_TYPE);
                 Session.currentSearchParams = stringParams;
             })
             .catch(error => Session.onPersonalException(error));
@@ -206,7 +206,7 @@ class LadderUtil
         for(const checkbox of form.querySelectorAll('input[type="checkbox"]')) checkbox.checked = false;
         ElementUtil.changeInputValue(form.querySelector("#" + form.id + "-season-picker"), params.get("season"));
         ElementUtil.changeInputValue(form.querySelector("#" + form.id + "-team-format-picker"), params.get("queue"));
-        ElementUtil.changeInputValue(form.querySelector("#" + form.id + "-team-type-picker"), params.get("team-type"));
+        ElementUtil.changeInputValue(form.querySelector("#" + form.id + "-team-type-picker"), params.get("teamType"));
         for(const entry of params.entries())
         {
             const checkbox = form.querySelector("#" + form.id + "-" + entry[1] + '[type="checkbox"]');
