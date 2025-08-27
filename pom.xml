@@ -360,6 +360,7 @@
                                         --language_out ECMASCRIPT_2015
                                         --js ${basedir}/src/main/webapp/static/script/LuxonConfig.js
                                         --js ${basedir}/src/main/webapp/static/script/IntervalExecutor.js
+                                        --js ${basedir}/src/main/webapp/static/script/SortParameter.js
                                         --js ${basedir}/src/main/webapp/static/script/Util.js
                                         --js ${basedir}/src/main/webapp/static/script/BootstrapUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/ElementUtil.js
