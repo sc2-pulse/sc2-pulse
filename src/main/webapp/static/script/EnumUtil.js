@@ -40,6 +40,12 @@ class EnumUtil
         throw new Error("Invalid name");
     }
 
+    static enumOfProperty(property, val, enumObj)
+    {
+        for(const curEnum of Object.values(enumObj)) if(curEnum[property] == val) return curEnum;
+        throw new Error("Invalid " + property);
+    }
+
     static getMemberCount(teamFormat, teamType)
     {
         if(teamType === TEAM_TYPE.RANDOM) return 1;
