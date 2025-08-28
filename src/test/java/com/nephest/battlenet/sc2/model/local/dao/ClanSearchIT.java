@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -224,13 +225,12 @@ public class ClanSearchIT
         //normal, first page
         CursorNavigableResult<List<Clan>> result = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max + 1))
                 .queryParam("idCursor", String.valueOf(max + 1))
                 .queryParam
                 (
-                    "sortingOrder",
-                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                    "sort",
+                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -244,13 +244,12 @@ public class ClanSearchIT
         //reversed, last page
         CursorNavigableResult<List<Clan>> reversedResult = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(min - 1))
                 .queryParam("idCursor", String.valueOf(min - 1))
                 .queryParam
                 (
-                    "sortingOrder",
-                    mvcConversionService.convert(SortingOrder.ASC, String.class)
+                    "sort",
+                    new SortParameter(cursor.getField(), SortingOrder.ASC).toPrefixedString()
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -264,13 +263,12 @@ public class ClanSearchIT
         //filtered by active member count
         CursorNavigableResult<List<Clan>> filteredByActiveMembersResult = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
                 .queryParam
                 (
-                    "sortingOrder",
-                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                    "sort",
+                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
                 )
                 .queryParam("minActiveMembers", "10")
                 .queryParam("maxActiveMembers", "19")
@@ -286,13 +284,12 @@ public class ClanSearchIT
         //filtered by active avg rating
         CursorNavigableResult<List<Clan>> filteredByAvgRatingResult = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
                 .queryParam
                 (
-                    "sortingOrder",
-                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                    "sort",
+                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
                 )
                 .queryParam("minAvgRating", "10")
                 .queryParam("maxAvgRating", "19")
@@ -309,13 +306,12 @@ public class ClanSearchIT
         Region[] regions = Region.values();
         CursorNavigableResult<List<Clan>> filteredByRegion = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
                 .queryParam
                 (
-                    "sortingOrder",
-                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                    "sort",
+                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
                 )
                 .queryParam("region", mvcConversionService.convert(Region.EU, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -333,13 +329,12 @@ public class ClanSearchIT
         //filtered by all
         CursorNavigableResult<List<Clan>> filteredByAllResult = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursor", mvcConversionService.convert(cursor, String.class))
                 .queryParam("cursorValue", String.valueOf(max))
                 .queryParam("idCursor", String.valueOf(max))
                 .queryParam
                 (
-                    "sortingOrder",
-                    mvcConversionService.convert(SortingOrder.DESC, String.class)
+                    "sort",
+                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
                 )
                 .queryParam("minActiveMembers", "10")
                 .queryParam("maxActiveMembers", "19")

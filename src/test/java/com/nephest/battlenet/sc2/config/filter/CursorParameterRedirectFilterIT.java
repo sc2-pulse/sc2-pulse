@@ -14,11 +14,14 @@ import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,6 +39,7 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
@@ -162,46 +166,14 @@ public class CursorParameterRedirectFilterIT
 
     @CsvSource
     ({
-        "ladder, count, 1, -rating",
-        "ladder, count, 0, rating",
-        "ladder, count, -1, rating"
-    })
-    @ParameterizedTest
-    public void testPaginationSortRedirection
-    (
-        String type,
-        String pageCountParameterName,
-        int count,
-        String sort
-    )
-    throws Exception
-    {
-        mvc.perform
-        (
-            get("/").queryParam("type", type)
-                .queryParam("page", "1")
-                .queryParam(pageCountParameterName, String.valueOf(count), null)
-                .queryParam("otherParam", "otherVal")
-                .contentType(MediaType.TEXT_HTML)
-        )
-            .andExpect(status().isMovedPermanently())
-            .andExpect(header().string(
-                "Location",
-                Matchers.allOf(
-                    Matchers.startsWith("http://localhost/?"),
-                    Matchers.containsString("type=" + type),
-                    Matchers.not(Matchers.containsString("page=1")),
-                    Matchers.containsString("sort=" + sort),
-                    Matchers.containsString("otherParam=otherVal")
-            )))
-            .andReturn();
-    }
+        "ladder, count, 1, , , -rating",
+        "ladder, count, 0, , , rating",
+        "ladder, count, -1, , , rating",
 
-    @CsvSource
-    ({
-        "clan-search, pageDiff, 1, DESC",
-        "clan-search, pageDiff, 0, ASC",
-        "clan-search, pageDiff, -1, ASC"
+        "clan-search, pageDiff, 1, , , -activeMembers",
+        "clan-search, pageDiff, 0, , , activeMembers",
+        "clan-search, pageDiff, -1, , , activeMembers",
+        "clan-search, pageDiff, 1, sortBy, MEMBERS, -members"
     })
     @ParameterizedTest
     public void testPaginationRedirection
@@ -209,32 +181,32 @@ public class CursorParameterRedirectFilterIT
         String type,
         String pageCountParameterName,
         int count,
-        SortingOrder sortingOrder
+        String sortByParameterName,
+        String sortByParameterValue,
+        String sort
     )
     throws Exception
     {
-        mvc.perform
-        (
-            get("/").queryParam("type", type)
-                .queryParam("page", "1")
-                .queryParam(pageCountParameterName, String.valueOf(count), null)
-                .queryParam("otherParam", "otherVal")
-                .contentType(MediaType.TEXT_HTML)
-        )
+        MockHttpServletRequestBuilder builder = get("/")
+            .queryParam("type", type)
+            .queryParam("page", "1")
+            .queryParam(pageCountParameterName, String.valueOf(count), null)
+            .queryParam("otherParam", "otherVal")
+            .contentType(MediaType.TEXT_HTML);
+        if(sortByParameterName != null)
+            builder = builder.queryParam(sortByParameterName, sortByParameterValue);
+        List<Matcher<? super String>> matchers = new ArrayList<>(List.of(
+            Matchers.startsWith("http://localhost/?"),
+            Matchers.containsString("type=" + type),
+            Matchers.not(Matchers.containsString("page=1")),
+            Matchers.containsString("sort=" + sort),
+            Matchers.containsString("otherParam=otherVal")
+        ));
+        if(sortByParameterName != null && !sortByParameterName.equals("sort"))
+            matchers.add(Matchers.not(Matchers.containsString(sortByParameterName)));
+        mvc.perform(builder)
             .andExpect(status().isMovedPermanently())
-            .andExpect(header().string(
-                "Location",
-                Matchers.allOf(
-                    Matchers.startsWith("http://localhost/?"),
-                    Matchers.containsString("type=" + type),
-                    Matchers.not(Matchers.containsString("page=1")),
-                    Matchers.containsString
-            (
-                "sortingOrder="
-                    + mvcConversionService.convert(sortingOrder, String.class)
-            ),
-                    Matchers.containsString("otherParam=otherVal")
-                )))
+            .andExpect(header().string("Location", Matchers.allOf(matchers)))
             .andReturn();
     }
 

@@ -179,6 +179,7 @@ const CLAN_CURSOR = Object.freeze
     {
         name: "active-members",
         fullName: "ACTIVE_MEMBERS",
+        field: "activeMembers",
         getter: (c)=>c.activeMembers,
         minParamName: "minActiveMembers",
         maxParamName: "maxActiveMembers",
@@ -188,6 +189,7 @@ const CLAN_CURSOR = Object.freeze
     {
         name: "average-rating",
         fullName: "AVG_RATING",
+        field: "avgRating",
         getter: (c)=>c.avgRating,
         minParamName: "minAverageRating",
         maxParamName: "maxAverageRating",
@@ -197,6 +199,7 @@ const CLAN_CURSOR = Object.freeze
     {
         name: "games-per-active-member-per-day",
         fullName: "GAMES_PER_ACTIVE_MEMBER_PER_DAY",
+        field: "gamesPerActiveMemberPerDay",
         getter: (c)=>c.games / c.activeMembers / CLAN_STATS_DEPTH_DAYS,
         minParamName: "minGamesPerActiveMemberPerDay",
         maxParamName: "maxGamesPerActiveMemberPerDay",
@@ -206,6 +209,7 @@ const CLAN_CURSOR = Object.freeze
     {
         name: "members",
         fullName: "MEMBERS",
+        field: "members",
         getter: (c)=>c.members,
         minParamName: "minMembers",
         maxParamName: "maxMembers",

@@ -224,7 +224,7 @@ SC2Restful.IMAGES = new Map
     ["cn", ElementUtil.createImage("flag/", "cn", "icon-chart table-image table-image-long", SC2Restful.REM)]
 ]);
 
-if(localStorage.getItem("s-local-storage-version") !== "6") {
+if(localStorage.getItem("s-local-storage-version") !== "7") {
     if(localStorage.getItem("stream-sort-by") === "mmr") localStorage.setItem("stream-sort-by", "RATING");
     if(localStorage.getItem("stream-sort-by") === "viewers") localStorage.setItem("stream-sort-by", "VIEWERS");
     if(localStorage.getItem("stream-sort-by") === "RANK_REGION") localStorage.setItem("stream-sort-by", "TOP_PERCENT_REGION");
@@ -237,8 +237,10 @@ if(localStorage.getItem("s-local-storage-version") !== "6") {
     if(matchUpGroupDuration < 3) localStorage.setItem("stats-match-up-group-duration", (matchUpGroupDuration + 1));
     removeOldMmrLocalStorage("mmr");
     removeOldMmrLocalStorage("team-mmr");
+    const clanSearchSortBy = localStorage.getItem("clan-search-sort-by");
+    if(clanSearchSortBy != null) localStorage.setItem("clan-search-sort-by", EnumUtil.enumOfFullName(clanSearchSortBy, CLAN_CURSOR).field);
 
-    localStorage.setItem("s-local-storage-version", "6");
+    localStorage.setItem("s-local-storage-version", "7");
 }
 
 function removeOldMmrLocalStorage(prefix)

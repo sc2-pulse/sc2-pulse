@@ -281,7 +281,7 @@ class HistoryUtil
                 promises.push(HistoryUtil.callWithArguments(
                     (p, reqParams)=>ClanUtil.updateClanSearch(
                         p,
-                        reqParams[0], reqParams[1], reqParams[2], EnumUtil.enumOfFullName(reqParams[3], SORTING_ORDER)),
+                        reqParams[0], reqParams[1], SortParameter.fromPrefixedString(reqParams[2])),
                     params,
                     ClanUtil.REQUIRED_CURSOR_PARAMETERS
                 ));

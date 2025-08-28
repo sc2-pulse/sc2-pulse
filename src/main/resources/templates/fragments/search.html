@@ -153,7 +153,7 @@
                     <label for="clan-search-sort-by">Order by</label>
                     <select id="clan-search-sort-by" class="form-control serializable" name="sortBy" required="required">
                         <option th:each="type : ${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO.Cursor).values()}"
-                                th:value="${type}"
+                                th:value="${type.getField()}"
                                 th:text="${type.getName()}"
                                 th:attrappend="selected=${type.isDefault()} ? selected"
                         >

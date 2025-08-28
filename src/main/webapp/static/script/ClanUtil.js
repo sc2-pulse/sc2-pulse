@@ -4,15 +4,15 @@
 class ClanUtil
 {
 
-    static updateClanSearchModel(formParams, cursor, cursorValue, idCursor = ClanUtil.FIRST_PAGE_ID_CURSOR, sortingOrder = SORTING_ORDER.DESC)
+    static updateClanSearchModel(formParams, cursorValue, idCursor = ClanUtil.FIRST_PAGE_ID_CURSOR, sort = ClanUtil.DEFAULT_SORT)
     {
+        const cursor = EnumUtil.enumOfProperty("field", sort.field, CLAN_CURSOR);
         const searchParams = new URLSearchParams("?" + formParams);
-        if(!cursorValue) cursorValue = searchParams.get(sortingOrder == SORTING_ORDER.ASC ? cursor.minParamName : cursor.maxParamName)
-            || sortingOrder == SORTING_ORDER.ASC ? CLAN_MIN_ADDITIONAL_CURSOR_FILTER : CLAN_MAX_ADDITIONAL_CURSOR_FILTER;
-        searchParams.append("cursor", cursor.fullName);
+        if(!cursorValue) cursorValue = searchParams.get(sort.order == SORTING_ORDER.ASC ? cursor.minParamName : cursor.maxParamName)
+            || sort.order == SORTING_ORDER.ASC ? CLAN_MIN_ADDITIONAL_CURSOR_FILTER : CLAN_MAX_ADDITIONAL_CURSOR_FILTER;
         searchParams.append("cursorValue", cursorValue);
         searchParams.append("idCursor", idCursor);
-        searchParams.append("sortingOrder", sortingOrder.fullName);
+        searchParams.append("sort", sort.toPrefixedString());
 
         const previousData = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
         const params =
@@ -21,7 +21,7 @@ class ClanUtil
             cursor: cursor,
             cursorValue: cursorValue,
             idCursor: idCursor,
-            sortingOrder: sortingOrder
+            sort: sort
         }
         if(!previousData || idCursor == ClanUtil.FIRST_PAGE_ID_CURSOR)
             ClanUtil.updateClanSearchPaginationConfig
@@ -51,7 +51,7 @@ class ClanUtil
             json.meta = PaginationUtil.createCursorMeta(
                 empty,
                 params.idCursor == ClanUtil.FIRST_PAGE_ID_CURSOR,
-                params.sortingOrder
+                params.sort.order
             );
             if(empty) {
                 if(params.idCursor == ClanUtil.FIRST_PAGE_ID_CURSOR || !Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH)) {
@@ -124,23 +124,20 @@ class ClanUtil
     static updateClanSearch
     (
         formParams,
-        cursor,
         cursorValue,
         idCursor = ClanUtil.FIRST_PAGE_ID_CURSOR,
-        sortingOrder = SORTING_ORDER.DESC
+        sort = ClanUtil.DEFAULT_SORT
     )
     {
-        if(!cursor.fullName) cursor = EnumUtil.enumOfFullName(cursor, CLAN_CURSOR);
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return ClanUtil.updateClanSearchModel(formParams, cursor, cursorValue, idCursor, sortingOrder)
+        return ClanUtil.updateClanSearchModel(formParams, cursorValue, idCursor, sort)
             .then(e => {
                 const executedParams = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH).params;
                 const searchParams = new URLSearchParams(executedParams.formParams);
                 searchParams.append("type", "clan-search");
-                searchParams.append("sortBy", executedParams.cursor.fullName);
                 searchParams.append("cursorValue", executedParams.cursorValue);
                 searchParams.append("idCursor", executedParams.idCursor);
-                searchParams.append("sortingOrder", executedParams.sortingOrder.fullName);
+                searchParams.append("sort", executedParams.sort.toPrefixedString());
                 const stringParams = searchParams.toString();
 
                 ClanUtil.updateClanSearchView();
@@ -160,10 +157,13 @@ class ClanUtil
         ClanUtil.updateClanSearch
         (
             searchData.params.formParams,
-            searchData.params.cursor,
             evt.target.getAttribute("data-page-cursor-value"),
             evt.target.getAttribute("data-page-id-cursor"),
-            evt.target.getAttribute("data-page-count") > 0 ? SORTING_ORDER.DESC : SORTING_ORDER.ASC
+            new SortParameter
+            (
+                searchData.params.sort.field,
+                evt.target.getAttribute("data-page-count") > 0 ? SORTING_ORDER.DESC : SORTING_ORDER.ASC
+            )
         );
     }
 
@@ -175,9 +175,15 @@ class ClanUtil
             evt.preventDefault();
             if(!FormUtil.verifyForm(form, form.querySelector(":scope .error-out"))) return;
             const formData = new FormData(form);
-            const cursor = formData.get("sortBy") ? EnumUtil.enumOfFullName(formData.get("sortBy"), CLAN_CURSOR) : CLAN_CURSOR.ACTIVE_MEMBERS;
+            const field = formData.get("sortBy") || CLAN_CURSOR.ACTIVE_MEMBERS.field;
+            formData.delete("sortBy");
             for(const p of ClanUtil.REQUIRED_CURSOR_PARAMETERS) formData.delete(p);
-            ClanUtil.updateClanSearch(Util.urlencodeFormData(formData), cursor, CLAN_MAX_ADDITIONAL_CURSOR_FILTER);
+            ClanUtil.updateClanSearch(
+                Util.urlencodeFormData(formData),
+                CLAN_MAX_ADDITIONAL_CURSOR_FILTER,
+                ClanUtil.FIRST_PAGE_ID_CURSOR,
+                new SortParameter(field, ClanUtil.DEFAULT_SORT.order)
+            );
         });
     }
 
@@ -227,5 +233,6 @@ class ClanUtil
 
 }
 
-ClanUtil.REQUIRED_CURSOR_PARAMETERS = ["sortBy", "cursorValue", "idCursor", "sortingOrder"];
+ClanUtil.REQUIRED_CURSOR_PARAMETERS = ["cursorValue", "idCursor", "sort"];
 ClanUtil.FIRST_PAGE_ID_CURSOR = 1;
+ClanUtil.DEFAULT_SORT = new SortParameter(CLAN_CURSOR.ACTIVE_MEMBERS.field, SORTING_ORDER.DESC);

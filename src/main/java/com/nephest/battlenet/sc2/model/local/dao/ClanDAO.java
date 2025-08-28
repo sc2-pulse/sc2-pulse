@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -256,6 +256,7 @@ public class ClanDAO
         MEMBERS
         (
             "Total members",
+            "members",
             false,
             FIND_BY_MEMBERS_CURSOR,
             FIND_BY_MEMBERS_CURSOR_REVERSED
@@ -263,6 +264,7 @@ public class ClanDAO
         ACTIVE_MEMBERS
         (
             "Active members",
+            "activeMembers",
             true,
             FIND_BY_ACTIVE_MEMBERS_CURSOR,
             FIND_BY_ACTIVE_MEMBERS_CURSOR_REVERSED
@@ -270,6 +272,7 @@ public class ClanDAO
         GAMES_PER_ACTIVE_MEMBER_PER_DAY
         (
             "Games per active member per day",
+            "gamesPerActiveMemberPerDay",
             false,
             FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR,
             FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_REVERSED
@@ -277,27 +280,43 @@ public class ClanDAO
         AVG_RATING
         (
             "Average rating",
+            "avgRating",
             false,
             FIND_BY_AVG_RATING_CURSOR,
             FIND_BY_AVG_RATING_CURSOR_REVERSED
         );
 
-        private final String name;
+        private final String name, field;
         private final boolean defaultt;
         private final String query;
         private final String reversedQuery;
 
-        Cursor(String name, boolean defaultt, String query, String reversedQuery)
+        Cursor(String name, String field, boolean defaultt, String query, String reversedQuery)
         {
             this.name = name;
+            this.field = field;
             this.defaultt = defaultt;
             this.query = query;
             this.reversedQuery = reversedQuery;
         }
 
+        public static Cursor fromField(String field)
+        {
+            Objects.requireNonNull(field);
+            for(Cursor cursor : Cursor.values())
+                if(cursor.getField().equals(field)) return cursor;
+
+            throw new IllegalArgumentException("Invalid field: " + field);
+        }
+
         public String getName()
         {
             return name;
+        }
+
+        public String getField()
+        {
+            return field;
         }
 
         public boolean isDefault()

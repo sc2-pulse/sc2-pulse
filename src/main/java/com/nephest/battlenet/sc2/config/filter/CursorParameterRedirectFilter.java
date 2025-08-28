@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.config.filter;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SortingOrder;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.springframework.core.convert.ConversionService;
 
@@ -136,11 +138,43 @@ implements Filter
         return Map.of
         (
             "page", params->null,
-            "pageDiff", params->Map.entry(
-                "sortingOrder",
-                Arrays.stream(convertCountValuesToSortingOrderValues(params.get("pageDiff")))
-                    .map(order->conversionService.convert(order, String.class))
-                    .toArray(String[]::new))
+            "pageDiff", params->overrideClanPageDiff(params, conversionService),
+            "sortBy", params->null
+        );
+    }
+
+    private static Map.Entry<String, String[]> overrideClanPageDiff
+    (
+        Map<String, String[]> params,
+        ConversionService conversionService
+    )
+    {
+        String[] pageDiffs = params.get("pageDiff");
+        if(pageDiffs == null || pageDiffs.length == 0) return null;
+
+        String[] fields = params.get("sortBy");
+        SortingOrder[] orders = convertCountValuesToSortingOrderValues(pageDiffs);
+        String defaultField = Arrays.stream(ClanDAO.Cursor.values())
+            .filter(ClanDAO.Cursor::isDefault)
+            .map(ClanDAO.Cursor::getField)
+            .findFirst()
+            .orElseThrow();
+        return Map.entry
+        (
+            "sort",
+            IntStream.range(0, orders.length)
+                .mapToObj(ix->new SortParameter(
+                    fields == null || fields.length == 0
+                        ? defaultField
+                        : conversionService.convert
+                            (
+                                fields[Math.min(ix, fields.length - 1)],
+                                ClanDAO.Cursor.class
+                            ).getField(),
+                    orders[ix]
+                ))
+                .map(SortParameter::toPrefixedString)
+                .toArray(String[]::new)
         );
     }
 
