@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.config.filter;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SortingOrder;
+import com.nephest.battlenet.sc2.model.web.SortParameter;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -50,21 +51,19 @@ implements Filter
         );
     }
 
-    private static String[] convertCountValuesToSortingOrderValues
+    private static SortingOrder[] convertCountValuesToSortingOrderValues
     (
-        String [] countValues,
-        ConversionService conversionService
+        String [] countValues
     )
     {
         if(countValues == null) return null;
-        if(countValues.length == 0) return new String[0];
+        if(countValues.length == 0) return new SortingOrder[0];
 
         return Arrays.stream(countValues)
             .filter(Objects::nonNull)
             .map(Integer::parseInt)
-            .map(intVal->conversionService.convert(
-                intVal > 0 ? SortingOrder.DESC : SortingOrder.ASC, String.class))
-            .toArray(String[]::new);
+            .map(intVal->intVal > 0 ? SortingOrder.DESC : SortingOrder.ASC)
+            .toArray(SortingOrder[]::new);
     }
 
     private static <T extends Enum<T>> Stream<Map.Entry<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>>> convertEnumBooleanParameters
@@ -100,8 +99,12 @@ implements Filter
             "ratingAnchor", params->Map.entry("ratingCursor", params.get("ratingAnchor")),
             "page", params->null,
             "count", params->Map.entry(
-                "sortingOrder",
-                convertCountValuesToSortingOrderValues(params.get("count"), conversionService))
+                "sort",
+                Arrays.stream(convertCountValuesToSortingOrderValues(params.get("count")))
+                    .map(order->new SortParameter("rating", order))
+                    .map(SortParameter::toPrefixedString)
+                    .toArray(String[]::new)
+            )
         ));
         Stream.of
         (
@@ -135,7 +138,9 @@ implements Filter
             "page", params->null,
             "pageDiff", params->Map.entry(
                 "sortingOrder",
-                convertCountValuesToSortingOrderValues(params.get("pageDiff"), conversionService))
+                Arrays.stream(convertCountValuesToSortingOrderValues(params.get("pageDiff")))
+                    .map(order->conversionService.convert(order, String.class))
+                    .toArray(String[]::new))
         );
     }
 

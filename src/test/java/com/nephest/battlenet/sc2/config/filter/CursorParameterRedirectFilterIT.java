@@ -162,10 +162,43 @@ public class CursorParameterRedirectFilterIT
 
     @CsvSource
     ({
-        "ladder, count, 1, DESC",
-        "ladder, count, 0, ASC",
-        "ladder, count, -1, ASC",
+        "ladder, count, 1, -rating",
+        "ladder, count, 0, rating",
+        "ladder, count, -1, rating"
+    })
+    @ParameterizedTest
+    public void testPaginationSortRedirection
+    (
+        String type,
+        String pageCountParameterName,
+        int count,
+        String sort
+    )
+    throws Exception
+    {
+        mvc.perform
+        (
+            get("/").queryParam("type", type)
+                .queryParam("page", "1")
+                .queryParam(pageCountParameterName, String.valueOf(count), null)
+                .queryParam("otherParam", "otherVal")
+                .contentType(MediaType.TEXT_HTML)
+        )
+            .andExpect(status().isMovedPermanently())
+            .andExpect(header().string(
+                "Location",
+                Matchers.allOf(
+                    Matchers.startsWith("http://localhost/?"),
+                    Matchers.containsString("type=" + type),
+                    Matchers.not(Matchers.containsString("page=1")),
+                    Matchers.containsString("sort=" + sort),
+                    Matchers.containsString("otherParam=otherVal")
+            )))
+            .andReturn();
+    }
 
+    @CsvSource
+    ({
         "clan-search, pageDiff, 1, DESC",
         "clan-search, pageDiff, 0, ASC",
         "clan-search, pageDiff, -1, ASC"
@@ -196,10 +229,10 @@ public class CursorParameterRedirectFilterIT
                     Matchers.containsString("type=" + type),
                     Matchers.not(Matchers.containsString("page=1")),
                     Matchers.containsString
-                    (
-                        "sortingOrder="
-                        + mvcConversionService.convert(sortingOrder, String.class)
-                    ),
+            (
+                "sortingOrder="
+                    + mvcConversionService.convert(sortingOrder, String.class)
+            ),
                     Matchers.containsString("otherParam=otherVal")
                 )))
             .andReturn();

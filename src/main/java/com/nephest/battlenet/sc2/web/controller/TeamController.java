@@ -18,7 +18,9 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.AllowedField;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import jakarta.validation.Valid;
@@ -138,7 +140,8 @@ public class TeamController
     (
         @RequestParam(value = "ratingCursor", required = false) Long ratingCursor,
         @RequestParam(value = "idCursor", required = false) Long idCursor,
-        @RequestParam(value = "sortingOrder", defaultValue = "DESC") SortingOrder sortingOrder,
+        @RequestParam(value = "sort", defaultValue = "-rating")
+        @AllowedField("rating") SortParameter sort,
         @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
@@ -146,10 +149,10 @@ public class TeamController
         @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues
     )
     {
-        if(ratingCursor == null) ratingCursor = sortingOrder == SortingOrder.DESC
+        if(ratingCursor == null) ratingCursor = sort.order() == SortingOrder.DESC
             ? Long.MAX_VALUE
             : Long.MIN_VALUE;
-        if(idCursor == null) idCursor = sortingOrder == SortingOrder.DESC
+        if(idCursor == null) idCursor = sort.order() == SortingOrder.DESC
             ? Long.MAX_VALUE
             : Long.MIN_VALUE;
 
@@ -162,7 +165,7 @@ public class TeamController
             2,
             ratingCursor,
             idCursor,
-            sortingOrder == SortingOrder.DESC ? 1 : -1
+            sort.order() == SortingOrder.DESC ? 1 : -1
         ).getResult(), new CursorNavigation(null, null));
     }
 

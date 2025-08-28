@@ -239,12 +239,12 @@ class HistoryUtil
                 LadderUtil.restoreLadderFormState(document.getElementById("form-ladder"), params);
                 const ratingCursor = params.get("ratingCursor"); params.delete("ratingCursor");
                 const idCursor = params.get("idCursor"); params.delete("idCursor");
-                const sortingOrder = EnumUtil.enumOfFullName(params.get("sortingOrder"), SORTING_ORDER);
-                params.delete("sortingOrder");
+                const sort = SortParameter.fromPrefixedString(params.get("sort"));
+                params.delete("sort");
                 const formParams = params.toString();
                 scrollTo = "generated-info-all";
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
-                promises.push(LadderUtil.updateLadder(formParams, ratingCursor, idCursor, sortingOrder));
+                promises.push(LadderUtil.updateLadder(formParams, ratingCursor, idCursor, sort));
                 promises.push(StatsUtil.updateQueueStats(formParams));
                 promises.push(StatsUtil.updateLadderStats(formParams));
                 promises.push(StatsUtil.updateLeagueBounds(formParams));
