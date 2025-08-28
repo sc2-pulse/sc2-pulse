@@ -30,12 +30,12 @@ implements Filter
 {
 
     public static final String MARKER_PARAMETER_NAME = "type";
-    private final Map<String, Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>>> parameterOverrides;
+    private final Map<String, Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>>> parameterOverrides;
 
 
     public CursorParameterRedirectFilter(ConversionService conversionService)
     {
-        Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>>
+        Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>>
             ladderOverrides = createLadderOverrides(conversionService);
         parameterOverrides = Map.of
         (
@@ -67,7 +67,7 @@ implements Filter
             .toArray(String[]::new);
     }
 
-    private static <T extends Enum<T>> Stream<Map.Entry<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>>> convertEnumBooleanParameters
+    private static <T extends Enum<T>> Stream<Map.Entry<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>>> convertEnumBooleanParameters
     (
         Class<T> enumm,
         Function<String, String> nameFunction,
@@ -76,29 +76,32 @@ implements Filter
     )
     {
         return Arrays.stream(enumm.getEnumConstants())
-            .map(e->Map.entry(
-                nameFunction.apply(e.name()),
-                param->Arrays.stream(param.getValue())
-                    .anyMatch(p->p != null && p.equals("true"))
-                        ? Map.entry(convertedName,
-                            new String[]{conversionService.convert(e, String.class)})
-                        : null
-            ));
+            .map(e->{
+                String name = nameFunction.apply(e.name());
+                return Map.entry(
+                    name,
+                    params->Arrays.stream(params.get(name))
+                        .anyMatch(p->p != null && p.equals("true"))
+                            ? Map.entry(convertedName,
+                                new String[]{conversionService.convert(e, String.class)})
+                            : null
+                );
+            });
     }
 
-    private static Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> createLadderOverrides
+    private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createLadderOverrides
     (
         ConversionService conversionService
     )
     {
-        Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> overrides =
+        Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> overrides =
         new HashMap<>(Map.of(
-            "idAnchor", param->Map.entry("idCursor", param.getValue()),
-            "ratingAnchor", param->Map.entry("ratingCursor", param.getValue()),
-            "page", param->null,
-            "count", param->Map.entry(
+            "idAnchor", params->Map.entry("idCursor", params.get("idAnchor")),
+            "ratingAnchor", params->Map.entry("ratingCursor", params.get("ratingAnchor")),
+            "page", params->null,
+            "count", params->Map.entry(
                 "sortingOrder",
-                convertCountValuesToSortingOrderValues(param.getValue(), conversionService))
+                convertCountValuesToSortingOrderValues(params.get("count"), conversionService))
         ));
         Stream.of
         (
@@ -122,17 +125,17 @@ implements Filter
         return Collections.unmodifiableMap(overrides);
     }
 
-    private static Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> createClanOverrides
+    private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createClanOverrides
     (
         ConversionService conversionService
     )
     {
         return Map.of
         (
-            "page", param->null,
-            "pageDiff", param->Map.entry(
+            "page", params->null,
+            "pageDiff", params->Map.entry(
                 "sortingOrder",
-                convertCountValuesToSortingOrderValues(param.getValue(), conversionService))
+                convertCountValuesToSortingOrderValues(params.get("pageDiff"), conversionService))
         );
     }
 
@@ -169,7 +172,7 @@ implements Filter
         String markerParameterValue = httpReq.getParameter(MARKER_PARAMETER_NAME);
         if(markerParameterValue == null) return null;
 
-        Map<String, Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>>> typeParameterOverrides
+        Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> typeParameterOverrides
             = parameterOverrides.get(markerParameterValue);
         if(typeParameterOverrides == null) return null;
 
@@ -181,9 +184,9 @@ implements Filter
         String prefix = "";
         for(Map.Entry<String, String[]> param : params.entrySet())
         {
-            Function<Map.Entry<String, String[]>, Map.Entry<String, String[]>> override
+            Function<Map<String, String[]>, Map.Entry<String, String[]>> override
                 = typeParameterOverrides.get(param.getKey());
-            Map.Entry<String, String[]> newParam = override != null ? override.apply(param) : param;
+            Map.Entry<String, String[]> newParam = override != null ? override.apply(params) : param;
             if(override != null) modified = true;
             if(newParam == null) continue;
 
