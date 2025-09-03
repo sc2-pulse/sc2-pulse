@@ -463,3 +463,9 @@ const SORTING_ORDER = Object.freeze
     ASC: Object.freeze({code:1, name: "ascending", fullName: "ASC", textContent: "Ascending", order: 1}),
     DESC: Object.freeze({code:2, name: "descending", fullName: "DESC", textContent: "Descending", order: 2})
 });
+
+const NAVIGATION_DIRECTION = Object.freeze
+({
+    FORWARD: Object.freeze({code:1, name: "forward", fullName: "FORWARD", relativePosition: "after", order: 1}),
+    BACKWARD: Object.freeze({code:2, name: "backward", fullName: "BACKWARD", relativePosition: "before", order: 2})
+});
