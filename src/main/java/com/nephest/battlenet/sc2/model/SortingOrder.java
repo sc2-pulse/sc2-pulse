@@ -6,7 +6,19 @@ package com.nephest.battlenet.sc2.model;
 public enum SortingOrder
 {
 
-    ASC,
-    DESC
+    ASC("ASC"),
+    DESC("DESC");
+
+    private final String sqlKeyword;
+
+    SortingOrder(String sqlKeyword)
+    {
+        this.sqlKeyword = sqlKeyword;
+    }
+
+    public String getSqlKeyword()
+    {
+        return sqlKeyword;
+    }
 
 }
