@@ -7,29 +7,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.nephest.battlenet.sc2.extension.ValidatorExtension;
 import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
 import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-class SortParameterAllowedFieldValidatorTest
+@ExtendWith(ValidatorExtension.class)
+class SortParameterAllowedFieldValidatorSimpleIntegrationTest
 {
 
-    private static Validator validator;
-
-    @BeforeAll
-    static void setUpValidator()
-    {
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory())
-        {
-            validator = factory.getValidator();
-        }
-    }
+    private Validator validator;
 
     @Test
     void shouldAllowValidField()
