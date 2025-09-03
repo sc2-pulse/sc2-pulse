@@ -21,4 +21,9 @@ public enum SortingOrder
         return sqlKeyword;
     }
 
+    public SortingOrder reverse()
+    {
+        return this == ASC ? DESC : ASC;
+    }
+
 }
