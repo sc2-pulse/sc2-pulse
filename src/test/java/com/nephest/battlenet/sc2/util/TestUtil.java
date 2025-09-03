@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.util;
@@ -22,7 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 public final class TestUtil
 {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     public static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newScheduledThreadPool(4);
 
