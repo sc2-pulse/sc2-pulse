@@ -409,7 +409,7 @@ public class LadderSearchDAO
         return LADDER_TEAM_EXTRACTOR;
     }
 
-    protected void setResultsPerPage(int resultsPerPage)
+    public void setResultsPerPage(int resultsPerPage)
     {
         this.resultsPerPage = resultsPerPage;
     }
