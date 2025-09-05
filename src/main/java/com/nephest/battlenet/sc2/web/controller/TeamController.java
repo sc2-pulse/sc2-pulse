@@ -3,23 +3,25 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import static com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO.CURSOR_POSITION_VERSION;
+
 import com.nephest.battlenet.sc2.config.openapi.TeamLegacyUids;
 import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.IdField;
 import com.nephest.battlenet.sc2.model.IdProjection;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
@@ -138,8 +140,7 @@ public class TeamController
     @GetMapping(value = "/teams", params = {"queue", "season"})
     public CursorNavigableResult<List<LadderTeam>> getLadders
     (
-        @RequestParam(value = "ratingCursor", required = false) Long ratingCursor,
-        @RequestParam(value = "idCursor", required = false) Long idCursor,
+        @Version(CURSOR_POSITION_VERSION) Cursor cursor,
         @RequestParam(value = "sort", defaultValue = "-rating")
         @AllowedField("rating") SortParameter sort,
         @RequestParam("season") int season,
@@ -149,24 +150,16 @@ public class TeamController
         @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues
     )
     {
-        if(ratingCursor == null) ratingCursor = sort.order() == SortingOrder.DESC
-            ? Long.MAX_VALUE
-            : Long.MIN_VALUE;
-        if(idCursor == null) idCursor = sort.order() == SortingOrder.DESC
-            ? Long.MAX_VALUE
-            : Long.MIN_VALUE;
-
-        return new CursorNavigableResult<>(ladderSearchDAO.find(
+        return ladderSearchDAO.find
+        (
             season,
             regions,
             leagues,
             queue,
             teamType,
-            2,
-            ratingCursor,
-            idCursor,
-            sort.order() == SortingOrder.DESC ? 1 : -1
-        ).getResult(), new CursorNavigation(null, null));
+            sort,
+            cursor
+        );
     }
 
     @GetMapping("/team-histories") @TeamGroup

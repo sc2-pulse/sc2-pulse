@@ -19,36 +19,34 @@ class LadderUtil
     static updateLadderModel(
         params,
         formParams,
-        ratingCursor = 99999,
-        idCursor = 0,
+        cursor = null,
         sort = LadderUtil.DEFAULT_SORT
     )
     {
-        return LadderUtil.chainLadderPromise(params, formParams, ratingCursor, idCursor, sort);
+        return LadderUtil.chainLadderPromise(params, formParams, cursor, sort);
     }
 
-    static chainLadderPromise(params, formParams, ratingCursor, idCursor, sort)
+    static chainLadderPromise(params, formParams, cursor, sort)
     {
         const allParams = new URLSearchParams(params.form);
-        allParams.append("ratingCursor", ratingCursor);
-        allParams.append("idCursor", idCursor);
         allParams.append("sort", sort.toPrefixedString());
+        if(cursor != null) allParams.append(cursor.direction.relativePosition, cursor.token);
 
         const request = `${ROOT_CONTEXT_PATH}api/teams?` + allParams.toString();
         const ladderPromise = Session.beforeRequest()
         .then(n=>fetch(request))
         .then(Session.verifyJsonResponse)
         .then(json => {
-            json.meta = {page: ratingCursor == 99999
-                ? PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER
-                : PaginationUtil.CURSOR_PAGE_NUMBER};
+            const direction = cursor?.direction || NAVIGATION_DIRECTION.FORWARD;
+            json.meta = PaginationUtil.createCursorMeta(
+                json,
+                cursor == null || json.navigation?.[NAVIGATION_DIRECTION.BACKWARD.relativePosition] == null,
+                direction
+            );
             if(json.result.length == 0) {
                 const searchData = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH);
                 if(searchData) {
-                    searchData.meta.page = sort.order == SORTING_ORDER.DESC
-                        ? PaginationUtil.CURSOR_DISABLED_NEXT_PAGE_NUMBER
-                        : PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER;
-                    if(sort.order == SORTING_ORDER.DESC) searchData.meta.isLastPage = true;
+                    PaginationUtil.setEmptyResultMeta(searchData.meta, direction);
                     return Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.VAR);
                 }
             }
@@ -69,8 +67,7 @@ class LadderUtil
 
     static updateLadder(
         formParams,
-        ratingCursor = 99999,
-        idCursor = 0,
+        cursor = null,
         sort = LadderUtil.DEFAULT_SORT,
     )
     {
@@ -78,17 +75,15 @@ class LadderUtil
         const params =
         {
             form: formParams,
-            ratingCursor: ratingCursor,
-            idCursor: idCursor,
+            cursor: cursor,
             sort: sort
         };
 
-        return LadderUtil.updateLadderModel(params, formParams, ratingCursor, idCursor, sort)
+        return LadderUtil.updateLadderModel(params, formParams, cursor, sort)
             .then(e => {
                 const searchParams = new URLSearchParams(e.form);
                 searchParams.append("type", "ladder");
-                searchParams.append("idCursor", e.idCursor);
-                searchParams.append("ratingCursor", e.ratingCursor);
+                if(e.cursor != null) searchParams.append(e.cursor.direction.relativePosition, e.cursor.token)
                 searchParams.append("sort", e.sort.toPrefixedString());
                 const stringParams = searchParams.toString();
 
@@ -160,14 +155,12 @@ class LadderUtil
     {
         evt.preventDefault();
         const formParams = Util.getFormParameters();
+        const params = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.VAR);
         LadderUtil.updateLadder
         (
             formParams,
-            evt.target.getAttribute("data-page-rating-cursor"),
-            evt.target.getAttribute("data-page-id-cursor"),
-            evt.target.getAttribute("data-page-count") > 0
-                ? new SortParameter("rating", SORTING_ORDER.DESC)
-                : new SortParameter("rating", SORTING_ORDER.ASC),
+            Cursor.fromElementAttributes(evt.target, "data-page-"),
+            params.sort
         ).then(e=>Util.scrollIntoViewById(evt.target.getAttribute("href").substring(1)));
     }
 

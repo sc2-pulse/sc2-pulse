@@ -3,10 +3,14 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
+import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -35,11 +39,14 @@ implements Filter
     public static final String MARKER_PARAMETER_NAME = "type";
     private final Map<String, Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>>> parameterOverrides;
 
-
-    public CursorParameterRedirectFilter(ConversionService conversionService)
+    public CursorParameterRedirectFilter
+    (
+        ConversionService conversionService,
+        ObjectMapper objectMapper
+    )
     {
         Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>>
-            ladderOverrides = createLadderOverrides(conversionService);
+            ladderOverrides = createLadderOverrides(conversionService, objectMapper);
         parameterOverrides = Map.of
         (
             "ladder",
@@ -51,6 +58,11 @@ implements Filter
             "clan-search",
             createClanOverrides(conversionService)
         );
+    }
+
+    private static String getLastValue(String[] vals)
+    {
+        return vals == null || vals.length == 0 ? null : vals[vals.length - 1];
     }
 
     private static SortingOrder[] convertCountValuesToSortingOrderValues
@@ -92,13 +104,14 @@ implements Filter
 
     private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createLadderOverrides
     (
-        ConversionService conversionService
+        ConversionService conversionService,
+        ObjectMapper objectMapper
     )
     {
         Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> overrides =
         new HashMap<>(Map.of(
-            "idAnchor", params->Map.entry("idCursor", params.get("idAnchor")),
-            "ratingAnchor", params->Map.entry("ratingCursor", params.get("ratingAnchor")),
+            "idAnchor", params->null,
+            "ratingAnchor", params->overrideLadderCursor(params, objectMapper),
             "page", params->null,
             "count", params->Map.entry(
                 "sort",
@@ -128,6 +141,33 @@ implements Filter
             .flatMap(Function.identity())
             .forEach(e->overrides.put(e.getKey(), e.getValue()));
         return Collections.unmodifiableMap(overrides);
+    }
+
+    private static Map.Entry<String, String[]> overrideLadderCursor
+    (
+        Map<String, String[]> params,
+        ObjectMapper objectMapper
+    )
+    {
+        String ratingAnchor = getLastValue(params.get("ratingAnchor"));
+        String idAnchor = getLastValue(params.get("idAnchor"));
+        String count = getLastValue(params.get("count"));
+        if(ratingAnchor == null || idAnchor == null || count == null) return null;
+
+        return Map.entry
+        (
+            Integer.parseInt(count) > 0
+                ? NavigationDirection.FORWARD.getRelativePosition()
+                : NavigationDirection.BACKWARD.getRelativePosition(),
+            new String[]{CursorUtil.encodePosition(
+                LadderSearchDAO.createTeamCursorPosition
+                (
+                    Long.parseLong(ratingAnchor),
+                    Long.parseLong(idAnchor)
+                ),
+                objectMapper
+            )}
+        );
     }
 
     private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createClanOverrides

@@ -13,7 +13,7 @@
                             ,region='US',region='EU',region='KR',region='CN'
                             ,league='BRONZE',league='SILVER',league='GOLD',league='PLATINUM',league='DIAMOND'
                             ,league='MASTER',league='GRANDMASTER'
-                            ,type='ladder',ratingCursor='99999',idCursor='0',sort='-rating')}"></loc>
+                            ,type='ladder',sort='-rating')}"></loc>
                             <changefreq>daily</changefreq>
                         </url>
                     </th:block>

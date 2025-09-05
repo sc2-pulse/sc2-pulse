@@ -10,8 +10,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
+import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -88,10 +90,6 @@ public class CursorParameterRedirectFilterIT
         mvc.perform
         (
             get("/").queryParam("type", type)
-                .queryParam("idAnchor", "anchorValueAnchor")
-                .queryParam("ratingAnchor", "1")
-                .queryParam("ratingAnchor", "%")
-
                 .queryParam("us", "true")
                 .queryParam("eu", "true")
                 .queryParam("kr", "true")
@@ -106,6 +104,7 @@ public class CursorParameterRedirectFilterIT
                 .queryParam("gra", "true")
 
                 .queryParam("otherParam", "otherVal")
+                .queryParam("otherParam", "%")
                 .queryParam("emptyParam", "")
                 .contentType(MediaType.TEXT_HTML)
         )
@@ -119,10 +118,8 @@ public class CursorParameterRedirectFilterIT
                         (
                             Matchers.startsWith("http://localhost/?"),
                             Matchers.containsString("type=" + type),
-                            Matchers.containsString("idCursor=anchorValueAnchor"),
-                            Matchers.containsString("ratingCursor=1"),
-                            Matchers.containsString("ratingCursor=%25"),
                             Matchers.containsString("otherParam=otherVal"),
+                            Matchers.containsString("otherParam=%25"),
                             Matchers.containsString("emptyParam")
                         ),
                         Arrays.stream(Region.values())
@@ -160,6 +157,46 @@ public class CursorParameterRedirectFilterIT
                     Matchers.startsWith("http://localhost/?"),
                     Matchers.containsString("type=ladder"),
                     Matchers.not(Matchers.containsString(parameterName))
+                )))
+            .andReturn();
+    }
+
+    @CsvSource
+    ({
+        "1, FORWARD",
+        "-1, BACKWARD"
+    })
+    @ParameterizedTest
+    public void testLadderCursorRedirection
+    (
+        int count,
+        NavigationDirection direction
+    )
+    throws Exception
+    {
+        Cursor cursor = new Cursor(LadderSearchDAO.createTeamCursorPosition(1L, 2L), direction);
+        mvc.perform
+        (
+            get("/").queryParam("type", "ladder")
+                .queryParam("ratingAnchor", "1")
+                .queryParam("idAnchor", "2")
+                .queryParam("count", String.valueOf(count))
+                .contentType(MediaType.TEXT_HTML)
+        )
+            .andExpect(status().isMovedPermanently())
+            .andExpect(header().string(
+                "Location",
+                Matchers.allOf(
+                    Matchers.startsWith("http://localhost/?"),
+                    Matchers.containsString("type=ladder"),
+                    Matchers.containsString
+                    (
+                        direction.getRelativePosition() + "="
+                            + mvcConversionService.convert(cursor, String.class)
+                    ),
+                    Matchers.not(Matchers.containsString("ratingAnchor")),
+                    Matchers.not(Matchers.containsString("idAnchor")),
+                    Matchers.not(Matchers.containsString("count"))
                 )))
             .andReturn();
     }

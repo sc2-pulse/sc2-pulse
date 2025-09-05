@@ -233,18 +233,19 @@ class HistoryUtil
 
         const type = params.get("type"); params.delete("type");
         let scrollTo = null;
+        let cursor = null;
         switch(type)
         {
             case "ladder":
                 LadderUtil.restoreLadderFormState(document.getElementById("form-ladder"), params);
-                const ratingCursor = params.get("ratingCursor"); params.delete("ratingCursor");
-                const idCursor = params.get("idCursor"); params.delete("idCursor");
+                cursor = Cursor.fromUrlSearchParams(params);
+                for(const direction of Object.values(NAVIGATION_DIRECTION)) params.delete(direction.relativePosition);
                 const sort = SortParameter.fromPrefixedString(params.get("sort"));
                 params.delete("sort");
                 const formParams = params.toString();
                 scrollTo = "generated-info-all";
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
-                promises.push(LadderUtil.updateLadder(formParams, ratingCursor, idCursor, sort));
+                promises.push(LadderUtil.updateLadder(formParams, cursor, sort));
                 promises.push(StatsUtil.updateQueueStats(formParams));
                 promises.push(StatsUtil.updateLadderStats(formParams));
                 promises.push(StatsUtil.updateLeagueBounds(formParams));

@@ -26,9 +26,18 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
+import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
+import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
+import com.nephest.battlenet.sc2.model.navigation.Position;
+import com.nephest.battlenet.sc2.model.validation.AllowedField;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.validation.Version;
+import com.nephest.battlenet.sc2.model.web.SortParameter;
 import jakarta.validation.Valid;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -143,7 +152,11 @@ public class LadderSearchDAO
         + FIND_TEAM_MEMBERS_BASE
 
         + LADDER_SEARCH_TEAM_FROM_WHERE
-        + "AND (team.rating, team.id) %2$s (:ratingCursor, :idCursor) "
+        + "AND "
+        + "( "
+            + "(:ratingCursor::bigint IS NULL AND :idCursor::bigint IS NULL) "
+            + "OR (team.rating, team.id) %2$s (:ratingCursor, :idCursor)"
+        + ") "
 
         + "ORDER BY team.rating %1$s, team.id %1$s "
         + "OFFSET :offset LIMIT :limit";
@@ -292,6 +305,8 @@ public class LadderSearchDAO
     private static RowMapper<LadderTeam> LADDER_TEAM_MAPPER;
     private static ResultSetExtractor<LadderTeam> LADDER_TEAM_EXTRACTOR;
     private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAMS_EXTRACTOR = this::mapTeams;
+
+    public static final long CURSOR_POSITION_VERSION = 1;
 
     private int resultsPerPage = 100;
 
@@ -478,6 +493,72 @@ public class LadderSearchDAO
         if(!forward) Collections.reverse(teams);
 
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, teams);
+    }
+
+    public CursorNavigableResult<List<LadderTeam>> find
+    (
+        int season,
+        Set<Region> regions,
+        Set<League.LeagueType> leagueTypes,
+        QueueType queueType,
+        TeamType teamType,
+        @Valid @AllowedField("rating") SortParameter sortParameter,
+        @Valid @Version(CURSOR_POSITION_VERSION) Cursor cursor
+    )
+    {
+        int membersPerTeam = queueType.getTeamFormat().getMemberCount(teamType);
+        int limit = getResultsPerPage() * membersPerTeam;
+        MapSqlParameterSource params =
+            LadderUtil.createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType)
+                .addValue("limit", limit)
+                .addValue("offset", 0)
+                .addValue
+                (
+                    "ratingCursor",
+                    cursor != null ? cursor.position().anchor().get(0) : null,
+                    Types.BIGINT
+                )
+                .addValue
+                (
+                    "idCursor",
+                    cursor != null ? cursor.position().anchor().get(1) : null,
+                    Types.BIGINT
+                )
+                .addValue("cheaterReportType", conversionService
+                    .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
+
+        NavigationDirection direction = cursor != null
+            ? cursor.direction()
+            : NavigationDirection.FORWARD;
+        String q = CursorUtil.formatCursorNavigableQuery
+        (
+            FIND_TEAM_MEMBERS_CURSOR_FORMAT,
+            sortParameter.order(),
+            direction,
+            true
+        );
+        List<LadderTeam> teams = template.query(q, params, LADDER_TEAMS_EXTRACTOR);
+        if(direction == NavigationDirection.BACKWARD) Collections.reverse(teams);
+
+        return CursorNavigableResult.wrap
+        (
+            teams,
+            getResultsPerPage(),
+            cursor == null,
+            LadderSearchDAO::createTeamCursorPosition
+        );
+    }
+
+    public static Position createTeamCursorPosition(long rating, long id)
+    {
+        return new Position(CURSOR_POSITION_VERSION, List.of(rating, id));
+    }
+
+    public static Position createTeamCursorPosition(LadderTeam team)
+    {
+        if(team == null) return null;
+
+        return createTeamCursorPosition(team.getRating(), team.getId());
     }
 
     @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")

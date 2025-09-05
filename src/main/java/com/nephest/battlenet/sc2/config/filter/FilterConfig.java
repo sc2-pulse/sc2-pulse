@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.web.service.GlobalContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,12 +77,14 @@ public class FilterConfig
     @Bean
     public FilterRegistrationBean<CursorParameterRedirectFilter> anchorParameterRedirectFilter
     (
-        @Qualifier("mvcConversionService") ConversionService mvcConversionService
+        @Qualifier("mvcConversionService") ConversionService mvcConversionService,
+        ObjectMapper objectMapper
     )
     {
         FilterRegistrationBean<CursorParameterRedirectFilter> registrationBean
             = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new CursorParameterRedirectFilter(mvcConversionService));
+        registrationBean.setFilter(new CursorParameterRedirectFilter(
+            mvcConversionService, objectMapper));
         registrationBean.addUrlPatterns("/");
         return registrationBean;
     }

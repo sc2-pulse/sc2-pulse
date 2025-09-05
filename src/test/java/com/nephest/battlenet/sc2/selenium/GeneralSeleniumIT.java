@@ -272,7 +272,7 @@ public class GeneralSeleniumIT
             + "&region=US&region=EU&region=KR&region=CN"
             + "&league=BRONZE&league=SILVER&league=GOLD&league=PLATINUM&league=DIAMOND"
             + "&league=MASTER&league=GRANDMASTER"
-            + "&type=ladder&ratingCursor=99999&idCursor=0&sort=-rating";
+            + "&type=ladder&sort=-rating";
         url = url.replaceAll("&", "&amp;");
         driver.get(root + "/sitemap.xml");
         //xml document with XPath locator doesn't work, using text match instead

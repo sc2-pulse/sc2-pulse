@@ -1,7 +1,7 @@
 // Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-package com.nephest.battlenet.sc2.model.local.ladder.dao;
+package com.nephest.battlenet.sc2.web.service;
 
 import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_END;
 import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_ID;
@@ -9,8 +9,12 @@ import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEAS
 import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_START;
 import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_YEAR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -38,7 +42,13 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
+import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -62,17 +72,23 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.test.web.servlet.MockMvc;
 
 
-@SpringJUnitConfig(classes = DatabaseTestConfig.class)
+@SpringBootTest(classes = AllTestConfig.class)
+@AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
-public class LadderSearchDAOIT
+public class LadderSearchIT
 {
 
     public static final int TEAMS_PER_LEAGUE = 10;
@@ -92,6 +108,7 @@ public class LadderSearchDAOIT
     public static final Set<BaseLeague.LeagueType> LEAGUES_SET = Collections.unmodifiableSet(EnumSet.copyOf(SEARCH_LEAGUES));
     public static final int TEAMS_PER_REGION = (BaseLeague.LeagueType.values()).length * TEAMS_PER_LEAGUE;
     public static final int TEAMS_PER_LEAGUE_REGION = REGIONS.size() * TEAMS_PER_LEAGUE;
+    public static final int LEAGUE_TEAM_COUNT = REGIONS.size() * TEAMS_PER_LEAGUE;
     public static final int TEAMS_TOTAL = REGIONS.size() * (BaseLeague.LeagueType.values()).length * TEAMS_PER_LEAGUE;
     public static final int PLAYERS_TOTAL = TEAMS_TOTAL * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
 
@@ -110,6 +127,17 @@ public class LadderSearchDAOIT
     @Autowired
     private LadderTeamStateDAO ladderTeamStateDAO;
 
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired @Qualifier("mvcConversionService")
+    private ConversionService mvcConversionService;
+
+    private static int initialResultsPerPage;
+
     @BeforeAll
     public static void beforeAll
     (
@@ -123,6 +151,7 @@ public class LadderSearchDAOIT
         @Autowired TeamMemberDAO teamMemberDAO,
         @Autowired TeamStateDAO teamStateDAO,
         @Autowired PopulationStateDAO populationStateDAO,
+        @Autowired LadderSearchDAO ladderSearchDAO,
         @Autowired JdbcTemplate template
     )
     throws SQLException
@@ -207,74 +236,140 @@ public class LadderSearchDAOIT
         queueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
+        initialResultsPerPage = ladderSearchDAO.getResultsPerPage();
+        ladderSearchDAO.setResultsPerPage(LEAGUE_TEAM_COUNT);
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
+    public static void afterAll
+    (
+        @Autowired DataSource dataSource,
+        @Autowired LadderSearchDAO ladderSearchDAO
+    )
         throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
         }
-
+        ladderSearchDAO.setResultsPerPage(initialResultsPerPage);
     }
 
     //skip masters league for test
     @CsvSource({"1, 279", "2, 199", "3, 159", "4, 119", "5, 79", "6, 39"})
     @ParameterizedTest
-    public void test4v4LadderCursor(int page, int teamId)
+    public void test4v4LadderCursor(int page, long teamId)
+    throws Exception
     {
-        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
-        search.setResultsPerPage(leagueTeamCount);
-        PagedSearchResult<List<LadderTeam>> result = search.find
+        LadderTeam afterCursor = search.findTeamsByIds(Set.of(teamId + 2)).get(0);
+        CursorNavigableResult<List<LadderTeam>> result = objectMapper.readValue(mvc.perform
         (
-            DEFAULT_SEASON_ID,
-            EnumSet.copyOf(REGIONS),
-            LEAGUES_SET,
-            QUEUE_TYPE,
-            TEAM_TYPE,
-            page - 1,
-            //team id is zero based in generator, but actual db id is 1 based. + 2 to offset that
-            teamId, teamId + 2,
-            1
-        );
-        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId, true);
+            get("/api/teams")
+                .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
+                .queryParam
+                (
+                    "region",
+                    Arrays.stream(Region.values())
+                        .map(region->mvcConversionService.convert(region, String.class))
+                        .toArray(String[]::new)
+                )
+                .queryParam
+                (
+                    "league",
+                    LEAGUES_SET.stream()
+                        .map(league->mvcConversionService.convert(league, String.class))
+                        .toArray(String[]::new)
+                )
+                .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
+                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            LadderSearchDAO.createTeamCursorPosition(afterCursor),
+                            NavigationDirection.FORWARD
+                        ),
+                        String.class
+                    )
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>() {});
+        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId);
 
-        //reversed
-        PagedSearchResult<List<LadderTeam>> resultReversed = search.find
-        (
-            DEFAULT_SEASON_ID,
-            EnumSet.copyOf(REGIONS),
-            LEAGUES_SET,
-            QUEUE_TYPE,
-            TEAM_TYPE,
-            page + 1,
-            //for reversed order the generator offset is correct
-            teamId - leagueTeamCount, (teamId - leagueTeamCount) + 1,
-            -1
-        );
-        verifyLadder(resultReversed, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId, true);
+        LadderTeam beforeCursor = result.result().get(result.result().size() - 1);
+        beforeCursor.setRating(beforeCursor.getRating() - 1);
+        CursorNavigableResult<List<LadderTeam>> reversedResult = objectMapper.readValue(mvc.perform(
+            get("/api/teams")
+                .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
+                .queryParam
+                (
+                    "region",
+                    Arrays.stream(Region.values())
+                        .map(region->mvcConversionService.convert(region, String.class))
+                        .toArray(String[]::new)
+                )
+                .queryParam
+                (
+                    "league",
+                    LEAGUES_SET.stream()
+                        .map(league->mvcConversionService.convert(league, String.class))
+                        .toArray(String[]::new)
+                )
+                .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
+                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam
+                (
+                    "before",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            LadderSearchDAO.createTeamCursorPosition(beforeCursor),
+                            NavigationDirection.BACKWARD
+                        ),
+                        String.class
+                    )
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>() {});
+        verifyLadder(reversedResult, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId);
     }
 
     @CsvSource({"1, 279", "2, 239", "3, 199", "4, 159", "5, 119", "6, 79", "7, 39"})
     @ParameterizedTest
-    public void test4v4LadderNoRegionAndLeagueFilters(int page, int teamId)
+    public void test4v4LadderNoRegionAndLeagueFilters(int page, long teamId)
+    throws Exception
     {
-        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
-        search.setResultsPerPage(leagueTeamCount);
-        PagedSearchResult<List<LadderTeam>> result = search.find
-        (
-            DEFAULT_SEASON_ID,
-            Set.of(),
-            Set.of(),
-            QUEUE_TYPE,
-            TEAM_TYPE,
-            page - 1,
-            //team id is zero based in generator, but actual db id is 1 based. + 2 to offset that
-            teamId, teamId + 2,
-            1
-        );
+        LadderTeam afterCursor = search.findTeamsByIds(Set.of(teamId + 2)).get(0);
+        CursorNavigableResult<List<LadderTeam>> result = objectMapper.readValue(mvc.perform(
+            get("/api/teams")
+                .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
+                .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
+                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            LadderSearchDAO.createTeamCursorPosition(afterCursor),
+                            NavigationDirection.FORWARD
+                        ),
+                        String.class
+                    )
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>() {});
         verifyLadder
         (
             result,
@@ -282,53 +377,111 @@ public class LadderSearchDAOIT
             //no filters = everything is accepted
             Arrays.asList(Region.values()),
             Arrays.asList(BaseLeague.LeagueType.values()),
-            page, teamId, true
+            page, teamId
         );
     }
 
     @Test
-    public void test4v4LadderCursorMultiplePages()
+    public void testNavigation()
+    throws Exception
     {
-        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
-        search.setResultsPerPage(leagueTeamCount);
-        PagedSearchResult<List<LadderTeam>> result = search.find
+        LadderTeam afterCursor = search.findTeamsByIds(Set.of(281L)).get(0);
+        CursorNavigableResult<List<LadderTeam>> result = objectMapper.readValue(mvc.perform
         (
-            DEFAULT_SEASON_ID,
-            EnumSet.copyOf(REGIONS),
-            LEAGUES_SET,
-            QUEUE_TYPE,
-            TEAM_TYPE,
-            1,
-            200, 201,
-            2
+            get("/api/teams")
+                .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
+                .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
+                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            LadderSearchDAO.createTeamCursorPosition(afterCursor),
+                            NavigationDirection.FORWARD
+                        ),
+                        String.class
+                    )
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>() {});
+        verifyLadder
+        (
+            result,
+            QUEUE_TYPE, TEAM_TYPE, TIER_TYPE,
+            //no filters = everything is accepted
+            Arrays.asList(Region.values()),
+            Arrays.asList(BaseLeague.LeagueType.values()),
+            1, 279L
         );
-        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, 3, 159, true);
 
-        //reversed
-        PagedSearchResult<List<LadderTeam>> resultReversed = search.find
+        CursorNavigableResult<List<LadderTeam>> forwardResult = objectMapper.readValue(mvc.perform
         (
-            DEFAULT_SEASON_ID,
-            EnumSet.copyOf(REGIONS),
-            LEAGUES_SET,
-            QUEUE_TYPE,
-            TEAM_TYPE,
-            3,
-            //for reversed order the generator offset is correct
-            159, 160,
-            -2
+            get("/api/teams")
+                .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
+                .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
+                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert
+                    (
+                        result.navigation().after(),
+                        String.class
+                    )
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>() {});
+        verifyLadder
+        (
+            forwardResult,
+            QUEUE_TYPE, TEAM_TYPE, TIER_TYPE,
+            //no filters = everything is accepted
+            Arrays.asList(Region.values()),
+            Arrays.asList(BaseLeague.LeagueType.values()),
+            2, 239L
         );
-        verifyLadder(resultReversed, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, 1, 279, true);
+
+        CursorNavigableResult<List<LadderTeam>> backwardResult = objectMapper.readValue(mvc.perform
+        (
+            get("/api/teams")
+                .queryParam("season", String.valueOf(DEFAULT_SEASON_ID))
+                .queryParam("queue", mvcConversionService.convert(QUEUE_TYPE, String.class))
+                .queryParam("team-type", mvcConversionService.convert(TEAM_TYPE, String.class))
+                .queryParam
+                (
+                    "before",
+                    mvcConversionService.convert(forwardResult.navigation().before(), String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>() {});
+        verifyLadder
+        (
+            backwardResult,
+            QUEUE_TYPE, TEAM_TYPE, TIER_TYPE,
+            //no filters = everything is accepted
+            Arrays.asList(Region.values()),
+            Arrays.asList(BaseLeague.LeagueType.values()),
+            1, 279L
+        );
     }
 
     private void verifyLadder
     (
-        PagedSearchResult<List<LadderTeam>> result,
+        CursorNavigableResult<List<LadderTeam>> result,
         QueueType queueType,
         TeamType teamType,
         BaseLeagueTier.LeagueTierType tierType,
         int page,
-        int teamId,
-        boolean cursor
+        long teamId
     )
     {
         verifyLadder
@@ -340,39 +493,30 @@ public class LadderSearchDAOIT
             REGIONS,
             SEARCH_LEAGUES,
             page,
-            teamId,
-            cursor
+            teamId
         );
     }
 
     private void verifyLadder
     (
-        PagedSearchResult<List<LadderTeam>> result,
+        CursorNavigableResult<List<LadderTeam>> result,
         QueueType queueType,
         TeamType teamType,
         BaseLeagueTier.LeagueTierType tierType,
         List<Region> regions,
         List<BaseLeague.LeagueType> leagues,
         int page,
-        int teamId,
-        boolean cursor
+        long teamId
     )
     {
-        long expectedTeamCount = (long) regions.size() * leagues.size() * TEAMS_PER_LEAGUE;
         int leagueTeamCount = regions.size() * TEAMS_PER_LEAGUE;
 
-        //validate meta
-        assertEquals(cursor ? null : expectedTeamCount, result.getMeta().getTotalCount());
-        assertEquals(leagueTeamCount, result.getMeta().getPerPage());
-        assertEquals(cursor ? null :  (long) Math.ceil(expectedTeamCount / (double) leagueTeamCount), result.getMeta().getPageCount());
-        assertEquals(page, result.getMeta().getPage());
-
         //validate teams
-        assertEquals(leagueTeamCount, result.getResult().size());
+        assertEquals(leagueTeamCount, result.result().size());
         int pagedIx = (page - 1) * leagueTeamCount;
-        for(int i = 0; i < result.getResult().size(); i++, pagedIx++, teamId--)
+        for(int i = 0; i < result.result().size(); i++, pagedIx++, teamId--)
         {
-            LadderTeam team = result.getResult().get(i);
+            LadderTeam team = result.result().get(i);
             //DESC order
             Region expectedRegion = regions.get((regions.size() - 1 - i / TEAMS_PER_LEAGUE % TEAMS_PER_LEAGUE % regions.size()));
             assertEquals(expectedRegion, team.getRegion());
@@ -382,9 +526,9 @@ public class LadderSearchDAOIT
             assertEquals(teamType, team.getLeague().getTeamType());
             assertEquals(tierType, team.getTierType());
             assertEquals(teamId, team.getRating());
-            assertEquals(teamId, team.getWins());
-            assertEquals(teamId + 1, team.getLosses());
-            assertEquals(teamId + 2, team.getTies());
+            assertEquals((int) teamId, team.getWins());
+            assertEquals((int) teamId + 1, team.getLosses());
+            assertEquals((int) teamId + 2, team.getTies());
             LadderTeamState state = ladderTeamStateDAO
                 .find(Set.of(TeamLegacyUid.of(team))).stream()
                 .findAny()
