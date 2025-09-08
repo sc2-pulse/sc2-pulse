@@ -22,11 +22,13 @@ class Pagination
             for(const pagination of document.querySelectorAll(this.cssSelector)) pagination.classList.add("d-none");
             return;
         }
-        const backwardParams = this.createParams(data.result[0]);
-        const forwardParams = this.createParams(data.result[data.result.length - 1]);
-        const firstParams = this.createMaxParams();
-        const lastParams = this.createMinParams();
-        const params = {first: firstParams, last: lastParams, forward: forwardParams, backward: backwardParams};
+        const params = {};
+        for(const direction of Object.values(NAVIGATION_DIRECTION)) {
+            const directionParams = new Map();
+            params[direction.name] = directionParams;
+            const value = data.navigation[direction.relativePosition];
+            if(value != null) directionParams.set(direction.relativePosition, value);
+        }
         for(const pagination of document.querySelectorAll(this.cssSelector))
         {
             PaginationUtil.updatePagination(pagination, params, data.meta.page, data.meta.isLastPage, this.onClick);
@@ -41,27 +43,6 @@ class Pagination
             if(link.getAttribute("data-page-count") >= minCount && link.getAttribute("data-page-number") != 0)
                 link.parentNode.classList.add("disabled");
         }
-    }
-
-    createParams(obj)
-    {
-        const result = new Map();
-        for(const param of this.config) result.set(param.name, param.getter(obj));
-        return result;
-    }
-
-    createMinParams()
-    {
-        const result = new Map();
-        for(const param of this.config) result.set(param.name, param.min);
-        return result;
-    }
-
-    createMaxParams()
-    {
-        const result = new Map();
-        for(const param of this.config) result.set(param.name, param.max);
-        return result;
     }
 
 }

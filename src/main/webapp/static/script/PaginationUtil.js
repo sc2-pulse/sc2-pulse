@@ -97,10 +97,7 @@ class PaginationUtil
         PaginationUtil.PAGINATIONS.set("ladder",
             new Pagination(
                 ".pagination-ladder",
-                [
-                    {name: "rating-cursor", min: 0, max: 99999, getter: (t)=>t.rating},
-                    {name: "id-cursor", min: 0, max: 1, getter: (t)=>t.id}
-                ],
+                [],
                 LadderUtil.ladderPaginationPageClick)
         );
     }
@@ -146,18 +143,18 @@ class PaginationUtil
         return r;
     }
 
-    static createCursorMeta(isEmpty, isFirstPage, sortingOrder)
+    static createCursorMeta(result, isFirstPage, navigationDirection)
     {
         return {
-            page: isEmpty
-                ? sortingOrder == SORTING_ORDER.ASC
+            page: result?.result?.length < 1
+                ? navigationDirection == NAVIGATION_DIRECTION.BACKWARD
                     ? PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER
                     : PaginationUtil.CURSOR_DISABLED_NEXT_PAGE_NUMBER
                 : isFirstPage
                     ? PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER
                     : PaginationUtil.CURSOR_PAGE_NUMBER,
-            pageDiff: sortingOrder == SORTING_ORDER.DESC ? 1 : -1,
-            isLastPage: isEmpty && sortingOrder == SORTING_ORDER.DESC
+            pageDiff: navigationDirection == NAVIGATION_DIRECTION.FORWARD ? 1 : -1,
+            isLastPage: result?.navigation?.after == null
         };
     }
 
