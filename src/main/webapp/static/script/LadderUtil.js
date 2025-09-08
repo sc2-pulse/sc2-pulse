@@ -80,7 +80,7 @@ class LadderUtil
             form: formParams,
             ratingCursor: ratingCursor,
             idCursor: idCursor,
-            sort: sort.toPrefixedString()
+            sort: sort
         };
 
         return LadderUtil.updateLadderModel(params, formParams, ratingCursor, idCursor, sort)
@@ -89,7 +89,7 @@ class LadderUtil
                 searchParams.append("type", "ladder");
                 searchParams.append("idCursor", e.idCursor);
                 searchParams.append("ratingCursor", e.ratingCursor);
-                searchParams.append("sort", e.sort);
+                searchParams.append("sort", e.sort.toPrefixedString());
                 const stringParams = searchParams.toString();
 
                 LadderUtil.updateLadderView();
