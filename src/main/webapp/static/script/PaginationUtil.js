@@ -77,7 +77,9 @@ class PaginationUtil
                 pageParams = count > -1 ? params.forward : params.backward;
                 break;
         }
-        for(const [key, val] of pageParams) page.setAttribute("data-page-" + key, val);
+        if(pageParams != null)
+            for(const [key, val] of pageParams)
+                page.setAttribute("data-page-" + key, val);
 
         page.setAttribute("data-page-count", count);
         page.setAttribute("data-page-number", pageNumber);
