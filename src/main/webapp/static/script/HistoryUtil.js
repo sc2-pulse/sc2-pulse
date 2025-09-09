@@ -279,10 +279,13 @@ class HistoryUtil
                 scrollTo = "search-result-clan-all";
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 lazyPromises.push(e=>FormUtil.setFormState(document.querySelector("#form-search-clan"), params));
+                cursor = Cursor.fromUrlSearchParams(params);
+                for(const direction of Object.values(NAVIGATION_DIRECTION)) params.delete(direction.relativePosition);
                 promises.push(HistoryUtil.callWithArguments(
                     (p, reqParams)=>ClanUtil.updateClanSearch(
                         p,
-                        reqParams[0], reqParams[1], SortParameter.fromPrefixedString(reqParams[2])),
+                        cursor,
+                        SortParameter.fromPrefixedString(reqParams[0])),
                     params,
                     ClanUtil.REQUIRED_CURSOR_PARAMETERS
                 ));

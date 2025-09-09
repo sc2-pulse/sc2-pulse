@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
@@ -197,6 +198,46 @@ public class CursorParameterRedirectFilterIT
                     Matchers.not(Matchers.containsString("ratingAnchor")),
                     Matchers.not(Matchers.containsString("idAnchor")),
                     Matchers.not(Matchers.containsString("count"))
+                )))
+            .andReturn();
+    }
+
+    @CsvSource
+    ({
+        "1, FORWARD",
+        "-1, BACKWARD"
+    })
+    @ParameterizedTest
+    public void testClanCursorRedirection
+    (
+        int pageDiff,
+        NavigationDirection direction
+    )
+    throws Exception
+    {
+        Cursor cursor = new Cursor(ClanDAO.createCursorPosition(1.53D, 2L), direction);
+        mvc.perform
+        (
+            get("/").queryParam("type", "clan-search")
+                .queryParam("cursorValue", "1.53")
+                .queryParam("idCursor", "2")
+                .queryParam("pageDiff", String.valueOf(pageDiff))
+                .contentType(MediaType.TEXT_HTML)
+        )
+            .andExpect(status().isMovedPermanently())
+            .andExpect(header().string(
+                "Location",
+                Matchers.allOf(
+                    Matchers.startsWith("http://localhost/?"),
+                    Matchers.containsString("type=clan-search"),
+                    Matchers.containsString
+                    (
+                        direction.getRelativePosition() + "="
+                            + mvcConversionService.convert(cursor, String.class)
+                    ),
+                    Matchers.not(Matchers.containsString("cursorValue")),
+                    Matchers.not(Matchers.containsString("idCursor")),
+                    Matchers.not(Matchers.containsString("pageDiff"))
                 )))
             .andReturn();
     }

@@ -56,7 +56,7 @@ implements Filter
             ladderOverrides,
 
             "clan-search",
-            createClanOverrides(conversionService)
+            createClanOverrides(conversionService, objectMapper)
         );
     }
 
@@ -172,14 +172,44 @@ implements Filter
 
     private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createClanOverrides
     (
-        ConversionService conversionService
+        ConversionService conversionService,
+        ObjectMapper objectMapper
     )
     {
         return Map.of
         (
             "page", params->null,
             "pageDiff", params->overrideClanPageDiff(params, conversionService),
-            "sortBy", params->null
+            "sortBy", params->null,
+            "cursorValue", params->overrideClanCursor(params, objectMapper),
+            "idCursor", params->null
+        );
+    }
+
+    private static Map.Entry<String, String[]> overrideClanCursor
+    (
+        Map<String, String[]> params,
+        ObjectMapper objectMapper
+    )
+    {
+        String cursorValue = getLastValue(params.get("cursorValue"));
+        String idCursor = getLastValue(params.get("idCursor"));
+        String pageDiff = getLastValue(params.get("pageDiff"));
+        if(cursorValue == null || idCursor == null || pageDiff == null) return null;
+
+        return Map.entry
+        (
+            Integer.parseInt(pageDiff) > 0
+                ? NavigationDirection.FORWARD.getRelativePosition()
+                : NavigationDirection.BACKWARD.getRelativePosition(),
+            new String[]{CursorUtil.encodePosition(
+                ClanDAO.createCursorPosition
+                (
+                    Double.parseDouble(cursorValue),
+                    Long.parseLong(idCursor)
+                ),
+                objectMapper
+            )}
         );
     }
 

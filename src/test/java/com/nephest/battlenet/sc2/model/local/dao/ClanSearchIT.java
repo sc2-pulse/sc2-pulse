@@ -16,6 +16,8 @@ import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
+import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
@@ -225,8 +227,19 @@ public class ClanSearchIT
         //normal, first page
         CursorNavigableResult<List<Clan>> result = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursorValue", String.valueOf(max + 1))
-                .queryParam("idCursor", String.valueOf(max + 1))
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            ClanDAO.createCursorPosition(max + 1, max + 1),
+                            NavigationDirection.FORWARD
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam
                 (
                     "sort",
@@ -244,12 +257,23 @@ public class ClanSearchIT
         //reversed, last page
         CursorNavigableResult<List<Clan>> reversedResult = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursorValue", String.valueOf(min - 1))
-                .queryParam("idCursor", String.valueOf(min - 1))
+                .queryParam
+                (
+                    "before",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            ClanDAO.createCursorPosition(min - 1 , min - 1),
+                            NavigationDirection.BACKWARD
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam
                 (
                     "sort",
-                    new SortParameter(cursor.getField(), SortingOrder.ASC).toPrefixedString()
+                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -263,8 +287,19 @@ public class ClanSearchIT
         //filtered by active member count
         CursorNavigableResult<List<Clan>> filteredByActiveMembersResult = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursorValue", String.valueOf(max))
-                .queryParam("idCursor", String.valueOf(max))
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            ClanDAO.createCursorPosition(max, max),
+                            NavigationDirection.FORWARD
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam
                 (
                     "sort",
@@ -284,8 +319,19 @@ public class ClanSearchIT
         //filtered by active avg rating
         CursorNavigableResult<List<Clan>> filteredByAvgRatingResult = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursorValue", String.valueOf(max))
-                .queryParam("idCursor", String.valueOf(max))
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            ClanDAO.createCursorPosition(max, max),
+                            NavigationDirection.FORWARD
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam
                 (
                     "sort",
@@ -306,8 +352,19 @@ public class ClanSearchIT
         Region[] regions = Region.values();
         CursorNavigableResult<List<Clan>> filteredByRegion = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursorValue", String.valueOf(max))
-                .queryParam("idCursor", String.valueOf(max))
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            ClanDAO.createCursorPosition(max, max),
+                            NavigationDirection.FORWARD
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam
                 (
                     "sort",
@@ -329,8 +386,19 @@ public class ClanSearchIT
         //filtered by all
         CursorNavigableResult<List<Clan>> filteredByAllResult = objectMapper.readValue(mvc.perform(
             get("/api/clans")
-                .queryParam("cursorValue", String.valueOf(max))
-                .queryParam("idCursor", String.valueOf(max))
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            ClanDAO.createCursorPosition(max, max),
+                            NavigationDirection.FORWARD
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam
                 (
                     "sort",
@@ -351,5 +419,52 @@ public class ClanSearchIT
         for(int i = 0; i < filteredByAllResult.result().size(); i++)
             assertEquals(firstAllId - i * regions.length, filteredByAllResult.result().get(i).getId());
     }
+
+    @Test
+    public void testCursorNavigation()
+    throws Exception
+    {
+        CursorNavigableResult<List<Clan>> firstResult = objectMapper.readValue(mvc.perform(
+            get("/api/clans")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertEquals(ClanDAO.PAGE_SIZE, firstResult.result().size());
+        for(int i = 0; i < ClanDAO.PAGE_SIZE; i++)
+            assertEquals(CLAN_COUNT - i, firstResult.result().get(i).getId());
+
+        CursorNavigableResult<List<Clan>> forwardResult = objectMapper.readValue(mvc.perform(
+            get("/api/clans")
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert(firstResult.navigation().after(), String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertEquals(ClanDAO.PAGE_SIZE, forwardResult.result().size());
+        for(int i = 0; i < ClanDAO.PAGE_SIZE; i++)
+            assertEquals(ClanDAO.PAGE_SIZE - i, forwardResult.result().get(i).getId());
+
+        CursorNavigableResult<List<Clan>> backwardResult = objectMapper.readValue(mvc.perform(
+            get("/api/clans")
+                .queryParam
+                (
+                    "before",
+                    mvcConversionService.convert(forwardResult.navigation().before(), String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertEquals(ClanDAO.PAGE_SIZE, backwardResult.result().size());
+        for(int i = 0; i < ClanDAO.PAGE_SIZE; i++)
+            assertEquals(CLAN_COUNT - i, backwardResult.result().get(i).getId());
+
+    }
+
 
 }

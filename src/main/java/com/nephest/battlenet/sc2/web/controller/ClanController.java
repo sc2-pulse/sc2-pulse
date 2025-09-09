@@ -5,16 +5,16 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import static com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver.areIdsInvalid;
 
-import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderClanMemberEventDAO;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import java.time.OffsetDateTime;
@@ -51,8 +51,7 @@ public class ClanController
     @GetMapping("/clans")
     public CursorNavigableResult<List<Clan>> getByCursor
     (
-        @RequestParam(value = "cursorValue", required = false) Double cursorValue,
-        @RequestParam(value = "idCursor", required = false) Integer idCursor,
+        @Version(ClanDAO.CURSOR_POSITION_VERSION) Cursor cursor,
         @RequestParam(value = "sort", defaultValue = "-activeMembers")
         @AllowedField({"members", "activeMembers", "gamesPerActiveMemberPerDay", "avgRating"})
         SortParameter sort,
@@ -65,21 +64,14 @@ public class ClanController
         @RequestParam(name="region", required = false) Region region
     )
     {
-        if(cursorValue == null) cursorValue = sort.order() == SortingOrder.DESC
-            ? (double) MAX_ADDITIONAL_CURSOR_FILTER
-            : (double) MIN_ADDITIONAL_CURSOR_FILTER;
-        if(idCursor == null) idCursor = sort.order() == SortingOrder.DESC
-            ? Integer.MAX_VALUE
-            : Integer.MIN_VALUE;
-        return new CursorNavigableResult<>(clanDAO.findByCursor
+        return clanDAO.findByCursor
         (
-            ClanDAO.Cursor.fromField(sort.field()), cursorValue, idCursor,
             minActiveMembers, maxActiveMembers,
             minGamesPerActiveMemberPerDay, maxGamesPerActiveMemberPerDay,
             minAvgRating, maxAvgRating,
             region,
-            2, sort.order() == SortingOrder.DESC ? 1 : -1
-        ).getResult(), new CursorNavigation(null, null));
+            sort, cursor
+        );
     }
 
     @GetMapping(value = "/clans", params = "query")

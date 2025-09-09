@@ -4,14 +4,11 @@
 class ClanUtil
 {
 
-    static updateClanSearchModel(formParams, cursorValue, idCursor = ClanUtil.FIRST_PAGE_ID_CURSOR, sort = ClanUtil.DEFAULT_SORT)
+    static updateClanSearchModel(formParams, navigationCursor = null, sort = ClanUtil.DEFAULT_SORT)
     {
         const cursor = EnumUtil.enumOfProperty("field", sort.field, CLAN_CURSOR);
         const searchParams = new URLSearchParams("?" + formParams);
-        if(!cursorValue) cursorValue = searchParams.get(sort.order == SORTING_ORDER.ASC ? cursor.minParamName : cursor.maxParamName)
-            || sort.order == SORTING_ORDER.ASC ? CLAN_MIN_ADDITIONAL_CURSOR_FILTER : CLAN_MAX_ADDITIONAL_CURSOR_FILTER;
-        searchParams.append("cursorValue", cursorValue);
-        searchParams.append("idCursor", idCursor);
+        if(navigationCursor != null) searchParams.append(navigationCursor.direction.relativePosition, navigationCursor.token);
         searchParams.append("sort", sort.toPrefixedString());
 
         const previousData = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
@@ -19,11 +16,10 @@ class ClanUtil
         {
             formParams: formParams,
             cursor: cursor,
-            cursorValue: cursorValue,
-            idCursor: idCursor,
+            navigationCursor: navigationCursor,
             sort: sort
         }
-        if(!previousData || idCursor == ClanUtil.FIRST_PAGE_ID_CURSOR)
+        if(!previousData || navigationCursor == null)
             ClanUtil.updateClanSearchPaginationConfig
             (
                 Number.parseFloat(searchParams.get(params.cursor.minParamName)) || CLAN_MIN_ADDITIONAL_CURSOR_FILTER,
@@ -47,24 +43,21 @@ class ClanUtil
         if(byTagOrName) {
             Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: PaginationUtil.resultToPagedResult(json), params: params});
         } else {
+            const direction = params.navigationCursor?.direction || NAVIGATION_DIRECTION.FORWARD;
             const empty = json.result.length == 0;
             json.meta = PaginationUtil.createCursorMeta(
-                empty,
-                params.idCursor == ClanUtil.FIRST_PAGE_ID_CURSOR,
-                params.sort.order
+                json,
+                params.navigationCursor == null || json.navigation?.[NAVIGATION_DIRECTION.BACKWARD.relativePosition] == null,
+                direction
             );
             if(empty) {
-                if(params.idCursor == ClanUtil.FIRST_PAGE_ID_CURSOR || !Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH)) {
-                    Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: json, params: params});
-                } else {
-                    const data = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
-                    data.searchResult.meta = json.meta;
+                const searchData = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
+                if(searchData?.searchResult?.meta != null) {
+                    PaginationUtil.setEmptyResultMeta(searchData.searchResult.meta, direction);
+                    return searchData;
                 }
             }
-            else {
-                json.empty = false;
-                Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: json, params: params});
-            }
+            Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: json, params: params});
         }
         return Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
     }
@@ -75,10 +68,7 @@ class ClanUtil
             new Pagination
             (
                 ".pagination-clan-search",
-                [
-                    {name: "cursor-value", min: min - 1, max: max + 1, getter: getter},
-                    {name: "id-cursor", min: 0, max: ClanUtil.FIRST_PAGE_ID_CURSOR, getter: (t)=>t.id}
-                ],
+                [],
                 ClanUtil.clanSearchPaginationPageClick
             )
         );
@@ -124,19 +114,18 @@ class ClanUtil
     static updateClanSearch
     (
         formParams,
-        cursorValue,
-        idCursor = ClanUtil.FIRST_PAGE_ID_CURSOR,
+        navigationCursor = null,
         sort = ClanUtil.DEFAULT_SORT
     )
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return ClanUtil.updateClanSearchModel(formParams, cursorValue, idCursor, sort)
+        return ClanUtil.updateClanSearchModel(formParams, navigationCursor, sort)
             .then(e => {
                 const executedParams = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH).params;
                 const searchParams = new URLSearchParams(executedParams.formParams);
                 searchParams.append("type", "clan-search");
-                searchParams.append("cursorValue", executedParams.cursorValue);
-                searchParams.append("idCursor", executedParams.idCursor);
+                if(executedParams.navigationCursor != null)
+                    searchParams.append(executedParams.navigationCursor.direction.relativePosition, executedParams.navigationCursor.token);
                 searchParams.append("sort", executedParams.sort.toPrefixedString());
                 const stringParams = searchParams.toString();
 
@@ -157,13 +146,8 @@ class ClanUtil
         ClanUtil.updateClanSearch
         (
             searchData.params.formParams,
-            evt.target.getAttribute("data-page-cursor-value"),
-            evt.target.getAttribute("data-page-id-cursor"),
-            new SortParameter
-            (
-                searchData.params.sort.field,
-                evt.target.getAttribute("data-page-count") > 0 ? SORTING_ORDER.DESC : SORTING_ORDER.ASC
-            )
+            Cursor.fromElementAttributes(evt.target, "data-page-"),
+            searchData.params.sort
         );
     }
 
@@ -180,8 +164,7 @@ class ClanUtil
             for(const p of ClanUtil.REQUIRED_CURSOR_PARAMETERS) formData.delete(p);
             ClanUtil.updateClanSearch(
                 Util.urlencodeFormData(formData),
-                CLAN_MAX_ADDITIONAL_CURSOR_FILTER,
-                ClanUtil.FIRST_PAGE_ID_CURSOR,
+                null,
                 new SortParameter(field, ClanUtil.DEFAULT_SORT.order)
             );
         });
@@ -233,6 +216,5 @@ class ClanUtil
 
 }
 
-ClanUtil.REQUIRED_CURSOR_PARAMETERS = ["cursorValue", "idCursor", "sort"];
-ClanUtil.FIRST_PAGE_ID_CURSOR = 1;
+ClanUtil.REQUIRED_CURSOR_PARAMETERS = ["sort"];
 ClanUtil.DEFAULT_SORT = new SortParameter(CLAN_CURSOR.ACTIVE_MEMBERS.field, SORTING_ORDER.DESC);

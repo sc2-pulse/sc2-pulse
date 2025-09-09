@@ -8,8 +8,18 @@ import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
+import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
+import com.nephest.battlenet.sc2.model.navigation.Position;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.AllowedField;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.validation.Version;
+import com.nephest.battlenet.sc2.model.web.SortParameter;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,8 +37,10 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.validation.annotation.Validated;
 
 @Repository
+@Validated
 public class ClanDAO
 {
 
@@ -149,7 +161,11 @@ public class ClanDAO
 
     private static final String FIND_BY_ACTIVE_MEMBERS_CURSOR_TEMPLATE =
         String.format(FIND_BY_CURSOR_TEMPLATE,
-            "(active_members, id) %2$s (:cursor, :idCursor)",
+            "( "
+                + ":cursor IS NULL "
+                + "OR :idCursor IS NULL "
+                + "OR (active_members, id) %2$s (:cursor, :idCursor) "
+            +  ") ",
             "active_members %1$s, id %1$s");
     private static final String FIND_BY_ACTIVE_MEMBERS_CURSOR =
         String.format(FIND_BY_ACTIVE_MEMBERS_CURSOR_TEMPLATE, "DESC", "<");
@@ -158,7 +174,12 @@ public class ClanDAO
 
     private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_TEMPLATE =
         String.format(FIND_BY_CURSOR_TEMPLATE,
-            "(games::double precision / active_members / %3$s, id) %2$s (:cursor, :idCursor)",
+            "( "
+                + ":cursor IS NULL "
+                + "OR :idCursor IS NULL "
+                + "OR (games::double precision / active_members / %3$s, id) %2$s (:cursor, :idCursor)"
+            + ") "
+            ,
             "games::double precision / active_members / %3$s %1$s, id %1$s");
     private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR =
         String.format(FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_TEMPLATE, "DESC", "<", CLAN_STATS_DEPTH_DAYS);
@@ -167,7 +188,11 @@ public class ClanDAO
 
     private static final String FIND_BY_AVG_RATING_CURSOR_TEMPLATE =
         String.format(FIND_BY_CURSOR_TEMPLATE,
-            "(avg_rating, id) %2$s (:cursor, :idCursor)",
+            "( "
+                + ":cursor IS NULL "
+                + "OR :idCursor IS NULL "
+                + "OR (avg_rating, id) %2$s (:cursor, :idCursor) "
+            +  ") ",
             "avg_rating %1$s, id %1$s");
     private static final String FIND_BY_AVG_RATING_CURSOR =
         String.format(FIND_BY_AVG_RATING_CURSOR_TEMPLATE, "DESC", "<");
@@ -176,7 +201,11 @@ public class ClanDAO
 
     private static final String FIND_BY_MEMBERS_TEMPLATE =
         String.format(FIND_BY_CURSOR_TEMPLATE,
-            "(members, id) %2$s (:cursor, :idCursor)",
+            "( "
+                + ":cursor IS NULL "
+                + "OR :idCursor IS NULL "
+                + "OR (members, id) %2$s (:cursor, :idCursor) "
+            +  ") ",
             "members %1$s, id %1$s");
     private static final String FIND_BY_MEMBERS_CURSOR =
         String.format(FIND_BY_MEMBERS_TEMPLATE, "DESC", "<");
@@ -251,6 +280,7 @@ public class ClanDAO
     private static RowMapper<Clan> STD_ROW_MAPPER;
     private static ResultSetExtractor<Clan> STD_EXTRACTOR;
     private static Integer[] DEFAULT_STATS_RACES;
+    public static final long CURSOR_POSITION_VERSION = 1;
 
     public enum Cursor
     {
@@ -541,6 +571,90 @@ public class ClanDAO
         List<Clan> clans = template.query(forward ? cursor.getQuery() : cursor.getReversedQuery(), params, STD_ROW_MAPPER);
         if(!forward) Collections.reverse(clans);
         return new PagedSearchResult<>(null, (long) PAGE_SIZE, finalPage, clans);
+    }
+
+    public CursorNavigableResult<List<Clan>> findByCursor
+    (
+        Integer minActiveMembers, Integer maxActiveMembers,
+        Double minGamesPerActiveMemberPerDay, Double maxGamesPerActiveMemberPerDay,
+        Integer minAvgRating, Integer maxAvgRating,
+        Region region,
+        @Valid
+        @NotNull
+        @AllowedField({"members", "activeMembers", "gamesPerActiveMemberPerDay", "avgRating"})
+        SortParameter sort,
+        @Valid
+        @Version(CURSOR_POSITION_VERSION)
+        com.nephest.battlenet.sc2.model.navigation.Cursor navigationCursor
+    )
+    {
+        if
+        (
+            minActiveMembers > maxActiveMembers
+                || minGamesPerActiveMemberPerDay > maxGamesPerActiveMemberPerDay
+                || minAvgRating > maxAvgRating
+        ) throw new IllegalArgumentException("Invalid search range. Min values should be less than max values");
+
+        Cursor cursor = Cursor.fromField(sort.field());
+        SqlParameterSource params = new MapSqlParameterSource()
+            .addValue
+            (
+                "cursor",
+                navigationCursor != null
+                    ? ((Number) navigationCursor.position().anchor().get(0)).doubleValue()
+                    : null,
+                Types.DOUBLE
+            )
+            .addValue
+            (
+                "idCursor",
+                navigationCursor != null
+                    ? navigationCursor.position().anchor().get(1)
+                    : null,
+                Types.BIGINT
+            )
+            .addValue("minActiveMembers", minActiveMembers)
+            .addValue("maxActiveMembers", maxActiveMembers)
+            .addValue("minGamesPerActiveMemberPerDay", minGamesPerActiveMemberPerDay)
+            .addValue("maxGamesPerActiveMemberPerDay", maxGamesPerActiveMemberPerDay)
+            .addValue("minAvgRating", minAvgRating)
+            .addValue("maxAvgRating", maxAvgRating)
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("limit", PAGE_SIZE)
+            .addValue("offset", 0);
+
+        NavigationDirection direction = navigationCursor != null
+            ? navigationCursor.direction()
+            : NavigationDirection.FORWARD;
+        String q = CursorUtil.formatCursorNavigableQuery
+        (
+            cursor.queryTemplate,
+            sort.order(),
+            direction,
+            true,
+            String.valueOf(CLAN_STATS_DEPTH_DAYS)
+        );
+        List<Clan> clans = template.query(q, params, STD_ROW_MAPPER);
+        if(direction == NavigationDirection.BACKWARD) Collections.reverse(clans);
+        return CursorNavigableResult.wrap
+        (
+            clans,
+            PAGE_SIZE,
+            navigationCursor == null,
+            clan->createCursorPosition(clan, cursor)
+        );
+    }
+
+    public static Position createCursorPosition(Number value, long id)
+    {
+        return new Position(CURSOR_POSITION_VERSION, List.of(value, id));
+    }
+
+    public static Position createCursorPosition(Clan clan, Cursor cursor)
+    {
+        if(clan == null) return null;
+
+        return createCursorPosition(cursor.getValueFunction().apply(clan), clan.getId());
     }
 
     public List<String> findTags(String tagLike, int limit)
