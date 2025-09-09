@@ -259,6 +259,7 @@ public class ClanDAO
             "Total members",
             "members",
             false,
+            FIND_BY_MEMBERS_TEMPLATE,
             FIND_BY_MEMBERS_CURSOR,
             FIND_BY_MEMBERS_CURSOR_REVERSED,
             Clan::getMembers
@@ -268,6 +269,7 @@ public class ClanDAO
             "Active members",
             "activeMembers",
             true,
+            FIND_BY_ACTIVE_MEMBERS_CURSOR_TEMPLATE,
             FIND_BY_ACTIVE_MEMBERS_CURSOR,
             FIND_BY_ACTIVE_MEMBERS_CURSOR_REVERSED,
             Clan::getActiveMembers
@@ -277,6 +279,7 @@ public class ClanDAO
             "Games per active member per day",
             "gamesPerActiveMemberPerDay",
             false,
+            FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_TEMPLATE,
             FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR,
             FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_REVERSED,
             clan->clan.getActiveMembers() == null || clan.getGames() == null
@@ -288,6 +291,7 @@ public class ClanDAO
             "Average rating",
             "avgRating",
             false,
+            FIND_BY_AVG_RATING_CURSOR_TEMPLATE,
             FIND_BY_AVG_RATING_CURSOR,
             FIND_BY_AVG_RATING_CURSOR_REVERSED,
             Clan::getAvgRating
@@ -295,6 +299,7 @@ public class ClanDAO
 
         private final String name, field;
         private final boolean defaultt;
+        private final String queryTemplate;
         private final String query;
         private final String reversedQuery;
         private final Function<Clan, Number> valueFunction;
@@ -304,6 +309,7 @@ public class ClanDAO
             String name,
             String field,
             boolean defaultt,
+            String queryTemplate,
             String query,
             String reversedQuery,
             Function<Clan, Number> valueFunction
@@ -312,6 +318,7 @@ public class ClanDAO
             this.name = name;
             this.field = field;
             this.defaultt = defaultt;
+            this.queryTemplate = queryTemplate;
             this.query = query;
             this.reversedQuery = reversedQuery;
             this.valueFunction = valueFunction;
@@ -339,6 +346,11 @@ public class ClanDAO
         public boolean isDefault()
         {
             return defaultt;
+        }
+
+        public String getQueryTemplate()
+        {
+            return queryTemplate;
         }
 
         public String getQuery()
