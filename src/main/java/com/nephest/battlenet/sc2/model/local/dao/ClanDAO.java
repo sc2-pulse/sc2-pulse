@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -259,7 +260,8 @@ public class ClanDAO
             "members",
             false,
             FIND_BY_MEMBERS_CURSOR,
-            FIND_BY_MEMBERS_CURSOR_REVERSED
+            FIND_BY_MEMBERS_CURSOR_REVERSED,
+            Clan::getMembers
         ),
         ACTIVE_MEMBERS
         (
@@ -267,7 +269,8 @@ public class ClanDAO
             "activeMembers",
             true,
             FIND_BY_ACTIVE_MEMBERS_CURSOR,
-            FIND_BY_ACTIVE_MEMBERS_CURSOR_REVERSED
+            FIND_BY_ACTIVE_MEMBERS_CURSOR_REVERSED,
+            Clan::getActiveMembers
         ),
         GAMES_PER_ACTIVE_MEMBER_PER_DAY
         (
@@ -275,7 +278,10 @@ public class ClanDAO
             "gamesPerActiveMemberPerDay",
             false,
             FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR,
-            FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_REVERSED
+            FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_REVERSED,
+            clan->clan.getActiveMembers() == null || clan.getGames() == null
+                ? null
+                : clan.getGames().doubleValue() / clan.getActiveMembers() / CLAN_STATS_DEPTH_DAYS
         ),
         AVG_RATING
         (
@@ -283,21 +289,32 @@ public class ClanDAO
             "avgRating",
             false,
             FIND_BY_AVG_RATING_CURSOR,
-            FIND_BY_AVG_RATING_CURSOR_REVERSED
+            FIND_BY_AVG_RATING_CURSOR_REVERSED,
+            Clan::getAvgRating
         );
 
         private final String name, field;
         private final boolean defaultt;
         private final String query;
         private final String reversedQuery;
+        private final Function<Clan, Number> valueFunction;
 
-        Cursor(String name, String field, boolean defaultt, String query, String reversedQuery)
+        Cursor
+        (
+            String name,
+            String field,
+            boolean defaultt,
+            String query,
+            String reversedQuery,
+            Function<Clan, Number> valueFunction
+        )
         {
             this.name = name;
             this.field = field;
             this.defaultt = defaultt;
             this.query = query;
             this.reversedQuery = reversedQuery;
+            this.valueFunction = valueFunction;
         }
 
         public static Cursor fromField(String field)
@@ -332,6 +349,11 @@ public class ClanDAO
         public String getReversedQuery()
         {
             return reversedQuery;
+        }
+
+        public Function<Clan, Number> getValueFunction()
+        {
+            return valueFunction;
         }
 
     }
