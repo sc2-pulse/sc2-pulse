@@ -317,7 +317,12 @@ public class Cron
             {
                 afterLadderUpdateTask.get();
             }
-            catch (InterruptedException | ExecutionException e)
+            catch (ExecutionException e)
+            {
+                afterLadderUpdateTask = statsService.afterCurrentSeasonUpdate(false);
+                throw new RuntimeException(e);
+            }
+            catch (InterruptedException e)
             {
                 throw new RuntimeException(e);
             }
