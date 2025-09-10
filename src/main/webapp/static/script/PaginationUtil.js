@@ -158,6 +158,14 @@ class PaginationUtil
         };
     }
 
+    static setEmptyResultMeta(meta, direction)
+    {
+        meta.page = direction == NAVIGATION_DIRECTION.FORWARD
+            ? PaginationUtil.CURSOR_DISABLED_NEXT_PAGE_NUMBER
+            : PaginationUtil.CURSOR_DISABLED_PREV_PAGE_NUMBER;
+        if(direction == NAVIGATION_DIRECTION.FORWARD) meta.isLastPage = true;
+    }
+
 }
 
 PaginationUtil.PAGINATION_SIDE_BUTTON_COUNT = 0;
