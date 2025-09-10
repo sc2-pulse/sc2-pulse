@@ -222,15 +222,12 @@ class GroupUtil
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
-    static createMatchesParams(matches, varModel, matchType)
+    static createMatchesParams(searchResult, varModel, matchType)
     {
         const params = new URLSearchParams(varModel.groupParams);
-        if(matches && matches.length > 0) {
-            const matchCursor = matches[matches.length - 1];
-            params.append("dateCursor", matchCursor.match.date);
-            params.append("typeCursor", matchCursor.match.type);
-            params.append("mapCursor", matchCursor.map.id);
-            params.append("regionCursor", matchCursor.match.region);
+        if(searchResult?.result?.length > 0) {
+            const cursorToken = searchResult.navigation?.[NAVIGATION_DIRECTION.FORWARD.relativePosition];
+            if(cursorToken != null) params.append(NAVIGATION_DIRECTION.FORWARD.relativePosition, cursorToken);
             if(varModel.matchType) params.append("type", varModel.matchType);
         } else {
             if(matchType != "all") {
@@ -253,11 +250,19 @@ class GroupUtil
                 if(!matchesResponse || matchesResponse.result.length == 0) {
                     return {status: LOADING_STATUS.COMPLETE};
                 }
-                Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = matches
-                    ? matches.concat(matchesResponse.result)
-                    : matchesResponse.result;
+                if(matches != null) {
+                    matches.result = matches.result.concat(matchesResponse.result);
+                    matches.navigation = matchesResponse.navigation;
+                } else {
+                    Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = matchesResponse;
+                }
                 GroupUtil.updateMatchesView(container, matchesResponse.result);
-                return {data: matchesResponse.result, status: LOADING_STATUS.NONE};
+                return {
+                    data: matchesResponse,
+                    status: matchesResponse.navigation[NAVIGATION_DIRECTION.FORWARD.relativePosition] == null
+                        ? LOADING_STATUS.COMPLETE
+                        : LOADING_STATUS.NONE
+                };
             });
     }
 

@@ -6,7 +6,6 @@ package com.nephest.battlenet.sc2.web.controller;
 import static com.nephest.battlenet.sc2.web.service.SearchService.ID_SEARCH_MAX_SEASONS;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
-import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.IdField;
 import com.nephest.battlenet.sc2.model.IdProjection;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -19,9 +18,9 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.validation.NotFakeSc2Name;
+import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.SearchService;
@@ -32,7 +31,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -155,11 +153,8 @@ public class CharacterController
     public ResponseEntity<?> getMatches
     (
         @CharacterGroup Set<Long> characterIds,
-        @RequestParam(name = "dateCursor", required = false) OffsetDateTime dateCursor,
-        @RequestParam(name = "typeCursor", required = false, defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
-        @RequestParam(name = "mapCursor", required = false, defaultValue = "0") int mapCursor,
-        @RequestParam(name = "regionCursor", required = false, defaultValue = "US") Region regionCursor,
-        @RequestParam(name = "type", required = false, defaultValue = "") BaseMatch.MatchType[] types,
+        @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor,
+        @RequestParam(name = "type", required = false, defaultValue = "") Set<BaseMatch.MatchType> types,
         @RequestParam(name = "limit", required = false, defaultValue = "20") int limit
     )
     {
@@ -167,15 +162,15 @@ public class CharacterController
             .badRequest()
             .body("Max limit: " + MATCH_PAGE_SIZE_MAX);
 
-        dateCursor = dateCursor != null ? dateCursor : SC2Pulse.offsetDateTime();
         return WebServiceUtil.notFoundIfEmpty
         (
-            new CursorNavigableResult<>(ladderMatchDAO.findMatchesByCharacterIds(
+            ladderMatchDAO.findMatchesByCharacterIds
+            (
                 characterIds,
-                dateCursor, typeCursor, mapCursor, regionCursor,
-                0, 1, limit,
+                cursor,
+                limit,
                 types
-            ).getResult(), new CursorNavigation(null, null))
+            )
         );
     }
 

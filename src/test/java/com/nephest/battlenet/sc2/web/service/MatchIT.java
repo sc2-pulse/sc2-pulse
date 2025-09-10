@@ -58,6 +58,8 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
+import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.sql.Connection;
@@ -78,8 +80,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -153,6 +157,10 @@ public class MatchIT
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    @Qualifier("mvcConversionService")
+    private ConversionService mvcConversionService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -615,8 +623,22 @@ public class MatchIT
             mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
             "/api/character-matches"
                 + "?characterId=" + charKr1.getId()
-                + "&dateCursor=" + SC2Pulse.offsetDateTime()
-                    .plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1)
+                + "&after=" + mvcConversionService.convert
+                    (
+                        new Cursor
+                        (
+                            LadderMatchDAO.createCursorPosition
+                            (
+                                SC2Pulse.offsetDateTime()
+                                    .plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1),
+                                BaseMatch.MatchType._1V1,
+                                1,
+                                Region.US
+                            ),
+                            NavigationDirection.FORWARD
+                        ),
+                        String.class
+                    )
         ).result();
         assertEquals(6, matches1v1.size());
         assertEquals(match1v1_3, matches1v1.get(0).getMatch());
@@ -719,6 +741,89 @@ public class MatchIT
             Set.of(charEu9), match1v1_4);
         verifyMatch(losers4_1, 1, 1, team1v1Loss4, Set.of(state1v1Loss4), BaseLeague.LeagueType.BRONZE,
             Set.of(charEu10), match1v1_4);
+    }
+
+    @Test
+    public void testNavigation()
+    throws Exception
+    {
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.EU),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_4V4),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            2
+        );
+
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
+        seasonGenerator.createMatches
+        (
+            BaseMatch.MatchType._4V4,
+            1L, 2L,
+            new long[]{1, 2, 3, 4}, new long[]{5, 6, 7, 8},
+            now, Region.EU, 10, 1,
+            8
+        );
+
+        CursorNavigableResult<List<LadderMatch>> initialResult = objectMapper.readValue(mvc.perform
+        (
+            get("/api/character-matches")
+                .queryParam("characterId", "1")
+                .queryParam("limit", "2")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andReturn().getResponse().getContentAsString(),new TypeReference<>() {});
+        assertEquals
+        (
+            List.of(1L, 2L),
+            initialResult.result().stream()
+                .map(m->m.getMatch().getId())
+                .toList()
+        );
+
+        CursorNavigableResult<List<LadderMatch>> forwardResult = objectMapper.readValue(mvc.perform
+        (
+            get("/api/character-matches")
+                .queryParam("characterId", "1")
+                .queryParam("limit", "2")
+                .queryParam
+                (
+                    "after",
+                    mvcConversionService.convert(initialResult.navigation().after(), String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andReturn().getResponse().getContentAsString(),new TypeReference<>() {});
+        assertEquals
+        (
+            List.of(3L, 4L),
+            forwardResult.result().stream()
+                .map(m->m.getMatch().getId())
+                .toList()
+        );
+
+        CursorNavigableResult<List<LadderMatch>> backwardResult = objectMapper.readValue(mvc.perform
+        (
+            get("/api/character-matches")
+                .queryParam("characterId", "1")
+                .queryParam("limit", "2")
+                .queryParam
+                (
+                    "before",
+                    mvcConversionService.convert(forwardResult.navigation().before(), String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andReturn().getResponse().getContentAsString(),new TypeReference<>() {});
+        assertEquals
+        (
+            List.of(1L, 2L),
+            backwardResult.result().stream()
+                .map(m->m.getMatch().getId())
+                .toList()
+        );
     }
 
     private void verifyMatch
@@ -832,7 +937,21 @@ public class MatchIT
             mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
             "/api/character-matches"
                 + "?characterId=" + charEu1.getId()
-                + "&dateCursor=" + now.plusSeconds(1)
+                + "&after=" + mvcConversionService.convert
+                (
+                    new Cursor
+                    (
+                        LadderMatchDAO.createCursorPosition
+                        (
+                            now.plusSeconds(1),
+                            BaseMatch.MatchType._1V1,
+                            1,
+                            Region.US
+                        ),
+                        NavigationDirection.FORWARD
+                    ),
+                    String.class
+                )
         ).result();
 
         assertEquals(300 - MatchDAO.DURATION_OFFSET, matches.get(0).getMatch().getDuration());
@@ -888,7 +1007,21 @@ public class MatchIT
             mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
             "/api/character-matches"
                 + "?characterId=1"
-                + "&dateCursor=" + now.plusSeconds(1)
+                + "&after=" + mvcConversionService.convert
+                (
+                    new Cursor
+                    (
+                        LadderMatchDAO.createCursorPosition
+                        (
+                            now.plusSeconds(1),
+                            BaseMatch.MatchType._1V1,
+                            1,
+                            Region.US
+                        ),
+                        NavigationDirection.FORWARD
+                    ),
+                    String.class
+                )
         ).result();
         assertEquals(10, matches.size());
         verifyRatingChange(matches.get(0), 5);

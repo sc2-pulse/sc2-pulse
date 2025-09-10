@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
@@ -26,9 +27,18 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
+import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
+import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
+import com.nephest.battlenet.sc2.model.navigation.Position;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.validation.Version;
+import jakarta.validation.Valid;
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -41,7 +51,9 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @Repository
 public class LadderMatchDAO
 {
@@ -117,7 +129,17 @@ public class LadderMatchDAO
             + "id "
             + "FROM participant_filter "
             + "INNER JOIN match USING(date, type, map_id, region) "
-            + "WHERE (date, type, map_id, region) %1$s (:dateCursor, :typeCursor, :mapIdCursor, :regionCursor) "
+            + "WHERE "
+            + "( "
+                + "( "
+                    + ":dateCursor::timestamp with time zone IS NULL "
+                    + "AND :typeCursor::smallint IS NULL "
+                    + "AND :mapIdCursor::integer IS NULL "
+                    + "AND :regionCursor::smallint IS NULL "
+                + ") "
+                + "OR (date, type, map_id, region) "
+                    + "%1$s (:dateCursor, :typeCursor, :mapIdCursor, :regionCursor) "
+            + ") "
             + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) "
             + "ORDER BY date %2$s, type %2$s, map_id %2$s, region %2$s "
             + "LIMIT :limit"
@@ -276,6 +298,8 @@ public class LadderMatchDAO
 
     private static ResultSetExtractor<LadderMatchParticipant> PARTICIPANT_EXTRACTOR;
     private static ResultSetExtractor<List<LadderMatch>> MATCHES_EXTRACTOR;
+
+    public static final long CURSOR_POSITION_VERSION = 1L;
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -442,6 +466,77 @@ public class LadderMatchDAO
         return new PagedSearchResult<>(null, (long) limit, finalPage, matches);
     }
 
+    public CursorNavigableResult<List<LadderMatch>> findMatchesByCharacterIds
+    (
+        Set<Long> characterIds,
+        @Valid @Version(CURSOR_POSITION_VERSION) Cursor cursor,
+        int limit,
+        Set<BaseMatch.MatchType> types
+    )
+    {
+        if(characterIds.isEmpty()) return CursorNavigableResult.emptyList();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("playerCharacterIds", characterIds)
+            .addValue("limit", limit);
+        addMatchCursorParams(cursor, types, params);
+
+        NavigationDirection direction = cursor != null
+            ? cursor.direction()
+            : NavigationDirection.FORWARD;
+        String q = CursorUtil.formatCursorNavigableQuery
+        (
+            FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE,
+            SortingOrder.DESC,
+            direction,
+            false
+        );
+        List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
+        if(direction == NavigationDirection.BACKWARD) Collections.reverse(matches);
+        return CursorNavigableResult.wrap
+        (
+            matches,
+            limit,
+            cursor == null,
+            LadderMatchDAO::createCursorPosition
+        );
+    }
+
+    public static Position createCursorPosition
+    (
+        OffsetDateTime dateCursor,
+        BaseMatch.MatchType typeCursor,
+        int mapCursor,
+        Region regionCursor
+    )
+    {
+        return new Position
+        (
+            CURSOR_POSITION_VERSION,
+            List.of
+            (
+                dateCursor.toString(),
+                typeCursor.getId(),
+                mapCursor,
+                regionCursor.getId()
+            )
+        );
+    }
+
+    public static Position createCursorPosition(LadderMatch match)
+    {
+        if(match == null) return null;
+
+        return createCursorPosition
+        (
+            match.getMatch().getDate(),
+            match.getMatch().getType(),
+            match.getMatch().getMapId(),
+            match.getMatch().getRegion()
+        );
+    }
+
+
     public PagedSearchResult<List<LadderMatch>> findTwitchVods
     (
         Race race, Race versusRace,
@@ -489,6 +584,50 @@ public class LadderMatchDAO
         );
         List<LadderMatch> matches = template.query(FIND_TWITCH_VODS, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
+    }
+
+    private MapSqlParameterSource addMatchCursorParams
+    (
+        Cursor cursor,
+        Set<BaseMatch.MatchType> types,
+        MapSqlParameterSource params
+    )
+    {
+        if(cursor == null)
+        {
+            params.addValue("dateCursor", null, Types.TIMESTAMP_WITH_TIMEZONE)
+                .addValue("typeCursor", null, Types.SMALLINT)
+                .addValue("mapIdCursor", null, Types.INTEGER)
+                .addValue("regionCursor", null, Types.SMALLINT);
+        }
+        else
+        {
+            params.addValue
+            (
+                "dateCursor",
+                OffsetDateTime.parse((String) cursor.position().anchor().get(0)),
+                Types.TIMESTAMP_WITH_TIMEZONE
+            )
+                .addValue("typeCursor", cursor.position().anchor().get(1), Types.SMALLINT)
+                .addValue("mapIdCursor", cursor.position().anchor().get(2), Types.INTEGER)
+                .addValue("regionCursor", cursor.position().anchor().get(3), Types.SMALLINT);
+        }
+        return params.addValue
+        (
+            "types",
+            types.stream()
+                .map(t->conversionService.convert(t, Integer.class))
+                .toArray(Integer[]::new)
+        )
+            .addValue
+            (
+                "cheaterReportType",
+                conversionService.convert
+                (
+                    PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+                    Integer.class
+                )
+            );
     }
 
     private MapSqlParameterSource addMatchCursorParams

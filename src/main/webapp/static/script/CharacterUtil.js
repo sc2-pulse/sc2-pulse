@@ -1776,7 +1776,7 @@ class CharacterUtil
         const pane = document.querySelector("#player-stats-matches");
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
         const characterId = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id;
-        const matches = commonCharacter.matches;
+        const matches = commonCharacter.matches.result;
 
         tabNav.classList.remove("d-none");
         pane.classList.remove("d-none");
@@ -1902,35 +1902,38 @@ class CharacterUtil
     {
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
         if(!commonCharacter.matches) CharacterUtil.resetNextMatchesView();
-        const lastMatch = commonCharacter.matches ? commonCharacter.matches[commonCharacter.matches.length - 1] : null;
         let type = localStorage.getItem("matches-type") || "all";
         if(type == "all") type = null;
+        const cursorToken = commonCharacter.matches?.navigation?.after;
         return CharacterUtil.updateNextMatchesModel(
             Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id,
             type,
-            lastMatch?.match.date, lastMatch?.match.type, lastMatch?.map.id
+            cursorToken != null ? new Cursor(cursorToken, NAVIGATION_DIRECTION.FORWARD) : null
         ).then(matches => {
-            if(matches && matches.length > 0) CharacterUtil.updateCharacterMatchesView();
-            const cursorIsComplete = !matches || matches.length < MATCH_BATCH_SIZE;
+            if(matches?.result?.length > 0) CharacterUtil.updateCharacterMatchesView();
+            const cursorIsComplete = matches?.navigation?.after == null;
             return {data: matches, status: cursorIsComplete ? LOADING_STATUS.COMPLETE : LOADING_STATUS.NONE};
          });
     }
 
-    static updateNextMatchesModel(id, type, dateCursor, typeCursor, mapCursor)
+    static updateNextMatchesModel(id, type, cursor)
     {
         const params = new URLSearchParams();
         params.append("characterId", id);
         if(type) params.append("type", type);
-        if(dateCursor) params.append("dateCursor", dateCursor);
-        if(typeCursor) params.append("typeCursor", typeCursor);
-        if(mapCursor) params.append("mapCursor", mapCursor);
+        if(cursor != null) params.append(cursor.direction.relativePosition, cursor.token);
         return GroupUtil.getMatches(params)
             .then(matches => {
                 if(matches?.result?.length > 0) {
                     const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-                    commonCharacter.matches = commonCharacter.matches ? commonCharacter.matches.concat(matches.result) : matches.result;
+                    if(commonCharacter.matches != null) {
+                        commonCharacter.matches.navigation = matches.navigation;
+                        commonCharacter.matches.result = commonCharacter.matches.result.concat(matches.result)
+                    } else {
+                         commonCharacter.matches = matches;
+                    }
                 }
-                return matches?.result;
+                return matches;
             });
     }
 
