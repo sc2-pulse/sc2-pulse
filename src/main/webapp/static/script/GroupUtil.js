@@ -315,11 +315,8 @@ class GroupUtil
     static createClanHistoryParams(clanHistory, varModel)
     {
         const params = new URLSearchParams(varModel.groupParams);
-        if(clanHistory && clanHistory.events && clanHistory.events.length > 0) {
-            const cursor = clanHistory.events[clanHistory.events.length - 1];
-            params.append("createdCursor", cursor.created);
-            params.append("characterIdCursor", cursor.playerCharacterId);
-        }
+        const forwardToken = clanHistory?.navigation?.[NAVIGATION_DIRECTION.FORWARD.relativePosition];
+        if(forwardToken != null) params.append(NAVIGATION_DIRECTION.FORWARD.relativePosition, forwardToken);
         return params;
     }
 
@@ -327,21 +324,29 @@ class GroupUtil
     {
         const view = ViewUtil.getView(section);
         const container = section.querySelector(":scope .group-clan");
-        const clanHistory = Model.DATA.get(view).get(VIEW_DATA.SEARCH).clanHistory;
+        const searchData = Model.DATA.get(view).get(VIEW_DATA.SEARCH);
         const varModel = Model.DATA.get(view).get(VIEW_DATA.VAR);
-        const params = GroupUtil.createClanHistoryParams(clanHistory, varModel);
+        const params = GroupUtil.createClanHistoryParams(searchData.clanHistory, varModel);
 
         return GroupUtil.getClanHistory(params)
             .then(response=>{
-                if(!response) {
+                if(response?.result == null) {
                     return {status: LOADING_STATUS.COMPLETE};
                 }
-                GroupUtil.mapClanHistory(response);
-                Model.DATA.get(view).get(VIEW_DATA.SEARCH).clanHistory = clanHistory
-                    ? Util.addAllCollections(response, clanHistory)
-                    : response;
-                ClanUtil.updateClanHistoryTable(container.querySelector(":scope .clan-history"), response);
-                return {data: response, status: LOADING_STATUS.NONE}
+                GroupUtil.mapClanHistory(response.result);
+                if(searchData.clanHistory != null) {
+                    searchData.clanHistory.result = Util.addAllCollections(response.result, searchData.clanHistory.result);
+                    searchData.clanHistory.navigation = response.navigation;
+                } else {
+                    searchData.clanHistory = response;
+                }
+                ClanUtil.updateClanHistoryTable(container.querySelector(":scope .clan-history"), response.result);
+                return {
+                    data: response,
+                    status: response?.navigation?.[NAVIGATION_DIRECTION.FORWARD.relativePosition] == null
+                        ? LOADING_STATUS.COMPLETE
+                        : LOADING_STATUS.NONE
+                 }
             });
     }
 

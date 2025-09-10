@@ -1,11 +1,21 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
+import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
+import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
+import com.nephest.battlenet.sc2.model.navigation.Position;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.validation.Version;
+import jakarta.validation.Valid;
+import java.sql.Types;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,8 +27,10 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.validation.annotation.Validated;
 
 @Repository
+@Validated
 public class ClanMemberEventDAO
 {
 
@@ -83,21 +95,31 @@ public class ClanMemberEventDAO
         + "END != type "
         + "OR (previous_clan_id IS NULL AND type = 1)";
 
+    private static final String CURSOR_TEMPLATE =
+        """
+        (
+            (
+                :createdCursor::timestamp with time zone IS NULL
+                AND :playerCharacterIdCursor::bigint IS NULL
+            )
+            OR (created, player_character_id) %1$s (:createdCursor, :playerCharacterIdCursor)
+        )
+       """;
     /*
         It seems that an additional filter can be applied here: select UID instead of STD_SELECT
         and then do limited STD_SELECT from the joined table.
         In practice, the queries that will be executed will rarely benefit from this optimization,
         so it only leads to redundant index scan in most cases.
      */
-    private static final String FIND =
+    private static final String FIND_TEMPLATE =
         "("
             + "SELECT " + STD_SELECT
             + "FROM clan_member_event "
             + "WHERE "
-            + "(created, player_character_id) < (:createdCursor, :playerCharacterIdCursor) "
+            + CURSOR_TEMPLATE
             + "AND (array_length(:playerCharacterIds::integer[], 1) IS NOT NULL "
             + "AND player_character_id = ANY(:playerCharacterIds)) "
-            + "ORDER BY created DESC, player_character_id DESC "
+            + "ORDER BY created %2$s, player_character_id %2$s "
             + "LIMIT :limit "
         + ") "
 
@@ -107,18 +129,20 @@ public class ClanMemberEventDAO
             + "SELECT " + STD_SELECT
             + "FROM clan_member_event "
             + "WHERE "
-            + "(created, player_character_id) < (:createdCursor, :playerCharacterIdCursor) "
+            + CURSOR_TEMPLATE
             + "AND (array_length(:clanIds::integer[], 1) IS NOT NULL "
             + "AND clan_id = ANY(:clanIds)) "
-            + "ORDER BY created DESC, player_character_id DESC "
+            + "ORDER BY created %2$s, player_character_id %2$s "
             + "LIMIT :limit "
         + ") "
 
-        + "ORDER BY \"clan_member_event.created\" DESC, "
-        + "\"clan_member_event.player_character_id\" DESC "
+        + "ORDER BY \"clan_member_event.created\" %2$s, "
+        + "\"clan_member_event.player_character_id\" %2$s "
         + "LIMIT :limit";
 
     private static RowMapper<ClanMemberEvent> STD_ROW_MAPPER;
+
+    public static final long CURSOR_POSITION_VERSION = 1L;
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -188,7 +212,74 @@ public class ClanMemberEventDAO
             .addValue("createdCursor", createdCursor)
             .addValue("playerCharacterIdCursor", playerCharacterIdCursor)
             .addValue("limit", limit);
-        return template.query(FIND, params, STD_ROW_MAPPER);
+        return template.query(FIND_TEMPLATE.formatted("<", "DESC"), params, STD_ROW_MAPPER);
+    }
+
+    public CursorNavigableResult<List<ClanMemberEvent>> find
+    (
+        Set<Long> playerCharacterIds,
+        Set<Integer> clanIds,
+        @Valid @Version(CURSOR_POSITION_VERSION) Cursor cursor,
+        int limit
+    )
+    {
+        if((playerCharacterIds.isEmpty() && clanIds.isEmpty()) || limit < 1)
+            return CursorNavigableResult.emptyList();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("playerCharacterIds", playerCharacterIds.toArray(Long[]::new))
+            .addValue("clanIds", clanIds.toArray(Integer[]::new))
+            .addValue
+            (
+                "createdCursor",
+                cursor != null
+                    ? OffsetDateTime.parse((String) cursor.position().anchor().get(0))
+                    : null,
+                Types.TIMESTAMP_WITH_TIMEZONE
+            )
+            .addValue
+            (
+                "playerCharacterIdCursor",
+                cursor != null ? cursor.position().anchor().get(1) : null,
+                Types.BIGINT
+            )
+            .addValue("limit", limit);
+
+        NavigationDirection direction = cursor != null
+            ? cursor.direction()
+            : NavigationDirection.FORWARD;
+        String q = CursorUtil.formatCursorNavigableQuery
+        (
+            FIND_TEMPLATE,
+            SortingOrder.DESC,
+            direction,
+            false
+        );
+        List<ClanMemberEvent> events = template.query(q, params, STD_ROW_MAPPER);
+        if(direction == NavigationDirection.BACKWARD) Collections.reverse(events);
+        return CursorNavigableResult.wrap
+        (
+            events,
+            limit,
+            cursor == null,
+            ClanMemberEventDAO::createCursorPosition
+        );
+    }
+
+    public static Position createCursorPosition(OffsetDateTime createdCursor, long characterId)
+    {
+        return new Position
+        (
+            CURSOR_POSITION_VERSION,
+            List.of(createdCursor.toString(), characterId)
+        );
+    }
+
+    public static Position createCursorPosition(ClanMemberEvent event)
+    {
+        if(event == null) return null;
+
+        return createCursorPosition(event.getCreated(), event.getPlayerCharacterId());
     }
 
 }

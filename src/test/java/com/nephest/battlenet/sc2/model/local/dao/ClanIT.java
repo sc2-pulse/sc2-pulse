@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
@@ -28,6 +29,7 @@ import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.web.service.ClanService;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -292,16 +294,16 @@ public class ClanIT
         assertEquals(2L, chars[1].getMembers().getCharacter().getId());
         assertEquals(1L, chars[2].getMembers().getCharacter().getId());
 
-        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<LadderClanMemberEvents> evts = objectMapper.readValue(mvc.perform
         (
             get("/api/clan-histories")
                 .queryParam("clanId", String.valueOf(clan.getId()))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
-        evts.getCharacters().sort(Comparator.comparing(c->c.getMembers().getCharacter().getId()));
-        Assertions.assertThat(evts)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        evts.result().getCharacters().sort(Comparator.comparing(c->c.getMembers().getCharacter().getId()));
+        Assertions.assertThat(evts.result())
             .usingRecursiveComparison()
             .ignoringFields("events.created")
             .isEqualTo
@@ -362,16 +364,16 @@ public class ClanIT
         clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan2, start.minusSeconds(1))));
         clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan3, start.plusSeconds(1))));
 
-        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<LadderClanMemberEvents> evts = objectMapper.readValue(mvc.perform
         (
             get("/api/clan-histories")
                 .queryParam("characterId", "1")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
-        evts.getClans().sort(Comparator.comparing(Clan::getTag));
-        Assertions.assertThat(evts)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        evts.result().getClans().sort(Comparator.comparing(Clan::getTag));
+        Assertions.assertThat(evts.result())
             .usingRecursiveComparison()
             .ignoringFields("events.created", "events.secondsSincePrevious")
             .isEqualTo
@@ -455,7 +457,7 @@ public class ClanIT
         );
         clanService.removeExpiredClanMembers();
 
-        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<LadderClanMemberEvents> evts = objectMapper.readValue(mvc.perform
         (
             get("/api/clan-histories")
                 .queryParam
@@ -469,11 +471,11 @@ public class ClanIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
-        evts.getEvents().sort(Comparator.comparing(ClanMemberEvent::getPlayerCharacterId)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        evts.result().getEvents().sort(Comparator.comparing(ClanMemberEvent::getPlayerCharacterId)
             .thenComparing(ClanMemberEvent::getCreated, Comparator.reverseOrder()));
-        evts.getClans().sort(Comparator.comparing(Clan::getTag));
-        Assertions.assertThat(evts)
+        evts.result().getClans().sort(Comparator.comparing(Clan::getTag));
+        Assertions.assertThat(evts.result())
             .usingRecursiveComparison()
             .ignoringFields("events.created", "events.secondsSincePrevious")
             .isEqualTo

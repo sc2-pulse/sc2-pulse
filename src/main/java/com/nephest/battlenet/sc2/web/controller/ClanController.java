@@ -9,15 +9,15 @@ import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
-import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,23 +89,25 @@ public class ClanController
         @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds,
         @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds,
         @RequestParam(name = "toonHandle", required = false, defaultValue = "") Set<PlayerCharacterNaturalId> toonHandles,
-        @RequestParam(name = "createdCursor", required = false) OffsetDateTime createdCursor,
-        @RequestParam(name = "characterIdCursor", required = false, defaultValue = Long.MAX_VALUE + "") Long characterIdCursor,
+        @Version(ClanMemberEventDAO.CURSOR_POSITION_VERSION) Cursor cursor,
         @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "") Integer limit
     )
     {
         if(limit > CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
             return ResponseEntity.badRequest().body("Max page size exceeded: " + CLAN_MEMBER_EVENT_PAGE_SIZE_MAX);
-        OffsetDateTime cCursor = createdCursor != null ? createdCursor : SC2Pulse.offsetDateTime();
         return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
-            .orElseGet(()->ResponseEntity.of(ladderClanMemberEventDAO.find
-            (
-                resolver.resolve(characterIds, Set.of(), proPlayerIds, accountIds, toonHandles),
-                clanIds,
-                cCursor,
-                characterIdCursor,
-                limit
-            )));
+            .orElseGet(()->{
+                CursorNavigableResult<LadderClanMemberEvents> evts = ladderClanMemberEventDAO.find
+                (
+                    resolver.resolve(characterIds, Set.of(), proPlayerIds, accountIds, toonHandles),
+                    clanIds,
+                    cursor,
+                    limit
+                );
+                return evts.result() == null
+                    ? ResponseEntity.notFound().build()
+                    : ResponseEntity.ok().body(evts);
+            });
     }
 
 }

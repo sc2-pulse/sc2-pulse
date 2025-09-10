@@ -6,10 +6,11 @@ package com.nephest.battlenet.sc2.web.service;
 import static com.nephest.battlenet.sc2.model.local.ClanMemberEvent.EventType.JOIN;
 import static com.nephest.battlenet.sc2.model.local.ClanMemberEvent.EventType.LEAVE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
@@ -29,6 +30,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -44,8 +46,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -76,6 +80,9 @@ public class ClanMemberEventIT
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired @Qualifier("mvcConversionService")
+    private ConversionService mvcConversionService;
 
     @Autowired
     private MockMvc mvc;
@@ -155,7 +162,7 @@ public class ClanMemberEventIT
             new ClanMemberEvent(characters[2].getId(), clans[1].getId(), JOIN, odt2)
         ));
 
-        LadderClanMemberEvents evts1 = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<LadderClanMemberEvents> evts1 = objectMapper.readValue(mvc.perform
         (
             get("/api/clan-histories")
                 .queryParam
@@ -175,50 +182,51 @@ public class ClanMemberEventIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
-        evts1.getCharacters().sort(Comparator.comparing(c->c.getMembers().getCharacter().getId()));
-        Assertions.assertThat(evts1).usingRecursiveComparison().isEqualTo
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        evts1.result().getCharacters().sort(Comparator.comparing(
+            c->c.getMembers().getCharacter().getId()));
+        LadderClanMemberEvents firstEvents = new LadderClanMemberEvents
         (
-            new LadderClanMemberEvents
+            List.of
             (
-                List.of
+                createCharacter(clans[0], 0),
+                createCharacter(clans[0], 1)
+            ),
+            List.of(clans[0], clans[1]),
+            List.of
+            (
+                new ClanMemberEvent
                 (
-                    createCharacter(clans[0], 0),
-                    createCharacter(clans[0], 1)
+                    characters[1].getId(),
+                    clans[1].getId(),
+                    JOIN,
+                    odt2,
+                    0
                 ),
-                List.of(clans[0], clans[1]),
-                List.of
+                new ClanMemberEvent
                 (
-                    new ClanMemberEvent
-                    (
-                        characters[1].getId(),
-                        clans[1].getId(),
-                        JOIN,
-                        odt2,
-                        0
-                    ),
-                    new ClanMemberEvent
-                    (
-                        characters[0].getId(),
-                        clans[0].getId(),
-                        LEAVE,
-                        odt2,
-                        secondsSincePrevious
-                    ),
-                    new ClanMemberEvent
-                    (
-                        characters[1].getId(),
-                        clans[0].getId(),
-                        LEAVE,
-                        odt2.minus(Duration.ofMillis(1)),
-                        secondsSincePrevious
-                    )
+                    characters[0].getId(),
+                    clans[0].getId(),
+                    LEAVE,
+                    odt2,
+                    secondsSincePrevious
+                ),
+                new ClanMemberEvent
+                (
+                    characters[1].getId(),
+                    clans[0].getId(),
+                    LEAVE,
+                    odt2.minus(Duration.ofMillis(1)),
+                    secondsSincePrevious
                 )
             )
         );
+        Assertions.assertThat(evts1.result())
+            .usingRecursiveComparison()
+            .isEqualTo(firstEvents);
 
         //next page
-        LadderClanMemberEvents evts2 = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<LadderClanMemberEvents> evts2 = objectMapper.readValue(mvc.perform
         (
             get("/api/clan-histories")
                 .queryParam
@@ -236,20 +244,16 @@ public class ClanMemberEventIT
                 )
                 .queryParam
                 (
-                    "characterIdCursor",
-                    String.valueOf(evts1.getEvents().get(2).getPlayerCharacterId())
-                )
-                .queryParam
-                (
-                    "createdCursor",
-                    evts1.getEvents().get(2).getCreated().toString()
+                    "after",
+                    mvcConversionService.convert(evts1.navigation().after(), String.class)
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
-        evts2.getCharacters().sort(Comparator.comparing(c->c.getMembers().getCharacter().getId()));
-        Assertions.assertThat(evts2).usingRecursiveComparison().isEqualTo
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        evts2.result().getCharacters().sort(Comparator.comparing(
+            c->c.getMembers().getCharacter().getId()));
+        Assertions.assertThat(evts2.result()).usingRecursiveComparison().isEqualTo
         (
             new LadderClanMemberEvents
             (
@@ -315,8 +319,10 @@ public class ClanMemberEventIT
         );
 
         //next page, empty
-        mvc.perform
-        (
+        assertNull(evts2.navigation().after());
+
+        //prev page
+        CursorNavigableResult<LadderClanMemberEvents> backwardResult = objectMapper.readValue(mvc.perform(
             get("/api/clan-histories")
                 .queryParam
                 (
@@ -333,18 +339,18 @@ public class ClanMemberEventIT
                 )
                 .queryParam
                 (
-                    "characterIdCursor",
-                    String.valueOf(evts2.getEvents().get(4).getPlayerCharacterId())
-                )
-                .queryParam
-                (
-                    "createdCursor",
-                    evts2.getEvents().get(4).getCreated().toString()
+                    "before",
+                    mvcConversionService.convert(evts2.navigation().before(), String.class)
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
-            .andExpect(status().isNotFound())
-            .andExpect(content().string(""));
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        backwardResult.result().getCharacters().sort(Comparator.comparing(
+            c->c.getMembers().getCharacter().getId()));
+        Assertions.assertThat(backwardResult.result())
+            .usingRecursiveComparison()
+            .isEqualTo(firstEvents);
     }
 
     @Test
@@ -368,7 +374,7 @@ public class ClanMemberEventIT
             new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt3)
         ));
 
-        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<LadderClanMemberEvents> evts = objectMapper.readValue(mvc.perform
         (
             get("/api/clan-histories")
                 .queryParam
@@ -379,8 +385,8 @@ public class ClanMemberEventIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
-        Assertions.assertThat(evts)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(evts.result())
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .isEqualTo
@@ -422,7 +428,7 @@ public class ClanMemberEventIT
             new ClanMemberEvent(characters[0].getId(), clans[1].getId(), JOIN, odt1.plusSeconds(1))
         ))));
 
-        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<LadderClanMemberEvents> evts = objectMapper.readValue(mvc.perform
         (
             get("/api/clan-histories")
                 .queryParam
@@ -433,8 +439,8 @@ public class ClanMemberEventIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
-        Assertions.assertThat(evts)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(evts.result())
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .isEqualTo
@@ -476,7 +482,7 @@ public class ClanMemberEventIT
             new ClanMemberEvent(characters[0].getId(), clans[1].getId(), JOIN, odt3)
         )));
 
-        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
+        CursorNavigableResult<LadderClanMemberEvents> evts = objectMapper.readValue(mvc.perform
         (
             get("/api/clan-histories")
                 .queryParam
@@ -487,8 +493,8 @@ public class ClanMemberEventIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
-        Assertions.assertThat(evts)
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(evts.result())
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .isEqualTo
