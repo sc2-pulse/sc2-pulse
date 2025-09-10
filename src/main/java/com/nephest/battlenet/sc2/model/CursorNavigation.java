@@ -16,4 +16,8 @@ public record CursorNavigation
     @Nullable @JsonSerialize(using = CursorToPositionStringSerializer.class) Cursor before,
     @Nullable @JsonSerialize(using = CursorToPositionStringSerializer.class) Cursor after
 )
-{}
+{
+
+    public static final CursorNavigation EMPTY = new CursorNavigation(null, null);
+
+}

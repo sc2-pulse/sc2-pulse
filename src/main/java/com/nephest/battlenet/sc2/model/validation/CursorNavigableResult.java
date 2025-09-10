@@ -15,6 +15,20 @@ import java.util.function.Function;
 public record CursorNavigableResult<T>(@Nullable T result, @NotNull CursorNavigation navigation)
 {
 
+    private static final CursorNavigableResult<Object> EMPTY_VALUE
+        = new CursorNavigableResult<>(null, CursorNavigation.EMPTY);
+
+    public static <T> CursorNavigableResult<List<T>> emptyList()
+    {
+        return new CursorNavigableResult<>(List.of(), CursorNavigation.EMPTY);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> CursorNavigableResult<T> emptyValue()
+    {
+        return (CursorNavigableResult<T>) EMPTY_VALUE;
+    }
+
     public static <T> CursorNavigation createNavigation
     (
         List<T> data,
