@@ -3,15 +3,12 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
-import com.nephest.battlenet.sc2.model.BaseMatch;
-import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.Race;
-import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
-import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
-import java.time.OffsetDateTime;
+import com.nephest.battlenet.sc2.model.validation.Version;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,10 +27,7 @@ public class MatchController
     @GetMapping(value = "/matches", params = "vod")
     public CursorNavigableResult<List<LadderMatch>> getVods
     (
-        @RequestParam(value = "dateCursor", required = false) OffsetDateTime dateCursor,
-        @RequestParam(value = "typeCursor", defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
-        @RequestParam(value = "mapCursor", defaultValue = "0") int mapCursor,
-        @RequestParam(value = "regionCursor", defaultValue = "US") Region regionCursor,
+        @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor,
         @RequestParam(value = "race", required = false) Race race,
         @RequestParam(value = "versusRace", required = false) Race versusRace,
         @RequestParam(value = "minRating", required = false) Integer minRating,
@@ -44,21 +38,15 @@ public class MatchController
         @RequestParam(value = "map", required = false) Integer map
     )
     {
-        if(dateCursor == null) dateCursor = SC2Pulse.offsetDateTime();
-        return new CursorNavigableResult<>(ladderMatchDAO.findTwitchVods
+        return ladderMatchDAO.findTwitchVods
         (
             race, versusRace,
             minRating, maxRating,
             minDuration, maxDuration,
             includeSubOnly,
             map,
-            dateCursor,
-            typeCursor,
-            mapCursor,
-            regionCursor,
-            2,
-            1
-        ).getResult(), new CursorNavigation(null, null));
+            cursor
+        );
     }
 
 }

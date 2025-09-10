@@ -4,11 +4,10 @@
 class VODUtil
 {
 
-    static getMatches(params, dateCursor, mapCursor)
+    static getMatches(params, cursor)
     {
         const cursorParams = new URLSearchParams(params);
-        cursorParams.append("dateCursor", dateCursor);
-        cursorParams.append("mapCursor", mapCursor);
+        if(cursor != null) cursorParams.append(cursor.direction.relativePosition, cursor.token);
         cursorParams.append("vod", "");
         const request = `${ROOT_CONTEXT_PATH}api/matches?${cursorParams.toString()}`;
         return Session.beforeRequest()
@@ -16,17 +15,18 @@ class VODUtil
            .then(Session.verifyJsonResponse);
     }
 
-    static updateModel(params, dateCursor = Util.currentISODateTimeString(), mapCursor = 0)
+    static updateModel(params, cursor = null)
     {
         if(params.get("minDuration")) params.set("minDuration", params.get("minDuration") * 60);
         if(params.get("maxDuration")) params.set("maxDuration", params.get("maxDuration") * 60);
-        return VODUtil.getMatches(params, dateCursor, mapCursor)
+        return VODUtil.getMatches(params, cursor)
             .then(json=>{
-                if(mapCursor == 0) {
+                if(cursor == null) {
                     Model.DATA.get(VIEW.VOD_SEARCH).set(VIEW_DATA.SEARCH, json);
                 } else {
                     const data = Model.DATA.get(VIEW.VOD_SEARCH).get(VIEW_DATA.SEARCH);
                     data.result = data.result.concat(json.result);
+                    data.navigation = json.navigation;
                 }
                 Model.DATA.get(VIEW.VOD_SEARCH).set(VIEW_DATA.VAR, {params: params});
                 if(json.result.length < MATCH_BATCH_SIZE){
@@ -52,10 +52,10 @@ class VODUtil
         return Promise.resolve();
     }
 
-    static update(params, dateCursor = Util.currentISODateTimeString(), mapCursor = 0)
+    static update(params, cursor = null)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return VODUtil.updateModel(params, dateCursor, mapCursor)
+        return VODUtil.updateModel(params, cursor)
             .then(VODUtil.updateView)
             .then(e=>{
                 Util.setGeneratingStatus(STATUS.SUCCESS);
@@ -72,9 +72,12 @@ class VODUtil
     static loadNextMatches(evt)
     {
         evt.preventDefault();
-        const matches = Model.DATA.get(VIEW.VOD_SEARCH).get(VIEW_DATA.SEARCH).result;
-        const lastMatch = matches[matches.length - 1];
-        VODUtil.update(Model.DATA.get(VIEW.VOD_SEARCH).get(VIEW_DATA.VAR).params, lastMatch.match.date, lastMatch.map.id);
+        const forwardToken = Model.DATA.get(VIEW.VOD_SEARCH).get(VIEW_DATA.SEARCH)
+            .navigation[NAVIGATION_DIRECTION.FORWARD.relativePosition];
+        VODUtil.update(
+            Model.DATA.get(VIEW.VOD_SEARCH).get(VIEW_DATA.VAR).params,
+            forwardToken != null ? new Cursor(forwardToken, NAVIGATION_DIRECTION.FORWARD) : null
+        );
     }
 
     static enhance()

@@ -39,6 +39,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -151,15 +152,23 @@ public class LadderMatchDAO
     public static String FIND_MATCHES_BY_CHARACTER_ID_REVERSED =
         String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC");
 
-    private static final String FIND_TWITCH_VODS =
-        String.format
-        (
+    private static final String FIND_TWITCH_VODS_TEMPLATE =
         "WITH match_filter AS "
         + "("
             + "SELECT id "
             + "FROM match "
             + "WHERE vod = true "
-            + "AND (date, type, map_id, region) < (:dateCursor, :typeCursor, :mapIdCursor, :regionCursor) "
+            + "AND "
+            + "( "
+                + "( "
+                    + ":dateCursor::timestamp with time zone IS NULL "
+                    + "AND :typeCursor::smallint IS NULL "
+                    + "AND :mapIdCursor::integer IS NULL "
+                    + "AND :regionCursor::smallint IS NULL "
+                + ") "
+                + "OR (date, type, map_id, region) "
+                + "%1$s (:dateCursor, :typeCursor, :mapIdCursor, :regionCursor) "
+            + ") "
             + "AND (:mapId::integer IS NULL OR map_id = :mapId) "
             + "AND (:minDuration::integer IS NULL OR duration >= :minDuration) "
             + "AND (:maxDuration::integer IS NULL OR duration <= :maxDuration) "
@@ -168,11 +177,9 @@ public class LadderMatchDAO
             + "AND (:raceVod::text IS NULL OR race_vod LIKE :raceVod) "
             + "AND (:race::text IS NULL OR race LIKE :race) "
             + "AND (:includeSubOnly = true OR sub_only_vod = false) "
-            + "ORDER BY date DESC, type DESC, map_id DESC, region DESC "
+            + "ORDER BY date %2$s, type %2$s, map_id %2$s, region %2$s "
             + "LIMIT :limit "
-        + ") " + FIND_MATCHES_TEMPLATE,
-            "<", "DESC"
-        );
+        + ") " + FIND_MATCHES_TEMPLATE;
 
     private static final String VERSUS_FILTER_TEMPLATE =
         "WITH "
@@ -582,8 +589,67 @@ public class LadderMatchDAO
             new BaseMatch.MatchType[]{BaseMatch.MatchType._1V1},
             params
         );
-        List<LadderMatch> matches = template.query(FIND_TWITCH_VODS, params, MATCHES_EXTRACTOR);
+        String q = String.format(FIND_TWITCH_VODS_TEMPLATE, "<", "DESC");
+        List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
+    }
+
+    public CursorNavigableResult<List<LadderMatch>> findTwitchVods
+    (
+        Race race, Race versusRace,
+        Integer minRating, Integer maxRating,
+        Integer minDuration, Integer maxDuration,
+        boolean includeSubOnly,
+        Integer mapId,
+        @Valid @Version(CURSOR_POSITION_VERSION) Cursor cursor
+    )
+    {
+        String raceStr = Stream.of(race, versusRace)
+            .filter(Objects::nonNull)
+            .mapToInt(r->conversionService.convert(r, Integer.class))
+            .sorted()
+            .mapToObj(String::valueOf)
+            .collect(Collectors.joining(""));
+        raceStr = raceStr.isEmpty() ? null : "%" + raceStr + "%";
+        String raceVodStr = race == null
+            ? null
+            : "%" + conversionService.convert(race, Integer.class) + "%";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("matchType", conversionService.convert(BaseMatch.MatchType._1V1, Integer.class))
+            .addValue("raceVod", raceVodStr)
+            .addValue("race", raceStr)
+            .addValue("minRating", minRating)
+            .addValue("maxRating", maxRating)
+            .addValue("minDuration", minDuration)
+            .addValue("maxDuration", maxDuration)
+            .addValue("includeSubOnly", includeSubOnly)
+            .addValue("mapId", mapId)
+            .addValue("limit", getResultsPerPage());
+        addMatchCursorParams
+        (
+            cursor,
+            EnumSet.of(BaseMatch.MatchType._1V1),
+            params
+        );
+        NavigationDirection direction = cursor != null
+            ? cursor.direction()
+            : NavigationDirection.FORWARD;
+        String q = CursorUtil.formatCursorNavigableQuery
+        (
+            FIND_TWITCH_VODS_TEMPLATE,
+            SortingOrder.DESC,
+            direction,
+            false
+        );
+        List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
+        if(direction == NavigationDirection.BACKWARD) Collections.reverse(matches);
+        return CursorNavigableResult.wrap
+        (
+            matches,
+            getResultsPerPage(),
+            cursor == null,
+            LadderMatchDAO::createCursorPosition
+        );
     }
 
     private MapSqlParameterSource addMatchCursorParams
