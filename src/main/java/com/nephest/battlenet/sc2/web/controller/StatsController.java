@@ -40,7 +40,7 @@ public class StatsController
     @GetMapping("/player-base")
     public List<QueueStats> getPlayerBaseStats
     (
-        @RequestParam("queueType") QueueType queueType,
+        @RequestParam("queue") QueueType queueType,
         @RequestParam("teamType") TeamType teamType
     )
     {

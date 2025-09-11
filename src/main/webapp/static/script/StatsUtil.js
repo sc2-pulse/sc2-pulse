@@ -46,7 +46,7 @@ class StatsUtil
     {
         const params = new URLSearchParams(formParams);
         const webParams = new URLSearchParams();
-        webParams.append("queueType", EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT).fullName);
+        webParams.append("queue", EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT).fullName);
         webParams.append("teamType", EnumUtil.enumOfFullName(params.get("teamType"), TEAM_TYPE).fullName);
         const request = `${ROOT_CONTEXT_PATH}api/stats/player-base?${webParams.toString()}`;
         return Session.beforeRequest()
