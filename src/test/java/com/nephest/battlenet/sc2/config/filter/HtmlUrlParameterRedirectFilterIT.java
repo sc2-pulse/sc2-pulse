@@ -48,7 +48,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
-public class CursorParameterRedirectFilterIT
+public class HtmlUrlParameterRedirectFilterIT
 {
 
     @Autowired
@@ -288,6 +288,79 @@ public class CursorParameterRedirectFilterIT
         mvc.perform(builder)
             .andExpect(status().isMovedPermanently())
             .andExpect(header().string("Location", Matchers.allOf(matchers)))
+            .andReturn();
+    }
+
+    @Test
+    public void testClanSearchRangeParametersRedirection()
+    throws Exception
+    {
+        mvc.perform
+        (
+            get("/").queryParam("type", "clan-search")
+                .queryParam("minAvgRating", "1")
+                .queryParam("maxAvgRating", "2")
+                .queryParam("minActiveMembers", "3")
+                .queryParam("maxActiveMembers", "4")
+                .queryParam("minGamesPerActiveMemberPerDay", "5")
+                .queryParam("maxGamesPerActiveMemberPerDay", "6")
+                .contentType(MediaType.TEXT_HTML)
+        )
+            .andExpect(status().isMovedPermanently())
+            .andExpect(header().string(
+                "Location",
+                Matchers.allOf(
+                    Matchers.startsWith("http://localhost/?"),
+                    Matchers.containsString("type=clan-search"),
+                    Matchers.containsString("avgRatingMin=1"),
+                    Matchers.containsString("avgRatingMax=2"),
+                    Matchers.containsString("activeMembersMin=3"),
+                    Matchers.containsString("activeMembersMax=4"),
+                    Matchers.containsString("gamesPerActiveMemberPerDayMin=5"),
+                    Matchers.containsString("gamesPerActiveMemberPerDayMax=6"),
+
+                    Matchers.not(Matchers.containsString("minAvgRating")),
+                    Matchers.not(Matchers.containsString("maxAvgRating")),
+                    Matchers.not(Matchers.containsString("minActiveMembers")),
+                    Matchers.not(Matchers.containsString("maxActiveMembers")),
+                    Matchers.not(Matchers.containsString("minGamesPerActiveMemberPerDay")),
+                    Matchers.not(Matchers.containsString("maxGamesPerActiveMemberPerDay"))
+                )))
+            .andReturn();
+    }
+
+    @Test
+    public void testVodSearchParametersRedirection()
+    throws Exception
+    {
+        mvc.perform
+        (
+            get("/").queryParam("type", "vod-search")
+                .queryParam("minRating", "1")
+                .queryParam("maxRating", "2")
+                .queryParam("minDuration", "3")
+                .queryParam("maxDuration", "4")
+                .queryParam("versusRace", "5")
+                .contentType(MediaType.TEXT_HTML)
+        )
+            .andExpect(status().isMovedPermanently())
+            .andExpect(header().string(
+                "Location",
+                Matchers.allOf(
+                    Matchers.startsWith("http://localhost/?"),
+                    Matchers.containsString("type=vod-search"),
+                    Matchers.containsString("ratingMin=1"),
+                    Matchers.containsString("ratingMax=2"),
+                    Matchers.containsString("durationMin=3"),
+                    Matchers.containsString("durationMax=4"),
+                    Matchers.containsString("raceVersus=5"),
+
+                    Matchers.not(Matchers.containsString("minRating")),
+                    Matchers.not(Matchers.containsString("maxRating")),
+                    Matchers.not(Matchers.containsString("minDuration")),
+                    Matchers.not(Matchers.containsString("maxDuration")),
+                    Matchers.not(Matchers.containsString("versusRace"))
+                )))
             .andReturn();
     }
 

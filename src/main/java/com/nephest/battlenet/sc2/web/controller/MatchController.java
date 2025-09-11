@@ -29,11 +29,11 @@ public class MatchController
     (
         @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor,
         @RequestParam(value = "race", required = false) Race race,
-        @RequestParam(value = "versusRace", required = false) Race versusRace,
-        @RequestParam(value = "minRating", required = false) Integer minRating,
-        @RequestParam(value = "maxRating", required = false) Integer maxRating,
-        @RequestParam(value = "minDuration", required = false) Integer minDuration,
-        @RequestParam(value = "maxDuration", required = false) Integer maxDuration,
+        @RequestParam(value = "raceVersus", required = false) Race versusRace,
+        @RequestParam(value = "ratingMin", required = false) Integer minRating,
+        @RequestParam(value = "ratingMax", required = false) Integer maxRating,
+        @RequestParam(value = "durationMin", required = false) Integer minDuration,
+        @RequestParam(value = "durationMax", required = false) Integer maxDuration,
         @RequestParam(value = "includeSubOnly", defaultValue = "false") boolean includeSubOnly,
         @RequestParam(value = "map", required = false) Integer map
     )

@@ -44,12 +44,12 @@ import java.lang.annotation.Target;
     ),
     @Parameter
     (
-        in = ParameterIn.QUERY, name = "fromSeason",
+        in = ParameterIn.QUERY, name = "seasonMin",
         schema = @Schema(type = "integer", format = "int32", minimum = "0")
     ),
     @Parameter
     (
-        in = ParameterIn.QUERY, name = "toSeason",
+        in = ParameterIn.QUERY, name = "seasonMax",
         schema = @Schema(type = "integer", format = "int32", minimum = "0")
     )
 })

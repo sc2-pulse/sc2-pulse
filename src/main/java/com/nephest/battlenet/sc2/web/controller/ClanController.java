@@ -55,12 +55,12 @@ public class ClanController
         @RequestParam(value = "sort", defaultValue = "-activeMembers")
         @AllowedField({"members", "activeMembers", "gamesPerActiveMemberPerDay", "avgRating"})
         SortParameter sort,
-        @RequestParam(name="minActiveMembers", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) int minActiveMembers,
-        @RequestParam(name="maxActiveMembers", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) int maxActiveMembers,
-        @RequestParam(name="minGamesPerActiveMemberPerDay", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) double minGamesPerActiveMemberPerDay,
-        @RequestParam(name="maxGamesPerActiveMemberPerDay", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) double maxGamesPerActiveMemberPerDay,
-        @RequestParam(name="minAvgRating", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) int minAvgRating,
-        @RequestParam(name="maxAvgRating", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) int maxAvgRating,
+        @RequestParam(name="activeMembersMin", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) int minActiveMembers,
+        @RequestParam(name="activeMembersMax", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) int maxActiveMembers,
+        @RequestParam(name="gamesPerActiveMemberPerDayMin", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) double minGamesPerActiveMemberPerDay,
+        @RequestParam(name="gamesPerActiveMemberPerDayMax", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) double maxGamesPerActiveMemberPerDay,
+        @RequestParam(name="avgRatingMin", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) int minAvgRating,
+        @RequestParam(name="avgRatingMax", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) int maxAvgRating,
         @RequestParam(name="region", required = false) Region region
     )
     {

@@ -787,8 +787,8 @@ class TeamUtil
         const params = new URLSearchParams();
         if(ids) ids.forEach(id=>params.append("id", id));
         if(legacyUids) legacyUids.forEach(l=>params.append("legacyUid", l));
-        if(fromSeason != null) params.append("fromSeason", fromSeason);
-        if(toSeason != null) params.append("toSeason", toSeason);
+        if(fromSeason != null) params.append("seasonMin", fromSeason);
+        if(toSeason != null) params.append("seasonMax", toSeason);
         return params;
     }
 

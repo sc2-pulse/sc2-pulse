@@ -75,15 +75,15 @@ public class FilterConfig
     }
 
     @Bean
-    public FilterRegistrationBean<CursorParameterRedirectFilter> anchorParameterRedirectFilter
+    public FilterRegistrationBean<HtmlUrlParameterRedirectFilter> anchorParameterRedirectFilter
     (
         @Qualifier("mvcConversionService") ConversionService mvcConversionService,
         ObjectMapper objectMapper
     )
     {
-        FilterRegistrationBean<CursorParameterRedirectFilter> registrationBean
+        FilterRegistrationBean<HtmlUrlParameterRedirectFilter> registrationBean
             = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new CursorParameterRedirectFilter(
+        registrationBean.setFilter(new HtmlUrlParameterRedirectFilter(
             mvcConversionService, objectMapper));
         registrationBean.addUrlPatterns("/");
         return registrationBean;

@@ -134,9 +134,9 @@
                 maxCursor=${T(com.nephest.battlenet.sc2.web.controller.ClanController).MAX_ADDITIONAL_CURSOR_FILTER}"
             >
                 <div class="d-inline-block">
-                <div th:replace="~{fragments/search :: search-filter('Active members', 'clan-search-active-members', 'ActiveMembers', ${minCursor}, ${maxCursor}, 1)}"></div>
-                <div th:replace="~{fragments/search :: search-filter('Average MMR', 'clan-search-avg-mmr', 'AvgRating', ${minCursor}, ${maxCursor}, 1)}"></div>
-                <div th:replace="~{fragments/search :: search-filter('Games per active member<br/> per day', 'clan-search-games-per-active-member-per-day', 'GamesPerActiveMemberPerDay', ${minCursor}, ${maxCursor}, 0.1)}"></div>
+                <div th:replace="~{fragments/search :: search-filter('Active members', 'clan-search-active-members', 'activeMembers', ${minCursor}, ${maxCursor}, 1)}"></div>
+                <div th:replace="~{fragments/search :: search-filter('Average MMR', 'clan-search-avg-mmr', 'avgRating', ${minCursor}, ${maxCursor}, 1)}"></div>
+                <div th:replace="~{fragments/search :: search-filter('Games per active member<br/> per day', 'clan-search-games-per-active-member-per-day', 'gamesPerActiveMemberPerDay', ${minCursor}, ${maxCursor}, 0.1)}"></div>
                 </div>
                 <div class="form-group d-inline-block mr-2">
                     <label for="clan-search-region">Region</label>
@@ -333,7 +333,7 @@
                 </div>
                 <div class="form-group d-inline-block mr-2">
                     <label for="vod-search-versus-race">Versus Race</label>
-                    <select id="vod-search-versus-race" class="form-control serializable" name="versusRace">
+                    <select id="vod-search-versus-race" class="form-control serializable" name="raceVersus">
                         <option value="">All</option>
                         <option th:each="type : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
                                 th:value="${type}"
@@ -343,8 +343,8 @@
                     </select>
                 </div>
                 <div class="d-inline-block">
-                    <div th:replace="~{fragments/search :: search-filter('MMR', 'vod-search-rating', 'Rating', 0, ${maxMmr}, 1)}"></div>
-                    <div th:replace="~{fragments/search :: search-filter('Duration(minutes)', 'vod-search-duration', 'Duration', 0, ${maxDuration}, 1)}"></div>
+                    <div th:replace="~{fragments/search :: search-filter('MMR', 'vod-search-rating', 'rating', 0, ${maxMmr}, 1)}"></div>
+                    <div th:replace="~{fragments/search :: search-filter('Duration(minutes)', 'vod-search-duration', 'duration', 0, ${maxDuration}, 1)}"></div>
                 </div>
                 <div class="form-group d-inline-block mr-2">
                     <label for="vod-search-map">Map</label>
@@ -374,7 +374,7 @@
     </section>
     </div>
 </section>
-<div th:fragment="search-filter(name, idRoot, nameSuffix, minValue, maxValue, step)" class="d-inline-block mr-2">
+<div th:fragment="search-filter(name, idRoot, namePrefix, minValue, maxValue, step)" class="d-inline-block mr-2">
     <div th:utext="${name}"></div>
     <div class="form-group d-inline-block">
         <label th:for="|${idRoot}-min|">Min</label>
@@ -383,7 +383,7 @@
                th:max="${maxValue}"
                th:step="${step}"
                th:data-name="|${name} Min|"
-               class="form-control serializable" th:id="|${idRoot}-min|" th:name="|min${nameSuffix}|">
+               class="form-control serializable" th:id="|${idRoot}-min|" th:name="|${namePrefix}Min|">
     </div>
     <div class="form-group d-inline-block">
         <label th:for="|${idRoot}-max|">Max</label>
@@ -394,7 +394,7 @@
                th:data-name="|${name} Max|"
                th:data-greater-than="|#${idRoot}-min|"
                th:data-greater-than-inclusive="true"
-               class="form-control serializable" th:id="|${idRoot}-max|" th:name="|max${nameSuffix}|">
+               class="form-control serializable" th:id="|${idRoot}-max|" th:name="|${namePrefix}Max|">
     </div>
 </div>
 <th:block th:fragment="stream-filters(idSuffix, featured)">

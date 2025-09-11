@@ -17,8 +17,8 @@ class VODUtil
 
     static updateModel(params, cursor = null)
     {
-        if(params.get("minDuration")) params.set("minDuration", params.get("minDuration") * 60);
-        if(params.get("maxDuration")) params.set("maxDuration", params.get("maxDuration") * 60);
+        if(params.get("durationMin")) params.set("durationMin", params.get("durationMin") * 60);
+        if(params.get("durationMax")) params.set("durationMax", params.get("durationMax") * 60);
         return VODUtil.getMatches(params, cursor)
             .then(json=>{
                 if(cursor == null) {

@@ -266,8 +266,8 @@ public class TeamGroupIT
                 String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX),
                 String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)
             )
-            .queryParam("fromSeason", "2")
-            .queryParam("toSeason", String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)))
+            .queryParam("seasonMin", "2")
+            .queryParam("seasonMax", String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), LadderTeam[].class);
         Arrays.sort(result, Comparator.comparing(LadderTeam::getId));
@@ -353,8 +353,8 @@ public class TeamGroupIT
                 String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX),
                 String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)
             )
-            .queryParam("fromSeason", "2")
-            .queryParam("toSeason", String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)))
+            .queryParam("seasonMin", "2")
+            .queryParam("seasonMax", String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), LadderTeam[].class);
         Arrays.sort(teams, Comparator.comparing(LadderTeam::getId));

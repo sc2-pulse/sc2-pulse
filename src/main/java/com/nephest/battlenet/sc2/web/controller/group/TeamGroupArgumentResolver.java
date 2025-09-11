@@ -194,8 +194,8 @@ implements HandlerMethodArgumentResolver
     (
         @RequestParam(name = "teamId", required = false, defaultValue = "") Set<Long> teamIds,
         @RequestParam(name = "legacyUid", required = false, defaultValue = "") @Valid @TeamLegacyUids Set<TeamLegacyUid> legacyUid,
-        @RequestParam(name = "fromSeason", required = false) @Min(0L) Integer fromSeason,
-        @RequestParam(name = "toSeason", required = false) @Min(0L) Integer toSeason
+        @RequestParam(name = "seasonMin", required = false) @Min(0L) Integer fromSeason,
+        @RequestParam(name = "seasonMax", required = false) @Min(0L) Integer toSeason
     )
     {
     }

@@ -32,14 +32,14 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.springframework.core.convert.ConversionService;
 
-public class CursorParameterRedirectFilter
+public class HtmlUrlParameterRedirectFilter
 implements Filter
 {
 
     public static final String MARKER_PARAMETER_NAME = "type";
     private final Map<String, Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>>> parameterOverrides;
 
-    public CursorParameterRedirectFilter
+    public HtmlUrlParameterRedirectFilter
     (
         ConversionService conversionService,
         ObjectMapper objectMapper
@@ -56,7 +56,10 @@ implements Filter
             ladderOverrides,
 
             "clan-search",
-            createClanOverrides(conversionService, objectMapper)
+            createClanOverrides(conversionService, objectMapper),
+
+            "vod-search",
+            createVodOverrides()
         );
     }
 
@@ -177,13 +180,51 @@ implements Filter
         ObjectMapper objectMapper
     )
     {
-        return Map.of
+        return Map.ofEntries
         (
-            "page", params->null,
-            "pageDiff", params->overrideClanPageDiff(params, conversionService),
-            "sortBy", params->null,
-            "cursorValue", params->overrideClanCursor(params, objectMapper),
-            "idCursor", params->null
+            Map.entry("page", params->null),
+            Map.entry("pageDiff", params->overrideClanPageDiff(params, conversionService)),
+            Map.entry("sortBy", params->null),
+            Map.entry("cursorValue", params->overrideClanCursor(params, objectMapper)),
+            Map.entry("idCursor", params->null),
+            Map.entry
+            (
+                "minAvgRating",
+                params->Map.entry("avgRatingMin", params.get("minAvgRating"))
+            ),
+            Map.entry
+            (
+                "maxAvgRating",
+                params->Map.entry("avgRatingMax", params.get("maxAvgRating"))
+            ),
+            Map.entry
+            (
+                "minActiveMembers",
+                params->Map.entry("activeMembersMin", params.get("minActiveMembers"))
+            ),
+            Map.entry
+            (
+                "maxActiveMembers",
+                params->Map.entry("activeMembersMax", params.get("maxActiveMembers"))
+            ),
+            Map.entry
+            (
+                "minGamesPerActiveMemberPerDay",
+                params->Map.entry
+                (
+                    "gamesPerActiveMemberPerDayMin",
+                    params.get("minGamesPerActiveMemberPerDay")
+                )
+            ),
+            Map.entry
+            (
+                "maxGamesPerActiveMemberPerDay",
+                params->Map.entry
+                (
+                    "gamesPerActiveMemberPerDayMax",
+                    params.get("maxGamesPerActiveMemberPerDay")
+                )
+            )
         );
     }
 
@@ -246,6 +287,18 @@ implements Filter
                 ))
                 .map(SortParameter::toPrefixedString)
                 .toArray(String[]::new)
+        );
+    }
+
+    private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createVodOverrides()
+    {
+        return Map.of
+        (
+            "minRating", params->Map.entry("ratingMin", params.get("minRating")),
+            "maxRating", params->Map.entry("ratingMax", params.get("maxRating")),
+            "minDuration", params->Map.entry("durationMin", params.get("minDuration")),
+            "maxDuration", params->Map.entry("durationMax", params.get("maxDuration")),
+            "versusRace", params->Map.entry("raceVersus", params.get("versusRace"))
         );
     }
 
