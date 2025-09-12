@@ -6,12 +6,14 @@ package com.nephest.battlenet.sc2.model.validation;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 public abstract class AbstractAllowedFieldValidator<T>
 implements ConstraintValidator<AllowedField, T>
 {
 
+    private List<String> orderedAllowedFields;
     private Set<String> allowedFields;
 
     public abstract String getField(T value);
@@ -19,7 +21,8 @@ implements ConstraintValidator<AllowedField, T>
     @Override
     public void initialize(AllowedField constraintAnnotation)
     {
-        this.allowedFields = Set.copyOf(Arrays.asList(constraintAnnotation.value()));
+        this.orderedAllowedFields = Arrays.asList(constraintAnnotation.value());
+        this.allowedFields = Set.copyOf(orderedAllowedFields);
     }
 
     @Override
@@ -32,7 +35,7 @@ implements ConstraintValidator<AllowedField, T>
         context.buildConstraintViolationWithTemplate
         (
             String.format("Invalid field '%s'. Allowed fields are: %s",
-                field, String.join(", ", allowedFields))
+                field, String.join(", ", orderedAllowedFields))
         ).addConstraintViolation();
         return false;
     }
