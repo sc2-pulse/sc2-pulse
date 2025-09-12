@@ -12,7 +12,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Documented
-@Constraint(validatedBy = SortParameterAllowedFieldValidator.class)
+@Constraint(validatedBy = {
+    SortParameterAllowedFieldValidator.class,
+    StringAllowedFieldValidator.class
+})
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AllowedField
