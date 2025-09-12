@@ -68,6 +68,19 @@ implements Filter
         return vals == null || vals.length == 0 ? null : vals[vals.length - 1];
     }
 
+    private static Map.Entry<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> overrideName
+    (
+        String name,
+        String newName
+    )
+    {
+        return Map.entry
+        (
+            name,
+            params->newName != null ? Map.entry(newName, params.get(name)) : null
+        );
+    }
+
     private static SortingOrder[] convertCountValuesToSortingOrderValues
     (
         String [] countValues
@@ -112,18 +125,18 @@ implements Filter
     )
     {
         Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> overrides =
-        new HashMap<>(Map.of(
-            "idAnchor", params->null,
-            "ratingAnchor", params->overrideLadderCursor(params, objectMapper),
-            "page", params->null,
-            "count", params->Map.entry(
+        new HashMap<>(Map.ofEntries(
+            overrideName("idAnchor", null),
+            Map.entry("ratingAnchor", params->overrideLadderCursor(params, objectMapper)),
+            overrideName("page", null),
+            Map.entry("count", params->Map.entry(
                 "sort",
                 Arrays.stream(convertCountValuesToSortingOrderValues(params.get("count")))
                     .map(order->new SortParameter("rating", order))
                     .map(SortParameter::toPrefixedString)
                     .toArray(String[]::new)
-            ),
-            "team-type", params->Map.entry("teamType", params.get("team-type"))
+            )),
+            overrideName("team-type", "teamType")
         ));
         Stream.of
         (
@@ -182,49 +195,17 @@ implements Filter
     {
         return Map.ofEntries
         (
-            Map.entry("page", params->null),
+            overrideName("page", null),
             Map.entry("pageDiff", params->overrideClanPageDiff(params, conversionService)),
-            Map.entry("sortBy", params->null),
+            overrideName("sortBy", null),
             Map.entry("cursorValue", params->overrideClanCursor(params, objectMapper)),
-            Map.entry("idCursor", params->null),
-            Map.entry
-            (
-                "minAvgRating",
-                params->Map.entry("avgRatingMin", params.get("minAvgRating"))
-            ),
-            Map.entry
-            (
-                "maxAvgRating",
-                params->Map.entry("avgRatingMax", params.get("maxAvgRating"))
-            ),
-            Map.entry
-            (
-                "minActiveMembers",
-                params->Map.entry("activeMembersMin", params.get("minActiveMembers"))
-            ),
-            Map.entry
-            (
-                "maxActiveMembers",
-                params->Map.entry("activeMembersMax", params.get("maxActiveMembers"))
-            ),
-            Map.entry
-            (
-                "minGamesPerActiveMemberPerDay",
-                params->Map.entry
-                (
-                    "gamesPerActiveMemberPerDayMin",
-                    params.get("minGamesPerActiveMemberPerDay")
-                )
-            ),
-            Map.entry
-            (
-                "maxGamesPerActiveMemberPerDay",
-                params->Map.entry
-                (
-                    "gamesPerActiveMemberPerDayMax",
-                    params.get("maxGamesPerActiveMemberPerDay")
-                )
-            )
+            overrideName("idCursor", null),
+            overrideName("minAvgRating", "avgRatingMin"),
+            overrideName("maxAvgRating", "avgRatingMax"),
+            overrideName("minActiveMembers", "activeMembersMin"),
+            overrideName("maxActiveMembers", "activeMembersMax"),
+            overrideName("minGamesPerActiveMemberPerDay", "gamesPerActiveMemberPerDayMin"),
+            overrideName("maxGamesPerActiveMemberPerDay", "gamesPerActiveMemberPerDayMax")
         );
     }
 
@@ -292,14 +273,14 @@ implements Filter
 
     private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createVodOverrides()
     {
-        return Map.of
+        return Map.ofEntries
         (
-            "minRating", params->Map.entry("ratingMin", params.get("minRating")),
-            "maxRating", params->Map.entry("ratingMax", params.get("maxRating")),
-            "minDuration", params->Map.entry("durationMin", params.get("minDuration")),
-            "maxDuration", params->Map.entry("durationMax", params.get("maxDuration")),
-            "versusRace", params->Map.entry("raceVersus", params.get("versusRace")),
-            "map", params->Map.entry("mapId", params.get("map"))
+            overrideName("minRating", "ratingMin"),
+            overrideName("maxRating", "ratingMax"),
+            overrideName("minDuration", "durationMin"),
+            overrideName("maxDuration", "durationMax"),
+            overrideName("versusRace", "raceVersus"),
+            overrideName("map", "mapId")
         );
     }
 
