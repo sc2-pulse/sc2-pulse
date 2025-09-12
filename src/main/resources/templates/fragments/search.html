@@ -348,7 +348,7 @@
                 </div>
                 <div class="form-group d-inline-block mr-2">
                     <label for="vod-search-map">Map</label>
-                    <select id="vod-search-map" class="form-control serializable" name="map">
+                    <select id="vod-search-map" class="form-control serializable" name="mapId">
                         <option value="">All</option>
                         <option th:each="map : ${@SC2MapDAO.findCurrent1v1()}"
                                 th:value="${map.id}"

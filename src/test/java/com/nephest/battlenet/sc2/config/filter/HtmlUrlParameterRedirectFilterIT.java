@@ -341,6 +341,7 @@ public class HtmlUrlParameterRedirectFilterIT
                 .queryParam("minDuration", "3")
                 .queryParam("maxDuration", "4")
                 .queryParam("versusRace", "5")
+                .queryParam("map", "6")
                 .contentType(MediaType.TEXT_HTML)
         )
             .andExpect(status().isMovedPermanently())
@@ -354,12 +355,14 @@ public class HtmlUrlParameterRedirectFilterIT
                     Matchers.containsString("durationMin=3"),
                     Matchers.containsString("durationMax=4"),
                     Matchers.containsString("raceVersus=5"),
+                    Matchers.containsString("mapId=6"),
 
                     Matchers.not(Matchers.containsString("minRating")),
                     Matchers.not(Matchers.containsString("maxRating")),
                     Matchers.not(Matchers.containsString("minDuration")),
                     Matchers.not(Matchers.containsString("maxDuration")),
-                    Matchers.not(Matchers.containsString("versusRace"))
+                    Matchers.not(Matchers.containsString("versusRace")),
+                    Matchers.not(Matchers.containsString("map="))
                 )))
             .andReturn();
     }

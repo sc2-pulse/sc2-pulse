@@ -35,7 +35,7 @@ public class MatchController
         @RequestParam(value = "durationMin", required = false) Integer minDuration,
         @RequestParam(value = "durationMax", required = false) Integer maxDuration,
         @RequestParam(value = "includeSubOnly", defaultValue = "false") boolean includeSubOnly,
-        @RequestParam(value = "map", required = false) Integer map
+        @RequestParam(value = "mapId", required = false) Integer map
     )
     {
         return ladderMatchDAO.findTwitchVods

@@ -298,7 +298,8 @@ implements Filter
             "maxRating", params->Map.entry("ratingMax", params.get("maxRating")),
             "minDuration", params->Map.entry("durationMin", params.get("minDuration")),
             "maxDuration", params->Map.entry("durationMax", params.get("maxDuration")),
-            "versusRace", params->Map.entry("raceVersus", params.get("versusRace"))
+            "versusRace", params->Map.entry("raceVersus", params.get("versusRace")),
+            "map", params->Map.entry("mapId", params.get("map"))
         );
     }
 
