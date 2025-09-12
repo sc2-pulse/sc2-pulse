@@ -236,7 +236,7 @@ public class TeamGroupIT
             .queryParam("field", IdField.NAME)
             .queryParam
             (
-                "legacyUid",
+                "teamLegacyUid",
                 conversionService.convert
                 (
                     new TeamLegacyUid
@@ -279,7 +279,7 @@ public class TeamGroupIT
             .toArray(Long[]::new);
         Assertions.assertThat(result[0])
             .usingRecursiveComparison()
-            .ignoringFields("legacyUid")
+            .ignoringFields("teamLegacyUid")
             .isEqualTo(fromId(expectedIds[0]));
         assertArrayEquals
         (
@@ -298,7 +298,7 @@ public class TeamGroupIT
             .queryParam("field", IdField.NAME)
             .queryParam
             (
-                "legacyUid",
+                "teamLegacyUid",
                 conversionService.convert
                 (
                     new TeamLegacyUid
@@ -334,7 +334,7 @@ public class TeamGroupIT
         LadderTeam[] teams = objectMapper.readValue(mvc.perform(get("/api/teams")
             .queryParam
             (
-                "legacyUid",
+                "teamLegacyUid",
                 conversionService.convert
                 (
                     new TeamLegacyUid
@@ -421,7 +421,7 @@ public class TeamGroupIT
             )
             .map(uid->conversionService.convert(uid, String.class))
             .toArray(String[]::new);
-        mvc.perform(get(url).queryParam("legacyUid", longIdList))
+        mvc.perform(get(url).queryParam("teamLegacyUid", longIdList))
             .andExpect(status().isBadRequest());
     }
 
@@ -434,7 +434,7 @@ public class TeamGroupIT
             .queryParam("field", IdField.NAME)
             .queryParam
             (
-                "legacyUid",
+                "teamLegacyUid",
                 conversionService.convert
                 (
                     new TeamLegacyUid
@@ -485,7 +485,7 @@ public class TeamGroupIT
         mvc.perform(get(url)
             .queryParam
             (
-                "legacyUid",
+                "teamLegacyUid",
                 new TeamLegacyUid
                 (
                     QueueType.LOTV_2V2,
@@ -508,7 +508,7 @@ public class TeamGroupIT
         mvc.perform(get(url)
             .queryParam
             (
-                "legacyUid",
+                "teamLegacyUid",
                 new TeamLegacyUid
                 (
                     QueueType.LOTV_2V2,
@@ -559,7 +559,7 @@ public class TeamGroupIT
                 .queryParam("last", "")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     ids.stream()
                         .map(id->conversionService.convert(
                             new TeamLegacyUid

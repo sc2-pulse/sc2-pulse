@@ -224,7 +224,7 @@ public class TeamGroupHistoryCornerCaseIT
             = objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     mvcConversionService.convert
                     (
                         new TeamLegacyUid

@@ -127,7 +127,7 @@ public class TeamController
     @GetMapping(value = "/teams", params = "last")
     public ResponseEntity<?> getLastTeams
     (
-        @RequestParam("legacyUid")
+        @RequestParam("teamLegacyUid")
         @TeamLegacyUids
         @Valid
         @Size(max = LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX)

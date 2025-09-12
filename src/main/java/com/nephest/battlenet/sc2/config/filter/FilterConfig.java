@@ -85,7 +85,11 @@ public class FilterConfig
             = new FilterRegistrationBean<>();
         registrationBean.setFilter(new HtmlUrlParameterRedirectFilter(
             mvcConversionService, objectMapper));
-        registrationBean.addUrlPatterns("/");
+        registrationBean.addUrlPatterns
+        (
+            "/",
+            "/team/history"
+        );
         return registrationBean;
     }
 

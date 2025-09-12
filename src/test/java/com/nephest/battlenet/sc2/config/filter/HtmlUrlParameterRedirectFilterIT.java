@@ -368,6 +368,31 @@ public class HtmlUrlParameterRedirectFilterIT
     }
 
     @Test
+    public void testTeamMmrHistorySearchParametersRedirection()
+    throws Exception
+    {
+        mvc.perform
+        (
+            get("/team/history").queryParam("type", "team-mmr")
+                .queryParam("legacyUid", "1")
+                .queryParam("legacyUid", "2")
+                .contentType(MediaType.TEXT_HTML)
+        )
+            .andExpect(status().isMovedPermanently())
+            .andExpect(header().string(
+                "Location",
+                Matchers.allOf(
+                    Matchers.startsWith("http://localhost/team/history?"),
+                    Matchers.containsString("type=team-mmr"),
+                    Matchers.containsString("teamLegacyUid=1"),
+                    Matchers.containsString("teamLegacyUid=2"),
+                    Matchers.not(Matchers.containsString("legacyUid"))
+                )))
+            .andReturn();
+    }
+
+
+    @Test
     public void whenNoQueryParameters_thenOk()
     throws Exception
     {

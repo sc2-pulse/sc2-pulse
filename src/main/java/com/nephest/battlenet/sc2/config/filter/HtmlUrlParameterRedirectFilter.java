@@ -59,7 +59,10 @@ implements Filter
             createClanOverrides(conversionService, objectMapper),
 
             "vod-search",
-            createVodOverrides()
+            createVodOverrides(),
+
+            "team-mmr",
+            createTeamMmrHistoryOverrides()
         );
     }
 
@@ -281,6 +284,14 @@ implements Filter
             overrideName("maxDuration", "durationMax"),
             overrideName("versusRace", "raceVersus"),
             overrideName("map", "mapId")
+        );
+    }
+
+    private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createTeamMmrHistoryOverrides()
+    {
+        return Map.ofEntries
+        (
+            overrideName("legacyUid", "teamLegacyUid")
         );
     }
 

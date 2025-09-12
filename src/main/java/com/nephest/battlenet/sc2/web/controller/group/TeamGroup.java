@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
     @Parameter
     (
         in = ParameterIn.QUERY,
-        name = "legacyUid",
+        name = "teamLegacyUid",
         description = "queueId-teamTypeId-regionId-legacyId",
         array = @ArraySchema
         (

@@ -22,7 +22,7 @@ public class ParameterBasedGoneFilter
 implements Filter
 {
 
-    public static final String LEGACY_UID_PARAMETER_NAME = "legacyUid";
+    public static final String LEGACY_UID_PARAMETER_NAME = "teamLegacyUid";
     public static final String NEW_LEGACY_UID_MARKER = ".";
 
     @Override

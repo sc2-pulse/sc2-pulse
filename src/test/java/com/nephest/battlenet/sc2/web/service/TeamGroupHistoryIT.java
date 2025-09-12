@@ -597,7 +597,7 @@ public class TeamGroupHistoryIT
             = objectMapper.readValue(mvc.perform(get("/api/team-histories")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     mvcConversionService.convert
                     (
                         new TeamLegacyUid
@@ -766,7 +766,7 @@ public class TeamGroupHistoryIT
             get("/api/team-histories")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     mvcConversionService.convert
                     (
                         new TeamLegacyUid
@@ -832,7 +832,7 @@ public class TeamGroupHistoryIT
             = objectMapper.readValue(mvc.perform(get("/api/team-histories")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     mvcConversionService.convert
                     (
                         new TeamLegacyUid
@@ -903,7 +903,7 @@ public class TeamGroupHistoryIT
             = objectMapper.readValue(mvc.perform(get("/api/team-histories")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     mvcConversionService.convert
                     (
                         new TeamLegacyUid
@@ -1052,7 +1052,7 @@ public class TeamGroupHistoryIT
             objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     mvcConversionService.convert
                     (
                         new TeamLegacyUid
@@ -1125,7 +1125,7 @@ public class TeamGroupHistoryIT
             get("/api/team-history-summaries")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     mvcConversionService.convert
                     (
                         new TeamLegacyUid
@@ -1187,7 +1187,7 @@ public class TeamGroupHistoryIT
             objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     mvcConversionService.convert
                     (
                         new TeamLegacyUid
@@ -1247,7 +1247,7 @@ public class TeamGroupHistoryIT
             objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
                 .queryParam
                 (
-                    "legacyUid",
+                    "teamLegacyUid",
                     mvcConversionService.convert
                     (
                         new TeamLegacyUid

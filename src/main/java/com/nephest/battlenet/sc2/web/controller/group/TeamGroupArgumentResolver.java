@@ -193,7 +193,7 @@ implements HandlerMethodArgumentResolver
     private void getTeamIdsDescriptor
     (
         @RequestParam(name = "teamId", required = false, defaultValue = "") Set<Long> teamIds,
-        @RequestParam(name = "legacyUid", required = false, defaultValue = "") @Valid @TeamLegacyUids Set<TeamLegacyUid> legacyUid,
+        @RequestParam(name = "teamLegacyUid", required = false, defaultValue = "") @Valid @TeamLegacyUids Set<TeamLegacyUid> legacyUid,
         @RequestParam(name = "seasonMin", required = false) @Min(0L) Integer fromSeason,
         @RequestParam(name = "seasonMax", required = false) @Min(0L) Integer toSeason
     )

@@ -452,7 +452,7 @@ class TeamUtil
     {
         const searchParams = new URLSearchParams();
         searchParams.append("type", "team-mmr");
-        for(const team of teams) searchParams.append("legacyUid", TeamUtil.getTeamLegacyUid(team));
+        for(const team of teams) searchParams.append("teamLegacyUid", TeamUtil.getTeamLegacyUid(team));
 
         return searchParams;
     }
@@ -483,7 +483,7 @@ class TeamUtil
     static updateTeamMmrModel(searchParams)
     {
         const reqParams = new URLSearchParams();
-        for(const id of searchParams.getAll("legacyUid")) reqParams.append("legacyUid", id);
+        for(const id of searchParams.getAll("teamLegacyUid")) reqParams.append("legacyUid", id);
         const request = `${ROOT_CONTEXT_PATH}api/team/history/common?${reqParams.toString()}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))
@@ -786,7 +786,7 @@ class TeamUtil
     {
         const params = new URLSearchParams();
         if(ids) ids.forEach(id=>params.append("id", id));
-        if(legacyUids) legacyUids.forEach(l=>params.append("legacyUid", l));
+        if(legacyUids) legacyUids.forEach(l=>params.append("teamLegacyUid", l));
         if(fromSeason != null) params.append("seasonMin", fromSeason);
         if(toSeason != null) params.append("seasonMax", toSeason);
         return params;
