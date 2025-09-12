@@ -116,10 +116,10 @@ public class TeamController
     public ResponseEntity<?> getTeams
     (
         @TeamGroup Set<Long> teamIds,
-        @RequestParam(value = "field", required = false) IdField idField
+        @RequestParam(value = "field", required = false) @AllowedField(IdField.NAME) String field
     )
     {
-        return idField != null
+        return field != null
             ? WebServiceUtil.notFoundIfEmpty(teamIds.stream().map(IdProjection::new).toList())
             : WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findTeamsByIds(teamIds));
     }

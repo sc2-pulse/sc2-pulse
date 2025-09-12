@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
+import com.nephest.battlenet.sc2.model.validation.AllowedField;
 import com.nephest.battlenet.sc2.model.validation.NotFakeSc2Name;
 import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
@@ -78,10 +79,10 @@ public class CharacterController
     public ResponseEntity<Object> get
     (
         @CharacterGroup Set<Long> characterIds,
-        @RequestParam(value = "field", required = false) IdField idField
+        @RequestParam(value = "field", required = false) @AllowedField("id") String field
     )
     {
-        return idField != null
+        return field != null
             ? WebServiceUtil.notFoundIfEmpty(characterIds.stream().map(IdProjection::new).toList())
             : WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
                 .findDistinctCharactersByCharacterIds(characterIds));

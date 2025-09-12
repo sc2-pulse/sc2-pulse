@@ -68,7 +68,7 @@ public class GoneFilterIT
             get(CONTEXT_PATH + path)
                 .contextPath(CONTEXT_PATH)
                 .servletPath(path)
-                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("field", IdField.NAME)
                 .queryParam(LEGACY_UID_PARAMETER_NAME, OLD_LEGACY_UID)
                 .contentType(MediaType.APPLICATION_JSON)
         )

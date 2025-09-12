@@ -233,7 +233,7 @@ public class TeamGroupIT
     public void testFlat() throws Exception
     {
         LadderTeam[] result = objectMapper.readValue(mvc.perform(get("/api/teams")
-            .queryParam("field", conversionService.convert(IdField.ID, String.class))
+            .queryParam("field", IdField.NAME)
             .queryParam
             (
                 "legacyUid",
@@ -295,7 +295,7 @@ public class TeamGroupIT
     throws Exception
     {
         Long[] ids = Arrays.stream(objectMapper.readValue(mvc.perform(get("/api/teams")
-            .queryParam("field", conversionService.convert(IdField.ID, String.class))
+            .queryParam("field", IdField.NAME)
             .queryParam
             (
                 "legacyUid",
@@ -371,7 +371,7 @@ public class TeamGroupIT
     throws Exception
     {
         mvc.perform(get("/api/teams")
-                .queryParam("field", conversionService.convert(IdField.ID, String.class)))
+                .queryParam("field", IdField.NAME))
             .andExpect(status().isBadRequest());
     }
 
@@ -384,7 +384,7 @@ public class TeamGroupIT
             .map(String::valueOf)
             .toArray(String[]::new);
         mvc.perform(get("/api/teams")
-            .queryParam("field", conversionService.convert(IdField.ID, String.class))
+            .queryParam("field", IdField.NAME)
             .queryParam("teamId", longIdList))
             .andExpect(status().isBadRequest());
     }
@@ -395,7 +395,7 @@ public class TeamGroupIT
         (
             Arguments.of
             (
-                "/api/teams?field=" + conversionService.convert(IdField.ID, String.class),
+                "/api/teams?field=" + IdField.NAME,
                 TeamGroupArgumentResolver.LEGACY_UIDS_MAX + 1
             ),
             Arguments.of
@@ -431,7 +431,7 @@ public class TeamGroupIT
     {
 
         mvc.perform(get("/api/teams")
-            .queryParam("field", conversionService.convert(IdField.ID, String.class))
+            .queryParam("field", IdField.NAME)
             .queryParam
             (
                 "legacyUid",
@@ -472,7 +472,7 @@ public class TeamGroupIT
     {
         return Stream.of
         (
-            Arguments.of("/api/teams?field=" + conversionService.convert(IdField.ID, String.class)),
+            Arguments.of("/api/teams?field=" + IdField.NAME),
             Arguments.of("/api/teams?last")
         );
     }

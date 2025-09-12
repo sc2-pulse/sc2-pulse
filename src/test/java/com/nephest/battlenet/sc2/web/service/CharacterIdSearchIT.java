@@ -118,7 +118,7 @@ public class CharacterIdSearchIT
         PlayerCharacter[] result = objectMapper.readValue(mvc.perform
         (
             get("/api/characters")
-                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("field", IdField.NAME)
                 .queryParam("name", "name1")
                 .queryParam("caseSensitive", String.valueOf(caseSensitive))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -154,7 +154,7 @@ public class CharacterIdSearchIT
         PlayerCharacter[] ids = objectMapper.readValue(mvc.perform
         (
             get("/api/characters")
-                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("field", IdField.NAME)
                 .queryParam("name", "name1")
                 .queryParam
                 (
@@ -192,7 +192,7 @@ public class CharacterIdSearchIT
         PlayerCharacter[] ids = objectMapper.readValue(mvc.perform
         (
             get("/api/characters")
-                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("field", IdField.NAME)
                 .queryParam("name", "character")
                 .queryParam("season", "1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -226,7 +226,7 @@ public class CharacterIdSearchIT
         PlayerCharacter[] ids = objectMapper.readValue(mvc.perform
         (
             get("/api/characters")
-                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("field", IdField.NAME)
                 .queryParam("name", "character")
                 .queryParam
                 (
@@ -262,7 +262,7 @@ public class CharacterIdSearchIT
         mvc.perform
         (
             get("/api/characters")
-                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("field", IdField.NAME)
                 .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("name", BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME)
         )
@@ -276,7 +276,7 @@ public class CharacterIdSearchIT
         mvc.perform
         (
             get("/api/characters")
-                .queryParam("field", mvcConversionService.convert(IdField.ID, String.class))
+                .queryParam("field", IdField.NAME)
                 .contentType(MediaType.APPLICATION_JSON)
                 .queryParam("name", "name")
                 .queryParam("season", "1", "2")
