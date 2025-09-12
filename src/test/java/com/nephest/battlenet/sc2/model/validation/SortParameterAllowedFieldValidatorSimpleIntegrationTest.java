@@ -37,7 +37,7 @@ class SortParameterAllowedFieldValidatorSimpleIntegrationTest
         assertFalse(violations.isEmpty());
         assertEquals
         (
-            "Invalid sort field 'salary'. Allowed fields are: name, age, email",
+            "Invalid field 'salary'. Allowed fields are: name, age, email",
             violations.iterator().next().getMessage()
         );
     }
