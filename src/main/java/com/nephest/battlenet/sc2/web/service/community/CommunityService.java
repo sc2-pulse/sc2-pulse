@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.community;
 
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.SocialMedia;
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
@@ -17,6 +18,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
@@ -30,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -68,13 +71,14 @@ public class CommunityService
     public enum StreamSorting
     {
 
-        VIEWERS("Viewers", STREAM_VIEWERS_COMPARATOR),
-        RATING("MMR", Comparator.<LadderVideoStream, Long>comparing(
+        VIEWERS("Viewers", "viewers", STREAM_VIEWERS_COMPARATOR),
+        RATING("MMR", "rating", Comparator.<LadderVideoStream, Long>comparing(
             s->s.getTeam() != null ? s.getTeam().getRating() : null,
             Comparator.nullsLast(Comparator.reverseOrder())
         )
             .thenComparing(STREAM_VIEWERS_COMPARATOR)),
-        TOP_PERCENT_REGION("Top% Region", Comparator.<LadderVideoStream, Float>comparing(
+        TOP_PERCENT_REGION("Top% Region", "topPercentRegion",
+            Comparator.<LadderVideoStream, Float>comparing(
             s->s.getTeam() != null
                 && s.getTeam().getRegionRank() != null
                 && s.getTeam().getPopulationState() != null
@@ -87,18 +91,39 @@ public class CommunityService
         )
             .thenComparing(STREAM_VIEWERS_COMPARATOR));
 
-        private final String name;
+        private final String name, field;
         private final Comparator<LadderVideoStream> comparator;
 
-        StreamSorting(String name, Comparator<LadderVideoStream> comparator)
+        StreamSorting
+        (
+            String name,
+            String field,
+            Comparator<LadderVideoStream> comparator
+        )
         {
             this.name = name;
+            this.field = field;
             this.comparator = comparator;
+        }
+
+        public static StreamSorting fromField(String field)
+        {
+            Objects.requireNonNull(field);
+
+            for(StreamSorting sorting: StreamSorting.values())
+                if(sorting.getField().equals(field)) return sorting;
+
+            throw new IllegalArgumentException("Invalid field: " + field);
         }
 
         public String getName()
         {
             return name;
+        }
+
+        public String getField()
+        {
+            return field;
         }
 
         public Comparator<LadderVideoStream> getComparator()
@@ -189,7 +214,7 @@ public class CommunityService
     public Mono<CommunityStreamResult> getStreams
     (
         Set<SocialMedia> services,
-        Comparator<LadderVideoStream> comparator,
+        SortParameter sort,
         boolean identifiedOnly,
         Set<Race> races,
         Set<Locale> languages,
@@ -208,7 +233,7 @@ public class CommunityService
                 (
                     result.getStreams().stream(),
                     services,
-                    comparator,
+                    sort,
                     identifiedOnly,
                     races,
                     languages,
@@ -230,7 +255,7 @@ public class CommunityService
     (
         Stream<LadderVideoStream> streams,
         Set<SocialMedia> services,
-        Comparator<LadderVideoStream> comparator,
+        SortParameter sort,
         boolean identifiedOnly,
         Set<Race> races,
         Set<Locale> languages,
@@ -284,7 +309,10 @@ public class CommunityService
                     ? s.getTeam() == null || containsTeamFormat(s, teamFormats)
                     : containsTeamFormat(s, teamFormats)
             );
-        if(comparator != null) streams = streams.sorted(comparator);
+        Comparator<LadderVideoStream> comparator = StreamSorting.fromField(sort.field())
+            .getComparator();
+        if(sort.order() == SortingOrder.ASC) comparator = comparator.reversed();
+        streams = streams.sorted(comparator);
         if(limitPlayer != null) streams = limitPlayers(streams, limitPlayer);
         if(limit != null) streams = streams.limit(limit);
         return streams;
@@ -428,18 +456,18 @@ public class CommunityService
             return communityService.getFeaturedStreams();
 
         return communityService.getStreams
-            (
-                services,
-                StreamSorting.RATING.getComparator(),
-                true,
-                Set.of(),
-                Set.of(),
-                Set.of(),
-                null, null,
-                FEATURED_STREAM_SKILLED_SLOT_COUNT,
-                FEATURED_STREAM_SKILLED_SLOT_COUNT,
-                false
-            )
+        (
+            services,
+            new SortParameter(StreamSorting.RATING.getField(), SortingOrder.DESC),
+            true,
+            Set.of(),
+            Set.of(),
+            Set.of(),
+            null, null,
+            FEATURED_STREAM_SKILLED_SLOT_COUNT,
+            FEATURED_STREAM_SKILLED_SLOT_COUNT,
+            false
+        )
             .map(result->new CommunityStreamResult(
                 getFeaturedStreams(result.getStreams()),
                 result.getErrors().isEmpty()

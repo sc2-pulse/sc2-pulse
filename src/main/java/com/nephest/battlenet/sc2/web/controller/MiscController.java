@@ -28,6 +28,8 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
+import com.nephest.battlenet.sc2.model.validation.AllowedField;
+import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.service.SC2MetaService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
@@ -130,7 +132,9 @@ public class MiscController
     public ResponseEntity<?> getStreams
     (
         @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services,
-        @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting,
+        @RequestParam(name = "sort", defaultValue = "-viewers", required = false)
+        @AllowedField({"viewers", "rating", "topPercentRegion"})
+        SortParameter sort,
         @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
         @RequestParam(name = "race", defaultValue = "") Set<Race> races,
         @RequestParam(name = "language", defaultValue = "") Set<Locale> languages,
@@ -146,13 +150,11 @@ public class MiscController
             .badRequest()
             .body("ratingMin is greater than ratingMax");
 
-        if(sorting == null) sorting = CommunityService.StreamSorting.VIEWERS;
-
         CommunityStreamResult result = communityService
             .getStreams
             (
                 services,
-                sorting.getComparator(),
+                sort,
                 identifiedOnly,
                 races,
                 languages,

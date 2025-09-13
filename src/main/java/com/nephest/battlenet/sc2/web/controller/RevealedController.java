@@ -7,10 +7,12 @@ import static com.nephest.battlenet.sc2.model.BaseTeam.MAX_RATING;
 
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.SocialMedia;
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
+import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
 import com.nephest.battlenet.sc2.web.service.community.CommunityStreamResult;
@@ -89,7 +91,7 @@ public class RevealedController
             .getStreams
             (
                 services,
-                sorting.getComparator(),
+                new SortParameter(sorting.getField(), SortingOrder.DESC),
                 identifiedOnly,
                 races,
                 languages,

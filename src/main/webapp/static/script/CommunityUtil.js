@@ -74,7 +74,9 @@ class CommunityUtil
     {
         return CommunityUtil.getStreams(
             CommunityUtil.getStreamServices("-featured"),
-            localStorage.getItem("stream-sort-by-featured") || "TOP_PERCENT_REGION",
+            localStorage.getItem("stream-sort-by-featured") != null
+                ? SortParameter.fromPrefixedString(localStorage.getItem("stream-sort-by-featured"))
+                : CommunityUtil.DEFAULT_FEATURED_STREAM_SORT,
             localStorage.getItem("stream-identified-only-featured") || "true",
             CommunityUtil.getStreamRaces("-featured"),
             localStorage.getItem("stream-language-preferred-featured") === "false" ? null : Util.getPreferredLanguages(),
@@ -114,7 +116,7 @@ class CommunityUtil
     {
         const params = new URLSearchParams();
         if(services != null) services.forEach(service=>params.append("service", service));
-        if(sorting != null) params.append("sort", sorting);
+        if(sorting != null) params.append("sort", sorting.toPrefixedString());
         if(identifiedOnly != null) params.append("identifiedOnly", identifiedOnly);
         if(races != null) races.forEach(race=>params.append("race", race.fullName));
         if(languages != null) languages.forEach(language=>params.append("language", language));
@@ -220,7 +222,9 @@ class CommunityUtil
             return Promise.resolve({data: null, status: LOADING_STATUS.COMPLETE});
         return CommunityUtil.updateStreamModel(
             CommunityUtil.getStreamServices(),
-            localStorage.getItem("stream-sort-by") || "RATING",
+            localStorage.getItem("stream-sort-by") != null
+                ? SortParameter.fromPrefixedString(localStorage.getItem("stream-sort-by"))
+                : CommunityUtil.DEFAULT_STREAM_SORT,
             localStorage.getItem("stream-identified-only") || "false",
             CommunityUtil.getStreamRaces(),
             localStorage.getItem("stream-language-preferred") === "true" ? Util.getPreferredLanguages() : null,
@@ -433,3 +437,6 @@ class CommunityUtil
     }
 
 }
+
+CommunityUtil.DEFAULT_STREAM_SORT = new SortParameter("rating", SORTING_ORDER.DESC);
+CommunityUtil.DEFAULT_FEATURED_STREAM_SORT = new SortParameter("topPercentRegion", SORTING_ORDER.DESC);

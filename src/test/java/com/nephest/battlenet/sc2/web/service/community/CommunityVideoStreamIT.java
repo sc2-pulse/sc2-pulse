@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
+import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -43,6 +44,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import jakarta.annotation.PostConstruct;
 import java.sql.Connection;
@@ -52,6 +54,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
@@ -316,7 +319,21 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(sorting, String.class))
+                .queryParam
+                (
+                    "sort",
+                    sorting == null
+                        ? null
+                        : conversionService.convert
+                            (
+                                new SortParameter
+                                (
+                                    sorting.getField(),
+                                    SortingOrder.DESC
+                                ),
+                                String.class
+                            )
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
@@ -368,8 +385,9 @@ public class CommunityVideoStreamIT
             ), Set.of()));
     }
 
-    @Test
-    public void testStreamRatingSorting()
+    @EnumSource(SortingOrder.class)
+    @ParameterizedTest
+    public void testStreamRatingSorting(SortingOrder order)
     throws Exception
     {
         init(4, (c, c1)->{});
@@ -384,26 +402,41 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.RATING, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.RATING.getField(),
+                            order
+                        ),
+                        String.class
+                    )
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        List<LadderVideoStream> expected = new ArrayList<>(List.of(
+            createIndexedLadderVideoStream(1, null),
+            createIndexedLadderVideoStream(2, null),
+            createIndexedLadderVideoStream(0, null),
+            createIndexedLadderVideoStream(3, null)
+        ));
+        if(order == SortingOrder.ASC) Collections.reverse(expected);
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("streams.proPlayer.proPlayer.version")
-            .isEqualTo(new CommunityStreamResult(List.of(
-                createIndexedLadderVideoStream(1, null),
-                createIndexedLadderVideoStream(2, null),
-                createIndexedLadderVideoStream(0, null),
-                createIndexedLadderVideoStream(3, null)
-            ), Set.of()));
+            .isEqualTo(new CommunityStreamResult(expected, Set.of()));
     }
 
-    @Test
-    public void whenSortingStreamsByRatingEndRatingsAreEqual_thenSortByViewers()
+    @EnumSource(SortingOrder.class)
+    @ParameterizedTest
+    public void whenSortingStreamsByRatingEndRatingsAreEqual_thenSortByViewers(SortingOrder order)
     throws Exception
     {
         init(2, (c, c1)->{});
@@ -417,24 +450,38 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.RATING, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.RATING.getField(),
+                            order
+                        ),
+                        String.class
+                    )
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        List<LadderVideoStream> expected = new ArrayList<>(List.of(
+            createIndexedLadderVideoStream(1, null),
+            createIndexedLadderVideoStream(0, null)
+        ));
+        if(order == SortingOrder.ASC) Collections.reverse(expected);
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("streams.proPlayer.proPlayer.version")
-            .isEqualTo(new CommunityStreamResult(List.of(
-                createIndexedLadderVideoStream(1, null),
-                createIndexedLadderVideoStream(0, null)
-            ), Set.of()));
+            .isEqualTo(new CommunityStreamResult(expected, Set.of()));
     }
 
-    @Test
-    public void testStreamRegionalTopPercentSorting()
+    @EnumSource(SortingOrder.class)
+    @ParameterizedTest
+    public void testStreamRegionalTopPercentSorting(SortingOrder order)
     throws Exception
     {
         init(4, (c, c1)->{});
@@ -452,22 +499,35 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.TOP_PERCENT_REGION, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.TOP_PERCENT_REGION.getField(),
+                            order
+                        ),
+                        String.class
+                    )
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        List<LadderVideoStream> expected = new ArrayList<>(List.of(
+            createIndexedLadderVideoStream(1, null),
+            createIndexedLadderVideoStream(2, null),
+            createIndexedLadderVideoStream(0, null),
+            createIndexedLadderVideoStream(3, null)
+        ));
+        if(order == SortingOrder.ASC) Collections.reverse(expected);
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("streams.proPlayer.proPlayer.version")
-            .isEqualTo(new CommunityStreamResult(List.of(
-                createIndexedLadderVideoStream(1, null),
-                createIndexedLadderVideoStream(2, null),
-                createIndexedLadderVideoStream(0, null),
-                createIndexedLadderVideoStream(3, null)
-            ), Set.of()));
+            .isEqualTo(new CommunityStreamResult(expected, Set.of()));
     }
     
     @Test
@@ -575,8 +635,19 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.VIEWERS.getField(),
+                            SortingOrder.DESC
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam("identifiedOnly", "true")
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -605,8 +676,19 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.VIEWERS.getField(),
+                            SortingOrder.DESC
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam
                 (
                     "race",
@@ -668,8 +750,19 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.VIEWERS.getField(),
+                            SortingOrder.DESC
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam("language", "en-US", "zh")
                 .queryParam("lax", conversionService.convert(lax, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -726,8 +819,19 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.VIEWERS.getField(),
+                            SortingOrder.DESC
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam("ratingMin", "2")
                 .queryParam("lax", conversionService.convert(lax, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -756,8 +860,19 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.VIEWERS.getField(),
+                            SortingOrder.DESC
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam("ratingMax", "1")
                 .queryParam("lax", conversionService.convert(lax, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -794,8 +909,19 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.VIEWERS.getField(),
+                            SortingOrder.DESC
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam("limit", "3")
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -842,8 +968,19 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.VIEWERS.getField(),
+                            SortingOrder.DESC
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam("limitPlayer", "3")
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -921,8 +1058,19 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "sort",
+                    conversionService.convert
+                    (
+                        new SortParameter
+                        (
+                            CommunityService.StreamSorting.VIEWERS.getField(),
+                            SortingOrder.DESC
+                        ),
+                        String.class
+                    )
+                )
                 .queryParam
                 (
                     "teamFormat",

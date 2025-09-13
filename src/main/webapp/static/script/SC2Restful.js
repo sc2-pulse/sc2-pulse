@@ -224,7 +224,7 @@ SC2Restful.IMAGES = new Map
     ["cn", ElementUtil.createImage("flag/", "cn", "icon-chart table-image table-image-long", SC2Restful.REM)]
 ]);
 
-if(localStorage.getItem("s-local-storage-version") !== "7") {
+if(localStorage.getItem("s-local-storage-version") !== "8") {
     localStorage.removeItem("stats-match-up-type");
     localStorage.removeItem("stats-match-up-map");
     if(localStorage.getItem("stats-match-up-league") === "5,0")
@@ -235,8 +235,29 @@ if(localStorage.getItem("s-local-storage-version") !== "7") {
     removeOldMmrLocalStorage("team-mmr");
     const clanSearchSortBy = localStorage.getItem("clan-search-sort-by");
     if(clanSearchSortBy != null) localStorage.setItem("clan-search-sort-by", EnumUtil.enumOfFullName(clanSearchSortBy, CLAN_CURSOR).field);
+    convertOldStreamSort("stream-sort-by");
+    convertOldStreamSort("stream-sort-by-featured")
 
-    localStorage.setItem("s-local-storage-version", "7");
+    localStorage.setItem("s-local-storage-version", "8");
+}
+
+function convertOldStreamSort(name)
+{
+    const streamSortBy = localStorage.getItem(name);
+    if(streamSortBy == null) return;
+
+    switch(streamSortBy)
+    {
+        case "RATING":
+            localStorage.setItem(name, new SortParameter("rating", SORTING_ORDER.DESC).toPrefixedString());
+            break;
+        case "VIEWERS":
+            localStorage.setItem(name, new SortParameter("viewers", SORTING_ORDER.DESC).toPrefixedString());
+            break;
+        case "TOP_PERCENT_REGION":
+            localStorage.setItem(name, new SortParameter("topPercentRegion", SORTING_ORDER.DESC).toPrefixedString());
+            break;
+    }
 }
 
 function removeOldMmrLocalStorage(prefix)
