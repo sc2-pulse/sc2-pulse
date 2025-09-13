@@ -91,7 +91,12 @@ public class MiscController
     private CommunityService communityService;
 
     @GetMapping("/seasons")
-    public List<Season> getSeasons(@RequestParam(name = "season", required = false) Integer season)
+    public List<Season> getSeasons
+    (
+        @RequestParam(name = "season", required = false)
+        @Min(0)
+        Integer season
+    )
     {
         return seasonDAO.findListByBattlenetId(season);
     }
@@ -99,11 +104,17 @@ public class MiscController
     @GetMapping("/patches")
     public ResponseEntity<?> getPatches
     (
-        @RequestParam(value = "buildMin", required = false) Long buildMin
+        @RequestParam
+        (
+            value = "buildMin",
+            required = false,
+            defaultValue = SC2MetaService.PATCH_START + ""
+        )
+        @Min(SC2MetaService.PATCH_START)
+        Long buildMin
     )
     {
-        return WebServiceUtil.notFoundIfEmpty(sc2MetaService
-            .getPatches(buildMin != null ? buildMin : SC2MetaService.PATCH_START));
+        return WebServiceUtil.notFoundIfEmpty(sc2MetaService.getPatches(buildMin));
     }
 
     @GetMapping("/tier-thresholds")
@@ -111,7 +122,7 @@ public class MiscController
     (
         @RequestParam("queue") QueueType queue,
         @RequestParam("teamType") TeamType teamType,
-        @RequestParam("season") int season,
+        @RequestParam("season") @Min(0) int season,
         @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
         @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues
     )

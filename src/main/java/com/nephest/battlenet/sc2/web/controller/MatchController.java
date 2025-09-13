@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.validation.Version;
+import jakarta.validation.constraints.Min;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,8 +32,8 @@ public class MatchController
         @RequestParam(value = "raceVersus", required = false) Race versusRace,
         @RequestParam(value = "ratingMin", required = false) Integer minRating,
         @RequestParam(value = "ratingMax", required = false) Integer maxRating,
-        @RequestParam(value = "durationMin", required = false) Integer minDuration,
-        @RequestParam(value = "durationMax", required = false) Integer maxDuration,
+        @RequestParam(value = "durationMin", required = false) @Min(0) Integer minDuration,
+        @RequestParam(value = "durationMax", required = false) @Min(0) Integer maxDuration,
         @RequestParam(value = "includeSubOnly", defaultValue = "false") boolean includeSubOnly,
         @RequestParam(value = "mapId", required = false) Integer map,
         @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor

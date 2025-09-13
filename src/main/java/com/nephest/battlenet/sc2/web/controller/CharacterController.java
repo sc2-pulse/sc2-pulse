@@ -30,6 +30,8 @@ import com.nephest.battlenet.sc2.web.service.external.ExternalLinkResolveResult;
 import com.nephest.battlenet.sc2.web.service.external.ExternalPlayerCharacterLinkService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.Collection;
@@ -156,13 +158,11 @@ public class CharacterController
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "type", required = false, defaultValue = "") Set<BaseMatch.MatchType> types,
         @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor,
-        @RequestParam(name = "limit", required = false, defaultValue = "20") int limit
+        @RequestParam(name = "limit", required = false, defaultValue = "20")
+        @Min(1) @Max(MATCH_PAGE_SIZE_MAX)
+        int limit
     )
     {
-        if(limit > MATCH_PAGE_SIZE_MAX) return ResponseEntity
-            .badRequest()
-            .body("Max limit: " + MATCH_PAGE_SIZE_MAX);
-
         return WebServiceUtil.notFoundIfEmpty
         (
             ladderMatchDAO.findMatchesByCharacterIds
@@ -186,21 +186,20 @@ public class CharacterController
     (
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "queue", required = false, defaultValue = "") Set<QueueType> queues,
-        @RequestParam(name = "season", required = false, defaultValue = "") Set<Integer> seasons,
+        @RequestParam(name = "season", required = false, defaultValue = "")
+        Set<@Min(0) Integer> seasons,
         @RequestParam(name = "race", required = false, defaultValue = "") Set<Race> races,
-        @RequestParam(name = "limit", required = false, defaultValue = TEAM_LIMIT + "") Integer limit
+        @RequestParam(name = "limit", required = false, defaultValue = TEAM_LIMIT + "")
+        @Min(1) @Max(SINGLE_CHARACTER_TEAM_LIMIT)
+        Integer limit
     )
     {
-        if
-        (
-            limit < 1
-                || (characterIds.size() == 1 && limit > SINGLE_CHARACTER_TEAM_LIMIT)
-                || (characterIds.size() > 1 && limit > TEAM_LIMIT)
-        ) return ResponseEntity.badRequest().body
-            (
-                "Limit should be in 1-" + TEAM_LIMIT + " range, "
-                    + "1-" + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
-            );
+        if(characterIds.size() > 1 && limit > TEAM_LIMIT)
+            return ResponseEntity.badRequest().body
+                (
+                    "Limit should be in 1-" + TEAM_LIMIT + " range, "
+                        + "1-" + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
+                );
         if(characterIds.size() > 1 && (seasons.size() != 1 || queues.size() != 1))
             return ResponseEntity.badRequest()
                 .body("1 season and 1 queue are required for multi-character request");

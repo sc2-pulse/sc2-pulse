@@ -142,7 +142,7 @@ public class TeamController
     (
         @RequestParam("queue") QueueType queue,
         @RequestParam("teamType") TeamType teamType,
-        @RequestParam("season") int season,
+        @RequestParam("season") @Min(0) int season,
         @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
         @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues,
         @RequestParam(value = "sort", defaultValue = "-rating")

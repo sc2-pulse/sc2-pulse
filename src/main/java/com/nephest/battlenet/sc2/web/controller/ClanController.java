@@ -18,6 +18,8 @@ import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,12 +54,24 @@ public class ClanController
     public CursorNavigableResult<List<Clan>> getByCursor
     (
         @RequestParam(name="region", required = false) Region region,
-        @RequestParam(name="activeMembersMin", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) int minActiveMembers,
-        @RequestParam(name="activeMembersMax", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) int maxActiveMembers,
-        @RequestParam(name="gamesPerActiveMemberPerDayMin", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) double minGamesPerActiveMemberPerDay,
-        @RequestParam(name="gamesPerActiveMemberPerDayMax", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) double maxGamesPerActiveMemberPerDay,
-        @RequestParam(name="avgRatingMin", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR) int minAvgRating,
-        @RequestParam(name="avgRatingMax", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR) int maxAvgRating,
+        @RequestParam(name="activeMembersMin", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR)
+        @Min(0)
+        int minActiveMembers,
+        @RequestParam(name="activeMembersMax", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR)
+        @Min(0)
+        int maxActiveMembers,
+        @RequestParam(name="gamesPerActiveMemberPerDayMin", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR)
+        @Min(0)
+        double minGamesPerActiveMemberPerDay,
+        @RequestParam(name="gamesPerActiveMemberPerDayMax", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR)
+        @Min(0)
+        double maxGamesPerActiveMemberPerDay,
+        @RequestParam(name="avgRatingMin", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER_STR)
+        @Min(0)
+        int minAvgRating,
+        @RequestParam(name="avgRatingMax", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER_STR)
+        @Min(0)
+        int maxAvgRating,
         @RequestParam(value = "sort", defaultValue = "-activeMembers")
         @AllowedField({"members", "activeMembers", "gamesPerActiveMemberPerDay", "avgRating"})
         SortParameter sort,
@@ -90,11 +104,11 @@ public class ClanController
         @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds,
         @RequestParam(name = "toonHandle", required = false, defaultValue = "") Set<PlayerCharacterNaturalId> toonHandles,
         @Version(ClanMemberEventDAO.CURSOR_POSITION_VERSION) Cursor cursor,
-        @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "") Integer limit
+        @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "")
+        @Min(1) @Max(CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
+        Integer limit
     )
     {
-        if(limit > CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
-            return ResponseEntity.badRequest().body("Max page size exceeded: " + CLAN_MEMBER_EVENT_PAGE_SIZE_MAX);
         return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
             .orElseGet(()->{
                 CursorNavigableResult<LadderClanMemberEvents> evts = ladderClanMemberEventDAO.find
