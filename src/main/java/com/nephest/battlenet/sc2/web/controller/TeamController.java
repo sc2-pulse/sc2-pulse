@@ -93,12 +93,9 @@ public class TeamController
         @RequestParam(value = "winsMax", required = false)  @Valid @Min(0) Integer winsMax,
         @RequestParam(value = "ratingMin", required = false) @Valid @Min(0) Integer ratingMin,
         @RequestParam(value = "ratingMax", required = false) @Valid @Min(0) Integer ratingMax,
-        @RequestParam(value = "limit", defaultValue = RECENT_TEAMS_LIMIT + "") @Valid @Min(1) @Max(RECENT_TEAMS_LIMIT) int limit,
-        @RequestParam(value = "recent", defaultValue = "true") boolean recent
+        @RequestParam(value = "limit", defaultValue = RECENT_TEAMS_LIMIT + "") @Valid @Min(1) @Max(RECENT_TEAMS_LIMIT) int limit
     )
     {
-        if(!recent) return ResponseEntity.badRequest().body("Only recent teams are supported");
-
         return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findRecentlyActiveTeams
         (
             queueType,
