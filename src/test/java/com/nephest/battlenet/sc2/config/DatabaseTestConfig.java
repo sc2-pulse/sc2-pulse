@@ -30,6 +30,7 @@ import com.nephest.battlenet.sc2.web.service.SC2WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.StatusService;
 import com.nephest.battlenet.sc2.web.service.notification.NotificationService;
+import com.nephest.battlenet.sc2.web.util.ConversionUtil;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -66,6 +67,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ClanService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SC2WebServiceUtil.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = WebContextUtil.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ConversionUtil.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatusService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AlternativeLadderService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = MatchService.class),
