@@ -17,7 +17,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SortParameterConverter
+public class StringToSortParameterConverter
 implements Converter<String, SortParameter>
 {
 

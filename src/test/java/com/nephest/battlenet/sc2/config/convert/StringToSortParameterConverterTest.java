@@ -11,15 +11,15 @@ import com.nephest.battlenet.sc2.model.web.SortParameter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class SortParameterConverterTest
+class StringToSortParameterConverterTest
 {
 
-    private SortParameterConverter converter;
+    private StringToSortParameterConverter converter;
 
     @BeforeEach
     void setUp()
     {
-        converter = new SortParameterConverter();
+        converter = new StringToSortParameterConverter();
     }
 
     @Test

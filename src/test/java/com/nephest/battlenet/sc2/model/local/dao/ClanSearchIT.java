@@ -243,7 +243,11 @@ public class ClanSearchIT
                 .queryParam
                 (
                     "sort",
-                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
+                    mvcConversionService.convert
+                    (
+                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        String.class
+                    )
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -273,7 +277,11 @@ public class ClanSearchIT
                 .queryParam
                 (
                     "sort",
-                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
+                    mvcConversionService.convert
+                    (
+                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        String.class
+                    )
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -303,7 +311,11 @@ public class ClanSearchIT
                 .queryParam
                 (
                     "sort",
-                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
+                    mvcConversionService.convert
+                    (
+                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        String.class
+                    )
                 )
                 .queryParam("activeMembersMin", "10")
                 .queryParam("activeMembersMax", "19")
@@ -335,7 +347,11 @@ public class ClanSearchIT
                 .queryParam
                 (
                     "sort",
-                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
+                    mvcConversionService.convert
+                    (
+                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        String.class
+                    )
                 )
                 .queryParam("avgRatingMin", "10")
                 .queryParam("avgRatingMax", "19")
@@ -368,7 +384,11 @@ public class ClanSearchIT
                 .queryParam
                 (
                     "sort",
-                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
+                    mvcConversionService.convert
+                    (
+                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        String.class
+                    )
                 )
                 .queryParam("region", mvcConversionService.convert(Region.EU, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -402,7 +422,11 @@ public class ClanSearchIT
                 .queryParam
                 (
                     "sort",
-                    new SortParameter(cursor.getField(), SortingOrder.DESC).toPrefixedString()
+                    mvcConversionService.convert
+                    (
+                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        String.class
+                    )
                 )
                 .queryParam("activeMembersMin", "10")
                 .queryParam("activeMembersMax", "19")
