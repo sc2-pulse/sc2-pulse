@@ -225,10 +225,6 @@ SC2Restful.IMAGES = new Map
 ]);
 
 if(localStorage.getItem("s-local-storage-version") !== "7") {
-    if(localStorage.getItem("stream-sort-by") === "mmr") localStorage.setItem("stream-sort-by", "RATING");
-    if(localStorage.getItem("stream-sort-by") === "viewers") localStorage.setItem("stream-sort-by", "VIEWERS");
-    if(localStorage.getItem("stream-sort-by") === "RANK_REGION") localStorage.setItem("stream-sort-by", "TOP_PERCENT_REGION");
-    if(localStorage.getItem("stream-sort-by-featured") === "RANK_REGION") localStorage.setItem("stream-sort-by-featured", "TOP_PERCENT_REGION");
     localStorage.removeItem("stats-match-up-type");
     localStorage.removeItem("stats-match-up-map");
     if(localStorage.getItem("stats-match-up-league") === "5,0")
