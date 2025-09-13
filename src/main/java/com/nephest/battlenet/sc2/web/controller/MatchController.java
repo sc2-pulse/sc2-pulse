@@ -27,7 +27,6 @@ public class MatchController
     @GetMapping(value = "/matches", params = "vod")
     public CursorNavigableResult<List<LadderMatch>> getVods
     (
-        @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor,
         @RequestParam(value = "race", required = false) Race race,
         @RequestParam(value = "raceVersus", required = false) Race versusRace,
         @RequestParam(value = "ratingMin", required = false) Integer minRating,
@@ -35,7 +34,8 @@ public class MatchController
         @RequestParam(value = "durationMin", required = false) Integer minDuration,
         @RequestParam(value = "durationMax", required = false) Integer maxDuration,
         @RequestParam(value = "includeSubOnly", defaultValue = "false") boolean includeSubOnly,
-        @RequestParam(value = "mapId", required = false) Integer map
+        @RequestParam(value = "mapId", required = false) Integer map,
+        @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor
     )
     {
         return ladderMatchDAO.findTwitchVods

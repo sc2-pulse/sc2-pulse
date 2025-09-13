@@ -62,15 +62,15 @@ public class StatsController
     @GetMapping("/balance-reports")
     public ResponseEntity<LadderMapStatsFilm> getBalanceReports
     (
-        @RequestParam("season") int season,
-        @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
         @RequestParam("queue") QueueType queue,
         @RequestParam("teamType") TeamType teamType,
         @RequestParam("league") BaseLeague.LeagueType league,
         @RequestParam("tier") BaseLeagueTier.LeagueTierType tier,
+        @RequestParam("season") int season,
+        @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
+        @RequestParam(value = "race", defaultValue = "") Set<Race> races,
         @RequestParam(value = "crossTier", defaultValue = "") Set<Boolean> crossTier,
-        @RequestParam(value = "frameNumberMax", required = false) Integer frameNumberMax,
-        @RequestParam(value = "race", defaultValue = "") Set<Race> races
+        @RequestParam(value = "frameNumberMax", required = false) Integer frameNumberMax
     )
     {
         if(regions.isEmpty()) regions = EnumSet.allOf(Region.class);

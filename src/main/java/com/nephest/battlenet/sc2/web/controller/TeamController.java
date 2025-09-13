@@ -87,12 +87,12 @@ public class TeamController
     (
         @RequestParam("queue") QueueType queueType,
         @RequestParam("league") BaseLeague.LeagueType league,
+        @RequestParam(value = "region", required = false) Region region,
+        @RequestParam(value = "race", required = false) Race race,
         @RequestParam(value = "winsMin", required = false) @Valid @Min(0) Integer winsMin,
         @RequestParam(value = "winsMax", required = false)  @Valid @Min(0) Integer winsMax,
         @RequestParam(value = "ratingMin", required = false) @Valid @Min(0) Integer ratingMin,
         @RequestParam(value = "ratingMax", required = false) @Valid @Min(0) Integer ratingMax,
-        @RequestParam(value = "race", required = false) Race race,
-        @RequestParam(value = "region", required = false) Region region,
         @RequestParam(value = "limit", defaultValue = RECENT_TEAMS_LIMIT + "") @Valid @Min(1) @Max(RECENT_TEAMS_LIMIT) int limit,
         @RequestParam(value = "recent", defaultValue = "true") boolean recent
     )
@@ -140,14 +140,14 @@ public class TeamController
     @GetMapping(value = "/teams", params = {"queue", "season"})
     public CursorNavigableResult<List<LadderTeam>> getLadders
     (
-        @Version(CURSOR_POSITION_VERSION) Cursor cursor,
-        @RequestParam(value = "sort", defaultValue = "-rating")
-        @AllowedField("rating") SortParameter sort,
-        @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("teamType") TeamType teamType,
+        @RequestParam("season") int season,
         @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
-        @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues
+        @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues,
+        @RequestParam(value = "sort", defaultValue = "-rating")
+        @AllowedField("rating") SortParameter sort,
+        @Version(CURSOR_POSITION_VERSION) Cursor cursor
     )
     {
         return ladderSearchDAO.find

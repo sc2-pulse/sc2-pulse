@@ -93,11 +93,11 @@ public class CharacterController
     public ResponseEntity<?> getIds
     (
         @RequestParam("name") @Valid @NotBlank @NotFakeSc2Name String name,
-        @RequestParam(name = "caseSensitive", defaultValue = "true") boolean caseSensitive,
         @RequestParam(name = "region", required = false) Region region,
+        @RequestParam(name = "queue", defaultValue = "") Set<QueueType> queues,
         @RequestParam(name = "season", defaultValue = "") @Valid @Size(max = ID_SEARCH_MAX_SEASONS)
         Set<Integer> seasons,
-        @RequestParam(name = "queue", defaultValue = "") Set<QueueType> queues
+        @RequestParam(name = "caseSensitive", defaultValue = "true") boolean caseSensitive
     )
     {
         if(seasons.size() > 1 && queues.size() > 1) return ResponseEntity.badRequest()
@@ -154,8 +154,8 @@ public class CharacterController
     public ResponseEntity<?> getMatches
     (
         @CharacterGroup Set<Long> characterIds,
-        @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor,
         @RequestParam(name = "type", required = false, defaultValue = "") Set<BaseMatch.MatchType> types,
+        @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor,
         @RequestParam(name = "limit", required = false, defaultValue = "20") int limit
     )
     {
@@ -185,8 +185,8 @@ public class CharacterController
     public ResponseEntity<?> getTeams
     (
         @CharacterGroup Set<Long> characterIds,
-        @RequestParam(name = "season", required = false, defaultValue = "") Set<Integer> seasons,
         @RequestParam(name = "queue", required = false, defaultValue = "") Set<QueueType> queues,
+        @RequestParam(name = "season", required = false, defaultValue = "") Set<Integer> seasons,
         @RequestParam(name = "race", required = false, defaultValue = "") Set<Race> races,
         @RequestParam(name = "limit", required = false, defaultValue = TEAM_LIMIT + "") Integer limit
     )

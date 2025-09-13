@@ -109,9 +109,9 @@ public class MiscController
     @GetMapping("/tier-thresholds")
     public Map<Region, Map<BaseLeague.LeagueType, Map<BaseLeagueTier.LeagueTierType, Integer[]>>> getTierThresholds
     (
-        @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("teamType") TeamType teamType,
+        @RequestParam("season") int season,
         @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
         @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues
     )
@@ -132,18 +132,18 @@ public class MiscController
     public ResponseEntity<?> getStreams
     (
         @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services,
+        @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
+        @RequestParam(name = "lax", defaultValue = "false") boolean lax,
+        @RequestParam(name = "teamFormat", defaultValue = "") Set<TeamFormat> teamFormats,
+        @RequestParam(name = "race", defaultValue = "") Set<Race> races,
+        @RequestParam(name = "language", defaultValue = "") Set<Locale> languages,
+        @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin,
+        @RequestParam(name = "ratingMax", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMax,
         @RequestParam(name = "sort", defaultValue = "-viewers", required = false)
         @AllowedField({"viewers", "rating", "topPercentRegion"})
         SortParameter sort,
-        @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
-        @RequestParam(name = "race", defaultValue = "") Set<Race> races,
-        @RequestParam(name = "language", defaultValue = "") Set<Locale> languages,
-        @RequestParam(name = "teamFormat", defaultValue = "") Set<TeamFormat> teamFormats,
-        @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin,
-        @RequestParam(name = "ratingMax", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMax,
         @RequestParam(name = "limit", required = false) @Min(1) @Valid Integer limit,
-        @RequestParam(name = "limitPlayer", required = false) @Min(1) @Valid Integer limitPlayer,
-        @RequestParam(name = "lax", defaultValue = "false") boolean lax
+        @RequestParam(name = "limitPlayer", required = false) @Min(1) @Valid Integer limitPlayer
     )
     {
         if(ratingMin != null && ratingMax != null && ratingMin > ratingMax) return ResponseEntity
