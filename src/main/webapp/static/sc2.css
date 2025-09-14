@@ -144,11 +144,6 @@ body
     text-align: left;
 }
 
-#about h2, #about h3
-{
-    text-align: center;
-}
-
 .readable-text-block
 {
     min-width: 20em;

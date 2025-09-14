@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2024 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -11,7 +11,7 @@
 </head>
 <body>
 <div th:replace="~{fragments/generic :: content(~{::section})}">
-    <section id="about" th:with="mods=${@userController.getModTags()}">
+    <section id="about" class="text-left text-content" th:with="mods=${@userController.getModTags()}">
         <header>
             <h2>What is this site?</h2>
             <p>
