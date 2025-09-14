@@ -61,8 +61,8 @@ implements HandlerMethodArgumentResolver
         }
     }
 
-    public static final int TEAMS_MAX = 10000;
-    public static final int LEGACY_UIDS_MAX = TEAMS_MAX / 1000;
+    public static final int TEAMS_MAX = 1500;
+    public static final int LEGACY_UIDS_MAX = TEAMS_MAX / 150;
 
     private final RequestParamMethodArgumentResolver paramResolver
         = new RequestParamMethodArgumentResolver(true);
