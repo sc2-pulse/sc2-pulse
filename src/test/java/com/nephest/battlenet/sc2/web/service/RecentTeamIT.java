@@ -184,7 +184,7 @@ public class RecentTeamIT
                 "/api/teams?queue=" + cs.convert(QueueType.LOTV_2V2, String.class)
                     + "&league=" + cs.convert(BaseLeague.LeagueType.GOLD, String.class)
                     + "&recent=true"
-                    + "?race=" + cs.convert(Race.TERRAN, String.class)
+                    + "&race=" + cs.convert(Race.TERRAN, String.class)
             )
         );
     }
