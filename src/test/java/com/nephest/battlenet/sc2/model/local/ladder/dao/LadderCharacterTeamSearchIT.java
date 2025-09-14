@@ -307,21 +307,6 @@ public class LadderCharacterTeamSearchIT
             assertTrue(teams.get(0).getMembers().stream().anyMatch(m->m.getCharacter().equals(character)));
     }
 
-    @ValueSource(ints = {-1, 0, CharacterController.SINGLE_CHARACTER_TEAM_LIMIT + 1})
-    @ParameterizedTest
-    public void whenSingleCharacterTeamLimitIsNotInValidRange_thenBadRequest(int limit)
-    throws Exception
-    {
-        mvc.perform
-        (
-            get("/api/character-teams")
-                .param("characterId", String.valueOf(characters[0].getId()))
-                .param("limit", String.valueOf(limit))
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isBadRequest());
-    }
-
     @ValueSource(ints = {-1, 0, CharacterController.TEAM_LIMIT + 1})
     @ParameterizedTest
     public void whenTeamLimitIsNotInValidRange_thenBadRequest(int limit)

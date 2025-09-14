@@ -26,7 +26,6 @@ import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.validation.NotFakeSc2Name;
 import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
-import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.SearchService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.external.ExternalLinkResolveResult;
@@ -57,8 +56,8 @@ public class CharacterController
     public static final int PLAYER_CHARACTERS_MAX = 100;
     public static final int SEARCH_SUGGESTIONS_SIZE = 10;
     public static final int MATCH_PAGE_SIZE_MAX = 100;
-    public static final int TEAM_LIMIT = CharacterGroupArgumentResolver.CHARACTERS_MAX * 5;
-    public static final int SINGLE_CHARACTER_TEAM_LIMIT = 3000;
+    public static final int TEAM_LIMIT = 400;
+    public static final int SINGLE_CHARACTER_TEAM_LIMIT = TeamController.TEAMS_LIMIT;
 
     @Autowired
     private PlayerCharacterDAO playerCharacterDAO;
@@ -176,8 +175,7 @@ public class CharacterController
     @Operation
     (
         description = "If multiple characters(flattened) are used, then you must supply 1 season "
-            + "and  1 queue filter. Max limit: " + TEAM_LIMIT + " for multi-character, "
-            + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
+            + "and  1 queue filter."
     )
     @GetMapping("/character-teams") @CharacterGroup
     public List<LadderTeam> getTeams
@@ -188,17 +186,10 @@ public class CharacterController
         Set<@Min(0) Integer> seasons,
         @RequestParam(name = "race", required = false, defaultValue = "") Set<Race> races,
         @RequestParam(name = "limit", required = false, defaultValue = TEAM_LIMIT + "")
-        @Min(1) @Max(SINGLE_CHARACTER_TEAM_LIMIT)
+        @Min(1) @Max(TEAM_LIMIT)
         Integer limit
     )
     {
-        if(characterIds.size() > 1 && limit > TEAM_LIMIT)
-            throw new ResponseStatusException
-            (
-                HttpStatus.BAD_REQUEST,
-                "Limit should be in 1-" + TEAM_LIMIT + " range, "
-                    + "1-" + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
-            );
         if(characterIds.size() > 1 && (seasons.size() != 1 || queues.size() != 1))
             throw new ResponseStatusException
             (
