@@ -30,6 +30,7 @@ import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -126,6 +127,7 @@ public class TeamController
             : ResponseEntity.ok(ladderSearchDAO.findTeamsByIds(teamIds));
     }
 
+    @Operation(description = "Returns last team from each `teamLegacyUid` set")
     @GetMapping(value = "/teams", params = "last")
     public List<LadderTeam> getLastTeams
     (
@@ -139,6 +141,7 @@ public class TeamController
         return ladderSearchDAO.findLegacyTeams(legacyUids, false);
     }
 
+    @Operation(summary = "Ladder")
     @GetMapping(value = "/teams", params = {"queue", "season"})
     public CursorNavigableResult<List<LadderTeam>> getLadders
     (

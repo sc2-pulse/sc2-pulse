@@ -22,7 +22,12 @@ import java.lang.annotation.Target;
     description = "queueId-teamTypeId-regionId-legacyId",
     array = @ArraySchema
     (
-        schema = @Schema(type = "string", pattern = "^(201|202|203|204|206)-(0|1)-(1|2|3|5)-.+$")
+        schema = @Schema
+        (
+            type = "string",
+            pattern = "^(201|202|203|204|206)-(0|1)-(1|2|3|5)-.+$",
+            example = "201-0-2-1.3141896.1"
+        )
     )
 )
 public @interface TeamLegacyUids

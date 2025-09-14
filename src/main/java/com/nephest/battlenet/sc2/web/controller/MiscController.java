@@ -35,6 +35,7 @@ import com.nephest.battlenet.sc2.web.service.SC2MetaService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
 import com.nephest.battlenet.sc2.web.service.community.CommunityStreamResult;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -181,6 +182,7 @@ public class MiscController
         return ResponseEntity.status(getStatus(result)).body(result);
     }
 
+    @Operation(summary = "Pull multiple different entities in one go")
     @GetMapping("/entities")
     public Group getEntities
     (
