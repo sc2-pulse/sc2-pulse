@@ -110,7 +110,7 @@ public class MiscController
             required = false,
             defaultValue = SC2MetaService.PATCH_START + ""
         )
-        @Min(SC2MetaService.PATCH_START)
+        @Min(0)
         Long buildMin
     )
     {
