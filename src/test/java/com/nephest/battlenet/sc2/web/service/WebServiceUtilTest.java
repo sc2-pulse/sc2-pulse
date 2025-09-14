@@ -20,7 +20,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 
 public class WebServiceUtilTest
@@ -152,6 +155,33 @@ public class WebServiceUtilTest
             Duration.ZERO,
             WebServiceUtil.cacheNotFoundError(ise)
         );
+    }
+
+    @CsvSource
+    ({
+        "NOT_FOUND, body",
+        "BAD_REQUEST,"
+    })
+    @ParameterizedTest
+    public void testThrowException(HttpStatus status, String body)
+    {
+        try
+        {
+            WebServiceUtil.throwException(ResponseEntity.status(status).body(body));
+        }
+        catch (ResponseStatusException ex)
+        {
+            assertEquals(status, ex.getStatusCode());
+            assertEquals(body, ex.getReason());
+            return;
+        }
+        throw new IllegalStateException("Expected exception was not thrown");
+    }
+
+    @Test
+    public void shouldNotThrowIfNull()
+    {
+        WebServiceUtil.throwException(null);
     }
 
 }

@@ -51,6 +51,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -643,6 +644,16 @@ public class WebServiceUtil
     )
     {
         return handleFluxResponse(response, targetClass, CONTENT_STATUS_CODES, EMPTY_STATUS_CODES);
+    }
+
+    public static void throwException(ResponseEntity<?> entity)
+    {
+        if(entity == null) return;
+
+        throw new ResponseStatusException(
+            entity.getStatusCode(),
+            entity.hasBody() ? entity.getBody().toString() : null
+        );
     }
 
 }
