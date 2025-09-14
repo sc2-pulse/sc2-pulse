@@ -6,10 +6,11 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
@@ -230,13 +231,13 @@ public class RecentTeamIT
             "UPDATE team SET last_played = ?",
             SC2Pulse.offsetDateTime().minus(TeamController.RECENT_TEAMS_OFFSET).minusSeconds(1)
         );
-        mvc.perform
-        (
+        List<LadderTeam> teams = objectMapper.readValue(mvc.perform(
             get(urlStart1v1)
                 .contentType(MediaType.APPLICATION_JSON)
         )
-            .andExpect(status().isNotFound())
-            .andExpect(content().string(""));
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertTrue(teams.isEmpty());
     }
 
     @Test

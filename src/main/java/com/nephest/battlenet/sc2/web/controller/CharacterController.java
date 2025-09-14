@@ -14,12 +14,15 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.validation.NotFakeSc2Name;
 import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
@@ -44,6 +47,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api")
@@ -92,7 +96,7 @@ public class CharacterController
 
     @Operation(description = "0/1 season and multiple queues, or multiple seasons and 0/1 queue")
     @GetMapping(value = "/characters", params = {"field=" + IdField.NAME, "name"})
-    public ResponseEntity<?> getIds
+    public List<IdProjection<Long>> getIds
     (
         @RequestParam("name") @Valid @NotBlank @NotFakeSc2Name String name,
         @RequestParam(name = "region", required = false) Region region,
@@ -102,13 +106,16 @@ public class CharacterController
         @RequestParam(name = "caseSensitive", defaultValue = "true") boolean caseSensitive
     )
     {
-        if(seasons.size() > 1 && queues.size() > 1) return ResponseEntity.badRequest()
-            .body("1 season x queues or x seasons 1 queue are supported");
-        return WebServiceUtil.notFoundIfEmpty(searchService
+        if(seasons.size() > 1 && queues.size() > 1) throw new IllegalArgumentException
+        (
+            "1 season x queues or x seasons 1 queue are supported"
+        );
+
+        return searchService
             .findIds(name, caseSensitive, region, seasons, queues)
             .stream()
             .map(IdProjection::new)
-            .toList());
+            .toList();
     }
 
     @GetMapping(value = "/characters", params = "query")
@@ -125,21 +132,15 @@ public class CharacterController
 
     private static HttpStatus getStatus(Collection<? extends ExternalLinkResolveResult> results)
     {
-        return results.isEmpty()
-            ? HttpStatus.NOT_FOUND
-            : results.stream()
-                .map(ExternalLinkResolveResult::failedTypes)
-                .anyMatch(s->!s.isEmpty())
+        return results.stream()
+            .map(ExternalLinkResolveResult::failedTypes)
+            .anyMatch(s->!s.isEmpty())
                 ? WebServiceUtil.UPSTREAM_ERROR_STATUS
-                : results.stream()
-                    .map(ExternalLinkResolveResult::links)
-                    .anyMatch(l->!l.isEmpty())
-                    ? HttpStatus.OK
-                    : HttpStatus.NOT_FOUND;
+                : HttpStatus.OK;
     }
 
     @GetMapping("/character-links") @CharacterGroup
-    public ResponseEntity<?> getLinks
+    public ResponseEntity<List<ExternalLinkResolveResult>> getLinks
     (
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "type", defaultValue = "") Set<SocialMedia> types
@@ -153,7 +154,7 @@ public class CharacterController
     }
 
     @GetMapping("/character-matches") @CharacterGroup
-    public ResponseEntity<?> getMatches
+    public CursorNavigableResult<List<LadderMatch>> getMatches
     (
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "type", required = false, defaultValue = "") Set<BaseMatch.MatchType> types,
@@ -163,15 +164,12 @@ public class CharacterController
         int limit
     )
     {
-        return WebServiceUtil.notFoundIfEmpty
+        return ladderMatchDAO.findMatchesByCharacterIds
         (
-            ladderMatchDAO.findMatchesByCharacterIds
-            (
-                characterIds,
-                cursor,
-                limit,
-                types
-            )
+            characterIds,
+            cursor,
+            limit,
+            types
         );
     }
 
@@ -182,7 +180,7 @@ public class CharacterController
             + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
     )
     @GetMapping("/character-teams") @CharacterGroup
-    public ResponseEntity<?> getTeams
+    public List<LadderTeam> getTeams
     (
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "queue", required = false, defaultValue = "") Set<QueueType> queues,
@@ -195,17 +193,21 @@ public class CharacterController
     )
     {
         if(characterIds.size() > 1 && limit > TEAM_LIMIT)
-            return ResponseEntity.badRequest().body
-                (
-                    "Limit should be in 1-" + TEAM_LIMIT + " range, "
-                        + "1-" + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
-                );
+            throw new ResponseStatusException
+            (
+                HttpStatus.BAD_REQUEST,
+                "Limit should be in 1-" + TEAM_LIMIT + " range, "
+                    + "1-" + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
+            );
         if(characterIds.size() > 1 && (seasons.size() != 1 || queues.size() != 1))
-            return ResponseEntity.badRequest()
-                .body("1 season and 1 queue are required for multi-character request");
+            throw new ResponseStatusException
+            (
+                HttpStatus.BAD_REQUEST,
+                "1 season and 1 queue are required for multi-character request"
+            );
 
-        return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO
-            .findCharacterTeams(characterIds, seasons, queues, races, limit));
+        return ladderSearchDAO
+            .findCharacterTeams(characterIds, seasons, queues, races, limit);
     }
 
 }

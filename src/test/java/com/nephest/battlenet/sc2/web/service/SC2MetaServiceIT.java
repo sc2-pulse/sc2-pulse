@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -93,13 +94,14 @@ public class SC2MetaServiceIT
             .collectList()
             .block();
 
-        mvc.perform
+        List<LadderPatch> foundPatches1 = objectMapper.readValue(mvc.perform
         (
             get("/api/patches")
                 .contentType(MediaType.APPLICATION_JSON)
         )
-            .andExpect(status().isNotFound())
-            .andReturn();
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertTrue(foundPatches1.isEmpty());
 
         LadderPatch firstPatch = recentPatches.get(recentPatches.size() - 1);
         patchDAO.merge(Set.of(firstPatch.getPatch()));

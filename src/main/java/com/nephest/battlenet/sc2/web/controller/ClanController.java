@@ -18,12 +18,12 @@ import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -95,7 +95,7 @@ public class ClanController
     }
 
     @GetMapping("/clan-histories")
-    public ResponseEntity<?> getClanHistories
+    public CursorNavigableResult<LadderClanMemberEvents> getClanHistories
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "")
         Set<Long> characterIds,
@@ -109,19 +109,18 @@ public class ClanController
         Integer limit
     )
     {
-        return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
-            .orElseGet(()->{
-                CursorNavigableResult<LadderClanMemberEvents> evts = ladderClanMemberEventDAO.find
-                (
-                    resolver.resolve(characterIds, Set.of(), proPlayerIds, accountIds, toonHandles),
-                    clanIds,
-                    cursor,
-                    limit
-                );
-                return evts.result() == null
-                    ? ResponseEntity.notFound().build()
-                    : ResponseEntity.ok().body(evts);
-            });
+        WebServiceUtil.throwException
+        (
+            areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
+                .orElse(null)
+        );
+        return ladderClanMemberEventDAO.find
+        (
+            resolver.resolve(characterIds, Set.of(), proPlayerIds, accountIds, toonHandles),
+            clanIds,
+            cursor,
+            limit
+        );
     }
 
 }

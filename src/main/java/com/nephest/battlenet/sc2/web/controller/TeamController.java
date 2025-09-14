@@ -13,7 +13,12 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryHistoryData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistorySummaryData;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistory;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
@@ -59,7 +64,7 @@ public class TeamController
     @Autowired
     private TeamHistoryDAO teamHistoryDAO;
 
-    private static Optional<ResponseEntity<Object>> getHistoryParametersError
+    private static Optional<ResponseEntity<?>> getHistoryParametersError
     (
         Set<TeamHistoryDAO.StaticColumn> staticColumns,
         TeamHistoryDAO.GroupMode groupMode,
@@ -83,7 +88,7 @@ public class TeamController
     }
 
     @GetMapping(value = "/teams", params = "recent")
-    public ResponseEntity<?> getTeams
+    public List<LadderTeam> getTeams
     (
         @RequestParam("queue") QueueType queueType,
         @RequestParam("league") BaseLeague.LeagueType league,
@@ -96,7 +101,7 @@ public class TeamController
         @RequestParam(value = "limit", defaultValue = RECENT_TEAMS_LIMIT + "") @Valid @Min(1) @Max(RECENT_TEAMS_LIMIT) int limit
     )
     {
-        return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findRecentlyActiveTeams
+        return ladderSearchDAO.findRecentlyActiveTeams
         (
             queueType,
             league,
@@ -106,7 +111,7 @@ public class TeamController
             race,
             region,
             limit
-        ));
+        );
     }
 
     @GetMapping("/teams") @TeamGroup
@@ -117,12 +122,12 @@ public class TeamController
     )
     {
         return field != null
-            ? WebServiceUtil.notFoundIfEmpty(teamIds.stream().map(IdProjection::new).toList())
-            : WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findTeamsByIds(teamIds));
+            ? ResponseEntity.ok(teamIds.stream().map(IdProjection::new).toList())
+            : ResponseEntity.ok(ladderSearchDAO.findTeamsByIds(teamIds));
     }
 
     @GetMapping(value = "/teams", params = "last")
-    public ResponseEntity<?> getLastTeams
+    public List<LadderTeam> getLastTeams
     (
         @RequestParam("teamLegacyUid")
         @TeamLegacyUids
@@ -131,7 +136,7 @@ public class TeamController
         Set<TeamLegacyUid> legacyUids
     )
     {
-        return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findLegacyTeams(legacyUids, false));
+        return ladderSearchDAO.findLegacyTeams(legacyUids, false);
     }
 
     @GetMapping(value = "/teams", params = {"queue", "season"})
@@ -160,7 +165,7 @@ public class TeamController
     }
 
     @GetMapping("/team-histories") @TeamGroup
-    public ResponseEntity<Object> getHistories
+    public List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> getHistories
     (
         @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
         @RequestParam("history") Set<TeamHistoryDAO.HistoryColumn> historyColumns,
@@ -171,14 +176,16 @@ public class TeamController
         @RequestParam(value = "to", required = false) OffsetDateTime to
     )
     {
-
-        return getHistoryParametersError(staticColumns, groupMode, from , to)
-            .orElseGet(()->WebServiceUtil.notFoundIfEmpty(
-                teamHistoryDAO.find(teamIds, from, to, staticColumns, historyColumns, groupMode)));
+        WebServiceUtil.throwException
+        (
+            getHistoryParametersError(staticColumns, groupMode, from , to)
+                .orElse(null)
+        );
+        return teamHistoryDAO.find(teamIds, from, to, staticColumns, historyColumns, groupMode);
     }
 
     @GetMapping("/team-history-summaries") @TeamGroup
-    public ResponseEntity<Object> getHistorySummaries
+    public List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> getHistorySummaries
     (
         @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
         @RequestParam("summary") Set<TeamHistoryDAO.SummaryColumn> summaryColumns,
@@ -189,9 +196,20 @@ public class TeamController
         @RequestParam(value = "to", required = false) OffsetDateTime to
     )
     {
-        return getHistoryParametersError(staticColumns, groupMode, from , to)
-            .orElseGet(()->WebServiceUtil.notFoundIfEmpty(
-                teamHistoryDAO.findSummary(teamIds, from, to, staticColumns, summaryColumns, groupMode)));
+        WebServiceUtil.throwException
+        (
+            getHistoryParametersError(staticColumns, groupMode, from , to)
+                .orElse(null)
+        );
+        return teamHistoryDAO.findSummary
+        (
+            teamIds,
+            from,
+            to,
+            staticColumns,
+            summaryColumns,
+            groupMode
+        );
     }
 
 }

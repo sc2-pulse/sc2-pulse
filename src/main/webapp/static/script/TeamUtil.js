@@ -680,7 +680,7 @@ class TeamUtil
     {
         return Session.beforeRequest()
            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/teams?${params.toString()}`))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+           .then(Session.verifyJsonResponse);
     }
 
     static fuzzyTeamSearchParams(params)
@@ -704,7 +704,6 @@ class TeamUtil
     {
         return TeamUtil.getTeams(TeamUtil.fuzzyTeamSearchParams(params))
             .then(teams=>{
-                if(!teams) teams = [];
                 const model = Model.DATA.get(VIEW.TEAM_SEARCH);
                 model.set(VIEW_DATA.SEARCH, {result: teams});
                 model.set(VIEW_DATA.VAR, teams);
@@ -811,7 +810,7 @@ class TeamUtil
 
         return Session.beforeRequest()
             .then(n=>fetch(request))
-            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+            .then(Session.verifyJsonResponse);
     }
 
     static getHistorySummary(ids, legacyUids, groupBy, from, to, staticColumns, summaryColumns)
@@ -823,7 +822,7 @@ class TeamUtil
 
         return Session.beforeRequest()
             .then(n=>fetch(request))
-            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+            .then(Session.verifyJsonResponse);
     }
 
     static getTeamGroup(ids, legacyUids, fromSeason, toSeason)
@@ -833,7 +832,7 @@ class TeamUtil
 
         return Session.beforeRequest()
             .then(n=>fetch(request))
-            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+            .then(Session.verifyJsonResponse);
     }
 
     static createLegacyUid(queue, teamType, region, legacyId)

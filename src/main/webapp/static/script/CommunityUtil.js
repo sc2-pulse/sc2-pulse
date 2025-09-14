@@ -176,7 +176,7 @@ class CommunityUtil
         );
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/streams?${params.toString()}`))
-            .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 500]))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 500]))
     }
 
     static updateStreamModel

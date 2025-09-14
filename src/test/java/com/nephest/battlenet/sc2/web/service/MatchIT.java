@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -582,14 +581,14 @@ public class MatchIT
                     + "&type=_4V4"
             ).result().stream().map(LadderMatch::getMatch).collect(Collectors.toList())
         );
-        mvc.perform
+        List<LadderMatch> matches1v1Empty = WebServiceTestUtil.getObject
         (
-            get("/api/character-matches")
-                .queryParam("characterId", String.valueOf(charEu1.getId()))
-                .queryParam("type", BaseMatch.MatchType._1V1.toString())
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isNotFound());
+            mvc, objectMapper, new TypeReference<CursorNavigableResult<List<LadderMatch>>>(){},
+            "/api/character-matches"
+                + "?characterId=" + charEu1.getId()
+                + "&type=" + BaseMatch.MatchType._1V1
+        ).result();
+        assertTrue(matches1v1Empty.isEmpty());
 
         List<LadderMatch> matches2v2 = WebServiceTestUtil.getObject
         (

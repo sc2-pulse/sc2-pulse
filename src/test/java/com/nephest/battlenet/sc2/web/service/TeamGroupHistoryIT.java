@@ -81,7 +81,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @SpringBootTest(classes = AllTestConfig.class)
@@ -761,52 +760,45 @@ public class TeamGroupHistoryIT
     )
     throws Exception
     {
-        ResultActions resultActions = mvc.perform
-        (
-            get("/api/team-histories")
-                .queryParam
-                (
-                    "teamLegacyUid",
-                    mvcConversionService.convert
+        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found =
+            objectMapper.readValue( mvc.perform(
+                get("/api/team-histories")
+                    .queryParam
                     (
-                        new TeamLegacyUid
+                        "teamLegacyUid",
+                        mvcConversionService.convert
                         (
-                            QueueType.LOTV_1V1,
-                            TeamType.ARRANGED,
-                            Region.EU,
-                            "1.11.1"
-                        ),
-                        String.class
+                            new TeamLegacyUid
+                            (
+                                QueueType.LOTV_1V1,
+                                TeamType.ARRANGED,
+                                Region.EU,
+                                "1.11.1"
+                            ),
+                            String.class
+                        )
                     )
-                )
-                .queryParam
-                (
-                    "history",
-                    Arrays.stream(HistoryColumn.values())
-                        .map(c->mvcConversionService.convert(c, String.class))
-                        .toArray(String[]::new)
-                )
-                .queryParam
-                (
-                    "static",
-                    Arrays.stream(StaticColumn.values())
-                        .map(c->mvcConversionService.convert(c, String.class))
-                        .toArray(String[]::new)
-                )
-                .queryParam("from", mvcConversionService.convert(from, String.class))
-                .queryParam("to", mvcConversionService.convert(to, String.class))
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(expected.isEmpty() ? status().isNotFound() : status().isOk());
-        if(expected.isEmpty())
-        {
-            resultActions.andExpect(content().string(""));
-            return;
-        }
-
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
-            = objectMapper.readValue(resultActions
+                    .queryParam
+                    (
+                        "history",
+                        Arrays.stream(HistoryColumn.values())
+                            .map(c->mvcConversionService.convert(c, String.class))
+                            .toArray(String[]::new)
+                    )
+                    .queryParam
+                    (
+                        "static",
+                        Arrays.stream(StaticColumn.values())
+                            .map(c->mvcConversionService.convert(c, String.class))
+                            .toArray(String[]::new)
+                    )
+                    .queryParam("from", mvcConversionService.convert(from, String.class))
+                    .queryParam("to", mvcConversionService.convert(to, String.class))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
         found.sort(ID_COMPARATOR);
         Assertions.assertThat(found)
             .usingRecursiveComparison()
@@ -1120,49 +1112,42 @@ public class TeamGroupHistoryIT
     )
     throws Exception
     {
-        ResultActions resultActions = mvc.perform
-        (
-            get("/api/team-history-summaries")
-                .queryParam
-                (
-                    "teamLegacyUid",
-                    mvcConversionService.convert
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found =
+            objectMapper.readValue(mvc.perform(
+                get("/api/team-history-summaries")
+                    .queryParam
                     (
-                        new TeamLegacyUid
+                        "teamLegacyUid",
+                        mvcConversionService.convert
                         (
-                            QueueType.LOTV_1V1,
-                            TeamType.ARRANGED,
-                            Region.EU,
-                            "1.11.1"
-                        ),
-                        String.class
+                            new TeamLegacyUid
+                            (
+                                QueueType.LOTV_1V1,
+                                TeamType.ARRANGED,
+                                Region.EU,
+                                "1.11.1"
+                            ),
+                            String.class
+                        )
                     )
-                )
-                .queryParam
-                (
-                    "summary",
-                    Arrays.stream(SummaryColumn.values())
-                        .map(c->mvcConversionService.convert(c, String.class))
-                        .toArray(String[]::new)
-                )
-                .queryParam
-                (
-                    "static",
-                    Arrays.stream(StaticColumn.values())
-                        .map(c->mvcConversionService.convert(c, String.class))
-                        .toArray(String[]::new)
-                )
-                .queryParam("from", mvcConversionService.convert(from, String.class))
-                .queryParam("to", mvcConversionService.convert(to, String.class))
-                .contentType(MediaType.APPLICATION_JSON)
-        );
-        if(expected.isEmpty())
-        {
-            resultActions.andExpect(content().string(""));
-            return;
-        }
-        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found
-            = objectMapper.readValue(resultActions
+                    .queryParam
+                    (
+                        "summary",
+                        Arrays.stream(SummaryColumn.values())
+                            .map(c->mvcConversionService.convert(c, String.class))
+                            .toArray(String[]::new)
+                    )
+                    .queryParam
+                    (
+                        "static",
+                        Arrays.stream(StaticColumn.values())
+                            .map(c->mvcConversionService.convert(c, String.class))
+                            .toArray(String[]::new)
+                    )
+                    .queryParam("from", mvcConversionService.convert(from, String.class))
+                    .queryParam("to", mvcConversionService.convert(to, String.class))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
                 .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         if(found.size() > 1) found.sort(ID_SUMMARY_COMPARATOR);
         Assertions.assertThat(found)

@@ -730,7 +730,7 @@ public class CommunityVideoStreamIT
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
-            .andExpect(status().isNotFound())
+            .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         assertTrue(ladderStreams.getStreams().isEmpty());
     }

@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
@@ -52,6 +53,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api")
@@ -102,7 +104,7 @@ public class MiscController
     }
 
     @GetMapping("/patches")
-    public ResponseEntity<?> getPatches
+    public List<LadderPatch> getPatches
     (
         @RequestParam
         (
@@ -114,7 +116,7 @@ public class MiscController
         Long buildMin
     )
     {
-        return WebServiceUtil.notFoundIfEmpty(sc2MetaService.getPatches(buildMin));
+        return sc2MetaService.getPatches(buildMin);
     }
 
     @GetMapping("/tier-thresholds")
@@ -134,13 +136,11 @@ public class MiscController
     {
         return !result.getErrors().isEmpty()
             ? WebServiceUtil.UPSTREAM_ERROR_STATUS
-            : result.getStreams().isEmpty()
-                ? HttpStatus.NOT_FOUND
-                : HttpStatus.OK;
+            : HttpStatus.OK;
     }
 
     @GetMapping("/streams")
-    public ResponseEntity<?> getStreams
+    public ResponseEntity<CommunityStreamResult> getStreams
     (
         @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services,
         @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
@@ -157,29 +157,32 @@ public class MiscController
         @RequestParam(name = "limitPlayer", required = false) @Min(1) @Valid Integer limitPlayer
     )
     {
-        if(ratingMin != null && ratingMax != null && ratingMin > ratingMax) return ResponseEntity
-            .badRequest()
-            .body("ratingMin is greater than ratingMax");
 
-        CommunityStreamResult result = communityService
-            .getStreams
+        if(ratingMin != null && ratingMax != null && ratingMin > ratingMax)
+            throw new ResponseStatusException
             (
-                services,
-                sort,
-                identifiedOnly,
-                races,
-                languages,
-                teamFormats,
-                ratingMin, ratingMax,
-                limit, limitPlayer,
-                lax
-            )
+                HttpStatus.BAD_REQUEST,
+                "ratingMin is greater than ratingMax"
+            );
+
+        CommunityStreamResult result = communityService.getStreams
+        (
+            services,
+            sort,
+            identifiedOnly,
+            races,
+            languages,
+            teamFormats,
+            ratingMin, ratingMax,
+            limit, limitPlayer,
+            lax
+        )
             .block();
         return ResponseEntity.status(getStatus(result)).body(result);
     }
 
     @GetMapping("/entities")
-    public ResponseEntity<?> getEntities
+    public Group getEntities
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
@@ -188,33 +191,29 @@ public class MiscController
         @RequestParam(name = "toonHandle", required = false, defaultValue = "") Set<PlayerCharacterNaturalId> toonHandles
     )
     {
-        return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
-            .orElseGet(()->
-            {
-                List<LadderDistinctCharacter> characters = ladderCharacterDAO
-                    .findDistinctCharactersByCharacterIds
+        WebServiceUtil.throwException
+        (
+            areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
+                .orElse(null)
+        );
+            List<LadderDistinctCharacter> characters = ladderCharacterDAO
+                .findDistinctCharactersByCharacterIds
+                (
+                    Stream.of
                     (
-                        Stream.of
-                        (
-                            characterIds,
-                            playerCharacterDAO.findIdsByNaturalIds(toonHandles)
-                        )
-                            .flatMap(Collection::stream)
-                            .collect(Collectors.toSet())
-                    );
-                List<Clan> clans = clanDAO.findByIds(clanIds);
-                if(!clans.isEmpty()) clans.sort(CLAN_COMPARATOR);
-                List<LadderProPlayer> proPlayers = ladderProPlayerDAO
-                    .findByIds(proPlayerIds);
-                List<Account> accounts = accountDAO.findByIds(accountIds);
-                if(!accounts.isEmpty()) accounts.sort(Account.NATURAL_ID_COMPARATOR);
-                return characters.isEmpty()
-                    && clans.isEmpty()
-                    && proPlayerIds.isEmpty()
-                    && accounts.isEmpty()
-                    ? ResponseEntity.notFound().build()
-                    : ResponseEntity.ok(new Group(characters, clans, proPlayers, accounts));
-            });
+                        characterIds,
+                        playerCharacterDAO.findIdsByNaturalIds(toonHandles)
+                    )
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toSet())
+                );
+            List<Clan> clans = clanDAO.findByIds(clanIds);
+            if(!clans.isEmpty()) clans.sort(CLAN_COMPARATOR);
+            List<LadderProPlayer> proPlayers = ladderProPlayerDAO
+                .findByIds(proPlayerIds);
+            List<Account> accounts = accountDAO.findByIds(accountIds);
+            if(!accounts.isEmpty()) accounts.sort(Account.NATURAL_ID_COMPARATOR);
+            return new Group(characters, clans, proPlayers, accounts);
     }
 
 }

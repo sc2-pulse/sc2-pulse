@@ -317,7 +317,7 @@ class CharacterUtil
     {
         return Session.beforeRequest()
            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character-links?characterId=${encodeURIComponent(id)}`))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 500]))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 500]))
            .then(links=>links ? links[0] : links);
     }
 
@@ -822,7 +822,7 @@ class CharacterUtil
                 const dataHistory = {};
                 Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory.history = dataHistory;
                 dataHistory.data = history;
-                if(history) {
+                if(history.length > 0) {
                     CharacterUtil.calculateMmrHistoryTimestampIndex(history);
                     dataHistory.originalData = structuredClone(history);
                     CharacterUtil.recalculateCharacterMmrHistoryStats();
@@ -1207,11 +1207,11 @@ class CharacterUtil
             .then(summaryBatch=>{
                 const summary = summaryBatch[0];
                 const currentTeams = summaryBatch[1];
-                if(summary != null) {
+                if(summary.length > 0) {
                     summary.forEach(CharacterUtil.addLegacyIdData);
                     summary.sort((a, b)=>b.summary[TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX.fullName] -
                         a.summary[TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX.fullName]);
-                    if(currentTeams != null) CharacterUtil.updateMmrHistorySummaryWithTeams(summary, currentTeams);
+                    if(currentTeams.length > 0) CharacterUtil.updateMmrHistorySummaryWithTeams(summary, currentTeams);
                 }
                 Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory.summary = summary;
                 return summary;
@@ -1924,7 +1924,7 @@ class CharacterUtil
         if(cursor != null) params.append(cursor.direction.relativePosition, cursor.token);
         return GroupUtil.getMatches(params)
             .then(matches => {
-                if(matches?.result?.length > 0) {
+                if(matches.result.length > 0) {
                     const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
                     if(commonCharacter.matches != null) {
                         commonCharacter.matches.navigation = matches.navigation;

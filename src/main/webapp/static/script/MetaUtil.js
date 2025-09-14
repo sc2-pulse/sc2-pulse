@@ -9,7 +9,7 @@ class MetaUtil
         const request = `${ROOT_CONTEXT_PATH}api/patches?buildMin=${encodeURIComponent(buildMin)}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+           .then(Session.verifyJsonResponse);
     }
 
     static loadPatches()
@@ -18,7 +18,7 @@ class MetaUtil
         const buildMin = parseInt(localStorage.getItem("internal-meta-patches-build-last") || -1) + 1;
         return MetaUtil.getPatches(buildMin)
             .then(newPatches=>{
-                if(newPatches && newPatches.length > 0) {
+                if(newPatches.length > 0) {
                     patches = newPatches.concat(patches);
                     localStorage.setItem("internal-meta-patches", JSON.stringify(patches));
                 }

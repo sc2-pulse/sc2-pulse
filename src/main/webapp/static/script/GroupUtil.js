@@ -16,7 +16,7 @@ class GroupUtil
         const request = `${ROOT_CONTEXT_PATH}api/entities?${groupParams.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]))
+           .then(Session.verifyJsonResponse)
            .then(json=>{
                 if(cache) {
                     GroupUtil.cacheGroup(json);
@@ -65,7 +65,7 @@ class GroupUtil
         return GroupUtil.getGroup(groupParams)
             .then(json=>{
                 Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.VAR).group = json;
-                Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.SEARCH).clans = json != null ? json.clans : [];
+                Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.SEARCH).clans = json.clans;
                 return json;
             });
     }
@@ -143,7 +143,7 @@ class GroupUtil
         const request = `${ROOT_CONTEXT_PATH}api/character-teams?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+           .then(Session.verifyJsonResponse);
     }
 
     static createTeamParams(groupParams, queue, season)
@@ -219,7 +219,7 @@ class GroupUtil
         const request = `${ROOT_CONTEXT_PATH}api/character-matches?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+           .then(Session.verifyJsonResponse);
     }
 
     static createMatchesParams(searchResult, varModel, matchType)
@@ -247,7 +247,7 @@ class GroupUtil
         const params = GroupUtil.createMatchesParams(matches, varModel, matchType);
         return GroupUtil.getMatches(params)
             .then(matchesResponse=>{
-                if(!matchesResponse || matchesResponse.result.length == 0) {
+                if(matchesResponse.result.length == 0) {
                     return {status: LOADING_STATUS.COMPLETE};
                 }
                 if(matches != null) {
@@ -309,7 +309,7 @@ class GroupUtil
         const request = `${ROOT_CONTEXT_PATH}api/clan-histories?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+           .then(Session.verifyJsonResponse);
     }
 
     static createClanHistoryParams(clanHistory, varModel)
@@ -330,7 +330,7 @@ class GroupUtil
 
         return GroupUtil.getClanHistory(params)
             .then(response=>{
-                if(response?.result == null) {
+                if(response.result == null) {
                     return {status: LOADING_STATUS.COMPLETE};
                 }
                 GroupUtil.mapClanHistory(response.result);
@@ -343,7 +343,7 @@ class GroupUtil
                 ClanUtil.updateClanHistoryTable(container.querySelector(":scope .clan-history"), response.result);
                 return {
                     data: response,
-                    status: response?.navigation?.[NAVIGATION_DIRECTION.FORWARD.relativePosition] == null
+                    status: response.navigation[NAVIGATION_DIRECTION.FORWARD.relativePosition] == null
                         ? LOADING_STATUS.COMPLETE
                         : LOADING_STATUS.NONE
                  }
@@ -361,7 +361,7 @@ class GroupUtil
         const request = `${ROOT_CONTEXT_PATH}api/character-links?${params.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 500]));
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 500]));
     }
 
     static resetLinksView(section)
