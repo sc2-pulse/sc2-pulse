@@ -48,6 +48,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api")
@@ -55,6 +56,7 @@ public class TeamController
 {
 
     public static final int RECENT_TEAMS_LIMIT = 250;
+    public static final int TEAMS_LIMIT = 250;
     public static final Duration RECENT_TEAMS_OFFSET = Duration.ofMinutes(60);
     public static final int HISTORY_TEAM_COUNT_MAX = 1200;
     public static final int LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX = 100;
@@ -115,6 +117,7 @@ public class TeamController
         );
     }
 
+    @Operation(description = "**" + TEAMS_LIMIT + " complete(non-id) teams max**")
     @GetMapping("/teams") @TeamGroup
     public ResponseEntity<?> getTeams
     (
@@ -122,6 +125,12 @@ public class TeamController
         @RequestParam(value = "field", required = false) @AllowedField(IdField.NAME) String field
     )
     {
+        if(field == null && teamIds.size() > TEAMS_LIMIT) throw new ResponseStatusException
+        (
+            HttpStatus.BAD_REQUEST,
+            TEAMS_LIMIT + " complete teams max"
+        );
+
         return field != null
             ? ResponseEntity.ok(teamIds.stream().map(IdProjection::new).toList())
             : ResponseEntity.ok(ladderSearchDAO.findTeamsByIds(teamIds));
