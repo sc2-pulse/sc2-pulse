@@ -14,15 +14,17 @@
         <div>Bot</div>
         <div class="feature text-secondary">1v1 stats</div>
         <div class="feature text-secondary">Role management</div>
-        <th:block th:with="installationData=${@discordAPI.getInstallationData().block()}">
-            <div class="usage server text-secondary c-divider">
-                <span class="description">Used in</span>
-                <span th:text="${installationData.guildCount()}"></span> servers
-            </div>
-            <div class="usage user text-secondary c-divider">
-                <span class="description">Used by</span>
-                <span th:text="${installationData.userCount()}"></span> users
-            </div>
+        <th:block th:with="installationData=${@discordAPI.getInstallationData().onErrorComplete().block()}">
+            <th:block th:if="${installationData != null}">
+                <div class="usage server text-secondary c-divider">
+                    <span class="description">Used in</span>
+                    <span th:text="${installationData.guildCount()}"></span> servers
+                </div>
+                <div class="usage user text-secondary c-divider">
+                    <span class="description">Used by</span>
+                    <span th:text="${installationData.userCount()}"></span> users
+                </div>
+            </th:block>
         </th:block>
     </div>
 </a>

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
@@ -310,15 +310,19 @@ public class Cron
             tasks.add(webExecutorService.submit(()->doUpdateSeasons(region), null));
 
         MiscUtil.awaitAndThrowException(tasks, true, true);
-        if(afterLadderUpdateTask != null)
+        if(afterLadderUpdateTask != null && !afterLadderUpdateTask.isDone())
         {
+            LOG.warn("Waiting for previous post ladder update task to complete");
             try
             {
-                if(!afterLadderUpdateTask.isDone())
-                    LOG.warn("Waiting for previous post ladder update task to complete");
                 afterLadderUpdateTask.get();
             }
-            catch (InterruptedException | ExecutionException e)
+            catch (ExecutionException e)
+            {
+                afterLadderUpdateTask = statsService.afterCurrentSeasonUpdate(false);
+                throw new RuntimeException(e);
+            }
+            catch (InterruptedException e)
             {
                 throw new RuntimeException(e);
             }
