@@ -216,12 +216,24 @@ public class TeamHistoryDAO
     public enum StaticColumn
     {
 
-        ID("team_id", List.of()),
-        REGION("region", List.of(StaticColumn.TEAM_JOIN)),
-        QUEUE_TYPE("queue_type", REGION.joins),
-        TEAM_TYPE("team_type", REGION.joins),
-        LEGACY_ID("legacy_id", REGION.joins),
-        SEASON("season", REGION.joins);
+        ID("team_id", List.of(), Set.of()),
+        REGION("region", List.of(StaticColumn.TEAM_JOIN), Set.of()),
+        QUEUE_TYPE("queue_type", REGION.joins, Set.of()),
+        TEAM_TYPE("team_type", REGION.joins, Set.of()),
+        LEGACY_ID("legacy_id", REGION.joins, Set.of()),
+        SEASON("season", REGION.joins, Set.of()),
+        LEGACY_UID
+        (
+            null,
+            List.of(),
+            Set.of
+            (
+                StaticColumn.QUEUE_TYPE,
+                StaticColumn.TEAM_TYPE,
+                StaticColumn.REGION,
+                StaticColumn.LEGACY_ID
+            )
+        );
 
         public static final String COLUMN_NAME_PREFIX = "team.";
         public static final String TEAM_JOIN = "INNER JOIN team ON team_id = team.id";
@@ -231,14 +243,16 @@ public class TeamHistoryDAO
         private final String aliasedName;
         private final String aggregationAliasedName;
         private final List<String> joins;
+        private final Set<StaticColumn> requiredStaticColumns;
 
-        StaticColumn(String name, List<String> joins)
+        StaticColumn(String name, List<String> joins, Set<StaticColumn> requiredStaticColumns)
         {
             this.name = name;
             this.alias = COLUMN_NAME_PREFIX + name;
             this.aliasedName = name + " AS \"" + this.alias + "\"";
             this.aggregationAliasedName = "MAX(" + name + ") AS \"" + this.alias + "\"";
             this.joins = joins;
+            this.requiredStaticColumns = requiredStaticColumns;
         }
 
         public static StaticColumn fromAlias(String alias)
@@ -272,6 +286,16 @@ public class TeamHistoryDAO
         public List<String> getJoins()
         {
             return joins;
+        }
+
+        public Set<StaticColumn> getRequiredStaticColumns()
+        {
+            return requiredStaticColumns;
+        }
+
+        public boolean isExpanded()
+        {
+            return !getRequiredStaticColumns().isEmpty();
         }
 
     }
@@ -881,13 +905,17 @@ public class TeamHistoryDAO
         HistoryParameters parameters, GroupMode groupMode
     )
     {
-        boolean shouldExpand = parameters.historyColumns().stream()
+        boolean shouldExpandHistory = parameters.historyColumns().stream()
             .anyMatch(HistoryColumn::isExpanded);
-        if(!shouldExpand && !groupMode.injectsParameters()) return parameters;
+        boolean shouldExpandStatic = parameters.staticColumns().stream()
+            .anyMatch(StaticColumn::isExpanded);
+        if(!shouldExpandHistory && !groupMode.injectsParameters() && !shouldExpandStatic)
+            return parameters;
 
         HistoryParameters expanded = HistoryParameters.copyOf(parameters);
-        if(shouldExpand) expandParameters(expanded);
+        if(shouldExpandHistory) expandParameters(expanded);
         if(groupMode.injectsParameters()) injectGroupModeParameters(expanded, groupMode);
+        if(shouldExpandStatic) expandStaticParameters(expanded.staticColumns());
         return expanded;
     }
 
@@ -895,6 +923,20 @@ public class TeamHistoryDAO
     {
         expandDivisionParameters(parameters);
         expandStaticHistoryParameters(parameters);
+    }
+
+    private static void expandStaticParameters(Set<StaticColumn> staticColumns)
+    {
+        List<StaticColumn> expandableColumns = staticColumns.stream()
+            .filter(StaticColumn::isExpanded)
+            .toList();
+        if(expandableColumns.isEmpty()) return;
+
+        for(StaticColumn column : expandableColumns)
+        {
+            staticColumns.remove(column);
+            staticColumns.addAll(column.getRequiredStaticColumns());
+        }
     }
 
     private static void expandStaticHistoryParameters(HistoryParameters parameters)
@@ -1038,6 +1080,11 @@ public class TeamHistoryDAO
     {
         expandDivisions(history, parameters);
         expandStaticHistory(history, parameters);
+        expandStaticData
+        (
+            history.stream().map(TeamHistory::staticData),
+            parameters.staticColumns()
+        );
     }
 
     private static boolean shouldExpandStaticHistory(HistoryParameters parameters)
@@ -1096,6 +1143,34 @@ public class TeamHistoryDAO
     {
         if(shouldExpandDivisions(parameters))
             parameters.historyColumns().add(HistoryColumn.DIVISION_ID);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandLegacyUids(RawTeamHistoryStaticData staticData)
+    {
+        ((Map<StaticColumn, Object>) staticData.data()).put
+        (
+            StaticColumn.LEGACY_UID,
+            Stream.of
+            (
+                staticData.data().get(StaticColumn.QUEUE_TYPE),
+                staticData.data().get(StaticColumn.TEAM_TYPE),
+                staticData.data().get(StaticColumn.REGION),
+                staticData.data().get(StaticColumn.LEGACY_ID)
+            )
+                .map(String::valueOf)
+                .collect(Collectors.joining("-"))
+        );
+    }
+
+    private void expandStaticData
+    (
+        Stream<RawTeamHistoryStaticData> staticDataStream,
+        Set<StaticColumn> parameters
+    )
+    {
+        if(parameters.contains(StaticColumn.LEGACY_UID))
+            staticDataStream.forEach(this::expandLegacyUids);
     }
 
     private static boolean shouldExpandDivisions(HistoryParameters parameters)
@@ -1219,6 +1294,47 @@ public class TeamHistoryDAO
         );
     }
 
+    private HistorySummaryParameters createExpandedParameters
+    (
+        HistorySummaryParameters parameters
+    )
+    {
+        boolean shouldExpandStatic = parameters.staticColumns().stream()
+            .anyMatch(StaticColumn::isExpanded);
+        if(!shouldExpandStatic) return parameters;
+
+        HistorySummaryParameters expanded = HistorySummaryParameters.copyOf(parameters);
+        expandStaticParameters(expanded.staticColumns());
+        return expanded;
+    }
+
+    private static void prune
+    (
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> summary,
+        HistorySummaryParameters parameters
+    )
+    {
+        for(TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData> curSummary : summary)
+        {
+
+            curSummary.staticData().data().keySet().retainAll(parameters.staticColumns());
+            curSummary.summary().data().keySet().retainAll(parameters.summaryColumns());
+        }
+    }
+
+    private void expandAllSummaries
+    (
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> summary,
+        HistorySummaryParameters parameters
+    )
+    {
+        expandStaticData
+        (
+            summary.stream().map(TeamHistorySummary::staticData),
+            parameters.staticColumns()
+        );
+    }
+
     public List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> findSummary
     (
         @NotNull Set<Long> teamIds,
@@ -1231,17 +1347,21 @@ public class TeamHistoryDAO
     {
         if(teamIds.isEmpty() || (summaryColumns.isEmpty() && staticColumns.isEmpty())) return List.of();
         checkParameters(from, to, staticColumns, groupMode);
+        HistorySummaryParameters parameters
+            = new HistorySummaryParameters(staticColumns, summaryColumns);
+        HistorySummaryParameters expanded = createExpandedParameters(parameters);
 
-        String query = generateFindSummaryQuery
-        (
-            new HistorySummaryParameters(staticColumns, summaryColumns),
-            groupMode
-        );
+        String query = generateFindSummaryQuery(expanded, groupMode);
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("teamIds", teamIds)
             .addValue("from", from)
             .addValue("to", to);
-        return template.query(query, params, TEAM_HISTORY_SUMMARY_EXTRACTOR);
+
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> summary
+            = template.query(query, params, TEAM_HISTORY_SUMMARY_EXTRACTOR);
+        expandAllSummaries(summary, parameters);
+        prune(summary, parameters);
+        return summary;
     }
 
     private record HistoryParameters
@@ -1271,7 +1391,22 @@ public class TeamHistoryDAO
         @NotNull Set<StaticColumn> staticColumns,
         @NotNull Set<SummaryColumn> summaryColumns
     )
-    {}
+    {
+
+        public static HistorySummaryParameters copyOf(HistorySummaryParameters parameters)
+        {
+            return new HistorySummaryParameters
+            (
+                parameters.staticColumns.isEmpty()
+                    ? EnumSet.noneOf(StaticColumn.class)
+                    : EnumSet.copyOf(parameters.staticColumns()),
+                parameters.summaryColumns().isEmpty()
+                    ? EnumSet.noneOf(SummaryColumn.class)
+                    : EnumSet.copyOf(parameters.summaryColumns())
+            );
+        }
+
+    }
 
     private record HistoryLegacyUidGroup
     (

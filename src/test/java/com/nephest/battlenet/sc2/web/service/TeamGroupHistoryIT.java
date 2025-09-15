@@ -150,7 +150,8 @@ public class TeamGroupHistoryIT
         @Autowired PopulationStateDAO populationStateDAO,
         @Autowired LeagueStatsDAO leagueStatsDAO,
         @Autowired SeasonGenerator seasonGenerator,
-        @Autowired JdbcTemplate jdbcTemplate
+        @Autowired JdbcTemplate jdbcTemplate,
+        @Autowired @Qualifier("mvcConversionService") ConversionService mvcConversionService
     )
     throws SQLException
     {
@@ -165,7 +166,8 @@ public class TeamGroupHistoryIT
                 populationStateDAO,
                 leagueStatsDAO,
                 seasonGenerator,
-                jdbcTemplate
+                jdbcTemplate,
+                mvcConversionService
             );
         }
     }
@@ -187,7 +189,8 @@ public class TeamGroupHistoryIT
         PopulationStateDAO populationStateDAO,
         LeagueStatsDAO leagueStatsDAO,
         SeasonGenerator seasonGenerator,
-        JdbcTemplate jdbcTemplate
+        JdbcTemplate jdbcTemplate,
+        ConversionService mvcConversionService
     )
     {
         OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
@@ -310,7 +313,7 @@ public class TeamGroupHistoryIT
                 teamStateDAO.takeSnapshot(seasonTeamIds, seasons.get(i).getEnd());
             }
         }
-        FULL_HISTORY = getFullTeamHistory();
+        FULL_HISTORY = getFullTeamHistory(mvcConversionService);
         FULL_HISTORY_LEGACY_UID_GROUP = List.of(new TeamHistory<>
         (
             new RawTeamHistoryStaticData(Stream.of(
@@ -454,8 +457,22 @@ public class TeamGroupHistoryIT
             .sum();
     }
 
-    private static List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> getFullTeamHistory()
+    private static List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> getFullTeamHistory
+    (
+        ConversionService conversionService
+    )
     {
+        String legacyUid = conversionService.convert
+        (
+            new TeamLegacyUid
+            (
+                QueueType.LOTV_1V1,
+                TeamType.ARRANGED,
+                Region.EU,
+                "1.11.1"
+            ),
+            String.class
+        );
         return List.of
         (
             new TeamHistory<>
@@ -468,7 +485,8 @@ public class TeamGroupHistoryIT
                     StaticColumn.REGION, 2,
 
                     StaticColumn.QUEUE_TYPE, 201,
-                    StaticColumn.TEAM_TYPE, 0
+                    StaticColumn.TEAM_TYPE, 0,
+                    StaticColumn.LEGACY_UID, legacyUid
                 )),
                 new RawTeamHistoryHistoryData(Map.ofEntries(
                     entry
@@ -510,7 +528,8 @@ public class TeamGroupHistoryIT
                     StaticColumn.REGION, 2,
 
                     StaticColumn.QUEUE_TYPE, 201,
-                    StaticColumn.TEAM_TYPE, 0
+                    StaticColumn.TEAM_TYPE, 0,
+                    StaticColumn.LEGACY_UID, legacyUid
                 )),
                 new RawTeamHistoryHistoryData(Map.ofEntries(
                     entry
@@ -552,7 +571,8 @@ public class TeamGroupHistoryIT
                     StaticColumn.REGION, 2,
 
                     StaticColumn.QUEUE_TYPE, 201,
-                    StaticColumn.TEAM_TYPE, 0
+                    StaticColumn.TEAM_TYPE, 0,
+                    StaticColumn.LEGACY_UID, legacyUid
                 )),
                 //current season team should be excluded. Snapshots only.
                 new RawTeamHistoryHistoryData(Map.ofEntries(

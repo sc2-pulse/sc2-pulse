@@ -311,7 +311,8 @@ const TEAM_HISTORY_STATIC_COLUMN = Object.freeze
     QUEUE_TYPE: {code:3, name: "queue", fullName: "QUEUE_TYPE", order: 3},
     TEAM_TYPE: {code:4, name: "type", fullName: "TEAM_TYPE", order: 4},
     LEGACY_ID: {code:5, name: "legacy-id", fullName: "LEGACY_ID", order: 5},
-    SEASON: {code:6, name: "season", fullName: "SEASON", order: 6}
+    SEASON: {code:6, name: "season", fullName: "SEASON", order: 6},
+    LEGACY_UID: {code: 7, name: "legacy-uid", fullName: "LEGACY_UID", order: 7}
 });
 
 const TEAM_HISTORY_HISTORY_COLUMN = Object.freeze
