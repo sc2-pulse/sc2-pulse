@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -8,7 +8,10 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.BaseLocalTeamMember;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.ProPlayer;
+import com.nephest.battlenet.sc2.model.local.ProTeam;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LadderTeamMember
@@ -29,6 +32,7 @@ implements java.io.Serializable
     private final Long proId;
     private final String proNickname;
     private final String proTeam;
+    private final LadderProPlayer proPlayer;
     private final Boolean restrictions;
 
     public LadderTeamMember
@@ -54,6 +58,12 @@ implements java.io.Serializable
         this.proNickname = proNickname;
         this.proTeam = proTeam;
         this.restrictions = restrictions;
+        this.proPlayer = proId == null ? null : new LadderProPlayer
+        (
+            new ProPlayer(proId, null, proNickname, null, null, null, null, null, null),
+            proTeam == null ? null : new ProTeam(null, null, null, proTeam, null),
+            List.of()
+        );
     }
 
     public PlayerCharacter getCharacter()
@@ -84,6 +94,11 @@ implements java.io.Serializable
     public String getProTeam()
     {
         return proTeam;
+    }
+
+    public LadderProPlayer getProPlayer()
+    {
+        return proPlayer;
     }
 
     public Boolean getRestrictions()
