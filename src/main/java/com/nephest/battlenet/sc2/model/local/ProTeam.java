@@ -38,6 +38,21 @@ implements java.io.Serializable
         this.aligulacId = aligulacId;
     }
 
+    public ProTeam
+    (
+        Long id,
+        Long aligulacId,
+        @NotNull String name,
+        String shortName,
+        OffsetDateTime updated
+    )
+    {
+        super(name, shortName);
+        this.id = id;
+        this.aligulacId = aligulacId;
+        this.updated = updated;
+    }
+
     public static ProTeam of(RevealedProPlayer revealedProPlayer)
     {
         if(revealedProPlayer.getCurrentTeam() == null) return null;
