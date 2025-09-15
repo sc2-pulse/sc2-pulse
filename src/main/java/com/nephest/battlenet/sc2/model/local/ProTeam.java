@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nephest.battlenet.sc2.model.BaseProTeam;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProTeam;
@@ -121,6 +122,7 @@ implements java.io.Serializable
         this.updated = updated;
     }
 
+    @JsonIgnore
     public String getUniqueName()
     {
         return getName().replace(" ", "").toLowerCase();
