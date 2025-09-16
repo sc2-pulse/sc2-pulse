@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -83,16 +83,16 @@ public class LadderMapStatsFilmDAO
     )
     {
         Objects.requireNonNull(frameDuration);
-        if(matchUps.isEmpty() || regions.isEmpty()) return null;
+        if(matchUps.isEmpty() || regions.isEmpty()) return LadderMapStatsFilm.EMPTY;
         Map<Integer, MapStatsFilmSpec> specs = mapStatsFilmSpecDAO.find(matchUps, frameDuration)
             .stream()
             .collect(Collectors.toMap(MapStatsFilmSpec::getId, Function.identity()));
-        if(specs.isEmpty()) return null;
+        if(specs.isEmpty()) return LadderMapStatsFilm.EMPTY;
 
         Map<Integer, Season> seasons = seasonDAO.findListByBattlenetId(season).stream()
             .filter(s->regions.contains(s.getRegion()))
             .collect(Collectors.toMap(Season::getId, Function.identity()));
-        if(seasons.isEmpty()) return null;
+        if(seasons.isEmpty()) return LadderMapStatsFilm.EMPTY;
 
         Map<Integer, League> leagues = leagueDAO
             .find
@@ -112,7 +112,7 @@ public class LadderMapStatsFilmDAO
             .find(specs.keySet(), tiers.keySet(), Set.of(), crossTier)
             .stream()
             .collect(Collectors.toMap(MapStatsFilm::getId, Function.identity()));
-        if(films.isEmpty()) return null;
+        if(films.isEmpty()) return LadderMapStatsFilm.EMPTY;
 
         List<MapStatsFrame> frames = mapStatsFilmFrameDAO.find(films.keySet(), frameNumberMax);
         List<Integer> mapIds = films.values().stream()

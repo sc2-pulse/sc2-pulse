@@ -88,9 +88,8 @@ public class CharacterController
     )
     {
         return field != null
-            ? WebServiceUtil.notFoundIfEmpty(characterIds.stream().map(IdProjection::new).toList())
-            : WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
-                .findDistinctCharactersByCharacterIds(characterIds));
+            ? ResponseEntity.ok(characterIds.stream().map(IdProjection::new).toList())
+            : ResponseEntity.ok(ladderCharacterDAO.findDistinctCharactersByCharacterIds(characterIds));
     }
 
     @Operation

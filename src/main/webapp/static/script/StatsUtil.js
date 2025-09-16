@@ -616,7 +616,7 @@ class StatsUtil
         const request = `${ROOT_CONTEXT_PATH}api/stats/balance-reports?${urlParams.toString()}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))
-            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+            .then(Session.verifyJsonResponse);
     }
 
     static concatMapStatsResolvedFilm(a, b)
@@ -761,7 +761,7 @@ class StatsUtil
             StatsUtil.getMapStatsFilm(season, regions, queue, teamType, lt[0], lt[1], crossTier, races)))
                 .then(films=>{
                     let film = {};
-                    films.filter(f=>f != null).forEach(f=>Util.concatObject(f, film));
+                    films.filter(f=>f.frames.length > 0).forEach(f=>Util.concatObject(f, film));
                     if(!film.frames) film = null;
                     Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilm = film;
                     return film;

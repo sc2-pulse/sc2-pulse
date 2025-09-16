@@ -14,14 +14,12 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStatsFilm;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import com.nephest.battlenet.sc2.web.service.MapService;
-import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import jakarta.validation.constraints.Min;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -61,7 +59,7 @@ public class StatsController
     }
 
     @GetMapping("/balance-reports")
-    public ResponseEntity<LadderMapStatsFilm> getBalanceReports
+    public LadderMapStatsFilm getBalanceReports
     (
         @RequestParam("queue") QueueType queue,
         @RequestParam("teamType") TeamType teamType,
@@ -79,7 +77,8 @@ public class StatsController
         if(regions.isEmpty()) regions = EnumSet.allOf(Region.class);
         if(races.isEmpty()) races = EnumSet.allOf(Race.class);
 
-        return WebServiceUtil.notFoundIfNull(mapService.findFilm(
+        return mapService.findFilm
+        (
             races,
             MapService.FILM_FRAME_DURATION,
             frameNumberMax,
@@ -90,7 +89,7 @@ public class StatsController
             league,
             tier,
             crossTier
-        ));
+        );
     }
 
 }

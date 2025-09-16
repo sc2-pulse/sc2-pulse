@@ -23,7 +23,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.web.service.MapService;
-import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.util.EnumSet;
 import java.util.List;
@@ -275,7 +274,8 @@ public class LadderController
         if(regions.isEmpty()) regions = EnumSet.allOf(Region.class);
         if(races.isEmpty()) races = EnumSet.allOf(Race.class);
 
-        return WebServiceUtil.notFoundIfNull(mapService.findFilm(
+        LadderMapStatsFilm film =  mapService.findFilm
+        (
             races,
             MapService.FILM_FRAME_DURATION,
             frameNumberMax,
@@ -286,7 +286,10 @@ public class LadderController
             league,
             tier,
             crossTier
-        ));
+        );
+        return film.getFrames().isEmpty()
+            ? ResponseEntity.notFound().build()
+            : ResponseEntity.ok(film);
     }
 
     @Hidden

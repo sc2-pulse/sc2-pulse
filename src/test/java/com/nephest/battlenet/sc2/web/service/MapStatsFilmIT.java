@@ -357,7 +357,15 @@ public class MapStatsFilmIT
             eventService.createMatchUpdateEvent(
                 new MatchUpdateContext(Map.of(), new UpdateContext(mucInstant, mucInstant)));
             updateContexts.poll(5, TimeUnit.SECONDS);
-            getStandardFilm().andExpect(status().isNotFound());
+
+            LadderMapStatsFilm ladderMapStatsFilm = objectMapper.readValue
+            (
+                getStandardFilm()
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString(),
+                LadderMapStatsFilm.class
+            );
+            assertTrue(ladderMapStatsFilm.getFilms().isEmpty());
         }
         finally
         {

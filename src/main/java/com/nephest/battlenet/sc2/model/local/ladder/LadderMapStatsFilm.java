@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -15,6 +15,17 @@ import java.util.Map;
 
 public class LadderMapStatsFilm
 {
+
+    public static final LadderMapStatsFilm EMPTY = new LadderMapStatsFilm
+    (
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        List.of()
+    );
 
     private final Map<Integer, SC2Map> maps;
     private final Map<Integer, Season> seasons;
