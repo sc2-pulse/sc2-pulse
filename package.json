@@ -1,0 +1,15 @@
+{
+  "name": "sc2-webapp",
+  "version": "1.64.0",
+  "scripts": {
+    "set-exact-versions": "npm config set save-exact true",
+    "babel-build": "babel src/main/webapp/static/script --out-dir target/classes/js",
+    "minify": "node minify-script.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "7.27.2",
+    "@babel/core": "7.27.7",
+    "@babel/preset-env": "7.27.2",
+    "terser": "5.43.1"
+  }
+}
