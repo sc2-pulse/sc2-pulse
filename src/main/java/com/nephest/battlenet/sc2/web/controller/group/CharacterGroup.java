@@ -68,6 +68,6 @@ import java.lang.annotation.Target;
 public @interface CharacterGroup
 {
 
-    boolean flatRequired() default true;
+    boolean flatRequired() default false;
 
 }

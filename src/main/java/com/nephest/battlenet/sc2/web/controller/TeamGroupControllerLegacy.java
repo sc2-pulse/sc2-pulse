@@ -41,13 +41,19 @@ public class TeamGroupControllerLegacy
     private TeamHistoryDAO teamHistoryDAO;
 
     @GetMapping("/flat") @TeamGroup
-    public ResponseEntity<Object> getCharacterIds(@TeamGroup Set<Long> teamIds)
+    public ResponseEntity<Object> getCharacterIds
+    (
+        @TeamGroup(flatRequired = true) Set<Long> teamIds
+    )
     {
         return WebServiceUtil.notFoundIfEmpty(teamIds);
     }
 
     @GetMapping("/team/full") @TeamGroup
-    public ResponseEntity<?> getLadderTeams(@TeamGroup Set<Long> teamIds)
+    public ResponseEntity<?> getLadderTeams
+    (
+        @TeamGroup(flatRequired = true) Set<Long> teamIds
+    )
     {
         return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findTeamsByIds(teamIds));
     }
@@ -92,7 +98,7 @@ public class TeamGroupControllerLegacy
     @GetMapping("/history") @TeamGroup
     public ResponseEntity<Object> getHistory
     (
-        @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
+        @TeamGroup(flatRequired = true) @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
         @RequestParam("history") Set<TeamHistoryDAO.HistoryColumn> historyColumns,
         @RequestParam(value = "static", defaultValue = "") Set<TeamHistoryDAO.StaticColumn> staticColumns,
         @RequestParam(value = "groupBy", defaultValue = TeamHistoryDAO.GroupMode.NAMES.TEAM)
@@ -110,7 +116,7 @@ public class TeamGroupControllerLegacy
     @GetMapping("/history/summary") @TeamGroup
     public ResponseEntity<Object> getHistorySummary
     (
-        @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
+        @TeamGroup(flatRequired = true) @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
         @RequestParam("summary") Set<TeamHistoryDAO.SummaryColumn> summaryColumns,
         @RequestParam(value = "static", defaultValue = "") Set<TeamHistoryDAO.StaticColumn> staticColumns,
         @RequestParam(value = "groupBy", defaultValue = TeamHistoryDAO.GroupMode.NAMES.TEAM)

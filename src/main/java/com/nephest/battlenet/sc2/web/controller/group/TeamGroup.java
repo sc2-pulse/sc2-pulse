@@ -57,6 +57,6 @@ import java.lang.annotation.Target;
 public @interface TeamGroup
 {
 
-    boolean flatRequired() default true;
+    boolean flatRequired() default false;
 
 }

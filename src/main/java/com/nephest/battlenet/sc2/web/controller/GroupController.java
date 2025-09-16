@@ -133,7 +133,10 @@ public class GroupController
 
     @Hidden
     @GetMapping("/character/full") @CharacterGroup
-    public ResponseEntity<Object> getFullPlayerCharactersLegacy(@CharacterGroup Set<Long> characterIds)
+    public ResponseEntity<Object> getFullPlayerCharactersLegacy
+    (
+        @CharacterGroup(flatRequired = true) Set<Long> characterIds
+    )
     {
         return WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
             .findDistinctCharactersByCharacterIds(characterIds));
@@ -143,7 +146,7 @@ public class GroupController
     @GetMapping("/character/link") @CharacterGroup
     public ResponseEntity<?> getExternalLinksLegacy
     (
-        @CharacterGroup Set<Long> characterIds,
+        @CharacterGroup(flatRequired = true) Set<Long> characterIds,
         @RequestParam(name = "type", defaultValue = "") Set<SocialMedia> types
     )
     {
@@ -201,7 +204,7 @@ public class GroupController
     @GetMapping("/match") @CharacterGroup
     public ResponseEntity<?> getMatchHistoryLegacy
     (
-        @CharacterGroup Set<Long> characterIds,
+        @CharacterGroup(flatRequired = true) Set<Long> characterIds,
         @RequestParam(name = "dateCursor", required = false) OffsetDateTime dateCursor,
         @RequestParam(name = "typeCursor", required = false, defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
         @RequestParam(name = "mapCursor", required = false, defaultValue = "0") int mapCursor,
@@ -231,7 +234,7 @@ public class GroupController
     @GetMapping("/match/cursor") @CharacterGroup
     public ResponseEntity<?> getMatchHistoryLegacy2
     (
-        @CharacterGroup Set<Long> characterIds,
+        @CharacterGroup(flatRequired = true) Set<Long> characterIds,
         @RequestParam(name = "dateCursor", required = false) OffsetDateTime dateCursor,
         @RequestParam(name = "typeCursor", required = false, defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
         @RequestParam(name = "mapCursor", required = false, defaultValue = "0") int mapCursor,
@@ -266,7 +269,7 @@ public class GroupController
     @GetMapping("/team") @CharacterGroup
     public ResponseEntity<?> getTeamsLegacy
     (
-        @CharacterGroup Set<Long> characterIds,
+        @CharacterGroup(flatRequired = true) Set<Long> characterIds,
         @RequestParam(name = "season", required = false, defaultValue = "") Set<Integer> seasons,
         @RequestParam(name = "queue", required = false, defaultValue = "") Set<QueueType> queues,
         @RequestParam(name = "race", required = false, defaultValue = "") Set<Race> races,
@@ -293,7 +296,10 @@ public class GroupController
 
     @Hidden
     @GetMapping("/flat") @CharacterGroup
-    public ResponseEntity<Object> getCharacterIdsLegacy(@CharacterGroup Set<Long> characterIds)
+    public ResponseEntity<Object> getCharacterIdsLegacy
+    (
+        @CharacterGroup(flatRequired = true) Set<Long> characterIds
+    )
     {
         return WebServiceUtil.notFoundIfEmpty(characterIds);
     }
