@@ -93,7 +93,11 @@ public class CharacterController
                 .findDistinctCharactersByCharacterIds(characterIds));
     }
 
-    @Operation(description = "0/1 season and multiple queues, or multiple seasons and 0/1 queue")
+    @Operation
+    (
+        summary = "Advanced search",
+        description = "0/1 season and multiple queues, or multiple seasons and 0/1 queue"
+    )
     @GetMapping(value = "/characters", params = {"field=" + IdField.NAME, "name"})
     public List<IdProjection<Long>> getIds
     (
