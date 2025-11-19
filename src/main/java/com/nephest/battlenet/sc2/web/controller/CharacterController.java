@@ -57,7 +57,6 @@ public class CharacterController
     public static final int SEARCH_SUGGESTIONS_SIZE = 10;
     public static final int MATCH_PAGE_SIZE_MAX = 100;
     public static final int TEAM_LIMIT = 400;
-    public static final int SINGLE_CHARACTER_TEAM_LIMIT = TeamController.TEAMS_LIMIT;
 
     @Autowired
     private PlayerCharacterDAO playerCharacterDAO;

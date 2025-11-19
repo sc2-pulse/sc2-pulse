@@ -4,7 +4,6 @@
 package com.nephest.battlenet.sc2.web.controller;
 
 import static com.nephest.battlenet.sc2.web.controller.CharacterController.MATCH_PAGE_SIZE_MAX;
-import static com.nephest.battlenet.sc2.web.controller.CharacterController.SINGLE_CHARACTER_TEAM_LIMIT;
 import static com.nephest.battlenet.sc2.web.controller.CharacterController.TEAM_LIMIT;
 import static com.nephest.battlenet.sc2.web.controller.ClanController.CLAN_MEMBER_EVENT_PAGE_SIZE;
 import static com.nephest.battlenet.sc2.web.controller.ClanController.CLAN_MEMBER_EVENT_PAGE_SIZE_MAX;
@@ -263,8 +262,7 @@ public class GroupController
     @Operation
     (
         description = "If multiple characters(flattened) are used, then you must supply 1 season "
-            + "and  1 queue filter. Max limit: " + TEAM_LIMIT + " for multi-character, "
-            + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
+            + "and  1 queue filter."
     )
     @GetMapping("/team") @CharacterGroup
     public ResponseEntity<?> getTeamsLegacy
@@ -276,16 +274,8 @@ public class GroupController
         @RequestParam(name = "limit", required = false, defaultValue = TEAM_LIMIT + "") Integer limit
     )
     {
-        if
-        (
-            limit < 1
-                || (characterIds.size() == 1 && limit > SINGLE_CHARACTER_TEAM_LIMIT)
-                || (characterIds.size() > 1 && limit > TEAM_LIMIT)
-        ) return ResponseEntity.badRequest().body
-            (
-                "Limit should be in 1-" + TEAM_LIMIT + " range, "
-                + "1-" + SINGLE_CHARACTER_TEAM_LIMIT + " for single character."
-            );
+        if(limit < 1 || limit > TEAM_LIMIT) return ResponseEntity.badRequest()
+            .body("Limit should be in 1-" + TEAM_LIMIT + " range, ");
         if(characterIds.size() > 1 && (seasons.size() != 1 || queues.size() != 1))
             return ResponseEntity.badRequest()
                 .body("1 season and 1 queue are required for multi-character request");
