@@ -16,40 +16,16 @@ import static org.openqa.selenium.support.ui.ExpectedConditions.presenceOfElemen
 import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOf;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.BaseLeagueTier;
-import com.nephest.battlenet.sc2.model.BaseMatch;
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.Clan;
-import com.nephest.battlenet.sc2.model.local.ClanMember;
-import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
-import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
-import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
-import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
-import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import com.nephest.battlenet.sc2.web.service.StatsService;
+import com.nephest.battlenet.sc2.model.util.TestDbInitializer;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -90,40 +66,7 @@ public class GeneralSeleniumIT
     public static final int TIMEOUT_MILLIS = 15000;
 
     @Autowired
-    private SeasonGenerator seasonGenerator;
-
-    @Autowired
-    private TeamDAO teamDAO;
-
-    @Autowired
-    private ClanDAO clanDAO;
-
-    @Autowired
-    private ClanMemberDAO clanMemberDAO;
-
-    @Autowired
-    private ClanMemberEventDAO clanMemberEventDAO;
-
-    @Autowired
-    private LeagueStatsDAO leagueStatsDAO;
-
-    @Autowired
-    private QueueStatsDAO queueStatsDAO;
-
-    @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
-
-    @Autowired
-    private SeasonStateDAO seasonStateDAO;
-
-    @Autowired
-    private LadderMatchDAO ladderMatchDAO;
-
-    @Autowired
-    private MatchParticipantDAO matchParticipantDAO;
-
-    @Autowired
-    private PopulationStateDAO populationStateDAO;
+    private TestDbInitializer testDbInitializer;
 
     @Autowired
     private WebContextUtil webContextUtil;
@@ -211,7 +154,7 @@ public class GeneralSeleniumIT
     {
         if(dataReady) return;
 
-        setupData();
+        testDbInitializer.setupData();
         dataReady = true;
     }
 
@@ -737,72 +680,6 @@ public class GeneralSeleniumIT
             );
             wait.until(contentLoaded);
         }
-    }
-
-    private void setupData()
-    {
-        seasonGenerator.generateDefaultSeason
-        (
-            List.of(Region.values()),
-            List.of(BaseLeague.LeagueType.values()),
-            List.copyOf(QueueType.getTypes(StatsService.VERSION)),
-            TeamType.ARRANGED,
-            BaseLeagueTier.LeagueTierType.FIRST,
-            10
-        );
-        template.update("UPDATE team SET last_played = NOW()");
-        Clan clan1 = clanDAO.merge(Set.of(new Clan(null, "clanTag1", Region.EU, "clanName1")))
-            .iterator().next();
-        setupClanData
-        (
-            template
-                .queryForList("SELECT id FROM player_character WHERE id <= 140", Long.class),
-            clan1
-        );
-        Clan clan2 = clanDAO.merge(Set.of(new Clan(null, "clanTag2", Region.EU, "clanName2")))
-            .iterator().next();
-        setupClanData
-        (
-            template.queryForList
-            (
-                "SELECT id FROM player_character WHERE id BETWEEN 141 AND 280",
-                Long.class
-            ),
-            clan2
-        );
-        OffsetDateTime startDateTime = SC2Pulse.offsetDateTime();
-        int matchCount = (int) Math.round(ladderMatchDAO.getResultsPerPage() * 2.5);
-        seasonGenerator.createMatches
-        (
-            BaseMatch.MatchType._1V1,
-            1, 280, new long[]{1}, new long[]{280},
-            startDateTime, Region.EU, 1, 28,
-            matchCount
-        );
-        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startDateTime.minusYears(1));
-        matchParticipantDAO.calculateRatingDifference(startDateTime.minusYears(1));
-        clanDAO.updateStats(List.of(clan1.getId(), clan2.getId()));
-        leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
-        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
-        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
-        queueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
-        playerCharacterStatsDAO.calculate();
-        seasonStateDAO.merge(SeasonGenerator.DEFAULT_SEASON_START.plusMinutes(1),
-            SeasonGenerator.DEFAULT_SEASON_ID);
-    }
-    
-    private void setupClanData(List<Long> charIds, Clan clan)
-    {
-        Set<ClanMember> cm = charIds
-            .stream()
-            .map(id->new ClanMember(id, clan.getId()))
-            .collect(Collectors.toSet());
-        clanMemberDAO.merge(cm);
-        Set<ClanMemberEvent> cme = charIds.stream()
-            .map(id->new ClanMemberEvent(
-                id, clan.getId(), ClanMemberEvent.EventType.JOIN, SC2Pulse.offsetDateTime()))
-            .collect(Collectors.toSet());
-        clanMemberEventDAO.merge(cme);
     }
 
 }
