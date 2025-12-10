@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Notification;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -67,9 +68,8 @@ public class NotificationIT
         Account account1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         Account account2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#2"));
         final String msg = "msg";
-        assertArrayEquals
+        DbTestUtil.assertBatchUpdate
         (
-            new int[]{-2, -2},
             notificationDAO.create(msg, Set.of(account1.getId(), account2.getId()))
         );
         assertArrayEquals
