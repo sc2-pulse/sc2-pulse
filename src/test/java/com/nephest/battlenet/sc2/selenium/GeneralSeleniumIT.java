@@ -20,7 +20,6 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.util.TestDbInitializer;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -32,13 +31,16 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -52,6 +54,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.testcontainers.selenium.BrowserWebDriverContainer;
 
 @SpringBootTest
 (
@@ -83,23 +86,27 @@ public class GeneralSeleniumIT
     private static boolean dataReady = false;
     private static int port;
 
+    private static BrowserWebDriverContainer BROWSER_CONTAINER;
+
     @BeforeAll
     public static void init
     (
         @Autowired DataSource dataSource,
         @Autowired AccountDAO accountDAO,
         @Autowired ServletWebServerApplicationContext webServerAppCtxt,
-        @Value("${selenium.driver}") String seleniumDriver,
-        @Value("${selenium.driver.headless:#{'true'}}") boolean headless
+        @Value("${org.testcontainers.selenium.image.name}") String seleniumImageName,
+        @Value("${org.testcontainers.selenium.headless:#{'true'}}") boolean headless,
+        @Value("${org.testcontainers.host:'host.docker.internal'}") String testContainersHost
     )
     throws Exception
     {
-        WebDriverManager.getInstance(seleniumDriver).setup();
-        driver = initDriver(seleniumDriver, headless);
+        BROWSER_CONTAINER
+            = new BrowserWebDriverContainer(seleniumImageName);
+        driver = initDriver(seleniumImageName, headless);
         wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
         js = (JavascriptExecutor) driver;
         port = webServerAppCtxt.getWebServer().getPort();
-        root = "http://localhost:" + port;
+        root = "http://" + testContainersHost + ":" + port;
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
@@ -107,45 +114,44 @@ public class GeneralSeleniumIT
         }
     }
 
-    public static WebDriver initDriver(String seleniumDriver, boolean headless)
-    throws Exception
+    private static WebDriver initDriver(String seleniumImageName, boolean headless)
     {
-        String lowerCase = seleniumDriver.toLowerCase();
-        switch (lowerCase)
-        {
-            case "firefox":
-                return initFirefoxDriver(seleniumDriver, headless);
-            case "chrome":
-            case "chromium":
-                return initChromeDriver(seleniumDriver, headless);
-            default:
-                return (WebDriver) Class
-                    .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
-                    .getDeclaredConstructor()
-                    .newInstance();
-        }
+        BROWSER_CONTAINER.start();
+        return new RemoteWebDriver
+        (
+            BROWSER_CONTAINER.getSeleniumAddress(),
+            getCapabilities(seleniumImageName, headless)
+        );
     }
 
-    private static WebDriver initFirefoxDriver(String seleniumDriver, boolean headless)
-    throws Exception
+    public static Capabilities getCapabilities(String seleniumImageName, boolean headless)
     {
-        FirefoxOptions options = new FirefoxOptions();
-        if(headless) options.addArguments("--headless");
-        return (WebDriver) Class
-            .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
-            .getDeclaredConstructor(FirefoxOptions.class)
-            .newInstance(options);
+        String seleniumImageNameLower = seleniumImageName.toLowerCase();
+        if(seleniumImageNameLower.contains("firefox")) return getFirefoxCapabilities(headless);
+        if(seleniumImageNameLower.contains("chrome")) return getChromeCapabilities(headless);
+        return new MutableCapabilities();
     }
 
-    private static WebDriver initChromeDriver(String seleniumDriver, boolean headless)
-    throws Exception
+    public static Capabilities getChromeCapabilities(boolean headless)
     {
         ChromeOptions options = new ChromeOptions();
-        if(headless) options.addArguments("--headless=new");
-        return (WebDriver) Class
-            .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
-            .getDeclaredConstructor(ChromeOptions.class)
-            .newInstance(options);
+        if(headless)
+        {
+            options.addArguments("--headless=new");
+            options.addArguments("--window-size=1920,1080");
+        }
+        return options;
+    }
+
+    public static Capabilities getFirefoxCapabilities(boolean headless)
+    {
+        FirefoxOptions options = new FirefoxOptions();
+        if(headless)
+        {
+            options.addArguments("--headless");
+            options.addArguments("--window-size=1920,1080");
+        }
+        return options;
     }
 
     //setup data in before each for easier auto wiring.
@@ -158,16 +164,12 @@ public class GeneralSeleniumIT
         dataReady = true;
     }
 
-    public static String getDriverPackage(String driver)
-    {
-        return driver.equals("InternetExplorer") ? "ie" : driver.toLowerCase();
-    }
-
     @AfterAll
     public static void afterAll(@Autowired DataSource dataSource)
     throws SQLException
     {
         driver.close();
+        BROWSER_CONTAINER.close();
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));

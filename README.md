@@ -17,8 +17,8 @@ Furthermore, I'm only interested in backend stack, so the frontend part of the p
 and I don't have time to rewrite the old code. The project will remain as it is until I implement all the planned features.
 
 ## Dependencies
+* Docker/Podman
 * Java 17+
-* PostgreSQL 15+ with btree_gist extension
 * Maven 3
 * BattleNet API access keys(you must use your own keys)
 * Twitch API keys(you must use your own keys)
@@ -33,18 +33,22 @@ create files with app property names, their content will be used as values.
 * Properties. Add a `SPRING_CONFIG_IMPORT=optional:file:/dir/file.properties` env variable. Use the supplied file as 
 a regular properties file (name-value map).
 
+## Podman(rootless)
+The container config is compatible with rootless podman.
+Requirements:
+* [General Container runtime requirements](https://java.testcontainers.org/supported_docker_environment/)
+* **Active** podman socket `podman system service --time=0`. Make it a systemd user service, a login script, whatever.
+Systemd socket activation (`systemctl --user enable podman.socket`) doesn't work. 
+* Spring test app property `org.testcontainers.host=host.containers.internal`
+* uid/gid mapping(`usermod --add-subuids from-to username`, `usermod --add-subgids from-to username`)
+* `loginctl enable-linger username`
+
 ## Testing
 Run the tests to ensure that you have a valid environment set up. You must also pass the tests
 before creating a PR.
 
-A real PostgreSQL database with btree_gist extension is required for some integration tests.
-**This should be only a testing db, as tests will drop/create the schema. Do not use your real DB.**
-
 Required properties:
 ```
-spring.datasource.username={name}
-spring.datasource.password={pasword}
-spring.datasource.url=jdbc:postgresql://localhost:5432/{test_db_name}
 spring.security.oauth2.client.blizzard.client-id={client_id}
 spring.security.oauth2.client.blizzard.client-secret={client_secret}
 com.nephest.battlenet.sc2.discord.bot.token={token}
@@ -59,12 +63,6 @@ To run all the tests execute the following command in a terminal
 ```
 mvn verify
 ```
-
-### Selenium tests
-The Firefox is used in selenium tests because it is one of the major browsers that is available on all platforms and has an
-ESR version, which makes it easier to find a correct selenium driver for it. 
-
-You can change the browser by modifying the `selenium.driver` application property.
 
 ## Running
 The `dev` profile will help you to start the local server. Reload a browser tab to instantly see resource modifications.
