@@ -13,7 +13,7 @@
 <div th:replace="~{fragments/generic :: content(~{::section})}">
     <section>
         <h2>Donate</h2>
-        <div th:utext="${@environment.getProperty('donate')}"></div>
+        <div th:utext="${@environment.getProperty('com.nephest.battlenet.sc2.donate')}"></div>
     </section>
     <script>ElementUtil.enhanceCopyToClipboard();</script>
 </div>

@@ -28,7 +28,7 @@ public class ShortURLIT
 
     private MockMvc mvc;
 
-    @Value("${discord.bot.invite.url}")
+    @Value("${com.nephest.battlenet.sc2.discord.bot.invite.url}")
     private String discordBotInviteUrl;
 
     @BeforeEach

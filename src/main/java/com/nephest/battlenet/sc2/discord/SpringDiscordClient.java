@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -24,7 +24,7 @@ public class SpringDiscordClient
     private final GlobalRateLimiter globalRateLimiter = BucketGlobalRateLimiter.create();
 
     @Autowired
-    public SpringDiscordClient(@Value("${discord.token:}") String token)
+    public SpringDiscordClient(@Value("${com.nephest.battlenet.sc2.discord.bot.token:}") String token)
     {
         this.client = DiscordClientBuilder.create(token)
             .setGlobalRateLimiter(globalRateLimiter)

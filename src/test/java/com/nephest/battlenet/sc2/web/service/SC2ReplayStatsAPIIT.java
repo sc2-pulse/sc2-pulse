@@ -32,7 +32,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @TestPropertySource("classpath:application.properties")
 @DisabledIf
 (
-    expression = "#{environment['com.nephest.battlenet.sc2.replaystats.api.key'] == null}",
+    expression = "#{environment['com.nephest.battlenet.sc2.api.replaystats.key'] == null}",
     reason = "Authorization token not found",
     loadContext = true
 )

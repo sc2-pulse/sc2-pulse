@@ -103,8 +103,8 @@ public class DiscordBootstrap
     @Autowired
     public DiscordBootstrap
     (
-        @Value("#{${discord.race.emoji:{:}}}") Map<Race, String> raceEmojis,
-        @Value("#{${discord.league.emoji:{:}}}") Map<BaseLeague.LeagueType, String> leagueEmojis,
+        @Value("#{${com.nephest.battlenet.sc2.discord.bot.emoji.race:{:}}}") Map<Race, String> raceEmojis,
+        @Value("#{${com.nephest.battlenet.sc2.discord.bot.emoji.league:{:}}}") Map<BaseLeague.LeagueType, String> leagueEmojis,
         DiscordAPI discordAPI,
         GuildEmojiStore guildEmojiStore,
         UpdateService updateService,

@@ -32,7 +32,7 @@ extends BaseAPI
     public AligulacAPI
     (
         ObjectMapper objectMapper,
-        @Value("${com.nephest.battlenet.sc2.aligulac.api.key}") String apiKey,
+        @Value("${com.nephest.battlenet.sc2.api.aligulac.key}") String apiKey,
         @Value("${com.nephest.battlenet.sc2.useragent}") String userAgent
     )
     {

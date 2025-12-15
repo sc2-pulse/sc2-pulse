@@ -14,7 +14,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 public class CoreHtmlController
 {
 
-    @Value("#{environment['donate'] != null}")
+    @Value("#{environment['com.nephest.battlenet.sc2.donate'] != null}")
     private boolean donate;
 
     @GetMapping("/")

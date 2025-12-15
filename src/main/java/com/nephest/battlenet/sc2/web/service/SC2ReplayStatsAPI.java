@@ -34,7 +34,7 @@ extends BaseAPI
     public SC2ReplayStatsAPI
     (
         ObjectMapper objectMapper,
-        @Value("${com.nephest.battlenet.sc2.replaystats.api.key}") String authorizationToken,
+        @Value("${com.nephest.battlenet.sc2.api.replaystats.key}") String authorizationToken,
         @Value("${com.nephest.battlenet.sc2.useragent}") String userAgent
     )
     {

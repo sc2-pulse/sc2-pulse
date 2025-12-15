@@ -51,10 +51,10 @@
         <div class="sponsor-desktop-side-container" th:if="${showAds == true}">
             <div id="dd-desktop-left" class="dd-block sponsor-desktop-side">
                 <!-- desktop-left -->
-                <div th:if="${@environment.getProperty('discord.bot.invite.url') != null}"
+                <div th:if="${@environment.getProperty('com.nephest.battlenet.sc2.discord.bot.invite.url') != null}"
                      th:replace="~{fragments/misc :: discord-bot-tile}">
                 </div>
-                <div th:if="${@environment.getProperty('contacts.discord.server') != null}"
+                <div th:if="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.discord.server') != null}"
                      th:replace="~{fragments/misc :: discord-server-tile}">
                 </div>
                 <h2 class="mb-3 text-break">
@@ -106,7 +106,7 @@
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/privacy-policy}" class="text-secondary">Privacy Policy</a></span>
             <address class="c-divider d-inline-block mb-3"><a th:href="@{/contacts}" class="text-secondary">Contacts</a></address>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/discord/bot}" class="text-secondary">Discord bot</a></span>
-            <span class="c-divider d-inline-block mb-3 text-nowrap" th:if="${@environment.getProperty('donate') != null}"><a th:href="@{/donate}" class="text-secondary">
+            <span class="c-divider d-inline-block mb-3 text-nowrap" th:if="${@environment.getProperty('com.nephest.battlenet.sc2.donate') != null}"><a th:href="@{/donate}" class="text-secondary">
                 <img class="table-image table-image-square mr-1" th:src="@{/static/icon/misc/heart.svg}" alt="heart image"/><span>Donate</span>
             </a></span>
         </div>

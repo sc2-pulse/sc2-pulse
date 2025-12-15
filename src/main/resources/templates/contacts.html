@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -16,12 +16,12 @@
         <h2>Contacts</h2>
         <table class="table inline-table">
             <tbody>
-                <tr th:if="${@environment.getProperty('contacts.discord.server') != null}">
+                <tr th:if="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.discord.server') != null}">
                     <th scope="row" class="social-media"><img th:src="@{/static/icon/logo/discord.svg}" alt="Discord support server"/></th>
                     <td class="text-left">
                         <a
-                            th:href="${@environment.getProperty('contacts.discord.server')}"
-                            th:text="${#strings.defaultString(@environment.getProperty('contacts.discord.server.name'), 'Discord server')}"
+                            th:href="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.discord.server')}"
+                            th:text="${#strings.defaultString(@environment.getProperty('com.nephest.battlenet.sc2.contacts.discord.server.name'), 'Discord server')}"
                             rel="noopener"
                             target="_blank"
                         >
@@ -29,37 +29,37 @@
                         </a>
                     </td>
                 </tr>
-                <tr th:if="${@environment.getProperty('contacts.twitter') != null}">
+                <tr th:if="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.twitter') != null}">
                     <th scope="row" class="social-media"><img th:src="@{/static/icon/logo/twitter.svg}" alt="Twitter"/></th>
                     <td class="text-left">
                         <a
-                                th:href="${@environment.getProperty('contacts.twitter')}"
-                                th:text="${@environment.getProperty('contacts.twitter').substring(@environment.getProperty('contacts.twitter').lastIndexOf('/') + 1)}"
+                                th:href="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.twitter')}"
+                                th:text="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.twitter').substring(@environment.getProperty('com.nephest.battlenet.sc2.contacts.twitter').lastIndexOf('/') + 1)}"
                                 rel="noopener"
                                 target="_blank"
                         >
                         </a>
                     </td>
                 </tr>
-                <tr th:if="${@environment.getProperty('contacts.github') != null}">
+                <tr th:if="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.github') != null}">
                     <th scope="row" class="social-media"><img th:src="@{/static/icon/logo/github.svg}" alt="Github"/></th>
                     <td class="text-left">
                         <a
-                                th:href="${@environment.getProperty('contacts.github')}"
-                                th:text="${@environment.getProperty('contacts.github').substring(@environment.getProperty('contacts.github').lastIndexOf('/') + 1)}"
+                                th:href="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.github')}"
+                                th:text="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.github').substring(@environment.getProperty('com.nephest.battlenet.sc2.contacts.github').lastIndexOf('/') + 1)}"
                                 rel="noopener"
                                 target="_blank"
                         >
                         </a>
                     </td>
                 </tr>
-                <tr th:if="${@environment.getProperty('contacts.email') != null}">
+                <tr th:if="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.email') != null}">
                     <th scope="row" class="social-media"><img th:src="@{/static/icon/misc/mail.svg}" alt="Email"/></th>
                     <td class="text-left">
                         <a
                                 sec:authorize="isAuthenticated()"
-                                th:href="|mailto:${@environment.getProperty('contacts.email')}|"
-                                th:text="${@environment.getProperty('contacts.email')}"
+                                th:href="|mailto:${@environment.getProperty('com.nephest.battlenet.sc2.contacts.email')}|"
+                                th:text="${@environment.getProperty('com.nephest.battlenet.sc2.contacts.email')}"
                                 rel="noopener"
                                 target="_blank"
                         >

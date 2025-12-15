@@ -95,7 +95,7 @@ extends BaseAPI
         OAuth2AuthorizedClientService auth2AuthorizedClientService,
         RemoveAuthorizedClientOAuth2AuthorizationFailureHandler failureHandler,
         @Value("${spring.security.oauth2.client.registration.discord-lg.client-id}") String applicationId,
-        @Value("${discord.token}") String token
+        @Value("${com.nephest.battlenet.sc2.discord.bot.token}") String token
     )
     {
         this.discordClient = discordClient;

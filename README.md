@@ -51,12 +51,12 @@ spring.security.oauth2.client.registration.sc2-sys-eu.client-id={client_id}
 spring.security.oauth2.client.registration.sc2-sys-eu.client-secret={client_secret}
 spring.security.oauth2.client.registration.sc2-sys-kr.client-id={client_id}
 spring.security.oauth2.client.registration.sc2-sys-kr.client-secret={client_secret}
-discord.token={token}
+com.nephest.battlenet.sc2.discord.bot.token={token}
 spring.security.oauth2.client.registration.discord-lg.client-id={client_id}
 spring.security.oauth2.client.registration.discord-lg.client-secret={client_secret}
 spring.security.oauth2.client.registration.twitch-sys.client-id={client_id}
 spring.security.oauth2.client.registration.twitch-sys.client-secret={client_secret}
-com.nephest.battlenet.sc2.aligulac.api.key={api_key}
+com.nephest.battlenet.sc2.api.aligulac.key={api_key}
 ```
 
 To run all the tests execute the following command in a terminal
@@ -93,19 +93,19 @@ spring.security.oauth2.client.registration.sc2-lg-us.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-us.client-secret = {client_secret}
 spring.security.oauth2.client.registration.sc2-lg-kr.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-kr.client-secret = {client_secret}
-discord.token={token}
-discord.bot.invite.url={discord_bot_invite_url}
+com.nephest.battlenet.sc2.discord.bot.token={token}
+com.nephest.battlenet.sc2.discord.bot.invite.url={discord_bot_invite_url}
 spring.security.oauth2.client.registration.discord-lg.client-id={client_id}
 spring.security.oauth2.client.registration.discord-lg.client-secret={client_secret}
 spring.security.oauth2.client.registration.twitch-sys.client-id={client_id}
 spring.security.oauth2.client.registration.twitch-sys.client-secret={client_secret}
-com.nephest.battlenet.sc2.aligulac.api.key={api_key}
+com.nephest.battlenet.sc2.api.aligulac.key={api_key}
 ```
 
 ### Optional application properties 
 The server will run without errors if these properties are missing, but the corresponding features will be disabled.
 ```
-com.nephest.battlenet.sc2.replaystats.api.key
+com.nephest.battlenet.sc2.api.replaystats.key
 ```
 
 ### Misc
@@ -172,12 +172,12 @@ To ensure that the potential violation is a minor one, the following rules are a
 limiter. False by default.
 * `com.nephest.battlenet.sc2.privacy.character.profile.update` update characters directly from their bnet profiles. True
 by default.
-* `contacts.email`
-* `contacts.discord.server`
-* `contacts.discord.server.name`
-* `contacts.twitter`
-* `contacts.github`
-* `donate` HTML text for the "donate" page
+* `com.nephest.battlenet.sc2.contacts.email`
+* `com.nephest.battlenet.sc2.contacts.discord.server`
+* `com.nephest.battlenet.sc2.contacts.discord.server.name`
+* `com.nephest.battlenet.sc2.contacts.twitter`
+* `com.nephest.battlenet.sc2.contacts.github`
+* `com.nephest.battlenet.sc2.donate` HTML text for the "donate" page
 * `security.remember-me.token.key` key for signing remember-me tokens
 * `security.remember-me.token.max-age` Max age(duration) of the cookie, P3650D(~10 years) by default
 ## Contributing
