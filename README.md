@@ -64,27 +64,13 @@ To run all the tests execute the following command in a terminal
 mvn verify
 ```
 
-## Running
-The `dev` profile will help you to start the local server. Reload a browser tab to instantly see resource modifications.
-Build project to hotswap(if possible) the new classes.
-
-### Required application properties
-You must set the following application properties:
-```
-server.port={port}
-spring.datasource.username={name}
-spring.datasource.password={pasword}
-spring.datasource.url=jdbc:postgresql://localhost:5432/{db_name}
-spring.security.oauth2.client.blizzard.client-id={client_id}
-spring.security.oauth2.client.blizzard.client-secret={client_secret}
-com.nephest.battlenet.sc2.discord.bot.token={token}
-com.nephest.battlenet.sc2.discord.bot.invite.url={discord_bot_invite_url}
-spring.security.oauth2.client.discord.client-id={client_id}
-spring.security.oauth2.client.discord.client-secret={client_secret}
-spring.security.oauth2.client.twitch.client-id={client_id}
-spring.security.oauth2.client.twitch.client-secret={client_secret}
-com.nephest.battlenet.sc2.api.aligulac.key={api_key}
-```
+## Development
+Execute `mvn spring-boot:test-run` command to launch the project in dev mode.
+* Default ephemeral tempfs storage with predefined data.
+* Optional persistent storage. Create docker volume `docker volume create volume-name` and add the following app 
+property `org.testcontainers.dev.volume.name=volume-name`
+* By default, the HTTP server uses a random free port which is displayed in the log. You can use the
+`org.testcontainers.dev.http.server.port` app property to pin the port if needed.
 
 ### Optional application properties 
 The server will run without errors if these properties are missing, but the corresponding features will be disabled.
