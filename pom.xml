@@ -331,28 +331,13 @@
         <profile>
             <id>prod</id>
             <properties>
-                <packaging.type>war</packaging.type>
+                <packaging.type>jar</packaging.type>
             </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-tomcat</artifactId>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
             <build>
                 <plugins>
                     <plugin>
-                        <artifactId>maven-war-plugin</artifactId>
-                        <version>3.4.0</version>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                                    <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                                </manifest>
-                            </archive>
-                        </configuration>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
                     </plugin>
                     <plugin>
                         <groupId>com.github.eirslett</groupId>
@@ -424,10 +409,6 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.5.3</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-war-plugin</artifactId>
-          <version>3.4.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
