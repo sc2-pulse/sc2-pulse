@@ -45,17 +45,13 @@ Required properties:
 spring.datasource.username={name}
 spring.datasource.password={pasword}
 spring.datasource.url=jdbc:postgresql://localhost:5432/{test_db_name}
-spring.security.oauth2.client.registration.sc2-sys-us.client-id={client_id}
-spring.security.oauth2.client.registration.sc2-sys-us.client-secret={client_secret}
-spring.security.oauth2.client.registration.sc2-sys-eu.client-id={client_id}
-spring.security.oauth2.client.registration.sc2-sys-eu.client-secret={client_secret}
-spring.security.oauth2.client.registration.sc2-sys-kr.client-id={client_id}
-spring.security.oauth2.client.registration.sc2-sys-kr.client-secret={client_secret}
+spring.security.oauth2.client.blizzard.client-id={client_id}
+spring.security.oauth2.client.blizzard.client-secret={client_secret}
 com.nephest.battlenet.sc2.discord.bot.token={token}
-spring.security.oauth2.client.registration.discord-lg.client-id={client_id}
-spring.security.oauth2.client.registration.discord-lg.client-secret={client_secret}
-spring.security.oauth2.client.registration.twitch-sys.client-id={client_id}
-spring.security.oauth2.client.registration.twitch-sys.client-secret={client_secret}
+spring.security.oauth2.client.discord.client-id={client_id}
+spring.security.oauth2.client.discord.client-secret={client_secret}
+spring.security.oauth2.client.twitch.client-id={client_id}
+spring.security.oauth2.client.twitch.client-secret={client_secret}
 com.nephest.battlenet.sc2.api.aligulac.key={api_key}
 ```
 
@@ -81,24 +77,14 @@ server.port={port}
 spring.datasource.username={name}
 spring.datasource.password={pasword}
 spring.datasource.url=jdbc:postgresql://localhost:5432/{db_name}
-spring.security.oauth2.client.registration.sc2-sys-us.client-id={client_id}
-spring.security.oauth2.client.registration.sc2-sys-us.client-secret={client_secret}
-spring.security.oauth2.client.registration.sc2-sys-eu.client-id={client_id}
-spring.security.oauth2.client.registration.sc2-sys-eu.client-secret={client_secret}
-spring.security.oauth2.client.registration.sc2-sys-kr.client-id={client_id}
-spring.security.oauth2.client.registration.sc2-sys-kr.client-secret={client_secret}
-spring.security.oauth2.client.registration.sc2-lg-eu.client-id = {client_id}
-spring.security.oauth2.client.registration.sc2-lg-eu.client-secret = {client_secret}
-spring.security.oauth2.client.registration.sc2-lg-us.client-id = {client_id}
-spring.security.oauth2.client.registration.sc2-lg-us.client-secret = {client_secret}
-spring.security.oauth2.client.registration.sc2-lg-kr.client-id = {client_id}
-spring.security.oauth2.client.registration.sc2-lg-kr.client-secret = {client_secret}
+spring.security.oauth2.client.blizzard.client-id={client_id}
+spring.security.oauth2.client.blizzard.client-secret={client_secret}
 com.nephest.battlenet.sc2.discord.bot.token={token}
 com.nephest.battlenet.sc2.discord.bot.invite.url={discord_bot_invite_url}
-spring.security.oauth2.client.registration.discord-lg.client-id={client_id}
-spring.security.oauth2.client.registration.discord-lg.client-secret={client_secret}
-spring.security.oauth2.client.registration.twitch-sys.client-id={client_id}
-spring.security.oauth2.client.registration.twitch-sys.client-secret={client_secret}
+spring.security.oauth2.client.discord.client-id={client_id}
+spring.security.oauth2.client.discord.client-secret={client_secret}
+spring.security.oauth2.client.twitch.client-id={client_id}
+spring.security.oauth2.client.twitch.client-secret={client_secret}
 com.nephest.battlenet.sc2.api.aligulac.key={api_key}
 ```
 
