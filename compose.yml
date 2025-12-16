@@ -1,0 +1,74 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:15.15-bookworm
+    container_name: sc2pulse-postgresql-prod
+    networks:
+      - sc2pulse_net_prod
+    volumes:
+      - sc2pulse_data_prod:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=sc2pulse
+      - POSTGRES_USER=sc2pulse
+      - POSTGRES_PASSWORD_FILE=/run/secrets/spring.datasource.password
+    secrets:
+      - spring.datasource.password
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U sc2pulse -d sc2pulse" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  sc2pulse:
+    image: ghcr.io/sc2-pulse/sc2-pulse:latest
+    container_name: sc2pulse-prod
+    networks:
+      - sc2pulse_net_prod
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sc2pulse?reWriteBatchedInserts=true
+      - SPRING_DATASOURCE_USERNAME=sc2pulse
+      - SPRING_CONFIG_IMPORT=optional:configtree:/run/secrets/
+      - SPRING_PROFILES_ACTIVE=default,prod
+    secrets:
+      - spring.datasource.password
+      - security.remember-me.token.key
+      - spring.security.oauth2.client.blizzard.client-id
+      - spring.security.oauth2.client.blizzard.client-secret
+      - spring.security.oauth2.client.discord.client-id
+      - spring.security.oauth2.client.discord.client-secret
+      - spring.security.oauth2.client.twitch.client-id
+      - spring.security.oauth2.client.twitch.client-secret
+      - com.nephest.battlenet.sc2.api.aligulac.key
+      - com.nephest.battlenet.sc2.discord.bot.token
+    restart: unless-stopped
+networks:
+  sc2pulse_net_prod:
+    driver: bridge
+volumes:
+  sc2pulse_data_prod:
+secrets:
+  spring.datasource.password:
+    file: /run/secrets/sc2pulse/spring.datasource.password
+  security.remember-me.token.key:
+    file: /run/secrets/sc2pulse/security.remember-me.token.key
+  spring.security.oauth2.client.blizzard.client-id:
+    file: /run/secrets/sc2pulse/spring.security.oauth2.client.blizzard.client-id
+  spring.security.oauth2.client.blizzard.client-secret:
+    file: /run/secrets/sc2pulse/spring.security.oauth2.client.blizzard.client-secret
+  spring.security.oauth2.client.discord.client-id:
+    file: /run/secrets/sc2pulse/spring.security.oauth2.client.discord.client-id
+  spring.security.oauth2.client.discord.client-secret:
+    file: /run/secrets/sc2pulse/spring.security.oauth2.client.discord.client-secret
+  spring.security.oauth2.client.twitch.client-id:
+    file: /run/secrets/sc2pulse/spring.security.oauth2.client.twitch.client-id
+  spring.security.oauth2.client.twitch.client-secret:
+    file: /run/secrets/sc2pulse/spring.security.oauth2.client.twitch.client-secret
+  com.nephest.battlenet.sc2.api.aligulac.key:
+    file: /run/secrets/sc2pulse/com.nephest.battlenet.sc2.api.aligulac.key
+  com.nephest.battlenet.sc2.discord.bot.token:
+    file: /run/secrets/sc2pulse/com.nephest.battlenet.sc2.discord.bot.token

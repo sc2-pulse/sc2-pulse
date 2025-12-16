@@ -88,6 +88,15 @@ mvn spring-boot:run
 
 Scheduled tasks are disabled in the dev mode. You can remove the `@Profile` annotation from the Cron class if you want 
 to run the tasks(like ladder scans) in the dev mode.
+
+## Production
+### Docker compose
+`docker compose up`
+
+Secrets should be supplied in `/run/secrets/sc2pulse`. See [compose.yml](compose.yml), secrets section.
+
+General (non-secret) config should be supplied via env vars.
+
 ## Alternative update
 ### Legacy and profile ladders
 The Blizzard API can sometimes break and return stale data. The app checks the API state before every update and will
