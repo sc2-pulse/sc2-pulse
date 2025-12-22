@@ -93,7 +93,6 @@ import reactor.core.publisher.Flux;
 @SpringBootTest(classes = {CommunityVideoStreamIT.InitConfiguration.class, AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class CommunityVideoStreamIT
 {
 

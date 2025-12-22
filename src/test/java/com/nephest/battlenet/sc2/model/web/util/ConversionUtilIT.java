@@ -15,7 +15,6 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class ConversionUtilIT
 {
 

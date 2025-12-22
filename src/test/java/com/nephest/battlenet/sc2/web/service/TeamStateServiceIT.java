@@ -80,7 +80,6 @@ import reactor.core.scheduler.Schedulers;
 @SpringBootTest(classes = {AllTestConfig.class, SpyBeanConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class TeamStateServiceIT
 {
 

@@ -24,6 +24,15 @@ and I don't have time to rewrite the old code. The project will remain as it is 
 * Twitch API keys(you must use your own keys)
 * Aligulac API key(you must use your own key)
 
+## Application properties
+You can provide application properties via the following methods:
+* Env variables. App property names should be converted to uppercase, dots replaced with underscores, 
+and hyphens should be removed. For example, the `x.y.z-z` app property name should be converted to `X_Y_ZZ` env var name.
+* Secret files. Add a `SPRING_CONFIG_IMPORT=optional:configtree:/path/to/secrets/` env variable. In the supplied directory,
+create files with app property names, their content will be used as values.
+* Properties. Add a `SPRING_CONFIG_IMPORT=optional:file:/dir/file.properties` env variable. Use the supplied file as 
+a regular properties file (name-value map).
+
 ## Testing
 Run the tests to ensure that you have a valid environment set up. You must also pass the tests
 before creating a PR.
@@ -31,9 +40,7 @@ before creating a PR.
 A real PostgreSQL database with btree_gist extension is required for some integration tests.
 **This should be only a testing db, as tests will drop/create the schema. Do not use your real DB.**
 
-You can use the ```src/test/resources/application-private.properties``` file (ignored by git, used by a test config) 
-to create a simple test config: 
-
+Required properties:
 ```
 spring.datasource.username={name}
 spring.datasource.password={pasword}
@@ -102,9 +109,6 @@ com.nephest.battlenet.sc2.replaystats.api.key
 ```
 
 ### Misc
-You can use the ```src/main/resources/application-private.properties``` file (ignored by git, used by config) 
-for private/local application properties
-
 Use [DB init script](src/main/resources/schema-postgres.sql) to create a fresh DB.
 
 To run the local server execute the following command in a terminal
@@ -158,7 +162,7 @@ To ensure that the potential violation is a minor one, the following rules are a
 
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
-## Application properties
+## Common application properties
 * `com.nephest.battlenet.sc2.url.public` public URL of your service
 * `com.nephest.battlenet.sc2.mmr.history.main.length` 1v1 mmr history length in days, 180 by default.
 * `com.nephest.battlenet.sc2.mmr.history.secondary.length` team mmr history length in days, 180 by default.

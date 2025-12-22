@@ -78,7 +78,6 @@ import reactor.core.publisher.Mono;
 
 @SpringBootTest(classes = {AllTestConfig.class, SpyBeanConfig.class})
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class ExternalServiceIT
 {
 

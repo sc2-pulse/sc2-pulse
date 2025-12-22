@@ -58,7 +58,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 @AutoConfigureMockMvc
 public class PlayerCharacterStatsIT
 {

@@ -25,7 +25,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Disabled("Bilibili is disabled until they have a proper API")
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class BilibiliAPIIT
 {
 

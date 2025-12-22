@@ -30,7 +30,6 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles({"default", "prod", "test"})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class SecurityIT
 {
 

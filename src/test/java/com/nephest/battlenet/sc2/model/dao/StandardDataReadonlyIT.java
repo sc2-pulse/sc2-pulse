@@ -58,7 +58,6 @@ import reactor.util.function.Tuple3;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class StandardDataReadonlyIT
 {
 

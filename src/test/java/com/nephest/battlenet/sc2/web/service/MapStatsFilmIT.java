@@ -69,7 +69,6 @@ import reactor.core.Disposable;
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class MapStatsFilmIT
 {
 

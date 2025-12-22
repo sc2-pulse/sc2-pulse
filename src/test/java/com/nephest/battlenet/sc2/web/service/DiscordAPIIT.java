@@ -37,7 +37,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class DiscordAPIIT
 {
 

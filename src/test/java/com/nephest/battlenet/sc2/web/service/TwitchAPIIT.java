@@ -37,7 +37,6 @@ import reactor.core.publisher.Flux;
 @TwitchTest
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class TwitchAPIIT
 {
 

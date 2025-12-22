@@ -30,7 +30,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 @DisabledIf
 (
     expression = "#{environment['com.nephest.battlenet.sc2.replaystats.api.key'] == null}",

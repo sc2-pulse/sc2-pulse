@@ -69,7 +69,6 @@ import reactor.util.function.Tuples;
 @SpringBootTest(classes = {AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class BlizzardSC2APIIT
 {
 

@@ -42,7 +42,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 @AutoConfigureMockMvc
 public class LadderSearchIndependentEmptyIT
 {

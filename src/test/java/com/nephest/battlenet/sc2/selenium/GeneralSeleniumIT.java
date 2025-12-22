@@ -84,7 +84,6 @@ import org.springframework.test.context.TestPropertySource;
 )
 @ActiveProfiles({"dev", "default"})
 @TestPropertySource("classpath:application.properties")
-@TestPropertySource("classpath:application-private.properties")
 public class GeneralSeleniumIT
 {
 
