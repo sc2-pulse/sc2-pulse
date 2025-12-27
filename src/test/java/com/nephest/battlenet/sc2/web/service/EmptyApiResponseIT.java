@@ -9,7 +9,9 @@ import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -96,27 +98,24 @@ public class EmptyApiResponseIT
 
     public static Stream<Arguments> whenEmptyStatusResponse_thenReturnEmptyPublisher()
     {
-        return Stream.of
-        (
-            Arguments.of
-            (
+        List<Arguments> args = new ArrayList<>(3);
+        if(sc2ReplayStatsAPI != null)
+            args.add(Arguments.of(
                 (Supplier<Mono<?>>)()->sc2ReplayStatsAPI.findCharacter
                 (
                     PlayerCharacterNaturalId.of(Region.EU, 1, 315071L)
                 )
-            ),
-            Arguments.of
+            ));
+        args.add(Arguments.of(
+            (Supplier<Mono<?>>)()->sc2ArcadeAPI.findCharacter
             (
-                (Supplier<Mono<?>>)()->sc2ArcadeAPI.findCharacter
-                (
-                    PlayerCharacterNaturalId.of(Region.EU, 1, 315071L)
-                )
-            ),
-            Arguments.of
-            (
-                (Supplier<Mono<?>>)()->sc2ArcadeAPI.findByRegionAndGameId(Region.EU, "123")
+                PlayerCharacterNaturalId.of(Region.EU, 1, 315071L)
             )
-        );
+        ));
+        args.add(Arguments.of(
+            (Supplier<Mono<?>>)()->sc2ArcadeAPI.findByRegionAndGameId(Region.EU, "123")
+        ));
+        return args.stream();
     }
 
     @ParameterizedTest
