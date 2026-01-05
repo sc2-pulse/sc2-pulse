@@ -15,8 +15,8 @@ RUN mvn -P prod com.github.eirslett:frontend-maven-plugin:npm@npm-install
 # Build stage
 FROM dependency AS build
 COPY src src
-COPY babel.config.json minify-script.js .
-RUN mvn -P prod clean package -DskipTests
+COPY babel.config.json minify-script.js version.properties .
+RUN mvn -P prod clean package -DskipTests -Drevision=$(cat version.properties | grep revision | cut -d'=' -f2)
 
 # Run stage
 FROM eclipse-temurin:17-jre-noble AS run
