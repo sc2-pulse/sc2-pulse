@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -504,7 +504,10 @@ public class StatsService
             updateSeason(season, data);
             LOG.info("Updated season {}", season);
         }
-        playerCharacterStatsDAO.mergeCalculate();
+        /*TODO Replace with on the fly aggregations when Clickhouse migration is complete.
+            Currently it's too heavy.
+         */
+        //playerCharacterStatsDAO.mergeCalculate();
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.info("Updated all after {} seconds", seconds);
@@ -618,7 +621,10 @@ public class StatsService
         Set<Long> pendingCharacterIds = pendingCharacters.stream()
             .map(PlayerCharacter::getId)
             .collect(Collectors.toSet());
-        playerCharacterStatsDAO.mergeCalculate(pendingCharacterIds);
+        /*TODO Replace with on the fly aggregations when Clickhouse migration is complete.
+            Currently it's too heavy.
+         */
+        //playerCharacterStatsDAO.mergeCalculate(pendingCharacterIds);
         PlayerCharacter[] characters = pendingCharacters.toArray(PlayerCharacter[]::new);
         eventService.createLadderCharacterActivityEvent(characters);
         LOG.info("Created {} character ladder activity events", characters.length);
