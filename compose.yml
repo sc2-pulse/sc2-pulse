@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   postgres:
-    image: postgres:15.15-bookworm
+    image: postgres:17.7-trixie
     container_name: sc2pulse-postgresql-prod
     networks:
       - sc2pulse_net_prod
