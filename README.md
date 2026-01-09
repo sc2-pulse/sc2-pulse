@@ -93,7 +93,7 @@ to run the tasks(like ladder scans) in the dev mode.
 ### Docker compose
 `docker compose up`
 
-Secrets should be supplied in `/run/secrets/sc2pulse`. See [compose.yml](compose.yml), secrets section.
+Secrets should be supplied in `/run/secrets/sc2pulse`. See [compose.yaml](compose.yaml), secrets section.
 
 General (non-secret) config should be supplied via env vars.
 
