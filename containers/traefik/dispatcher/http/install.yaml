@@ -1,0 +1,7 @@
+providers:
+  file:
+    filename: /etc/traefik/routing.yaml
+    watch: true
+entryPoints:
+  web:
+    address: ":80"

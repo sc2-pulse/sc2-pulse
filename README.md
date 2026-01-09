@@ -99,6 +99,9 @@ General (non-secret) config should be supplied via env vars.
 
 Nothing is exposed by default. Sc2pulse service port is 8080 by default, expose it directly or add a reverse proxy.
 
+See [containers/traefik/dispatcher](containers/traefik/dispatcher). If directory structure is preserved, you can use
+it like this `docker compose -f "compose.yaml" -f "containers/traefik/dispatcher/http/compose.yaml" up`
+
 ## Alternative update
 ### Legacy and profile ladders
 The Blizzard API can sometimes break and return stale data. The app checks the API state before every update and will

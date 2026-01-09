@@ -1,0 +1,12 @@
+http:
+  routers:
+    web:
+      rule: "PathPrefix(`/`)"
+      entryPoints:
+        - web
+      service: sc2pulse
+  services:
+    sc2pulse:
+      loadBalancer:
+        servers:
+          - url: "http://sc2pulse:8080"

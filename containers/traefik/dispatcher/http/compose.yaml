@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+  traefik:
+    image: traefik:v3.6.6
+    container_name: traefik-prod
+    networks:
+      - sc2pulse_net_prod
+    ports:
+      - "80:80"
+    volumes:
+      - ./containers/traefik/dispatcher/http/install.yaml:/etc/traefik/traefik.yaml:ro
+      - ./containers/traefik/dispatcher/http/routing.yaml:/etc/traefik/routing.yaml:ro
+    restart: unless-stopped
