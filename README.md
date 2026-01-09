@@ -97,6 +97,8 @@ Secrets should be supplied in `/run/secrets/sc2pulse`. See [compose.yaml](compos
 
 General (non-secret) config should be supplied via env vars.
 
+Nothing is exposed by default. Sc2pulse service port is 8080 by default, expose it directly or add a reverse proxy.
+
 ## Alternative update
 ### Legacy and profile ladders
 The Blizzard API can sometimes break and return stale data. The app checks the API state before every update and will
