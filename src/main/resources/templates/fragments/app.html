@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2026 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -757,7 +757,7 @@
                             </section>
                             <section id="revealed-report">
                                 <ul class="d-inline-block">
-                                    <li th:insert="~{/fragments/section :: missing-battle-tag-message}"></li>
+                                    <li th:insert="~{fragments/section :: missing-battle-tag-message}"></li>
                                     <li>Do you know which pro player plays on this account? Please
                                         <a th:href="@{/contacts}">contact me</a>.
                                     </li>
@@ -770,7 +770,7 @@
                             </section>
                         </section>
                         <section id="player-stats-matches" class="tab-pane fade container-loading loading-none" data-view-title="Matches">
-                            <div th:replace="~{/fragments/section :: matches('', true, false)}"></div>
+                            <div th:replace="~{fragments/section :: matches('', true, false)}"></div>
                             <div th:replace="~{fragments/section :: loading-indicator}"></div>
                             <div id="player-stats-matches-reset-loading" class="container-loading loading-none"></div>
                         </section>

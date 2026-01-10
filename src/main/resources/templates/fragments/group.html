@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2026 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -172,11 +172,11 @@
                         <div th:replace="~{fragments/section :: loading-indicator}"></div>
                     </section>
                     <section id="group-matches" class="group-matches container-loading loading-none tab-pane fade" data-view-title="Matches">
-                        <div th:replace="~{/fragments/section :: matches('-group', true, false)}"></div>
+                        <div th:replace="~{fragments/section :: matches('-group', true, false)}"></div>
                         <div th:replace="~{fragments/section :: loading-indicator}"></div>
                     </section>
                     <section id="group-clan" class="group-clan container-loading loading-none tab-pane fade" data-view-title="Clan history">
-                        <div th:replace="~{/fragments/section :: clan-history('group')}"></div>
+                        <div th:replace="~{fragments/section :: clan-history('group')}"></div>
                         <div th:replace="~{fragments/section :: loading-indicator}"></div>
                     </section>
                     <section id="group-links" class="group-links container-loading loading-none tab-pane fade" data-view-title="Links">
