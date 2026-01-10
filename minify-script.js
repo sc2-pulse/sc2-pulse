@@ -2,7 +2,7 @@ const { minify } = require("terser");
 const fs = require('fs');
 const path = require('path');
 
-const root = 'target/classes/js';
+const root = 'target/js';
 const orderedFiles = [
     root + '/LuxonConfig.js',
     root + '/IntervalExecutor.js',
@@ -53,7 +53,7 @@ minify(fileContents, {
     mangle: true
 })
 .then(result => {
-    const outputDir = 'target/sc2-webapp/static/script';
+    const outputDir = 'target/classes/static/script';
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
