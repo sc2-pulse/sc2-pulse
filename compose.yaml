@@ -30,7 +30,7 @@ services:
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sc2pulse?reWriteBatchedInserts=true
       - SPRING_DATASOURCE_USERNAME=sc2pulse
-      - SPRING_CONFIG_IMPORT=optional:configtree:/run/secrets/
+      - SPRING_CONFIG_IMPORT=optional:configtree:/run/sc2pulse/
       - SPRING_PROFILES_ACTIVE=default,prod
       - COM_NEPHEST_BATTLENET_SC2_CRON_ENABLED=true
     secrets:
