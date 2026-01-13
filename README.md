@@ -107,6 +107,15 @@ See [containers/traefik/dispatcher](containers/traefik/dispatcher).
 You can provide required secrets via env variables or compose secrets(file mounts). The sc2pulse service accepts secrets
 in the `/run/secrets` directory, and copies them into service readable secrets in the `/run/sc2pulse` directory.
 
+You can use [containers/secrets/infisical](containers/secrets/infisical) to inject secrets via tmpfs.
+* Register on https://infisical.com/, create a secret management project, add secrets, add machine identity access.
+* Mount `/etc/sc2pulse/id` and `/etc/sc2pulse/secret` files into the infisical service with machine identity universal 
+access id and secret content.
+* Replace `"PROJECT_ID"` with your project id in [template.tmpl](containers/secrets/infisical/template.tmpl). You can
+also replace `prod` with `dev` or `stage`, depending on what secrets you want to pull.
+* Replace `address` in [agent-config.yaml](containers/secrets/infisical/agent-config.yaml) with your infisical address 
+if you are using other infisical instance(EU(`https://eu.infisical.com`) or self-hosted).
+
 ## Alternative update
 ### Legacy and profile ladders
 The Blizzard API can sometimes break and return stale data. The app checks the API state before every update and will
