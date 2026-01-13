@@ -93,14 +93,19 @@ to run the tasks(like ladder scans) in the dev mode.
 ### Docker compose
 `docker compose up`
 
-Secrets should be supplied in `/run/secrets/sc2pulse`. See [compose.yaml](compose.yaml), secrets section.
+#### Config
+You can merge additional compose configs via config merge. The directory structure must be preserved. The project
+root must be the working directory. For example 
+`docker compose -f "compose.yaml" -f "containers/traefik/dispatcher/http/compose.yaml" up`
 
-General (non-secret) config should be supplied via env vars.
-
+#### Exposure
 Nothing is exposed by default. Sc2pulse service port is 8080 by default, expose it directly or add a reverse proxy.
 
-See [containers/traefik/dispatcher](containers/traefik/dispatcher). If directory structure is preserved, you can use
-it like this `docker compose -f "compose.yaml" -f "containers/traefik/dispatcher/http/compose.yaml" up`
+See [containers/traefik/dispatcher](containers/traefik/dispatcher).
+
+#### Secrets
+You can provide required secrets via env variables or compose secrets(file mounts). The sc2pulse service accepts secrets
+in the `/run/secrets` directory, and copies them into service readable secrets in the `/run/sc2pulse` directory.
 
 ## Alternative update
 ### Legacy and profile ladders
