@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 set -e
+umask 277
 
 ALL_SECRETS=/run/all-secrets.txt
 
