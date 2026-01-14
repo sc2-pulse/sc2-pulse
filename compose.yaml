@@ -14,7 +14,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
   sc2pulse:
     image: ghcr.io/sc2-pulse/sc2-pulse:2
     container_name: sc2pulse-prod
@@ -28,7 +27,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=sc2pulse
       - SPRING_PROFILES_ACTIVE=default,prod
       - COM_NEPHEST_BATTLENET_SC2_CRON_ENABLED=true
-    restart: unless-stopped
 networks:
   sc2pulse_net_prod:
     driver: bridge

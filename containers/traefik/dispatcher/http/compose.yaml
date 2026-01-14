@@ -9,4 +9,3 @@ services:
     volumes:
       - ./containers/traefik/dispatcher/http/install.yaml:/etc/traefik/traefik.yaml:ro
       - ./containers/traefik/dispatcher/http/routing.yaml:/etc/traefik/routing.yaml:ro
-    restart: unless-stopped

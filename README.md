@@ -93,6 +93,10 @@ to run the tasks(like ladder scans) in the dev mode.
 ### Docker compose
 `docker compose up`
 
+#### Restart
+There is no restart config. You are encouraged to create a systemd service to start/stop/restart it, use
+the `--abort-on-container-failure` flag in compose up script.
+
 #### Config
 You can merge additional compose configs via config merge. The directory structure must be preserved. The project
 root must be the working directory. For example 
