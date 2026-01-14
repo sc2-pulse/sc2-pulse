@@ -108,6 +108,9 @@ You can provide required secrets via env variables or compose secrets(file mount
 in the `/run/secrets` directory, and copies them into service readable secrets in the `/run/sc2pulse` directory.
 
 You can use [containers/secrets/infisical](containers/secrets/infisical) to inject secrets via tmpfs.
+* Set up [shm-sc2pulse-dir](containers/secrets/infisical/shm-sc2pulse-dir.service) systemd service. This is needed
+because docker is bad at sharing tmpfs. If you are using podman, then you can modify the infisical compose config and
+share named tmpfs volumes directly. 
 * Register on https://infisical.com/, create a secret management project, add secrets, add machine identity access.
 * Mount `/etc/sc2pulse/id` and `/etc/sc2pulse/secret` files into the infisical service with machine identity universal 
 access id and secret content.
