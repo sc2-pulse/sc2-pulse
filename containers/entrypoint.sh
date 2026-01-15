@@ -8,7 +8,7 @@ umask 277
 TARGET_DIR="/run/sc2pulse"
 APP_USER="sc2pulse"
 
-mkdir -p "$TARGET_DIR"
+mkdir "$TARGET_DIR"
 chown "$APP_USER":"$APP_USER" "$TARGET_DIR"
 
 if [ -d "/run/secrets" ]; then
