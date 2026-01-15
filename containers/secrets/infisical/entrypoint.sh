@@ -9,7 +9,6 @@ ALL_SECRETS=/run/all-secrets.txt
 
 infisical agent --config /etc/sc2pulse/agent-config.yaml
 awk -F= -v outdir="./run/sc2pulse" '
-BEGIN { system("mkdir -p " outdir) }
 {
     if ($1 != "") {
         print $2 > (outdir "/" $1)
