@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -114,18 +114,6 @@ extends BaseAPI
     public static final Duration SHORT_IO_TIMEOUT = Duration.ofSeconds(20);
     public static final String SYSTEM_REQUEST_LIMIT_PRIORITY_NAME = "system";
     public static final int SYSTEM_HOURLY_REQUEST_LIMIT_PRIORITY_SLOTS = 600;
-    /*
-        This data is mainly used in ladder discovery process when starting with an empty DB. The values should be
-        manually updated when a new season begins.
-        Season 62
-     */
-    public static final Map<Region, Long> LAST_LADDER_IDS = Map.of
-    (
-        Region.US, 328850L,
-        Region.EU, 264386L,
-        Region.KR, 86053L,
-        Region.CN, 67627L
-    );
     public static final Map<Region, Region> DEFAULT_REGION_REDIRECTS = Map.of
     (
         Region.US, Region.KR,

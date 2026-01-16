@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -128,6 +128,7 @@ public class AlternativeLadderService
     private final ExecutorService dbExecutorService;
     private final ClanService clanService;
     private final Predicate<BlizzardProfileTeam> teamValidationPredicate;
+    private final Map<Region, Long> ladderDiscoveryStartIds;
 
     @Value("${com.nephest.battlenet.sc2.ladder.alternative.web.auto:#{'false'}}")
     private boolean autoWeb;
@@ -151,7 +152,11 @@ public class AlternativeLadderService
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
-        ClanService clanService
+        ClanService clanService,
+        @Value("${com.nephest.battlenet.sc2.api.blizzard.ladder.id.previous.us}") Long discoveryStartIdUs,
+        @Value("${com.nephest.battlenet.sc2.api.blizzard.ladder.id.previous.eu}") Long discoveryStartIdEu,
+        @Value("${com.nephest.battlenet.sc2.api.blizzard.ladder.id.previous.kr}") Long discoveryStartIdKr,
+        @Value("${com.nephest.battlenet.sc2.api.blizzard.ladder.id.previous.cn}") Long discoveryStartIdCn
     )
     {
         this.api = api;
@@ -170,6 +175,12 @@ public class AlternativeLadderService
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         this.dbExecutorService = dbExecutorService;
         this.clanService = clanService;
+        Map<Region, Long> discoveryIds = new EnumMap<>(Region.class);
+        discoveryIds.put(Region.US, discoveryStartIdUs);
+        discoveryIds.put(Region.EU, discoveryStartIdEu);
+        discoveryIds.put(Region.KR, discoveryStartIdKr);
+        discoveryIds.put(Region.CN, discoveryStartIdCn);
+        this.ladderDiscoveryStartIds = Collections.unmodifiableMap(discoveryIds);
     }
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 100;
@@ -406,7 +417,7 @@ public class AlternativeLadderService
     public List<Future<Void>> discoverSeason(Season season, boolean web)
     {
         long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion())
-            .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion())) + 1;
+            .orElse(ladderDiscoveryStartIds.get(season.getRegion())) + 1;
         return discoverSeason(season, lastDivision, web, null, true);
     }
 
@@ -416,7 +427,7 @@ public class AlternativeLadderService
             .findLastDivision(season.getBattlenetId(), season.getRegion())
             .orElseGet(()->divisionDao
                 .findLastDivision(season.getBattlenetId() - 1, season.getRegion())
-                .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion()))) + 1;
+                .orElse(ladderDiscoveryStartIds.get(season.getRegion()))) + 1;
     }
 
     private List<Future<Void>> continueSeasonDiscovery(Season season)
