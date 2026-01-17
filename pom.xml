@@ -322,6 +322,8 @@
                                 <argument>--logging.level.com.nephest=DEBUG</argument>
                                 <argument>--spring.thymeleaf.cache=false</argument>
                                 <argument>--spring.thymeleaf.prefix=file:src/main/resources/templates/</argument>
+                                <argument>--spring.web.resources.static-locations=file:src/main/resources/static/</argument>
+                                <argument>--spring.devtools.restart.exclude=static/**,public/**,templates/**</argument>
                             </arguments>
                             <jvmArguments>-Dsun.net.client.defaultConnectTimeout=30000 -Dsun.net.client.defaultReadTimeout=30000</jvmArguments>
                         </configuration>
