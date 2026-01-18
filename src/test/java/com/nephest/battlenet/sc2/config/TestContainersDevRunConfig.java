@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.devtools.restart.RestartScope;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +29,6 @@ public class TestContainersDevRunConfig
 
     @Bean
     @ServiceConnection
-    @RestartScope
     public PostgreSQLContainer postgreSQLContainer
     (
         @Value("${org.testcontainers.postgres.image.name}") String postgresImageName,
