@@ -24,11 +24,17 @@ LABEL org.opencontainers.image.source="https://github.com/sc2-pulse/sc2-pulse"
 LABEL org.opencontainers.image.title="SC2 Pulse"
 LABEL org.opencontainers.image.description="The fastest and most reliable ranked ladder tracker for StarCraft2"
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later"
-WORKDIR /opt/sc2pulse
-ENV JAVA_BASE_OPTIONS="-Dsun.net.client.defaultConnectTimeout=30000 -Dsun.net.client.defaultReadTimeout=30000"
+ENV WORK_DIR="/opt/sc2pulse"
+WORKDIR ${WORK_DIR}
+ENV JAVA_BASE_OPTIONS="-Djava.io.tmpdir=${WORK_DIR}/tmp \
+   -Dsun.net.client.defaultConnectTimeout=30000 \
+   -Dsun.net.client.defaultReadTimeout=30000"
 ENV JAVA_TOOL_OPTIONS="${JAVA_BASE_OPTIONS}"
 ENV USER_NAME=sc2pulse
-RUN useradd --system --user-group ${USER_NAME}
+RUN useradd --system --user-group ${USER_NAME} && \
+    mkdir -p ${WORK_DIR}/tmp && \
+    chown ${USER_NAME}:${USER_NAME} ${WORK_DIR}/tmp && \
+    chmod 700 ${WORK_DIR}/tmp
 COPY --from=build --chown=${USER_NAME}:${USER_NAME} /usr/local/src/sc2pulse/target/sc2-webapp.jar /opt/sc2pulse/sc2pulse.jar
 COPY containers/entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
