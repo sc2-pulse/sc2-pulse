@@ -21,4 +21,5 @@ if [ -d "/run/secrets" ]; then
     done
 fi
 
+umask 077
 exec setpriv --reuid=$APP_USER --regid=$APP_USER --clear-groups -- "$@"
