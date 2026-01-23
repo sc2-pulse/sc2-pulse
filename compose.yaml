@@ -23,6 +23,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      - SERVER_SERVLET_CONTEXTPATH=/sc2
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sc2pulse?reWriteBatchedInserts=true
       - SPRING_DATASOURCE_USERNAME=sc2pulse
       - SPRING_PROFILES_ACTIVE=default,prod
