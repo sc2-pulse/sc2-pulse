@@ -1,0 +1,24 @@
+services:
+  sc2pulse:
+    environment:
+      - SERVER_TOMCAT_REMOTEIPHEADER=x-forwarded-for
+      - SERVER_TOMCAT_PROTOCOLHEADER=x-forwarded-proto
+      - SERVER_TOMCAT_REDIRECTCONTEXTROOT=false
+      - SERVER_FORWARDHEADERSSTRATEGY=native
+  nginx:
+    image: nginx:1.29.4-trixie
+    container_name: sc2pulse-nginx-prod
+    networks:
+      - sc2pulse_net_prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./containers/nginx/cloudflare-ip-sync/conf/cloudflare-ips.conf:/etc/nginx/conf.d/cloudflare-ips.conf:ro
+      - ./containers/nginx/proxy/https/ca/sc2pulse.conf:/etc/nginx/conf.d/sc2pulse.conf:ro
+      - ./containers/nginx/proxy/https/ca/sc2pulse-proxy.conf:/usr/local/etc/nginx/sc2pulse-proxy.conf:ro
+      - ./containers/nginx/proxy/https/ca/sc2pulse.pem:/etc/ssl/certs/sc2pulse.pem:ro
+      - ./containers/nginx/proxy/https/ca/sc2pulse.key:/etc/ssl/private/sc2pulse.key:ro
+    depends_on:
+      sc2pulse:
+        condition: service_healthy
