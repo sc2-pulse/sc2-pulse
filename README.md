@@ -116,7 +116,7 @@ You can use [containers/secrets/infisical](containers/secrets/infisical) to inje
 because docker is bad at sharing tmpfs. If you are using podman, then you can modify the infisical compose config and
 share named tmpfs volumes directly. 
 * Register on https://infisical.com/, create a secret management project, add secrets, add machine identity access.
-* Mount `/etc/sc2pulse/id` and `/etc/sc2pulse/secret` files into the infisical service with machine identity universal 
+* Mount `/opt/sc2pulse/id` and `/opt/sc2pulse/secret` files into the infisical service with machine identity universal 
 access id and secret content.
 * Replace `"PROJECT_ID"` with your project id in [template.tmpl](containers/secrets/infisical/template.tmpl). You can
 also replace `prod` with `dev` or `stage`, depending on what secrets you want to pull.

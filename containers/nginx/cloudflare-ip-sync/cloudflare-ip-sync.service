@@ -5,8 +5,8 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=/etc/sc2pulse/compose/containers/nginx/cloudflare-ip-sync
-ExecStart=/etc/sc2pulse/compose/containers/nginx/cloudflare-ip-sync/cloudflare-ip-sync.sh
+WorkingDirectory=/opt/sc2pulse/compose/containers/nginx/cloudflare-ip-sync
+ExecStart=/opt/sc2pulse/compose/containers/nginx/cloudflare-ip-sync/cloudflare-ip-sync.sh
 
 NoNewPrivileges=true
 PrivateTmp=true
@@ -14,6 +14,6 @@ ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
 MemoryDenyWriteExecute=true
-ReadWritePaths=/etc/sc2pulse/compose/containers/nginx/cloudflare-ip-sync/conf
+ReadWritePaths=/opt/sc2pulse/compose/containers/nginx/cloudflare-ip-sync/conf
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_DAC_OVERRIDE
 AmbientCapabilities=CAP_NET_ADMIN
