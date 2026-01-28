@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -732,7 +732,7 @@ implements BasicEntityOperations<Team>
             @CacheEvict
             (
                 cacheNames = "last-played-max",
-                key = "new org.springframework.cache.interceptor.SimpleKey(#p0.region, #p0.season)"
+                key = "{#p0.region, #p0.season}"
             )
         }
     )
