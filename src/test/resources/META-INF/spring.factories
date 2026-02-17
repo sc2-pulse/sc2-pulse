@@ -1,1 +1,2 @@
 org.springframework.boot.env.EnvironmentPostProcessor=com.nephest.battlenet.sc2.config.TestEnvironmentPostProcessor
+org.springframework.boot.autoconfigure.service.connection.ConnectionDetailsFactory=com.nephest.battlenet.sc2.config.data.clickhouse.ClickHouseServiceConnectionFactory

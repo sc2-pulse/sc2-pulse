@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.testcontainers.clickhouse.ClickHouseContainer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -32,7 +33,7 @@ public class TestContainersDevRunConfig
     public PostgreSQLContainer postgreSQLContainer
     (
         @Value("${org.testcontainers.postgres.image.name}") String postgresImageName,
-        @Value("${org.testcontainers.dev.volume.name:#{null}}") String volumeName
+        @Value("${org.testcontainers.dev.postgres.volume.name:#{null}}") String volumeName
     )
     {
         PostgreSQLContainer postgreSQLContainer
@@ -49,7 +50,7 @@ public class TestContainersDevRunConfig
             );
         if(volumeName != null)
         {
-            LOG.info("Using {} volume", volumeName);
+            LOG.info("Using {} postgres volume", volumeName);
             postgreSQLContainer = postgreSQLContainer.withCreateContainerCmdModifier
             (
                 cmd->cmd.getHostConfig()
@@ -59,9 +60,35 @@ public class TestContainersDevRunConfig
         }
         else
         {
-            LOG.info("Using ephemeral storage");
+            LOG.info("Using ephemeral postgresql storage");
         }
         return postgreSQLContainer;
+    }
+
+    @Bean
+    @ServiceConnection
+    public ClickHouseContainer clickHouseContainer
+    (
+        @Value("${org.testcontainers.clickhouse.image.name}") String clickHouseImageName,
+        @Value("${org.testcontainers.dev.clickhouse.volume.name:#{null}}") String volumeName
+    )
+    {
+        ClickHouseContainer clickHouseContainer
+            = new ClickHouseContainer(DockerImageName.parse(clickHouseImageName));
+        if(volumeName != null)
+        {
+            LOG.info("Using {} clickhouse volume", volumeName);
+            clickHouseContainer = clickHouseContainer.withCreateContainerCmdModifier
+            (
+                cmd->cmd.getHostConfig()
+                    .withBinds(Bind.parse(volumeName + ":/var/lib/clickhouse"))
+            );
+        }
+        else
+        {
+            LOG.info("Using ephemeral clickhouse storage");
+        }
+        return clickHouseContainer;
     }
 
     /**
@@ -81,7 +108,13 @@ public class TestContainersDevRunConfig
     }
 
     @Bean
-    @ConditionalOnExpression("#{'${org.testcontainers.dev.volume.name:}'.isBlank()}")
+    @ConditionalOnExpression
+    (
+        "#{"
+            + "'${org.testcontainers.dev.postgres.volume.name:}'.isBlank() "
+            + "&& '${org.testcontainers.dev.clickhouse.volume.name:}'.isBlank()"
+        + "}"
+    )
     public ApplicationRunner dbInitializer(@Autowired TestDbInitializer testDbInitializer)
     {
         return args->

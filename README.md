@@ -68,7 +68,8 @@ mvn verify
 Execute `mvn spring-boot:test-run` command to launch the project in dev mode.
 * Default ephemeral tempfs storage with predefined data.
 * Optional persistent storage. Create docker volume `docker volume create volume-name` and add the following app 
-property `org.testcontainers.dev.volume.name=volume-name`
+properties: `org.testcontainers.dev.postgres.volume.name=volume-name`,
+`org.testcontainers.dev.clickhouse.volume.name=volume-name`
 * By default, the HTTP server uses a random free port which is displayed in the log. You can use the
 `org.testcontainers.dev.http.server.port` app property to pin the port if needed.
 
