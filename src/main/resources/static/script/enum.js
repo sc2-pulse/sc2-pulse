@@ -298,21 +298,9 @@ const LADDER_STATS_GLOBAL_VIEW_MODE = Object.freeze
     },
 });
 
-const TEAM_HISTORY_GROUP_MODE = Object.freeze
-({
-    TEAM: {code:1, name: "team", fullName: "TEAM", order: 1},
-    LEGACY_UID: {code:2, name: "legacy-uid", fullName: "LEGACY_UID", order: 2}
-});
-
 const TEAM_HISTORY_STATIC_COLUMN = Object.freeze
 ({
-    ID: {code:1, name: "id", fullName: "ID", order: 1},
-    REGION: {code:2, name: "region", fullName: "REGION", order: 2},
-    QUEUE_TYPE: {code:3, name: "queue", fullName: "QUEUE_TYPE", order: 3},
-    TEAM_TYPE: {code:4, name: "type", fullName: "TEAM_TYPE", order: 4},
-    LEGACY_ID: {code:5, name: "legacy-id", fullName: "LEGACY_ID", order: 5},
-    SEASON: {code:6, name: "season", fullName: "SEASON", order: 6},
-    LEGACY_UID: {code: 7, name: "legacy-uid", fullName: "LEGACY_UID", order: 7}
+    LEGACY_UID: {code: 1, name: "legacy-uid", fullName: "LEGACY_UID", order: 1}
 });
 
 const TEAM_HISTORY_HISTORY_COLUMN = Object.freeze
@@ -323,15 +311,14 @@ const TEAM_HISTORY_HISTORY_COLUMN = Object.freeze
     WINS: {code:4, name: "wins", fullName: "WINS", order: 4},
     LEAGUE_TYPE: {code:5, name: "league", fullName: "LEAGUE_TYPE", order: 5},
     TIER_TYPE: {code:6, name: "tier", fullName: "TIER_TYPE", order: 6},
-    DIVISION_ID: {code:7, name: "division-id", fullName: "DIVISION_ID", order: 7},
+    DIVISION_BATTLENET_ID: {code:7, name: "division-battlenet-id", fullName: "DIVISION_BATTLENET_ID", order: 7},
     GLOBAL_RANK: {code:8, name: "global-rank", fullName: "GLOBAL_RANK", order: 8},
     REGION_RANK: {code:9, name: "region-rank", fullName: "REGION_RANK", order: 9},
     LEAGUE_RANK: {code:10, name: "league-rank", fullName: "LEAGUE_RANK", order: 10},
     GLOBAL_TEAM_COUNT: {code:11, name: "global-team-count", fullName: "GLOBAL_TEAM_COUNT", order: 11},
     REGION_TEAM_COUNT: {code:12, name: "region-team-count", fullName: "REGION_TEAM_COUNT", order: 12},
     LEAGUE_TEAM_COUNT: {code:13, name: "league-team-count", fullName: "LEAGUE_TEAM_COUNT", order: 13},
-    ID: {code:14, name: "id", fullName: "ID", order: 14},
-    SEASON: {code:15, name: "season", fullName: "SEASON", order: 15},
+    SEASON: {code:14, name: "season", fullName: "SEASON", order: 14},
 });
 
 const TEAM_HISTORY_SUMMARY_COLUMN = Object.freeze

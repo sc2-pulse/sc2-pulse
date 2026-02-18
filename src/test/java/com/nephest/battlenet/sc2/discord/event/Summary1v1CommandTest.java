@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -142,9 +142,7 @@ public class Summary1v1CommandTest
             anySet(),
             depthCaptor.capture(),
             any(),
-            anySet(),
-            anySet(),
-            any()
+            anySet()
         );
         //verify correct depth, 10 seconds to run the test just in case
         if(depth == null)
@@ -202,13 +200,20 @@ public class Summary1v1CommandTest
                 (
                     Map.of
                     (
-                        TeamHistoryDAO.StaticColumn.QUEUE_TYPE, QueueType.LOTV_1V1.getId(),
-                        TeamHistoryDAO.StaticColumn.TEAM_TYPE, TeamType.ARRANGED.getId(),
-                        TeamHistoryDAO.StaticColumn.REGION, Region.EU.getId(),
-                        TeamHistoryDAO.StaticColumn.LEGACY_ID,
-                        TeamLegacyId.standard(List.of(
-                            new TeamLegacyIdEntry(0, (long) i, Race.TERRAN)
-                        )).getId()
+                        TeamHistoryDAO.StaticColumn.LEGACY_UID,
+                        sc2ConversionService.convert
+                        (
+                            new TeamLegacyUid
+                            (
+                                QueueType.LOTV_1V1,
+                                TeamType.ARRANGED,
+                                Region.EU,
+                                TeamLegacyId.standard(List.of(
+                                    new TeamLegacyIdEntry(0, (long) i, Race.TERRAN)
+                                ))
+                            ),
+                            String.class
+                        )
                     )
                 ),
                 new RawTeamHistorySummaryData
@@ -277,26 +282,15 @@ public class Summary1v1CommandTest
                 ))
             ))
             .toList();
-        List<Long> teamIds = List.of(1L);
-        when(teamDAO.findIdsByLegacyUids(
-            Set.copyOf(depth == null ? uids.subList(0, 4) : uids), null, null))
-                .thenReturn(teamIds);
         when(teamHistoryDAO.findSummary(
-            eq(Set.copyOf(teamIds)),
+            eq(Set.copyOf(uids)),
             any(), isNull(),
-            eq(EnumSet.of(
-                TeamHistoryDAO.StaticColumn.QUEUE_TYPE,
-                TeamHistoryDAO.StaticColumn.TEAM_TYPE,
-                TeamHistoryDAO.StaticColumn.REGION,
-                TeamHistoryDAO.StaticColumn.LEGACY_ID
-            )),
             eq(EnumSet.of(
                 TeamHistoryDAO.SummaryColumn.GAMES,
                 TeamHistoryDAO.SummaryColumn.RATING_LAST,
                 TeamHistoryDAO.SummaryColumn.RATING_AVG,
                 TeamHistoryDAO.SummaryColumn.RATING_MAX
-            )),
-            eq(TeamHistoryDAO.GroupMode.LEGACY_UID)
+            ))
         )).thenReturn(generateSummaries(4));
         when(ladderSearchDAO.findLegacyTeams(
             Set.copyOf(depth == null ? uids : uids.subList(0, 4)), false))
@@ -358,17 +352,18 @@ public class Summary1v1CommandTest
         when(searchService.findDistinctCharacters(searchTerm)).thenReturn(characters);
 
         //verify that legacyUids were generated from profiles with stats
-        when(teamDAO.findIdsByLegacyUids(
-            LongStream.range(0, 2)
+        when(teamHistoryDAO.findSummary(
+            eq(LongStream.range(0, 2)
                 .mapToObj(i->new TeamLegacyUid(
                     QueueType.LOTV_1V1,
                     TeamType.ARRANGED,
                     Region.EU,
                     TeamLegacyId.standard(List.of(new TeamLegacyIdEntry(0, i, Race.TERRAN)))
                 ))
-                .collect(Collectors.toSet()),
-            null,
-            null
+                .collect(Collectors.toSet())),
+            any(),
+            isNull(),
+            eq(Summary1v1Command.SUMMARY_HISTORY_COLUMNS)
         ))
             .thenReturn(List.of());
 

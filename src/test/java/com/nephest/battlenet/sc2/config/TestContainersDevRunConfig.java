@@ -79,7 +79,12 @@ public class TestContainersDevRunConfig
     {
         ClickHouseContainer clickHouseContainer
             = new ClickHouseContainer(DockerImageName.parse(clickHouseImageName))
-            .withNetwork(Network.SHARED);
+            .withNetwork(Network.SHARED)
+            .withCopyFileToContainer
+            (
+                MountableFile.forClasspathResource("schema-clickhouse.sql"),
+                "/docker-entrypoint-initdb.d/schema.sql"
+            );
         if(volumeName != null)
         {
             LOG.info("Using {} clickhouse volume", volumeName);

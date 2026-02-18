@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.inner;
@@ -19,14 +19,13 @@ public record ConvertedTeamHistoryHistoryData
     @JsonProperty("WINS") List<Integer> wins,
     @JsonProperty("LEAGUE_TYPE") List<BaseLeague.LeagueType> leagueTypes,
     @JsonProperty("TIER_TYPE") List<BaseLeagueTier.LeagueTierType> tierTypes,
-    @JsonProperty("DIVISION_ID") List<Integer> divisionIds,
+    @JsonProperty("DIVISION_BATTLENET_ID") List<Long> divisionBattlenetIds,
     @JsonProperty("GLOBAL_RANK") List<Integer> globalRanks,
     @JsonProperty("REGION_RANK") List<Integer> regionRanks,
     @JsonProperty("LEAGUE_RANK") List<Integer> leagueRanks,
     @JsonProperty("GLOBAL_TEAM_COUNT") List<Integer> globalTeamCounts,
     @JsonProperty("REGION_TEAM_COUNT") List<Integer> regionTeamCunts,
     @JsonProperty("LEAGUE_TEAM_COUNT") List<Integer> leagueTeamCounts,
-    @JsonProperty("ID") List<Long> ids,
     @JsonProperty("SEASON") List<Integer> seasons
 )
 implements TeamHistoryHistoryData
@@ -54,14 +53,13 @@ implements TeamHistoryHistoryData
                 : typed.tierTypes().stream()
                     .map(t->conversionService.convert(t, BaseLeagueTier.LeagueTierType.class))
                     .toList(),
-            typed.divisionIds(),
+            typed.divisionBattlenetIds(),
             typed.globalRanks(),
             typed.regionRanks(),
             typed.leagueRanks(),
             typed.globalTeamCounts(),
             typed.regionTeamCunts(),
             typed.leagueTeamCounts(),
-            typed.ids(),
             typed.seasons()
         );
     }

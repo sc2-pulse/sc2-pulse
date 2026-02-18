@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -13,10 +13,8 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryHistoryData;
 import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
 import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistorySummaryData;
-import com.nephest.battlenet.sc2.model.local.inner.TeamHistory;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
@@ -29,12 +27,14 @@ import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
+import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -49,6 +49,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RestController
 @RequestMapping("/api")
@@ -69,8 +70,6 @@ public class TeamController
 
     private static Optional<ResponseEntity<?>> getHistoryParametersError
     (
-        Set<TeamHistoryDAO.StaticColumn> staticColumns,
-        TeamHistoryDAO.GroupMode groupMode,
         OffsetDateTime from,
         OffsetDateTime to
     )
@@ -80,11 +79,6 @@ public class TeamController
             result = ResponseEntity.of(ProblemDetail.forStatusAndDetail(
                     HttpStatus.BAD_REQUEST,
                     "'from' parameter must be before 'to' parameter"))
-                .build();
-        if(staticColumns.stream().anyMatch(c->!groupMode.isSupported(c)))
-            result = ResponseEntity.of(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST,
-                    "Some static columns are not supported by the group mode"))
                 .build();
 
         return Optional.ofNullable(result);
@@ -176,51 +170,56 @@ public class TeamController
         );
     }
 
-    @GetMapping("/team-histories") @TeamGroup
-    public List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> getHistories
+    @GetMapping("/team-histories")
+    public StreamingResponseBody getHistories
     (
-        @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
+        @RequestParam("teamLegacyUid")
+        @Size(min = 1, max = TeamGroupArgumentResolver.LEGACY_UIDS_MAX)
+        Set<TeamLegacyUid> teamLegacyUIds,
         @RequestParam("history") Set<TeamHistoryDAO.HistoryColumn> historyColumns,
-        @RequestParam(value = "static", defaultValue = "") Set<TeamHistoryDAO.StaticColumn> staticColumns,
-        @RequestParam(value = "groupBy", defaultValue = TeamHistoryDAO.GroupMode.NAMES.TEAM)
-        TeamHistoryDAO.GroupMode groupMode,
         @RequestParam(value = "from", required = false) OffsetDateTime from,
         @RequestParam(value = "to", required = false) OffsetDateTime to
     )
     {
-        WebServiceUtil.throwException
+        WebServiceUtil.throwException(getHistoryParametersError(from, to).orElse(null));
+
+        return os -> teamHistoryDAO.findHistoryJson
         (
-            getHistoryParametersError(staticColumns, groupMode, from , to)
-                .orElse(null)
+            teamLegacyUIds,
+            from, to,
+            historyColumns,
+            is->
+            {
+                try
+                {
+                    is.transferTo(os);
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
         );
-        return teamHistoryDAO.find(teamIds, from, to, staticColumns, historyColumns, groupMode);
     }
 
-    @GetMapping("/team-history-summaries") @TeamGroup
+    @GetMapping("/team-history-summaries")
     public List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> getHistorySummaries
     (
-        @TeamGroup @Size(max = HISTORY_TEAM_COUNT_MAX) Set<Long> teamIds,
+        @RequestParam("teamLegacyUid")
+        @Size(min = 1, max = TeamGroupArgumentResolver.LEGACY_UIDS_MAX)
+        Set<TeamLegacyUid> teamLegacyUIds,
         @RequestParam("summary") Set<TeamHistoryDAO.SummaryColumn> summaryColumns,
-        @RequestParam(value = "static", defaultValue = "") Set<TeamHistoryDAO.StaticColumn> staticColumns,
-        @RequestParam(value = "groupBy", defaultValue = TeamHistoryDAO.GroupMode.NAMES.TEAM)
-        TeamHistoryDAO.GroupMode groupMode,
         @RequestParam(value = "from", required = false) OffsetDateTime from,
         @RequestParam(value = "to", required = false) OffsetDateTime to
     )
     {
-        WebServiceUtil.throwException
-        (
-            getHistoryParametersError(staticColumns, groupMode, from , to)
-                .orElse(null)
-        );
+        WebServiceUtil.throwException(getHistoryParametersError(from , to).orElse(null));
         return teamHistoryDAO.findSummary
         (
-            teamIds,
+            teamLegacyUIds,
             from,
             to,
-            staticColumns,
-            summaryColumns,
-            groupMode
+            summaryColumns
         );
     }
 

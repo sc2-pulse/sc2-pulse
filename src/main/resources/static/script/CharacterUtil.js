@@ -815,9 +815,9 @@ class CharacterUtil
         CharacterUtil.resetCharacterMmrHistorySummary(resetLoading);
     }
 
-    static updateCharacterMmrHistoryModel(ids, legacyUids, groupBy, from, to, staticColumns, historyColumns)
+    static updateCharacterMmrHistoryModel(legacyUids, from, to, historyColumns)
     {
-        return TeamUtil.getHistory(ids, legacyUids, groupBy, from, to, staticColumns, historyColumns)
+        return TeamUtil.getHistory(legacyUids, from, to, historyColumns)
             .then(history=>{
                 const dataHistory = {};
                 Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory.history = dataHistory;
@@ -853,8 +853,8 @@ class CharacterUtil
         const mmrYValueGetter = CharacterUtil.MMR_Y_VALUE_OPERATIONS.get(parameters.yAxis).get;
         for(const curHistory of mmrHistory.data) {
             const curHistoryLength = Object.values(curHistory.history)[0].length;
-            const legacyIdData = TeamUtil.parseLegacyId(curHistory.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID.fullName]);
-            const curHistoryRace = legacyIdData.race || CharacterUtil.ALL_RACE;
+            const legacyUidData = TeamUtil.parseLegacyUid(curHistory.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_UID.fullName]);
+            const curHistoryRace = legacyUidData.legacyId.entries[0].race || CharacterUtil.ALL_RACE;
             rawData.history[curHistoryRace.name] = curHistory;
             for(let i = 0; i < curHistoryLength; i++) {
                 const curTimestamp = curHistory.history[TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP.fullName][i];
@@ -954,13 +954,11 @@ class CharacterUtil
         if(params.showLeagues) historyColumns.add(TEAM_HISTORY_HISTORY_COLUMN.LEAGUE_TYPE);
         if(params.endOfSeason) historyColumns.add(TEAM_HISTORY_HISTORY_COLUMN.SEASON);
         params.historyColumns = historyColumns;
-        return CharacterUtil.updateCharacterMmrHistoryModel(
-            null,
+        return CharacterUtil.updateCharacterMmrHistoryModel
+        (
             params.queueData.legacyUids,
-            TEAM_HISTORY_GROUP_MODE.LEGACY_UID,
             params.from,
             params.to,
-            [TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID],
             historyColumns
         )
             .then(history=>{
@@ -1148,9 +1146,9 @@ class CharacterUtil
         return entries;
     }
 
-    static addLegacyIdData(history)
+    static addLegacyUidData(history)
     {
-        history.legacyIdData = TeamUtil.parseLegacyId(history.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID.fullName]);
+        history.legacyUidData = TeamUtil.parseLegacyUid(history.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_UID.fullName]);
     }
 
     static resetCharacterMmrHistorySummaryNumericView()
@@ -1188,7 +1186,7 @@ class CharacterUtil
 
     static updateMmrHistorySummaryWithTeams(summaries, teams)
     {
-        const legacyIdSummaries = Util.toMap(summaries, s=>TeamUtil.createLegacyUidFromHistoryStaticData(s.staticData));
+        const legacyIdSummaries = Util.toMap(summaries, s=>s.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_UID]);
         for(const team of teams) {
             const summary = legacyIdSummaries.get(team.legacyUid);
             if(summary == null) continue;
@@ -1198,17 +1196,17 @@ class CharacterUtil
         }
     }
 
-    static updateCharacterMmrHistorySummaryModel(ids, legacyUids, groupBy, from, to, staticColumns, summaryColumns)
+    static updateCharacterMmrHistorySummaryModel(legacyUids, from, to, summaryColumns)
     {
         return Promise.all([
-            TeamUtil.getHistorySummary(ids, legacyUids, groupBy, from, to, staticColumns, summaryColumns),
-            TeamUtil.getTeamGroup(ids, legacyUids, Session.currentSeasons[0].battlenetId)
+            TeamUtil.getHistorySummary(legacyUids, from, to, summaryColumns),
+            TeamUtil.getTeamGroup(null, legacyUids, Session.currentSeasons[0].battlenetId)
         ])
             .then(summaryBatch=>{
                 const summary = summaryBatch[0];
                 const currentTeams = summaryBatch[1];
                 if(summary.length > 0) {
-                    summary.forEach(CharacterUtil.addLegacyIdData);
+                    summary.forEach(CharacterUtil.addLegacyUidData);
                     summary.sort((a, b)=>b.summary[TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX.fullName] -
                         a.summary[TEAM_HISTORY_SUMMARY_COLUMN.RATING_MAX.fullName]);
                     if(currentTeams.length > 0) CharacterUtil.updateMmrHistorySummaryWithTeams(summary, currentTeams);
@@ -1254,17 +1252,9 @@ class CharacterUtil
         params.progressSummaryColumns = new Set(CharacterUtil.MMR_REQUIRED_PROGRESS_SUMMARY_COLUMNS);
         params.summaryColumns = new Set([...params.numericSummaryColumns, ...params.progressSummaryColumns]);
         return CharacterUtil.updateCharacterMmrHistorySummaryModel(
-            null,
             params.queueData.legacyUids,
-            TEAM_HISTORY_GROUP_MODE.LEGACY_UID,
             params.from,
             params.to,
-            [
-                TEAM_HISTORY_STATIC_COLUMN.QUEUE_TYPE,
-                TEAM_HISTORY_STATIC_COLUMN.TEAM_TYPE,
-                TEAM_HISTORY_STATIC_COLUMN.REGION,
-                TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID
-            ],
             params.summaryColumns
         )
             .then(history=>{
@@ -1282,7 +1272,7 @@ class CharacterUtil
     {
         for(const summary of summaries) {
             const tr = tbody.insertRow();
-            tr.insertCell().appendChild(ElementUtil.createRaceImage(summary.legacyIdData.race));
+            tr.insertCell().appendChild(ElementUtil.createRaceImage(summary.legacyUidData.legacyId.entries[0].race));
             for(const column of summaryColumns) {
                 const val = summary.summary[column.fullName];
                 const td = tr.insertCell();
@@ -1322,7 +1312,7 @@ class CharacterUtil
             if(!progress) continue;
 
             const tr = tbody.insertRow();
-            tr.insertCell().appendChild(ElementUtil.createRaceImage(summary.legacyIdData.race));
+            tr.insertCell().appendChild(ElementUtil.createRaceImage(summary.legacyUidData.legacyId.entries[0].race));
             TableUtil.insertCell(tr, "cell-main").appendChild(progress);
         }
     }
@@ -1611,17 +1601,15 @@ class CharacterUtil
         const mmrHistory = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).mmrHistory;
         const to = new Date(from.valueOf() + 1000);
 
-        return TeamUtil.getHistory(null,
+        return TeamUtil.getHistory(
             mmrHistory.parameters.queueData.legacyUids,
-            TEAM_HISTORY_GROUP_MODE.LEGACY_UID,
             from, to,
-            [TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID],
             Object.values(TEAM_HISTORY_HISTORY_COLUMN)
         )
             .then(historyArray=>{
                 historyArray.forEach(history=>{
-                    const existingHistory = mmrHistory.history.data.find(h=>h.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID.fullName]
-                        === history.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_ID.fullName]);
+                    const existingHistory = mmrHistory.history.data.find(h=>h.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_UID.fullName]
+                        === history.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_UID.fullName]);
                     if(existingHistory != null) {
                         if(existingHistory.completeTimestamps == null) existingHistory.completeTimestamps = new Set();
                         CharacterUtil.copyMmrHistory(history, existingHistory).forEach(ts=>existingHistory.completeTimestamps.add(ts));

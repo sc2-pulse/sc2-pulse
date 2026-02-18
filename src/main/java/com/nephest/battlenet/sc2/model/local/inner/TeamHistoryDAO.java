@@ -1,179 +1,100 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.inner;
 
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.Division;
-import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.LeagueTier;
-import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
+import com.clickhouse.client.api.Client;
+import com.clickhouse.client.api.command.CommandResponse;
+import com.clickhouse.client.api.data_formats.ClickHouseBinaryFormatReader;
+import com.clickhouse.client.api.query.QueryResponse;
+import com.clickhouse.client.api.query.QuerySettings;
+import com.clickhouse.data.ClickHouseFormat;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.util.ClickHouseUtil;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import java.sql.Array;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.jdbc.JdbcConnectionDetails;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.lang.Nullable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
+import org.springframework.validation.annotation.Validated;
 
 @Repository
+@Validated
 public class TeamHistoryDAO
 {
 
-    private static final Set<HistoryColumn> FIND_COLUMN_HARDCODED_COLUMNS
-        = EnumSet.of(HistoryColumn.TIMESTAMP);
-    private static final String FINAL_HISTORY_TABLE = "data_group";
-    private static final Map<HistoryColumn, String> FINAL_HISTORY_FQDN_NAMES =
-        Arrays.stream(HistoryColumn.values())
-            .filter(historyColumn ->!historyColumn.isExpanded())
-            .collect(Collectors.toMap(
-                Function.identity(),
-                c->FINAL_HISTORY_TABLE + "." + c.getName(),
-                (l,r)->{throw new IllegalArgumentException("Unexpected merge");},
-                ()->new EnumMap<>(HistoryColumn.class)
-            ));
+    private static final Logger LOG = LoggerFactory.getLogger(TeamHistoryDAO.class);
 
-    public static final String PARAMETER_JOIN_DELIMITER = ",\n";
-    public static final String JOIN_JOIN_DELIMITER = "\n";
+    public static final String SYNC_FROM_VAR_NAME = "team_state.clickhouse.from";
+    public static final String TABLE_NAME = "team_state";
+    public static final int DEFAULT_SYNC_BATCH_SIZE = 10000;
 
     public enum HistoryColumn
     {
-        TIMESTAMP("timestamp", "team_state.timestamp", "BIGINT"),
-        RATING("rating", "INTEGER"),
-        GAMES("games", "INTEGER"),
-        WINS("wins", "INTEGER"),
-        LEAGUE_TYPE("league", "SMALLINT", true),
-        TIER_TYPE("tier", "SMALLINT", true),
-        DIVISION_ID("division_id", "INTEGER"),
-        GLOBAL_RANK("global_rank", "INTEGER"),
-        REGION_RANK("region_rank", "INTEGER"),
-        LEAGUE_RANK("league_rank", "INTEGER"),
-        GLOBAL_TEAM_COUNT
-        (
-            "global_team_count", "global_team_count", "INTEGER",
-            List.of
-            (
-                """
-                LEFT JOIN population_state
-                    ON team_state.population_state_id = population_state.id
-                """
-            )
-        ),
-        REGION_TEAM_COUNT("region_team_count", "team_state.region_team_count", "INTEGER"),
-        LEAGUE_TEAM_COUNT("league_team_count", "league_team_count", "INTEGER", GLOBAL_TEAM_COUNT.joins),
+        TIMESTAMP("timestamp", "UInt32"),
+        RATING("rating", "Int32"),
+        GAMES("games", "Int32"),
+        WINS("wins", "Int32", "-1"),
+        LEAGUE_TYPE("league_type", "Int8"),
+        TIER_TYPE("tier_type", "Int8"),
+        DIVISION_BATTLENET_ID("division_battlenet_id", "Int64"),
+        GLOBAL_RANK("global_rank", "Int32", "-1"),
+        REGION_RANK("region_rank", "Int32", "-1"),
+        LEAGUE_RANK("league_rank", "Int32", "-1"),
+        GLOBAL_TEAM_COUNT("global_team_count", "Int32", "-1"),
+        REGION_TEAM_COUNT("region_team_count", "Int32", "-1"),
+        LEAGUE_TEAM_COUNT("league_team_count", "Int32", "-1"),
+        SEASON("season", "Int16");
 
-        ID("id", "BIGINT", true),
-        SEASON("season", "INTEGER", true);
-
-        private final String name, columName, columnAliasedName, aggregationFunction;
-        private final List<String> joins;
-        private final Map<String, Class<?>> typeMapping;
-        private final Class<?> valueConversionClass;
-        private final boolean expanded;
+        private final String columName, sentinelValue, tupleNameDefinition;
 
         HistoryColumn
         (
-            String name,
             String columName,
             String sqlType,
-            List<String> joins,
-            Map<String, Class<?>> typeMapping,
-            Class<?> valueConversionClass,
-            boolean expanded
+            String sentinelValue
         )
         {
-            this.name = name;
             this.columName = columName;
-            this.columnAliasedName = columName + " AS " + name;
-            this.joins = joins;
-            this.aggregationFunction = "array_agg(" + name + ")::" + sqlType + "[] AS " + name;
-            this.typeMapping = typeMapping;
-            this.valueConversionClass = valueConversionClass;
-            this.expanded = expanded;
+            this.sentinelValue = sentinelValue;
+            this.tupleNameDefinition = this.name()
+                + " Array("
+                + (sentinelValue != null ? "Nullable(" + sqlType + ")" : sqlType)
+                + ")";
         }
 
         HistoryColumn
         (
-            String name,
             String columName,
-            String sqlType,
-            List<String> joins
+            String sqlType
         )
         {
-            this
-            (
-                name,
-                columName,
-                sqlType,
-                joins,
-                Map.of(),
-                null,
-                false
-            );
-        }
-
-        HistoryColumn(String name, String columName, String sqlType)
-        {
-            this
-            (
-                name,
-                columName,
-                sqlType,
-                List.of(),
-                Map.of(),
-                null,
-                false
-            );
-        }
-
-        HistoryColumn(String name, String sqlType)
-        {
-            this(name, name, sqlType);
-        }
-
-        HistoryColumn(String name, String sqlType, boolean expanded)
-        {
-            this(name, name, sqlType, List.of(), Map.of(), null, expanded);
-        }
-
-        public static HistoryColumn fromName(String name)
-        {
-            return Arrays.stream(HistoryColumn.values())
-                .filter(c->c.getName().equals(name))
-                .findFirst()
-                .orElseThrow();
-        }
-
-        public String getName()
-        {
-            return name;
+            this(columName, sqlType, null);
         }
 
         public String getColumName()
@@ -181,34 +102,21 @@ public class TeamHistoryDAO
             return columName;
         }
 
-        public String getColumnAliasedName()
+        public String getTupleNameDefinition()
         {
-            return columnAliasedName;
+            return tupleNameDefinition;
         }
 
-        public String getAggregationFunction()
+        public String getTupleDataDefinition(int ix)
         {
-            return aggregationFunction;
-        }
-
-        public List<String> getJoins()
-        {
-            return joins;
-        }
-
-        public Map<String, Class<?>> getTypeMapping()
-        {
-            return typeMapping;
-        }
-
-        public Class<?> getValueConversionClass()
-        {
-            return valueConversionClass;
-        }
-
-        public boolean isExpanded()
-        {
-            return expanded;
+            String tupleEntry = "t." + ix;
+            return "arrayMap(t -> "
+                + (
+                    sentinelValue != null
+                        ? "if(" + tupleEntry + " = " + sentinelValue + ", NULL, " + tupleEntry + ")"
+                        : tupleEntry
+                )
+                + ", sorted)";
         }
 
     }
@@ -216,175 +124,18 @@ public class TeamHistoryDAO
     public enum StaticColumn
     {
 
-        ID("team_id", List.of(), Set.of()),
-        REGION("region", List.of(StaticColumn.TEAM_JOIN), Set.of()),
-        QUEUE_TYPE("queue_type", REGION.joins, Set.of()),
-        TEAM_TYPE("team_type", REGION.joins, Set.of()),
-        LEGACY_ID("legacy_id", REGION.joins, Set.of()),
-        SEASON("season", REGION.joins, Set.of()),
-        LEGACY_UID
-        (
-            null,
-            List.of(),
-            Set.of
-            (
-                StaticColumn.QUEUE_TYPE,
-                StaticColumn.TEAM_TYPE,
-                StaticColumn.REGION,
-                StaticColumn.LEGACY_ID
-            )
-        );
-
-        public static final String COLUMN_NAME_PREFIX = "team.";
-        public static final String TEAM_JOIN = "INNER JOIN team ON team_id = team.id";
+        LEGACY_UID("team_legacy_uid");
 
         private final String name;
-        private final String alias;
-        private final String aliasedName;
-        private final String aggregationAliasedName;
-        private final List<String> joins;
-        private final Set<StaticColumn> requiredStaticColumns;
 
-        StaticColumn(String name, List<String> joins, Set<StaticColumn> requiredStaticColumns)
+        StaticColumn(String name)
         {
             this.name = name;
-            this.alias = COLUMN_NAME_PREFIX + name;
-            this.aliasedName = name + " AS \"" + this.alias + "\"";
-            this.aggregationAliasedName = "MAX(" + name + ") AS \"" + this.alias + "\"";
-            this.joins = joins;
-            this.requiredStaticColumns = requiredStaticColumns;
-        }
-
-        public static StaticColumn fromAlias(String alias)
-        {
-            return Arrays.stream(StaticColumn.values())
-                .filter(c->c.getAlias().equals(alias))
-                .findFirst()
-                .orElseThrow();
         }
 
         public String getName()
         {
             return name;
-        }
-
-        public String getAlias()
-        {
-            return alias;
-        }
-
-        public String getAliasedName()
-        {
-            return aliasedName;
-        }
-
-        public String getAggregationAliasedName()
-        {
-            return aggregationAliasedName;
-        }
-
-        public List<String> getJoins()
-        {
-            return joins;
-        }
-
-        public Set<StaticColumn> getRequiredStaticColumns()
-        {
-            return requiredStaticColumns;
-        }
-
-        public boolean isExpanded()
-        {
-            return !getRequiredStaticColumns().isEmpty();
-        }
-
-    }
-
-    public enum GroupMode
-    {
-
-        TEAM
-        (
-            EnumSet.of(StaticColumn.ID),
-            EnumSet.allOf(StaticColumn.class),
-            EnumSet.noneOf(StaticColumn.class)
-        ),
-        LEGACY_UID
-        (
-            EnumSet.of
-            (
-                StaticColumn.REGION,
-                StaticColumn.QUEUE_TYPE,
-                StaticColumn.TEAM_TYPE,
-                StaticColumn.LEGACY_ID,
-                StaticColumn.LEGACY_UID
-            ),
-            EnumSet.of
-            (
-                StaticColumn.REGION,
-                StaticColumn.QUEUE_TYPE,
-                StaticColumn.TEAM_TYPE,
-                StaticColumn.LEGACY_ID,
-                StaticColumn.SEASON
-            )
-        );
-
-        private final Set<StaticColumn> groupStaticColumns;
-        private final Set<StaticColumn> supportedStaticColumns;
-        private final Set<StaticColumn> requiredStaticParameters;
-
-        GroupMode
-        (
-            EnumSet<StaticColumn> groupStaticColumns,
-            EnumSet<StaticColumn> supportedStaticColumns,
-            EnumSet<StaticColumn> requiredStaticParameters
-        )
-        {
-            this.groupStaticColumns = Collections.unmodifiableSet(groupStaticColumns);
-            this.supportedStaticColumns = Collections.unmodifiableSet(supportedStaticColumns);
-            this.requiredStaticParameters = Collections.unmodifiableSet(requiredStaticParameters);
-        }
-
-        GroupMode
-        (
-            EnumSet<StaticColumn> supportedStaticColumns,
-            EnumSet<StaticColumn> requiredStaticParameters
-        )
-        {
-            this.supportedStaticColumns = Collections.unmodifiableSet(supportedStaticColumns);
-            this.requiredStaticParameters = Collections.unmodifiableSet(requiredStaticParameters);
-            this.groupStaticColumns = supportedStaticColumns;
-        }
-
-        public Set<StaticColumn> getGroupStaticColumns()
-        {
-            return groupStaticColumns;
-        }
-
-        public Set<StaticColumn> getSupportedStaticColumns()
-        {
-            return supportedStaticColumns;
-        }
-
-        public boolean isSupported(StaticColumn staticColumn)
-        {
-            return supportedStaticColumns.contains(staticColumn);
-        }
-
-        public Set<StaticColumn> getRequiredStaticParameters()
-        {
-            return requiredStaticParameters;
-        }
-
-        public boolean injectsParameters()
-        {
-            return !requiredStaticParameters.isEmpty();
-        }
-
-        public static final class NAMES
-        {
-            public static final String TEAM = "TEAM";
-            public static final String LEGACY_UID = "LEGACY_UID";
         }
 
     }
@@ -393,1033 +144,471 @@ public class TeamHistoryDAO
     {
         GAMES
         (
-            "games_diff",
-            """
-                CASE
-                    WHEN LAG(games) OVER w IS NULL THEN 1
-                    WHEN games - LAG(games) OVER w < 0
-                        OR team_id != LAG(team_id) OVER w
-                        OR
-                        (
-                            games = LAG(games) OVER w
-                            AND team_state.rating != LAG(team_state.rating) OVER w
-                        )
-                    THEN games
-                    ELSE games - LAG(games) OVER w
-                END
-            """,
-            "INTEGER",
             "games",
-            "SUM"
+            "SUM(games_delta) - argMin(games_delta, timestamp) + 1"
         ),
 
-        RATING_MIN
-        (
-            "rating", "team_state.rating", "INTEGER",
-            "rating_min", "MIN"
-        ),
-        RATING_AVG
-        (
-            "rating", "team_state.rating", "DOUBLE PRECISION",
-            "rating_avg", "AVG"
-        ),
-        RATING_MAX
-        (
-            "rating", "team_state.rating", "INTEGER",
-            "rating_max", "MAX"
-        ),
-        RATING_LAST
-        (
-            "rating_last", "LAST_VALUE(team_state.rating) OVER w", "INTEGER",
-            "rating_last", "MAX"
-        ),
-
+        RATING_MIN("rating_min",  "MIN(rating)"),
+        RATING_AVG("rating_avg", "AVG(rating)"),
+        RATING_MAX("rating_max", "MAX(rating)"),
+        RATING_LAST("rating_last", "argMax(rating, timestamp)"),
         REGION_RANK_LAST
         (
-            "region_rank_last", "LAST_VALUE(team_state.region_rank) OVER w", "INTEGER",
-            "region_rank_last", "MAX"
+            "region_rank_last",
+            "nullIf(argMax(region_rank, timestamp), -1)"
         ),
         REGION_TEAM_COUNT_LAST
         (
-            "region_team_count_last", "LAST_VALUE(team_state.region_team_count) OVER w", "INTEGER",
-            "region_team_count_last", "MAX"
+            "region_team_count_last",
+            "nullIf(argMax(region_team_count, timestamp), -1)"
         );
 
-
-        private final String dataName, dataColumn, dataAliasedColumn,
-            aggregationName,  aggregationFunction, aggregationAliasedFunction;
+        private final String name, function, aliasedFunction;
 
         SummaryColumn
         (
-            String dataName,
-            String dataColumn,
-            String sqlType,
-            String aggregationName,
-            String aggregationFunctionName
+            String name,
+            String function
         )
         {
-            this.dataName = dataName;
-            this.dataColumn = dataColumn;
-            this.dataAliasedColumn = dataColumn + " AS " + dataName;
-            this.aggregationName = aggregationName;
-            this.aggregationFunction = aggregationFunctionName + "(" + dataName + ")::" + sqlType;
-            this.aggregationAliasedFunction = aggregationFunction + " AS " + aggregationName;
+            this.name = name;
+            this.function = function;
+            this.aliasedFunction = function + " AS " + name;
         }
 
-        public static SummaryColumn fromAggregationName(String name)
+        public String getName()
         {
-            return Arrays.stream(SummaryColumn.values())
-                .filter(c->c.getAggregationName().equals(name))
-                .findFirst()
-                .orElseThrow();
+            return name;
         }
 
-        public String getDataName()
+        public String getFunction()
         {
-            return dataName;
+            return function;
         }
 
-        public String getDataColumn()
+        public String getAliasedFunction()
         {
-            return dataColumn;
-        }
-
-        public String getDataAliasedColumn()
-        {
-            return dataAliasedColumn;
-        }
-
-        public String getAggregationName()
-        {
-            return aggregationName;
-        }
-
-        public String getAggregationFunction()
-        {
-            return aggregationFunction;
-        }
-
-        public String getAggregationAliasedFunction()
-        {
-            return aggregationAliasedFunction;
+            return aliasedFunction;
         }
 
     }
 
     private static final String FIND_COLUMNS_TEMPLATE =
         """
-        WITH
-        data_group AS
+        SELECT
+        tuple(team_legacy_uid)::Tuple(LEGACY_UID String) AS staticData,
+        tuple(%3$s)::Tuple(%4$s) AS history
+        FROM
         (
-            SELECT
-            team_id
-            %1$s
-            FROM
-            (
-                SELECT * FROM
-                (
-                    SELECT team_id, FLOOR(EXTRACT(epoch FROM team_state.timestamp)) AS timestamp
-                    %2$s
-                    FROM team_state
-                    %3$s
-                    WHERE team_id IN(:teamIds)
-                    AND
-                    (
-                        :from::timestamp with time zone IS NULL
-                        OR timestamp >= :from::timestamp with time zone
-                    )
-                    AND
-                    (
-                        :to::timestamp with time zone IS NULL
-                        OR timestamp < :to::timestamp with time zone
-                    )
-                ) data ORDER BY team_id, timestamp
-            ) team_state_ordered
-            GROUP BY team_state_ordered.team_id
-        )
-            SELECT
-            %4$s
-            FROM data_group
+            SELECT team_legacy_uid,
+            arraySort(t -> t.%2$s, groupArray(tuple(%1$s))) AS sorted
+            FROM team_state
+            WHERE team_legacy_uid IN({teamLegacyUids:Array(String)})
             %5$s
+            %6$s
+            GROUP BY team_legacy_uid
+        )
         """;
-
-    private static final Map<GroupMode, String> FIND_SUMMARY_ID_COLUMN = Map.of
-    (
-        GroupMode.TEAM, "team_id",
-        GroupMode.LEGACY_UID, "team.id"
-    );
 
     private static final String FIND_SUMMARY_TEMPLATE =
         """
-        WITH
-        data_group AS
-        (
-            SELECT
-            CASE
-                WHEN games IS DISTINCT FROM LAG(games) OVER w
-                    OR team_state.rating IS DISTINCT FROM LAG(team_state.rating) OVER w
-                    OR team_id IS DISTINCT FROM LAG(team_id) OVER w
-                THEN true
-                ELSE false
-            END AS is_player_action,
+            SELECT team_legacy_uid,
             %1$s
             FROM team_state
+            WHERE team_legacy_uid IN({teamLegacyUids:Array(String)})
+            AND source = 'USER'
             %2$s
-            WHERE %5$s IN(:teamIds)
-            AND
-            (
-                :from::timestamp with time zone IS NULL
-                OR timestamp >= :from::timestamp with time zone
-            )
-            AND
-            (
-                :to::timestamp with time zone IS NULL
-                OR timestamp < :to::timestamp with time zone
-            )
-            WINDOW w AS (PARTITION BY %4$s ORDER BY timestamp ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
-        )
-            SELECT
             %3$s
-            FROM data_group
-            WHERE is_player_action
-            GROUP BY %4$s
+            GROUP BY team_legacy_uid
         """;
 
-    private static ResultSetExtractor<List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>>> COLUMN_TEAM_HISTORY_EXTRACTOR;
-    private static ResultSetExtractor<List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>>> TEAM_HISTORY_SUMMARY_EXTRACTOR;
+    private static final String FIND_MAX_TEAM_STATE_TIMESTAMP_PG =
+        """
+            WITH timestamp_frame AS
+            (
+                SELECT timestamp
+                FROM team_state
+                WHERE timestamp > :from
+                ORDER BY timestamp
+                LIMIT :limit
+            )
+            SELECT MAX(timestamp)
+            FROM timestamp_frame
+        """;
 
-    private final DivisionDAO divisionDAO;
-    private final LeagueTierDAO leagueTierDAO;
-    private final LeagueDAO leagueDAO;
-    private final NamedParameterJdbcTemplate template;
+    private static final String FIND_MAX_TEAM_STATE_TIMESTAMP =
+        "SELECT MAX(timestamp) AS max_timestamp FROM team_state";
+
+    private static final String SYNC_TEMPLATE =
+        """
+        INSERT INTO team_state
+        (
+            team_legacy_uid,
+            timestamp,
+            division_battlenet_id,
+            league_type,
+            tier_type,
+            season,
+            wins,
+            games,
+            games_delta,
+            rating,
+            global_rank,
+            region_rank,
+            league_rank,
+            global_team_count,
+            region_team_count,
+            league_team_count,
+            source
+        )
+        SELECT
+        team_legacy_uid,
+        timestamp,
+        division_battlenet_id,
+        league_type,
+        tier_type,
+        season,
+        wins,
+        games,
+        games_delta,
+        rating,
+        global_rank,
+        region_rank,
+        league_rank,
+        global_team_count,
+        region_team_count,
+        league_team_count,
+        source
+        FROM postgresql('%1$s', '%2$s', 'team_state_denormalized', '%3$s', {password:String}) AS team_state_pg
+        WHERE team_state_pg.timestamp > parseDateTime64BestEffort({from:String}, 6)
+        AND team_state_pg.timestamp <= parseDateTime64BestEffort({to:String}, 6)
+        """;
+    private final String SYNC;
+    private final String postgresPassword;
+
     private final ConversionService sc2StatsConversionService;
-    private final ConversionService minConversionService;
+
+    private final NamedParameterJdbcTemplate template;
+    private final Client clickHouseClient;
+    private final VarDAO varDAO;
+    private final AtomicBoolean syncLock = new AtomicBoolean(false);
+
+    private int syncBatchSize = DEFAULT_SYNC_BATCH_SIZE;
 
     @Autowired
     public TeamHistoryDAO
     (
-        DivisionDAO divisionDAO,
-        LeagueTierDAO leagueTierDAO,
-        LeagueDAO leagueDAO,
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
+        Client clickHouseClient,
+        VarDAO varDAO,
         @Qualifier("sc2StatsConversionService") ConversionService sc2StatsConversionService,
-        @Qualifier("minimalConversionService") ConversionService minConversionService
+        JdbcConnectionDetails jdbcConnectionDetails,
+        @Qualifier("postgresUrlProperties") Properties postgresUrlProperties
     )
     {
-        this.divisionDAO = divisionDAO;
-        this.leagueTierDAO = leagueTierDAO;
-        this.leagueDAO = leagueDAO;
         this.template = template;
+        this.clickHouseClient = clickHouseClient;
+        this.varDAO = varDAO;
         this.sc2StatsConversionService = sc2StatsConversionService;
-        this.minConversionService = minConversionService;
-        initMappers(sc2StatsConversionService, minConversionService);
-    }
-
-    private static <T extends Enum<T>> Map<T, ?>  mapGenericColumns
-    (
-        ResultSet rs,
-        List<T> columns,
-        ConversionService minConversionService,
-        Function<T, String> columnNameMapper,
-        Class<T> clazz
-    )
-    {
-        try
-        {
-            Map<T, Object> result = new EnumMap<>(clazz);
-            for(T column : columns) result.put(column, minConversionService
-                .convert(rs.getObject(columnNameMapper.apply(column)), Object.class));
-            return result;
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static RawTeamHistoryStaticData mapTeamColumns
-    (
-        ResultSet rs,
-        List<StaticColumn> staticColumns,
-        ConversionService minConversionService
-    )
-    {
-        return new RawTeamHistoryStaticData(mapGenericColumns(
-            rs,
-            staticColumns,
-            minConversionService,
-            StaticColumn::getAlias,
-            StaticColumn.class
-        ));
-    }
-
-    private static RawTeamHistoryHistoryData mapColumns
-    (
-        ResultSet rs,
-        List<HistoryColumn> historyColumns,
-        ConversionService sc2StatsConversionService,
-        ConversionService minConversionService
-    )
-    {
-        return new RawTeamHistoryHistoryData(historyColumns.stream()
-            .collect(Collectors.toMap(
-                Function.identity(),
-                historyColumn ->
-                {
-                    try
-                    {
-                        Array dbArray = rs.getArray(historyColumn.getName());
-                        Object array = !historyColumn.getTypeMapping().isEmpty()
-                            ? dbArray.getArray(historyColumn.getTypeMapping())
-                            : dbArray.getArray();
-                        return historyColumn.getValueConversionClass() != null
-                            ? Arrays.stream((Number[]) array)
-                                .map(number -> number != null ? number.intValue() : null)
-                                .map(id->sc2StatsConversionService.convert(id, historyColumn.getValueConversionClass()))
-                                .toList()
-                            : Arrays.asList(minConversionService.convert(array, Object[].class));
-
-                    }
-                    catch (SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                }
-            )));
-    }
-
-
-    private static TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> map
-    (
-        ResultSet rs,
-        List<StaticColumn> staticColumns,
-        List<HistoryColumn> historyColumns,
-        ConversionService sc2StatsConversionService,
-        ConversionService minConversionService
-    )
-    {
-        return new TeamHistory<>
+        SYNC = SYNC_TEMPLATE.formatted
         (
-            mapTeamColumns(rs, staticColumns, minConversionService),
-            mapColumns(rs, historyColumns, sc2StatsConversionService, minConversionService)
+            PostgreSQLUtils.getContainerHostAndPort(postgresUrlProperties),
+            postgresUrlProperties.get(PostgreSQLUtils.DRIVER_DB_NAME),
+            jdbcConnectionDetails.getUsername()
         );
+        postgresPassword = jdbcConnectionDetails.getPassword();
     }
 
-    private static TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData> mapSummary
+    private static String generateFindColumnsQuery
     (
-        ResultSet rs,
-        List<StaticColumn> staticColumns,
-        List<SummaryColumn> summaryColumns,
-        ConversionService minConversionService
+        Set<HistoryColumn> historyColumns,
+        @Nullable OffsetDateTime from,
+        @Nullable OffsetDateTime to
     )
     {
-        return new TeamHistorySummary<>
-        (
-            mapTeamColumns(rs, staticColumns, minConversionService),
-            new RawTeamHistorySummaryData(mapGenericColumns(
-                rs,
-                summaryColumns,
-                minConversionService,
-                SummaryColumn::getAggregationName,
-                SummaryColumn.class
-            ))
-        );
-    }
-
-    private static void initMappers
-    (
-        ConversionService sc2StatsConversionService,
-        ConversionService minConversionService
-    )
-    {
-        if(COLUMN_TEAM_HISTORY_EXTRACTOR == null) COLUMN_TEAM_HISTORY_EXTRACTOR = (rs)->
-        {
-            if(!rs.isBeforeFirst()) return List.of();
-
-            ResultSetMetaData meta  = rs.getMetaData();
-            List<StaticColumn> staticColumns = new ArrayList<>();
-            List<HistoryColumn> historyColumns = new ArrayList<>();
-            IntStream.rangeClosed(1, meta.getColumnCount())
-                .boxed()
-                .map(i->
-                {
-                    try
-                    {
-                        return meta.getColumnLabel(i);
-                    }
-                    catch (SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .forEach(columnName->{
-                    if(columnName.startsWith(StaticColumn.COLUMN_NAME_PREFIX))
-                    {
-                        staticColumns.add(StaticColumn.fromAlias(columnName));
-                    }
-                    else
-                    {
-                        historyColumns.add(HistoryColumn.fromName(columnName));
-                    }
-                });
-            List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> result
-                = new ArrayList<>();
-            while(rs.next())
-                result.add(map(rs, staticColumns, historyColumns,
-                    sc2StatsConversionService, minConversionService));
-
-            return result;
-        };
-
-        if(TEAM_HISTORY_SUMMARY_EXTRACTOR == null) TEAM_HISTORY_SUMMARY_EXTRACTOR
-            = createTeamHistorySummaryExtractor(minConversionService);
-    }
-
-    private static ResultSetExtractor<List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>>> createTeamHistorySummaryExtractor
-    (
-        ConversionService minConversionService
-    )
-    {
-        return rs->{
-            if(!rs.isBeforeFirst()) return List.of();
-
-            ResultSetMetaData meta  = rs.getMetaData();
-            int columnCount = meta.getColumnCount();
-            List<StaticColumn> staticColumns = new ArrayList<>(columnCount);
-            List<SummaryColumn> summaryColumns = new ArrayList<>(columnCount);
-            IntStream.rangeClosed(1, columnCount)
-                .boxed()
-                .map(i->
-                {
-                    try
-                    {
-                        return meta.getColumnLabel(i);
-                    }
-                    catch (SQLException e)
-                    {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .forEach(columnName->{
-                    if(columnName.startsWith(StaticColumn.COLUMN_NAME_PREFIX))
-                    {
-                        staticColumns.add(StaticColumn.fromAlias(columnName));
-                    }
-                    else
-                    {
-                        summaryColumns.add(SummaryColumn.fromAggregationName(columnName));
-                    }
-                });
-
-            List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> result
-                = new ArrayList<>();
-            while(rs.next())
-                result.add(mapSummary(rs, staticColumns, summaryColumns, minConversionService));
-            return result;
-        };
-    }
-
-    private static String generateFindColumnsQuery(HistoryParameters parameters)
-    {
-        List<StaticColumn> directStaticColumns = parameters.staticColumns().stream()
-            .filter(staticColumn->!staticColumn.isExpanded())
-            .toList();
-        List<HistoryColumn> directHistoryColumns = parameters.historyColumns().stream()
-            .filter(historyColumn ->!historyColumn.isExpanded())
-            .toList();
-        List<HistoryColumn> dynamicHistoryColumns = directHistoryColumns.stream()
-            .filter(historyColumn ->!FIND_COLUMN_HARDCODED_COLUMNS.contains(historyColumn))
-            .toList();
-        String dynamicPrefix = dynamicHistoryColumns.isEmpty() ? "" : ",";
+        List<HistoryColumn> historyColumnList = new ArrayList<>(historyColumns);
+        int timestampIx = historyColumnList.indexOf(HistoryColumn.TIMESTAMP);
         return FIND_COLUMNS_TEMPLATE.formatted
         (
-            directHistoryColumns.isEmpty() ? "" : "," + directHistoryColumns.stream()
-                .map(HistoryColumn::getAggregationFunction)
-                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
-
-            dynamicPrefix + dynamicHistoryColumns.stream()
-                    .map(HistoryColumn::getColumnAliasedName)
-                    .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
-            dynamicHistoryColumns.stream()
-                .flatMap(historyColumn -> historyColumn.getJoins().stream())
-                .distinct()
-                .collect(Collectors.joining(JOIN_JOIN_DELIMITER)),
-
-            Stream.concat
             (
-                directHistoryColumns.stream().map(FINAL_HISTORY_FQDN_NAMES::get),
-                directStaticColumns.stream().map(StaticColumn::getAliasedName)
+                timestampIx != -1
+                    ? historyColumnList.stream()
+                    : Stream.concat(historyColumnList.stream(), Stream.of(HistoryColumn.TIMESTAMP))
             )
-                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
-            directStaticColumns.stream()
-                .map(StaticColumn::getJoins)
-                .flatMap(Collection::stream)
-                .distinct()
-                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER))
+                .map(HistoryColumn::getColumName)
+                .collect(Collectors.joining(", ")),
+            //clickhouse index is 1 based
+            timestampIx != -1 ? timestampIx + 1 : historyColumns.size() + 1,
+            IntStream.range(0, historyColumnList.size())
+                .mapToObj(ix->historyColumnList.get(ix).getTupleDataDefinition(ix + 1))
+                .collect(Collectors.joining(", ")),
+            historyColumnList.stream()
+                .map(HistoryColumn::getTupleNameDefinition)
+                .collect(Collectors.joining(", ")),
+            from == null ? "" : "AND timestamp >= {from:DateTime}",
+            to == null ? "" : "AND timestamp < {to:DateTime}"
         );
     }
 
     private static void checkParameters
     (
         @Nullable OffsetDateTime from,
-        @Nullable OffsetDateTime to,
-        @NotNull Set<StaticColumn> staticColumns,
-        @NotNull GroupMode groupMode
+        @Nullable OffsetDateTime to
     )
     {
         if(from != null && to != null && !from.isBefore(to))
             throw new IllegalArgumentException("'from' parameter must be before 'to' parameter");
-        if(staticColumns.stream().anyMatch(c->!groupMode.isSupported(c)))
-            throw new IllegalArgumentException
-            (
-                "Some static columns in " + Arrays.toString(staticColumns.toArray())
-                    + " are not supported by the group mode " + groupMode
-            );
     }
 
-    public List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> find
+    public void findHistoryJson
     (
-        @NotNull Set<Long> teamIds,
+        @NotNull @Valid Set<TeamLegacyUid> teamLegacyUids,
         @Nullable OffsetDateTime from,
         @Nullable OffsetDateTime to,
-        @NotNull Set<StaticColumn> staticColumns,
         @NotNull Set<HistoryColumn> historyColumns,
-        @NotNull GroupMode groupMode
+        @NotNull Consumer<InputStream> isConsumer
     )
     {
-        if(teamIds.isEmpty() || (historyColumns.isEmpty() && staticColumns.isEmpty())) return List.of();
-        checkParameters(from, to, staticColumns, groupMode);
-
-        HistoryParameters parameters = new HistoryParameters(staticColumns, historyColumns);
-        String query = generateFindColumnsQuery(createExpandedParameters(parameters, groupMode));
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("teamIds", teamIds)
-            .addValue("from", from, Types.TIMESTAMP_WITH_TIMEZONE)
-            .addValue("to", to, Types.TIMESTAMP_WITH_TIMEZONE);
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history
-            = template.query(query, params, COLUMN_TEAM_HISTORY_EXTRACTOR);
-        expandAll(history, parameters);
-        history = group(history, parameters, groupMode);
-        prune(history, parameters);
-        return history;
-    }
-
-    private HistoryParameters createExpandedParameters
-    (
-        HistoryParameters parameters, GroupMode groupMode
-    )
-    {
-        boolean shouldExpandHistory = parameters.historyColumns().stream()
-            .anyMatch(HistoryColumn::isExpanded);
-        boolean shouldExpandStatic = parameters.staticColumns().stream()
-            .anyMatch(StaticColumn::isExpanded);
-        if(!shouldExpandHistory && !groupMode.injectsParameters() && !shouldExpandStatic)
-            return parameters;
-
-        HistoryParameters expanded = HistoryParameters.copyOf(parameters);
-        if(shouldExpandHistory) expandParameters(expanded);
-        if(groupMode.injectsParameters()) injectGroupModeParameters(expanded, groupMode);
-        if(shouldExpandStatic) expandStaticParameters(expanded.staticColumns());
-        return expanded;
-    }
-
-    private void expandParameters(HistoryParameters parameters)
-    {
-        expandDivisionParameters(parameters);
-        expandStaticHistoryParameters(parameters);
-    }
-
-    private static void expandStaticParameters(Set<StaticColumn> staticColumns)
-    {
-        List<StaticColumn> expandableColumns = staticColumns.stream()
-            .filter(StaticColumn::isExpanded)
-            .toList();
-        if(expandableColumns.isEmpty()) return;
-
-        for(StaticColumn column : expandableColumns)
+        if(teamLegacyUids.isEmpty() || historyColumns.isEmpty())
         {
-            staticColumns.remove(column);
-            staticColumns.addAll(column.getRequiredStaticColumns());
-        }
-    }
-
-    private static void expandStaticHistoryParameters(HistoryParameters parameters)
-    {
-        if(parameters.historyColumns().contains(HistoryColumn.ID))
-            parameters.staticColumns().add(StaticColumn.ID);
-        if(parameters.historyColumns().contains(HistoryColumn.SEASON))
-            parameters.staticColumns().add(StaticColumn.SEASON);
-        if(
-            (
-                parameters.historyColumns().contains(HistoryColumn.ID)
-                    || parameters.historyColumns().contains(HistoryColumn.SEASON)
-            )
-                && parameters.historyColumns().stream().allMatch(HistoryColumn::isExpanded)
-        )
-            parameters.historyColumns().add(HistoryColumn.TIMESTAMP);
-    }
-
-    private static void injectGroupModeParameters(HistoryParameters parameters, GroupMode groupMode)
-    {
-        parameters.staticColumns().addAll(groupMode.getRequiredStaticParameters());
-    }
-
-    private static void prune
-    (
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history,
-        HistoryParameters parameters
-    )
-    {
-        for(TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> curHistory : history)
-        {
-
-            curHistory.staticData().data().keySet().retainAll(parameters.staticColumns());
-            curHistory.history().data().keySet().retainAll(parameters.historyColumns());
-        }
-    }
-
-    private List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> group
-    (
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history,
-        HistoryParameters parameters,
-        GroupMode groupMode
-    )
-    {
-        return switch (groupMode)
-        {
-            case TEAM->history;
-            case LEGACY_UID->groupByLegacyUid(history, parameters);
-            default->throw new IllegalArgumentException("Unsupported group mode: " + groupMode);
-        };
-    }
-
-    private List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> groupByLegacyUid
-    (
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history,
-        HistoryParameters parameters
-    )
-    {
-        return history.stream()
-            .map(this::toLegacyUidGroup)
-            .collect(Collectors.groupingBy(HistoryLegacyUidGroup::legacyUid))
-                .values().stream()
-            .map(group->group.stream().map(HistoryLegacyUidGroup::history).collect(Collectors.toList()))
-            .map(historyGroup->concatGroup(historyGroup, parameters))
-            .toList();
-    }
-
-    private TeamLegacyUid toLegacyUid
-    (
-        TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> teamHistory
-    )
-    {
-        return new TeamLegacyUid
-        (
-            sc2StatsConversionService.convert
-            (
-                teamHistory.staticData().data().get(StaticColumn.QUEUE_TYPE),
-                QueueType.class
-            ),
-            sc2StatsConversionService.convert
-            (
-                teamHistory.staticData().data().get(StaticColumn.TEAM_TYPE),
-                TeamType.class
-            ),
-            sc2StatsConversionService.convert
-            (
-                teamHistory.staticData().data().get(StaticColumn.REGION),
-                Region.class
-            ),
-            (String) teamHistory.staticData().data().get(StaticColumn.LEGACY_ID)
-        );
-    }
-
-    private HistoryLegacyUidGroup toLegacyUidGroup
-    (
-        TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> teamHistory
-    )
-    {
-        return new HistoryLegacyUidGroup(teamHistory, toLegacyUid(teamHistory));
-    }
-
-    private static TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> concatGroup
-    (
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history,
-        HistoryParameters parameters
-    )
-    {
-        if(history.isEmpty()) return new TeamHistory<>
-        (
-            RawTeamHistoryStaticData.EMPTY,
-            RawTeamHistoryHistoryData.EMPTY
-        );
-
-        history.sort(Comparator.comparing(h->(int) h.staticData().data().get(StaticColumn.SEASON)));
-        return new TeamHistory<>
-        (
-            new RawTeamHistoryStaticData(parameters.staticColumns.stream()
-                .collect(Collectors.toMap(
-                    Function.identity(),
-                    col->history.get(0).staticData().data().get(col),
-                    (l, r)->{throw new IllegalStateException("Unexpected merge");},
-                    ()->new EnumMap<StaticColumn, Object>(StaticColumn.class)
-                ))),
-            new RawTeamHistoryHistoryData(parameters.historyColumns.stream()
-                .collect(Collectors.toMap(
-                    Function.identity(),
-                    col->history.stream()
-                        .flatMap(h->h.history().data().get(col).stream())
-                        .toList(),
-                    (l, r)->{throw new IllegalStateException("Unexpected merge");},
-                    ()->new EnumMap<>(HistoryColumn.class)
-                )))
-        );
-    }
-
-    private void expandAll
-    (
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history,
-        HistoryParameters parameters
-    )
-    {
-        expandDivisions(history, parameters);
-        expandStaticHistory(history, parameters);
-        expandStaticData
-        (
-            history.stream().map(TeamHistory::staticData),
-            parameters.staticColumns()
-        );
-    }
-
-    private static boolean shouldExpandStaticHistory(HistoryParameters parameters)
-    {
-        return parameters.historyColumns().contains(HistoryColumn.ID)
-            || parameters.historyColumns().contains(HistoryColumn.SEASON);
-    }
-
-    private static void expandStaticHistory
-    (
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history,
-        HistoryParameters parameters
-    )
-    {
-        if(!shouldExpandStaticHistory(parameters)) return;
-
-        List<BiConsumer<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>, Integer>> expanders
-            = createStaticHistoryExpanders(parameters);
-        history.forEach(h->{
-            int size = h.history().data().values().iterator().next().size();
-            expanders.forEach(expander->expander.accept(h, size));
-        });
-    }
-
-    private static List<BiConsumer<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>, Integer>> createStaticHistoryExpanders
-    (
-        HistoryParameters parameters
-    )
-    {
-        List<BiConsumer<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>, Integer>> expanders = new ArrayList<>(2);
-        if(parameters.historyColumns().contains(HistoryColumn.ID))
-            expanders.add((h, size)->expandStaticHistory(
-                h, StaticColumn.ID, HistoryColumn.ID, size));
-        if(parameters.historyColumns().contains(HistoryColumn.SEASON))
-            expanders.add((h, size)->expandStaticHistory(
-                h, StaticColumn.SEASON, HistoryColumn.SEASON, size));
-        return expanders;
-    }
-
-    private static void expandStaticHistory
-    (
-        TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> history,
-        StaticColumn staticColumn,
-        HistoryColumn historyColumn,
-        int size
-    )
-    {
-        history.history().data().put
-        (
-            historyColumn,
-            Collections.nCopies(size, history.staticData().data().get(staticColumn))
-        );
-    }
-
-    private static void expandDivisionParameters(HistoryParameters parameters)
-    {
-        if(shouldExpandDivisions(parameters))
-            parameters.historyColumns().add(HistoryColumn.DIVISION_ID);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void expandLegacyUids(RawTeamHistoryStaticData staticData)
-    {
-        ((Map<StaticColumn, Object>) staticData.data()).put
-        (
-            StaticColumn.LEGACY_UID,
-            Stream.of
-            (
-                staticData.data().get(StaticColumn.QUEUE_TYPE),
-                staticData.data().get(StaticColumn.TEAM_TYPE),
-                staticData.data().get(StaticColumn.REGION),
-                staticData.data().get(StaticColumn.LEGACY_ID)
-            )
-                .map(String::valueOf)
-                .collect(Collectors.joining("-"))
-        );
-    }
-
-    private void expandStaticData
-    (
-        Stream<RawTeamHistoryStaticData> staticDataStream,
-        Set<StaticColumn> parameters
-    )
-    {
-        if(parameters.contains(StaticColumn.LEGACY_UID))
-            staticDataStream.forEach(this::expandLegacyUids);
-    }
-
-    private static boolean shouldExpandDivisions(HistoryParameters parameters)
-    {
-        return parameters.historyColumns().contains(HistoryColumn.TIER_TYPE)
-            || parameters.historyColumns().contains(HistoryColumn.LEAGUE_TYPE);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void expandDivisions
-    (
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history,
-        HistoryParameters parameters
-    )
-    {
-        if(!shouldExpandDivisions(parameters)) return;
-
-        Map<Integer, Division> divisions = divisionDAO.findByIds
-        (
-            history.stream()
-                .map(TeamHistory::history)
-                .map(data->(List<Integer>) data.data().get(HistoryColumn.DIVISION_ID))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet())
-        )
-            .stream()
-            .collect(Collectors.toMap(Division::getId, Function.identity()));
-        if(divisions.isEmpty()) return;
-
-        Map<Integer, LeagueTier> tiers = leagueTierDAO.findByIds
-        (
-            divisions.values().stream()
-                .map(Division::getTierId)
-                .collect(Collectors.toSet())
-        )
-            .stream()
-            .collect(Collectors.toMap(LeagueTier::getId, Function.identity()));
-        boolean expandTiers = parameters.historyColumns().contains(HistoryColumn.TIER_TYPE);
-        boolean expandLeagues = parameters.historyColumns().contains(HistoryColumn.LEAGUE_TYPE);
-
-        Map<Integer, League> leagues = expandLeagues
-            ? leagueDAO.find
-                (
-                    tiers.values().stream()
-                        .map(LeagueTier::getLeagueId)
-                        .distinct()
-                        .toList()
-                )
-                .stream()
-                .collect(Collectors.toMap(League::getId, Function.identity()))
-            : Map.of();
-
-        history.forEach(h->{
-            List<Integer> divisionIds = (List<Integer>) h.history().data().get(HistoryColumn.DIVISION_ID);
-            List<Object> historyTiers = expandTiers
-                ? new ArrayList<>(divisionIds.size())
-                : List.of();
-            List<Object> historyLeagues = expandLeagues
-                ? new ArrayList<>(divisionIds.size())
-                : List.of();
-            for(Integer id : divisionIds)
+            try(InputStream is = ClickHouseUtil.createEmptyJsonArrayInputStream())
             {
-                Division currentDivision = divisions.get(id);
-                LeagueTier currentTier = tiers.get(currentDivision.getTierId());
-
-                if(expandTiers) historyTiers
-                    .add(minConversionService.convert(currentTier.getType(), Object.class));
-                if(expandLeagues)
-                {
-                    League currentLeague = leagues.get(currentTier.getLeagueId());
-                    historyLeagues
-                        .add(minConversionService.convert(currentLeague.getType(), Object.class));
-                }
-
+                isConsumer.accept(is);
             }
-            if(expandTiers) h.history().data().put(HistoryColumn.TIER_TYPE, historyTiers);
-            if(expandLeagues) h.history().data().put(HistoryColumn.LEAGUE_TYPE, historyLeagues);
-        });
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+            return;
+        }
+
+        checkParameters(from, to);
+
+        List<TeamLegacyUid> expandedTeamLegacyUids = teamLegacyUids.stream()
+            .flatMap(TeamLegacyUid::expandWildcards)
+            .toList();
+        Map<String, Object> params = new HashMap<>(3);
+        params.put
+        (
+            "teamLegacyUids",
+            expandedTeamLegacyUids.stream()
+                .map(uid->sc2StatsConversionService.convert(uid, String.class))
+                .map(ClickHouseUtil::quote)
+                .toList()
+        );
+        if(from != null) params.put("from", from.toEpochSecond());
+        if(to != null) params.put("to", to.toEpochSecond());
+        try
+        (
+            QueryResponse response = clickHouseClient.query
+            (
+                generateFindColumnsQuery(historyColumns, from, to),
+                params,
+                new QuerySettings().setFormat(ClickHouseFormat.JSONEachRow)
+                    .serverSetting("output_format_json_array_of_rows", "1")
+            ).get()
+        )
+        {
+            try(InputStream is = response.getInputStream())
+            {
+                isConsumer.accept(is);
+            }
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     private static String generateFindSummaryQuery
     (
-        HistorySummaryParameters parameters,
-        GroupMode groupMode
+        Set<SummaryColumn> summaryColumns,
+        @Nullable OffsetDateTime from,
+        @Nullable OffsetDateTime to
     )
     {
-        Set<StaticColumn> directGroupedStaticColumns =
-            Stream.of(groupMode.getGroupStaticColumns(), parameters.staticColumns())
-                .flatMap(Collection::stream)
-                .filter(s->!s.isExpanded())
-                .collect(Collectors.toSet());
+
         return FIND_SUMMARY_TEMPLATE.formatted
         (
-            Stream.concat
-            (
-                directGroupedStaticColumns.stream().map(StaticColumn::getName),
-                parameters.summaryColumns().stream()
-                    .map(SummaryColumn::getDataAliasedColumn)
-                    .distinct()
-            )
-                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
-            directGroupedStaticColumns.stream()
-                .map(StaticColumn::getJoins)
-                .flatMap(Collection::stream)
-                .distinct()
-                .collect(Collectors.joining(JOIN_JOIN_DELIMITER)),
-
-            Stream.concat
-            (
-                parameters.staticColumns().stream()
-                    .filter(s->!s.isExpanded())
-                    .map(StaticColumn::getAggregationAliasedName),
-                parameters.summaryColumns().stream()
-                    .map(SummaryColumn::getAggregationAliasedFunction)
-            )
-                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
-
-            groupMode.getGroupStaticColumns().stream()
-                .filter(s->!s.isExpanded())
-                .map(StaticColumn::getName)
-                .collect(Collectors.joining(PARAMETER_JOIN_DELIMITER)),
-            FIND_SUMMARY_ID_COLUMN.get(groupMode)
-        );
-    }
-
-    private HistorySummaryParameters createExpandedParameters
-    (
-        HistorySummaryParameters parameters
-    )
-    {
-        boolean shouldExpandStatic = parameters.staticColumns().stream()
-            .anyMatch(StaticColumn::isExpanded);
-        if(!shouldExpandStatic) return parameters;
-
-        HistorySummaryParameters expanded = HistorySummaryParameters.copyOf(parameters);
-        expandStaticParameters(expanded.staticColumns());
-        return expanded;
-    }
-
-    private static void prune
-    (
-        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> summary,
-        HistorySummaryParameters parameters
-    )
-    {
-        for(TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData> curSummary : summary)
-        {
-
-            curSummary.staticData().data().keySet().retainAll(parameters.staticColumns());
-            curSummary.summary().data().keySet().retainAll(parameters.summaryColumns());
-        }
-    }
-
-    private void expandAllSummaries
-    (
-        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> summary,
-        HistorySummaryParameters parameters
-    )
-    {
-        expandStaticData
-        (
-            summary.stream().map(TeamHistorySummary::staticData),
-            parameters.staticColumns()
+            summaryColumns.stream()
+                .map(SummaryColumn::getAliasedFunction)
+                .collect(Collectors.joining(", ")),
+            from == null ? "" : "AND timestamp >= {from:DateTime}",
+            to == null ? "" : "AND timestamp < {to:DateTime}"
         );
     }
 
     public List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> findSummary
     (
-        @NotNull Set<Long> teamIds,
+        @NotNull @Valid Set<TeamLegacyUid> teamLegacyUids,
         @Nullable OffsetDateTime from,
         @Nullable OffsetDateTime to,
-        @NotNull Set<StaticColumn> staticColumns,
-        @NotNull Set<SummaryColumn> summaryColumns,
-        @NotNull GroupMode groupMode
-    )
-    {
-        if(teamIds.isEmpty() || (summaryColumns.isEmpty() && staticColumns.isEmpty())) return List.of();
-        checkParameters(from, to, staticColumns, groupMode);
-        HistorySummaryParameters parameters
-            = new HistorySummaryParameters(staticColumns, summaryColumns);
-        HistorySummaryParameters expanded = createExpandedParameters(parameters);
-
-        String query = generateFindSummaryQuery(expanded, groupMode);
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("teamIds", teamIds)
-            .addValue("from", from)
-            .addValue("to", to);
-
-        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> summary
-            = template.query(query, params, TEAM_HISTORY_SUMMARY_EXTRACTOR);
-        expandAllSummaries(summary, parameters);
-        prune(summary, parameters);
-        return summary;
-    }
-
-    private record HistoryParameters
-    (
-        @NotNull Set<StaticColumn> staticColumns,
-        @NotNull Set<HistoryColumn> historyColumns
-    )
-    {
-
-        public static HistoryParameters copyOf(HistoryParameters parameters)
-        {
-            return new HistoryParameters
-            (
-                parameters.staticColumns.isEmpty()
-                    ? EnumSet.noneOf(StaticColumn.class)
-                    : EnumSet.copyOf(parameters.staticColumns()),
-                parameters.historyColumns.isEmpty()
-                    ? EnumSet.noneOf(HistoryColumn.class)
-                    : EnumSet.copyOf(parameters.historyColumns())
-            );
-        }
-
-    }
-
-    private record HistorySummaryParameters
-    (
-        @NotNull Set<StaticColumn> staticColumns,
         @NotNull Set<SummaryColumn> summaryColumns
     )
     {
+        if(teamLegacyUids.isEmpty() || summaryColumns.isEmpty()) return List.of();
+        checkParameters(from, to);
 
-        public static HistorySummaryParameters copyOf(HistorySummaryParameters parameters)
+        List<TeamLegacyUid> expandedTeamLegacyUids = teamLegacyUids.stream()
+            .flatMap(TeamLegacyUid::expandWildcards)
+            .toList();
+        Map<String, Object> queryParams = new HashMap<>(3);
+        queryParams.put
+        (
+            "teamLegacyUids",
+            expandedTeamLegacyUids.stream()
+                .map(uid->sc2StatsConversionService.convert(uid, String.class))
+                .map(ClickHouseUtil::quote)
+                .toList()
+        );
+        if(from != null) queryParams.put("from", from.toEpochSecond());
+        if(to != null) queryParams.put("to", to.toEpochSecond());
+
+        List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> result
+            = new ArrayList<>(expandedTeamLegacyUids.size());
+        try
+        (
+            QueryResponse response = clickHouseClient
+                .query(generateFindSummaryQuery(summaryColumns, from, to), queryParams)
+                .get();
+            ClickHouseBinaryFormatReader reader = clickHouseClient.newBinaryFormatReader(response)
+        )
         {
-            return new HistorySummaryParameters
-            (
-                parameters.staticColumns.isEmpty()
-                    ? EnumSet.noneOf(StaticColumn.class)
-                    : EnumSet.copyOf(parameters.staticColumns()),
-                parameters.summaryColumns().isEmpty()
-                    ? EnumSet.noneOf(SummaryColumn.class)
-                    : EnumSet.copyOf(parameters.summaryColumns())
-            );
+            Map<String, Object> row;
+            while ((row = reader.next()) != null)
+            {
+                Map<SummaryColumn, Object> summaryData = new EnumMap<>(SummaryColumn.class);
+                for(SummaryColumn summaryColumn : summaryColumns)
+                    summaryData.put(summaryColumn, row.get(summaryColumn.getName()));
+                result.add(new TeamHistorySummary<>(
+                    new RawTeamHistoryStaticData(Map.of(
+                        StaticColumn.LEGACY_UID,
+                        row.get(StaticColumn.LEGACY_UID.getName())
+                    )),
+                    new RawTeamHistorySummaryData(summaryData)
+                ));
+            }
         }
-
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+        return result;
     }
 
-    private record HistoryLegacyUidGroup
-    (
-        @NotNull TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> history,
-        @NotNull TeamLegacyUid legacyUid
-    )
-    {}
+    private Optional<OffsetDateTime> getMaxTimestamp()
+    {
+        try
+        (
+            QueryResponse response = clickHouseClient
+                .query(FIND_MAX_TEAM_STATE_TIMESTAMP)
+                .get();
+            ClickHouseBinaryFormatReader reader = clickHouseClient.newBinaryFormatReader(response)
+        )
+        {
+            return reader.next() == null
+                ? Optional.empty()
+                : Optional.ofNullable(reader.getOffsetDateTime("max_timestamp"));
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private OffsetDateTime getSyncFrom()
+    {
+        OffsetDateTime fromVar = varDAO.find(SYNC_FROM_VAR_NAME)
+            .map(OffsetDateTime::parse)
+            .orElse(SC2Pulse.EPOCH_ODT);
+        OffsetDateTime maxTimestamp = getMaxTimestamp().orElse(SC2Pulse.EPOCH_ODT);
+        return maxTimestamp.isAfter(fromVar)
+            ? maxTimestamp.plus
+                (
+                    SC2Pulse.CHRONO_UNIT_MIN.between(maxTimestamp, maxTimestamp.plusSeconds(1)) - 1,
+                    SC2Pulse.CHRONO_UNIT_MIN
+                )
+            : fromVar;
+    }
+
+    private OffsetDateTime getSyncTo(OffsetDateTime from, int limit)
+    {
+        return template.queryForObject
+        (
+            FIND_MAX_TEAM_STATE_TIMESTAMP_PG,
+            Map.of
+            (
+                "from", from,
+                "limit", limit
+            ),
+            OffsetDateTime.class
+        );
+    }
+
+    private long syncBatch(int batchSize)
+    {
+        OffsetDateTime from = getSyncFrom();
+        OffsetDateTime to = getSyncTo(from, batchSize);
+        if(to == null) return 0;
+
+        LOG.trace("Syncing team history {}-{}", from, to);
+        long rowsSynced = 0;
+        Map<String, Object> queryParams = Map.of
+        (
+            "password", postgresPassword,
+            "from", from,
+            "to", to
+        );
+        try(CommandResponse response = clickHouseClient.execute(SYNC, queryParams).get())
+        {
+            rowsSynced = response.getWrittenRows();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+        varDAO.merge(SYNC_FROM_VAR_NAME, to.toString());
+        if(rowsSynced > 0) LOG.trace("Synced {} team history rows batch", rowsSynced);
+        return rowsSynced;
+    }
+
+    public int getSyncBatchSize()
+    {
+        return syncBatchSize;
+    }
+
+    public void setSyncBatchSize(int syncBatchSize)
+    {
+        if(syncBatchSize < 1) throw new IllegalArgumentException("Positive batch size expected");
+
+        this.syncBatchSize = syncBatchSize;
+    }
+
+    @Scheduled(cron = "0 0 * * * *")
+    public long trySync()
+    {
+        if(!syncLock.compareAndSet(false, true))
+        {
+            LOG.trace("Tried to sync team history but the task was already active");
+            return -1;
+        }
+        try
+        {
+            long syncedBatch = -1;
+            long syncedTotal = 0;
+            while (syncedBatch != 0)
+            {
+                syncedBatch = syncBatch(getSyncBatchSize());
+                syncedTotal += syncedBatch;
+            }
+            if (syncedTotal > 0) LOG.info("Synced {} team history rows", syncedTotal);
+            return syncedTotal;
+        }
+        finally
+        {
+            syncLock.compareAndSet(true, false);
+        }
+    }
 
 
 }

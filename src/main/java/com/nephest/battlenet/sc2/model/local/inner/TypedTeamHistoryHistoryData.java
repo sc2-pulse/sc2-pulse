@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.inner;
@@ -16,14 +16,13 @@ public record TypedTeamHistoryHistoryData
     @JsonProperty("WINS") List<Integer> wins,
     @JsonProperty("LEAGUE_TYPE") List<Integer> leagueTypes,
     @JsonProperty("TIER_TYPE") List<Integer> tierTypes,
-    @JsonProperty("DIVISION_ID") List<Integer> divisionIds,
+    @JsonProperty("DIVISION_BATTLENET_ID") List<Long> divisionBattlenetIds,
     @JsonProperty("GLOBAL_RANK") List<Integer> globalRanks,
     @JsonProperty("REGION_RANK") List<Integer> regionRanks,
     @JsonProperty("LEAGUE_RANK") List<Integer> leagueRanks,
     @JsonProperty("GLOBAL_TEAM_COUNT") List<Integer> globalTeamCounts,
     @JsonProperty("REGION_TEAM_COUNT") List<Integer> regionTeamCunts,
     @JsonProperty("LEAGUE_TEAM_COUNT") List<Integer> leagueTeamCounts,
-    @JsonProperty("ID") List<Long> ids,
     @JsonProperty("SEASON") List<Integer> seasons
 )
 implements TeamHistoryHistoryData
@@ -40,14 +39,13 @@ implements TeamHistoryHistoryData
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.WINS),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.LEAGUE_TYPE),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.TIER_TYPE),
-            (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.DIVISION_ID),
+            (List<Long>) raw.data().get(TeamHistoryDAO.HistoryColumn.DIVISION_BATTLENET_ID),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.GLOBAL_RANK),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.REGION_RANK),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.LEAGUE_RANK),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.GLOBAL_TEAM_COUNT),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.REGION_TEAM_COUNT),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.LEAGUE_TEAM_COUNT),
-            (List<Long>) raw.data().get(TeamHistoryDAO.HistoryColumn.ID),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.SEASON)
         );
     }

@@ -1,9 +1,11 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
+import com.nephest.battlenet.sc2.model.util.ClickHouseUtil;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import java.time.Duration;
 import java.util.Collection;
@@ -22,6 +24,7 @@ public class StatusService
     private final AlternativeLadderService alternativeLadderService;
     private final MatchService matchService;
     private final PostgreSQLUtils postgreSQLUtils;
+    private final ClickHouseUtil clickHouseUtil;
     private final Map<Region, Status> statusMap = new EnumMap<>(Region.class);
     private Long players;
     private Long teamSnapshots;
@@ -36,6 +39,7 @@ public class StatusService
         AlternativeLadderService alternativeLadderService,
         MatchService matchService,
         PostgreSQLUtils postgreSQLUtils,
+        ClickHouseUtil clickHouseUtil,
         GlobalContext globalContext
     )
     {
@@ -45,6 +49,7 @@ public class StatusService
         this.alternativeLadderService = alternativeLadderService;
         this.matchService = matchService;
         this.postgreSQLUtils = postgreSQLUtils;
+        this.clickHouseUtil = clickHouseUtil;
         init(globalContext.getActiveRegions());
     }
 
@@ -57,7 +62,7 @@ public class StatusService
     public void update()
     {
         players = postgreSQLUtils.getApproximateCount("account");
-        teamSnapshots = postgreSQLUtils.getApproximateCount("team_state");
+        teamSnapshots = clickHouseUtil.getCount(TeamHistoryDAO.TABLE_NAME);
         matches = postgreSQLUtils.getApproximateCount("match");
         for(Map.Entry<Region, Status> entry : statusMap.entrySet())
         {

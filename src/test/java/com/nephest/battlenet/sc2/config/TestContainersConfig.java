@@ -13,6 +13,7 @@ import org.testcontainers.clickhouse.ClickHouseContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
 @TestConfiguration(proxyBeanMethods = false)
 @Import({TestContainersCommonConfig.class})
@@ -41,6 +42,11 @@ public class TestContainersConfig
     {
         return new ClickHouseContainer(clickHouseImageName)
             .withTmpFs(Map.of("/var/lib/clickhouse", "rw,noexec,nosuid,size=512m"))
+            .withCopyFileToContainer
+            (
+                MountableFile.forClasspathResource("schema-clickhouse.sql"),
+                "/docker-entrypoint-initdb.d/schema.sql"
+            )
             .withNetwork(Network.SHARED);
     }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.util;
@@ -23,6 +23,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.time.OffsetDateTime;
@@ -49,6 +50,7 @@ public class TestDbInitializer
     private final LadderMatchDAO ladderMatchDAO;
     private final MatchParticipantDAO matchParticipantDAO;
     private final PopulationStateDAO populationStateDAO;
+    private final TeamHistoryDAO teamHistoryDAO;
     private final JdbcTemplate template;
 
     @Autowired
@@ -66,6 +68,7 @@ public class TestDbInitializer
         LadderMatchDAO ladderMatchDAO,
         MatchParticipantDAO matchParticipantDAO,
         PopulationStateDAO populationStateDAO,
+        TeamHistoryDAO teamHistoryDAO,
         JdbcTemplate template
     )
     {
@@ -81,6 +84,7 @@ public class TestDbInitializer
         this.ladderMatchDAO = ladderMatchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
         this.populationStateDAO = populationStateDAO;
+        this.teamHistoryDAO = teamHistoryDAO;
         this.template = template;
     }
 
@@ -134,6 +138,7 @@ public class TestDbInitializer
         playerCharacterStatsDAO.calculate();
         seasonStateDAO.merge(SeasonGenerator.DEFAULT_SEASON_START.plusMinutes(1),
             SeasonGenerator.DEFAULT_SEASON_ID);
+        teamHistoryDAO.trySync();
     }
 
     private void setupClanData(List<Long> charIds, Clan clan)

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -66,13 +66,6 @@ public class Summary1v1Command
     public static final Comparator<LadderTeam> TEAM_COMPARATOR =
         Comparator.comparing(LadderTeam::getRating, Comparator.reverseOrder());
 
-    public static final Set<TeamHistoryDAO.StaticColumn> STATIC_HISTORY_COLUMNS
-        = Collections.unmodifiableSet(EnumSet.of(
-            TeamHistoryDAO.StaticColumn.QUEUE_TYPE,
-            TeamHistoryDAO.StaticColumn.TEAM_TYPE,
-            TeamHistoryDAO.StaticColumn.REGION,
-            TeamHistoryDAO.StaticColumn.LEGACY_ID
-    ));
     public static final Set<TeamHistoryDAO.SummaryColumn> SUMMARY_HISTORY_COLUMNS
         = Collections.unmodifiableSet(EnumSet.of(
             TeamHistoryDAO.SummaryColumn.GAMES,
@@ -155,19 +148,9 @@ public class Summary1v1Command
         List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries
             = teamHistoryDAO.findSummary
             (
-                Set.copyOf
-                (
-                    teamDAO.findIdsByLegacyUids
-                    (
-                        teams.values().stream()
-                            .map(LadderTeam::getLegacyUid)
-                            .collect(Collectors.toSet()),
-                        null, null
-                    )
-                ),
+                uids,
                 null, null,
-                STATIC_HISTORY_COLUMNS, SUMMARY_HISTORY_COLUMNS,
-                TeamHistoryDAO.GroupMode.LEGACY_UID
+                SUMMARY_HISTORY_COLUMNS
             ).stream()
                 .map(TeamHistorySummary::cast)
                 .map(c->TeamHistorySummary.convert(c, sc2ConversionService))
@@ -190,10 +173,9 @@ public class Summary1v1Command
         List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries
             = teamHistoryDAO.findSummary
                 (
-                    Set.copyOf(teamDAO.findIdsByLegacyUids(uids, null, null)),
+                    uids,
                     SC2Pulse.offsetDateTime().minusDays(depth), null,
-                    STATIC_HISTORY_COLUMNS, SUMMARY_HISTORY_COLUMNS,
-                    TeamHistoryDAO.GroupMode.LEGACY_UID
+                    SUMMARY_HISTORY_COLUMNS
                 ).stream()
                     .map(TeamHistorySummary::cast)
                     .map(c->TeamHistorySummary.convert(c, sc2ConversionService))
@@ -205,12 +187,7 @@ public class Summary1v1Command
         Map<TeamLegacyUid, LadderTeam> teams = ladderSearchDAO.findLegacyTeams
         (
             summaries.stream()
-                .map(s->new TeamLegacyUid(
-                    s.staticData().queueType(),
-                    s.staticData().teamType(),
-                    s.staticData().region(),
-                    s.staticData().legacyId()
-                ))
+                .map(s->s.staticData().teamLegacyUid())
                 .collect(Collectors.toSet()),
             false
         )
@@ -278,17 +255,10 @@ public class Summary1v1Command
             .orElseThrow();
         for(TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData> summary : summaryData.summaries())
         {
-            TeamLegacyUid uid = new TeamLegacyUid
-            (
-                summary.staticData().queueType(),
-                summary.staticData().teamType(),
-                summary.staticData().region(),
-                summary.staticData().legacyId()
-            );
             appendSummary
             (
                 description,
-                summaryData.teams().get(uid),
+                summaryData.teams().get(summary.staticData().teamLegacyUid()),
                 summary,
                 discordBootstrap,
                 evt,
@@ -325,7 +295,7 @@ public class Summary1v1Command
             .append(" ").append(discordBootstrap.getRaceEmojiOrName
             (
                 evt,
-                summary.staticData().legacyId().getEntries().get(0).race())
+                summary.staticData().teamLegacyUid().getId().getEntries().get(0).race())
             )
             .append(" | **`")
             .append(String.format("%" + gamesDigits + "d", summary.summary().games()))

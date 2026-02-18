@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -14,9 +14,12 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
@@ -38,11 +41,10 @@ import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistory;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -67,10 +69,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -88,6 +88,9 @@ public class TeamStateServiceIT
 
     @Autowired
     private TeamStateDAO teamStateDAO;
+
+    @Autowired
+    private TeamHistoryDAO teamHistoryDAO;
 
     @Autowired
     private TeamStateArchiveDAO teamStateArchiveDAO;
@@ -127,14 +130,10 @@ public class TeamStateServiceIT
     private static int secondaryLengthBefore;
 
     @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource)
-    throws SQLException
+    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
         teamStateService.reset();
         updateService.updated(Instant.MIN);
         mainLengthBefore = teamStateService.getMainLengthDays();
@@ -156,15 +155,13 @@ public class TeamStateServiceIT
     public static void afterAll
     (
         @Autowired DataSource dataSource,
+        @Autowired Client clickHouseClient,
         @Autowired TeamStateService teamStateService
     )
-    throws SQLException
+    throws Exception
     {
         teamStateService.reset();
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     private static LadderUpdateData createUpdateData(int season)
@@ -337,10 +334,16 @@ public class TeamStateServiceIT
             (teamCount * 2 + 2), //+ not expired and last
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
+        teamHistoryDAO.trySync();
 
+        String teamLegacyUidString = mvcConversionService.convert
+        (
+            teamDAO.findById(teamId).orElseThrow().getLegacyUid(),
+            String.class
+        );
         List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history
-            = objectMapper.readValue(mvc.perform(get("/api/team-histories")
-                .queryParam("teamId", String.valueOf(teamId))
+            = objectMapper.readValue(mvc.perform(asyncDispatch(mvc.perform(get("/api/team-histories")
+                .queryParam("teamLegacyUid", teamLegacyUidString)
                 .queryParam
                 (
                     "history",
@@ -348,7 +351,7 @@ public class TeamStateServiceIT
                         .convert(TeamHistoryDAO.HistoryColumn.TIMESTAMP, String.class)
                 )
                 .contentType(MediaType.APPLICATION_JSON)
-        )
+        ).andExpect(request().asyncStarted()).andReturn()))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         assertTrue(AssertionUtil.numberListEquals(
@@ -377,32 +380,6 @@ public class TeamStateServiceIT
             (teamCount * 2 + 1), // + last timestamp
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> history2
-            = objectMapper.readValue(mvc.perform(get("/api/team-histories")
-                .queryParam("teamId", String.valueOf(teamId))
-                .queryParam
-                (
-                    "history",
-                    mvcConversionService
-                        .convert(TeamHistoryDAO.HistoryColumn.TIMESTAMP, String.class)
-                )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        assertTrue(AssertionUtil.numberListEquals(
-            Stream.of
-            (
-                odtStart.minusSeconds(3), //min rating
-                odtStart.minusSeconds(1), //max rating
-                //odtStart.plusMinutes(1), removed
-                //last timestamp
-                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET)
-            )
-                .map(odt->minConversionService.convert(odt, Object.class))
-                .toList(),
-            history2.get(0).history().data().get(TeamHistoryDAO.HistoryColumn.TIMESTAMP)
-        ));
     }
 
     private void whenExceptionIsThrownMidProcess_thenThereShouldBeNoLeftoversInDb

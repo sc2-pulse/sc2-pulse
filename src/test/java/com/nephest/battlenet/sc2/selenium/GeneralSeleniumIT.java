@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.selenium;
@@ -15,13 +15,13 @@ import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfEl
 import static org.openqa.selenium.support.ui.ExpectedConditions.presenceOfElementLocated;
 import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOf;
 
+import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.TestDbInitializer;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
@@ -49,9 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.selenium.BrowserWebDriverContainer;
@@ -92,6 +90,7 @@ public class GeneralSeleniumIT
     public static void init
     (
         @Autowired DataSource dataSource,
+        @Autowired Client clickHouseClient,
         @Autowired AccountDAO accountDAO,
         @Autowired ServletWebServerApplicationContext webServerAppCtxt,
         @Value("${org.testcontainers.selenium.image.name}") String seleniumImageName,
@@ -107,11 +106,7 @@ public class GeneralSeleniumIT
         js = (JavascriptExecutor) driver;
         port = webServerAppCtxt.getWebServer().getPort();
         root = "http://" + testContainersHost + ":" + port;
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
     private static WebDriver initDriver(String seleniumImageName, boolean headless)
@@ -165,15 +160,12 @@ public class GeneralSeleniumIT
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
-    throws SQLException
+    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
         driver.close();
         BROWSER_CONTAINER.close();
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test
