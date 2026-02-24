@@ -3,13 +3,22 @@
 
 package com.nephest.battlenet.sc2.config.data;
 
+import static com.nephest.battlenet.sc2.model.util.PostgreSQLUtils.CONTAINER_HOST;
+import static com.nephest.battlenet.sc2.model.util.PostgreSQLUtils.CONTAINER_PORT;
+
 import com.clickhouse.client.api.Client;
+import com.nephest.battlenet.sc2.config.container.ContainerInfo;
 import com.nephest.battlenet.sc2.config.data.clickhouse.ClickHouseConnectionDetails;
 import com.nephest.battlenet.sc2.config.data.clickhouse.ClickHouseConnectionDetailsImpl;
+import java.util.Properties;
 import javax.sql.DataSource;
+import org.postgresql.Driver;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.jdbc.JdbcConnectionDetails;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +29,24 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Configuration
 public class DataConfig
 {
+
+    @Bean
+    public Properties postgresUrlProperties
+    (
+        JdbcConnectionDetails jdbcConnectionDetails,
+        @Autowired(required = false)
+        @Qualifier("postgreSQLContainerInfo")
+        ContainerInfo postgreSQLContainerInfo
+    )
+    {
+        Properties props =  Driver.parseURL(jdbcConnectionDetails.getJdbcUrl(), null);
+        if(postgreSQLContainerInfo != null)
+        {
+            props.put(CONTAINER_HOST, postgreSQLContainerInfo.host());
+            props.put(CONTAINER_PORT, postgreSQLContainerInfo.port());
+        }
+        return props;
+    }
 
     @Bean
     public PlatformTransactionManager transactionManager(DataSource dataSource)

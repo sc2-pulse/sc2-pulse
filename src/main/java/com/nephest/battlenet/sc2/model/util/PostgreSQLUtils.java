@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.util;
 
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import java.util.Properties;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,6 +13,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PostgreSQLUtils
 {
+
+    public static final String DRIVER_HOST = "PGHOST";
+    public static final String DRIVER_PORT = "PGPORT";
+    public static final String DRIVER_DB_NAME = "PGDBNAME";
+    public static final String CONTAINER_HOST = "CONTAINER_HOST";
+    public static final String CONTAINER_PORT = "CONTAINER_PORT";
 
     public static final String TRANSACTION_USER_ID_PARAMETER_NAME = "sc2pulse.user_id";
 
@@ -73,6 +80,31 @@ public class PostgreSQLUtils
     {
         String id = template.queryForObject(GET_TRANSACTION_USER_ID_QUERY, String.class);
         return id == null || id.isEmpty() ? null : id;
+    }
+
+    public static String getContainerHost(Properties properties)
+    {
+        return (String) properties.getOrDefault
+        (
+            PostgreSQLUtils.CONTAINER_HOST,
+            properties.get(PostgreSQLUtils.DRIVER_HOST)
+        );
+    }
+
+    public static Integer getContainerPort(Properties properties)
+    {
+        String portString = properties.getOrDefault
+        (
+            PostgreSQLUtils.CONTAINER_PORT,
+            properties.get(PostgreSQLUtils.DRIVER_PORT)
+        )
+            .toString();
+        return portString == null ? null : Integer.valueOf(portString);
+    }
+
+    public static String getContainerHostAndPort(Properties properties)
+    {
+        return getContainerHost(properties) + ":" + getContainerPort(properties);
     }
 
 }
