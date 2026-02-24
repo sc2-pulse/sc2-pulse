@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.clickhouse.ClickHouseContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -38,6 +39,7 @@ public class TestContainersDevRunConfig
     {
         PostgreSQLContainer postgreSQLContainer
             = new PostgreSQLContainer(DockerImageName.parse(postgresImageName))
+            .withNetwork(Network.SHARED)
             .withCopyFileToContainer
             (
                 MountableFile.forClasspathResource("init-db.sql"),
@@ -74,7 +76,8 @@ public class TestContainersDevRunConfig
     )
     {
         ClickHouseContainer clickHouseContainer
-            = new ClickHouseContainer(DockerImageName.parse(clickHouseImageName));
+            = new ClickHouseContainer(DockerImageName.parse(clickHouseImageName))
+            .withNetwork(Network.SHARED);
         if(volumeName != null)
         {
             LOG.info("Using {} clickhouse volume", volumeName);

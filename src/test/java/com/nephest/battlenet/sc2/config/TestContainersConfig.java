@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.clickhouse.ClickHouseContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -25,7 +26,8 @@ public class TestContainersConfig
     {
         return new PostgreSQLContainer(DockerImageName.parse(postgresImageName))
             .withTmpFs(Map.of("/var/lib/postgresql/data", "rw,noexec,nosuid,size=512m"))
-            .withInitScript("init-db.sql");
+            .withInitScript("init-db.sql")
+            .withNetwork(Network.SHARED);
     }
 
     @Bean
@@ -36,7 +38,8 @@ public class TestContainersConfig
     )
     {
         return new ClickHouseContainer(clickHouseImageName)
-            .withTmpFs(Map.of("/var/lib/clickhouse", "rw,noexec,nosuid,size=512m"));
+            .withTmpFs(Map.of("/var/lib/clickhouse", "rw,noexec,nosuid,size=512m"))
+            .withNetwork(Network.SHARED);
     }
 
 }
