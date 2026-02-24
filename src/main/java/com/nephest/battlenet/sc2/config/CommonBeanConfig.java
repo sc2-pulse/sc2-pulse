@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
@@ -19,6 +19,8 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToSC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
 import com.nephest.battlenet.sc2.config.convert.StringToAuditLogEntryActionConverter;
+import com.nephest.battlenet.sc2.config.convert.StringToTeamLegacyUidConverter;
+import com.nephest.battlenet.sc2.config.convert.TeamLegacyUidToStringConverter;
 import com.nephest.battlenet.sc2.config.convert.min.IdentifiableToMinimalObjectConverter;
 import com.nephest.battlenet.sc2.config.convert.min.TemporalAccessorToMinimalObjectConverter;
 import com.nephest.battlenet.sc2.config.convert.min.TimestampToMinimalObjectConverter;
@@ -73,6 +75,8 @@ public class CommonBeanConfig
         service.addConverter(new IntegerToPlayerCharacterReportTypeConverter());
         service.addConverter(new IntegerToClanMemberEventTypeConverter());
         service.addConverter(new IntegerToAccountPropertyTypeConverter());
+        service.addConverter(new StringToTeamLegacyUidConverter());
+        service.addConverter(new TeamLegacyUidToStringConverter());
         return service;
     }
 
