@@ -35,6 +35,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
@@ -145,6 +146,20 @@ public class CommonBeanConfig
     )
     {
         return Schedulers.fromExecutorService(executorService, "Secondary DB scheduler");
+    }
+
+    @Bean
+    public ThreadPoolTaskExecutor asyncTaskExecutor()
+    {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(600);
+        executor.setKeepAliveSeconds(600);
+        executor.setThreadNamePrefix("async-");
+        executor.initialize();
+
+        return executor;
     }
 
 }

@@ -6,9 +6,12 @@ package com.nephest.battlenet.sc2.config.mvc;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -27,6 +30,10 @@ implements WebMvcConfigurer
     @Autowired
     private List<HandlerMethodArgumentResolver> customArgumentResolvers;
 
+    @Autowired
+    @Qualifier("asyncTaskExecutor")
+    private ThreadPoolTaskExecutor asyncTaskExecutor;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry)
     {
@@ -41,4 +48,9 @@ implements WebMvcConfigurer
         argumentResolvers.addAll(customArgumentResolvers);
     }
 
+    @Override
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer)
+    {
+        configurer.setTaskExecutor(asyncTaskExecutor);
+    }
 }
