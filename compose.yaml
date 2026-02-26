@@ -14,6 +14,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.8
+    container_name: sc2pulse-clickhouse-prod
+    networks:
+      - sc2pulse_net_prod
+    volumes:
+      - sc2pulse_data_clickhouse_prod:/var/lib/clickhouse
+    environment:
+      - CLICKHOUSE_DB=sc2pulse
+      - CLICKHOUSE_USER=sc2pulse
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8123/ping || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
   sc2pulse:
     image: ghcr.io/sc2-pulse/sc2-pulse:2
     container_name: sc2pulse-prod
@@ -22,10 +38,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      clickhouse:
+        condition: service_healthy
     environment:
       - SERVER_SERVLET_CONTEXTPATH=/sc2
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sc2pulse?reWriteBatchedInserts=true
       - SPRING_DATASOURCE_USERNAME=sc2pulse
+      - COM_NEPHEST_BATTLENET_SC2_DATASOURCE_NATIVE_CLICKHOUSE_ENDPOINT=http://clickhouse:8123
+      - COM_NEPHEST_BATTLENET_SC2_DATASOURCE_NATIVE_CLICKHOUSE_DATABASE=sc2pulse
       - SPRING_PROFILES_ACTIVE=default,prod
       - COM_NEPHEST_BATTLENET_SC2_CRON_ENABLED=true
       - COM_NEPHEST_BATTLENET_SC2_API_BLIZZARD_LADDER_ID_PREVIOUS_US=333365
@@ -43,3 +63,4 @@ networks:
     driver: bridge
 volumes:
   sc2pulse_data_prod:
+  sc2pulse_data_clickhouse_prod:

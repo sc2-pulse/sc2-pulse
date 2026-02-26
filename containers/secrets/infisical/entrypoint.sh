@@ -15,5 +15,6 @@ awk -F= -v outdir="./run/sc2pulse" '
     }
 }' "$ALL_SECRETS"
 [ -f "/run/sc2pulse/spring.datasource.password" ] && \
-  cp "/run/sc2pulse/spring.datasource.password" "/run/postgres/spring.datasource.password"
+  cp "/run/sc2pulse/spring.datasource.password" "/run/postgres/spring.datasource.password" && \
+  cp "/run/sc2pulse/spring.datasource.password" "/run/clickhouse/spring.datasource.password"
 rm "$ALL_SECRETS"
