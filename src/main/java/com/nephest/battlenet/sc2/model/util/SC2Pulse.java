@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.util;
@@ -22,6 +22,14 @@ public final class SC2Pulse
     public static final ChronoUnit CHRONO_UNIT_MIN = ChronoUnit.MICROS;
     public static final Clock CLOCK
         = Clock.tick(Clock.systemUTC(), Duration.of(1, CHRONO_UNIT_MIN));
+    public static final OffsetDateTime EPOCH_ODT = SC2Pulse.offsetDateTime
+    (
+        OffsetDateTime.ofInstant
+        (
+            Instant.EPOCH,
+            SC2Pulse.offsetDateTime().getOffset()
+        )
+    );
 
     private SC2Pulse(){}
 
