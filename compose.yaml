@@ -22,6 +22,7 @@ services:
     volumes:
       - sc2pulse_data_clickhouse_prod:/var/lib/clickhouse
       - sc2pulse_log_clickhouse_prod:/var/log/clickhouse-server
+      - ./containers/clickhouse/clickhouse.xml:/etc/clickhouse-server/config.d/sc2pulse.xml:ro
     environment:
       - CLICKHOUSE_DB=sc2pulse
       - CLICKHOUSE_USER=sc2pulse
