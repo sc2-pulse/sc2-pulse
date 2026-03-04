@@ -13,6 +13,7 @@ const orderedFiles = [
     root + '/ElementUtil.js',
     root + '/enum.js',
     root + '/EnumUtil.js',
+    root + '/MmrHistory.js',
     root + '/CharacterUtil.js',
     root + '/FollowUtil.js',
     root + '/HistoryUtil.js',

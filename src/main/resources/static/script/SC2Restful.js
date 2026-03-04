@@ -88,7 +88,7 @@ class SC2Restful
                 StatsUtil.updateGamesStatsVisibility();
             case START_MODE.MINIMAL:
                 CharacterUtil.setCharacterViewTasks();
-                CharacterUtil.enhanceMmrForm();
+                CharacterUtil.MMR_HISTORY.enhanceForm();
                 CharacterUtil.enhanceReportForm();
                 CharacterUtil.updateReportForm();
                 CharacterUtil.enhanceCharacterTeamsSeasonCtl();
