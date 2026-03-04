@@ -14,4 +14,6 @@
     <part_log remove="1" />
     <query_log remove="1" />
     <processors_profile_log remove="1" />
+
+    <asynchronous_metrics_update_period_s>60</asynchronous_metrics_update_period_s>
 </clickhouse>
