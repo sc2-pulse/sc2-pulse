@@ -57,42 +57,6 @@ class CharacterUtil
              });
     }
 
-    static expandMmrHistory(history)
-    {
-        if(!history || !history.season || history.season.length == 0) return [];
-        const expanded = new Array(history.season.length);
-        for(let i = 0; i < history.season.length; i++)
-        {
-            expanded[i] =
-            {
-                teamState:
-                {
-                    teamId: history.teamId[i],
-                    dateTime: history.dateTime[i],
-                    games: history.games[i],
-                    wins: history.wins[i],
-                    rating: history.rating[i],
-                    globalRank: history.globalRank[i],
-                    globalTeamCount: history.globalTeamCount[i],
-                    regionRank: history.regionRank[i],
-                    regionTeamCount: history.regionTeamCount[i],
-                    leagueRank: history.leagueRank[i],
-                    leagueTeamCount: history.leagueTeamCount[i],
-                },
-                league:
-                {
-                    type: history.leagueType[i],
-                    queueType: history.queueType[i],
-                    teamType: history.teamType[i]
-                },
-                season: history.season[i],
-                tier: history.tier[i],
-                race: history.race[i]
-            };
-        }
-        return expanded;
-    }
-
     static getMatchTypePath(path = true)
     {
         const type = localStorage.getItem("matches-type");
@@ -771,42 +735,6 @@ class CharacterUtil
             legacyUids: legacyUids
         };
     }
-
-    //legacy tbr start
-    static getLastSeasonTeamSnapshotDates(states)
-    {
-        const result = new Map();
-        let season = 999;
-        for(let i = states.length - 1; i > -1; i--)
-        {
-            const state = states[i];
-            if(state.season < season) {
-                season = state.season;
-                result.set(season, Util.parseIsoDateTime(state.teamState.dateTime));
-            }
-        }
-        return result;
-    }
-
-    static convertTeamToTeamSnapshot(t, lastSeasonTeamSnapshotDates, seasonLastOnly)
-    {
-        const season = Session.currentSeasonsMap.get(t.region).get(t.season)[0];
-        if(seasonLastOnly) return MmrHistory.createTeamSnapshot(t, season.nowOrEnd);
-
-        const date = (lastSeasonTeamSnapshotDates.get(t.season + 1) || Session.currentSeasonsMap.get(t.region).get(t.season + 1))
-            ? ((lastSeasonTeamSnapshotDates.get(t.season) ? new Date(lastSeasonTeamSnapshotDates.get(t.season).getTime() + 1000)  : null)
-                || new Date(season.nowOrEnd.getTime() - CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS))
-            : new Date();
-        return MmrHistory.createTeamSnapshot(t, date);
-    }
-
-    static calculateMmrHistoryTopPercentage(h)
-    {
-        if(h.globalTopPercent) return;
-        h.teamState.globalTopPercent = (h.teamState.globalRank / h.teamState.globalTeamCount) * 100;
-        h.teamState.regionTopPercent = (h.teamState.regionRank / h.teamState.regionTeamCount) * 100;
-    }
-    //legacy tbr end
 
     static updateCharacterLinkedCharacters()
     {
