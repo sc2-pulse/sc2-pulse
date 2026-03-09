@@ -127,7 +127,7 @@ class MmrHistory
         const parameters = this.mmrHistory.parameters;
         const xAxisType = (localStorage.getItem(`${this.domPrefix}-x-type`) || "true") === "true" ? "time" : "category";
 
-        const data = [];
+        const data = {};
         const rawData = {index: {}, history: {}};
         ChartUtil.CHART_RAW_DATA.set(`${this.domPrefix}-table`, {rawData: rawData, additionalDataGetter: this.getAdditionalHistoryData.bind(this)});
         ChartUtil.batchExecute(
