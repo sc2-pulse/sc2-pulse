@@ -1507,7 +1507,7 @@ ChartUtil.CURSOR_PLUGIN =
     id: "nephest-cursor",
     afterDraw: chart =>
     {
-        if (chart.config.type == "line" && chart.tooltip._active && chart.tooltip._active.length)
+        if (chart.config.type == "line" && chart.tooltip?._active && chart.tooltip._active.length)
         {
             var activePoint = chart.tooltip._active[0],
             ctx = chart.ctx,
