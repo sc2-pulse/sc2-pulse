@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2026 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -352,31 +352,7 @@
                 data-view-name="team-mmr"
                 data-view-title="MMR history"
         >
-            <div id="team-mmr-filters"></div>
-            <div th:replace="~{fragments/section:: form-mmr-history('team-mmr', false)}"></div>
-            <div id="team-mmr-container">
-                <table
-                        id="team-mmr-table"
-                        class="chartable"
-                        data-chart-type="line"
-                        data-chart-group="mmr"
-                        data-chart-tooltip-percentage="false"
-                        data-chart-tooltip-table-headers="Team,Season,League,MMR,Games/W%,Global Rank,Region rank,League rank"
-                        data-chart-id="team-mmr-chart"
-                        data-chart-x-title="Date" data-chart-y-title="MMR"
-                        data-chart-performance="fast"
-                        data-chart-will-read-frequently="true"
-                        data-chart-point-radius="0.5"
-                        data-chart-x-type="time"
-                        data-chart-direct="true"
-                        data-chart-zoom="xy"
-                        data-chart-custom-annotations="mmr-meta"
-                >
-                    <thead><tr></tr></thead>
-                    <tbody><tr></tr></tbody>
-                </table>
-                <div th:replace="~{fragments/section :: chartjs('team-mmr', _)}"></div>
-            </div>
+            <section th:replace="~{fragments/section:: mmr-history('team-mmr', 'Team', false, 'l')}"></section>
         </section>
         <section id="team-mmr-teams" class="tab-pane fade" data-view-name="team-mmr" data-view-title="MMR history - teams">
             <h3>Teams</h3>
