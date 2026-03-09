@@ -822,9 +822,10 @@ class TeamUtil
             .then(Session.verifyJsonResponse);
     }
 
-    static getTeamGroup(ids, legacyUids, fromSeason, toSeason)
+    static getTeamGroup(ids, legacyUids, fromSeason, toSeason, last)
     {
         const params = TeamUtil.createTeamGroupBaseParams(ids, legacyUids, fromSeason, toSeason);
+        if(last != null) params.append("last", last);
         const request = ROOT_CONTEXT_PATH + "api/teams?" + params.toString();
 
         return Session.beforeRequest()
