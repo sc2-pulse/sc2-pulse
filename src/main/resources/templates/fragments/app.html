@@ -561,73 +561,11 @@
                                 <div th:replace="~{fragments/section :: loading-indicator}"></div>
                             </section>
                         </section>
-                        <section id="player-stats-mmr" class="tab-pane fade show active" data-view-title="MMR history">
-                            <section id="character-mmr-section">
-                                <h3>Solo MMR history
-                                    <span class="fullscreen-toggle align-middle" data-target="player-stats-mmr"></span></h3>
-                                <div id="mmr-history-all-loading" class="container-loading loading-none"></div>
-
-                                <div id="mmr-history-info-panel" class="flex-col-adaptive adaptive-border-color-splitter">
-                                <div id="mmr-history-ctl">
-                                <div><div id="mmr-history-filters"></div><div id="mmr-history-games-avg-mmr"></div></div>
-                                <div th:replace="~{fragments/section:: form-mmr-history('mmr', true)}"></div>
-                                </div>
-                                <div id="mmr-summary-table-container" class="table-responsive container-loading loading-none">
-                                    <table id="mmr-summary-table" class="table inline-table table-sm table-hover">
-                                        <thead>
-                                        <tr>
-                                            <th scope="col">Race</th>
-                                            <th scope="col">Games</th>
-                                            <th scope="col">Last MMR</th>
-                                            <th scope="col">Avg MMR</th>
-                                            <th scope="col">Max MMR</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                    <div th:replace="~{fragments/section :: loading-indicator}"></div>
-                                </div>
-                                <div class="table-responsive flex-grow-1">
-                                    <table id="mmr-tier-progress-table" class="table table-sm table-hover">
-                                        <thead>
-                                        <tr>
-                                            <th scope="col"><br/>Race</th>
-                                            <th scope="col"
-                                                class="hoverable"
-                                                title="Tier progress based on regional rank/top% and official tier thresholds for LotV"
-                                                data-toggle="tooltip"><br/>Progress</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                                </div>
-                                <table
-                                        id="mmr-table"
-                                        class="chartable"
-                                        data-chart-type="line"
-                                        data-chart-group="mmr"
-                                        data-chart-tooltip-percentage="false"
-                                        data-chart-tooltip-table-headers="Race,Season,League,MMR,Games/W%,Global Rank,Region rank,League rank"
-                                        data-chart-id="mmr-chart"
-                                        data-chart-x-title="Date" data-chart-y-title="MMR"
-                                        data-chart-performance="fast"
-                                        data-chart-will-read-frequently="true"
-                                        data-chart-point-radius="0.5"
-                                        data-chart-x-type="time"
-                                        data-chart-x-time-unit="false"
-                                        data-chart-direct="true"
-                                        data-chart-zoom="xy"
-                                        data-chart-custom-annotations="mmr-meta"
-                                >
-                                    <thead><tr></tr></thead>
-                                    <tbody><tr></tr></tbody>
-                                </table>
-                                <div th:replace="~{fragments/section :: chartjs('mmr', _)}"></div>
-                                <div id="mmr-history-loading" class="container-loading loading-none">
-                                    <div th:replace="~{fragments/section :: loading-indicator}"></div>
-                                </div>
-                            </section>
+                        <section th:id="player-stats-mmr"
+                                 class="tab-pane fade show active"
+                                 data-view-title="MMR history"
+                        >
+                            <section th:replace="~{fragments/section :: mmr-history('mmr', 'Race', true, 's')}"></section>
                         </section>
                         <section id="player-stats-history" class="tab-pane fade container-loading loading-none" data-view-title="Teams">
                             <section id="character-teams-section">

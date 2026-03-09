@@ -504,23 +504,28 @@ label.required::after
     margin-left: 0.2em;
 }
 
-#mmr-history-info-panel
+.mmr-history-info-panel
 {
     margin-bottom: 1em;
     border-bottom: solid 2px;
 }
 
-#mmr-history-ctl
+.mmr-history-s .mmr-history-ctl
 {
     flex-basis: 40rem;
 }
 
-#mmr-summary-table-container
+.mmr-history-l .mmr-history-ctl
+{
+    width: 100%;
+}
+
+.mmr-summary-table-container
 {
     flex-basis: min-content;
 }
 
-#mmr-summary-table, #mmr-tier-progress-table
+.mmr-summary-table, .mmr-summary .tier-progress-table
 {
     font-size: 0.8rem;
 }
@@ -528,6 +533,54 @@ label.required::after
 .tier-progress
 {
     min-width: 4rem;
+}
+
+.mmr-history-l
+{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.mmr-history-l .mmr-history-info-panel
+{
+    display: contents;
+}
+
+.mmr-history-l .container-chart-outer
+{
+    grid-row: 4;
+}
+
+.mmr-history-l .mmr-history-loading
+{
+    grid-row: 5;
+}
+
+.mmr-history-l .mmr-summary-table-container
+{
+    grid-row: 6;
+}
+
+.mmr-history-l .mmr-summary-tier-progress-table-container
+{
+    grid-row: 7;
+}
+
+.mmr-history-l .container-chart-outer,
+.mmr-history-l .mmr-summary-table-container
+{
+    margin-bottom: 1.5rem;
+}
+
+.mmr-history-l .flex-col-adaptive .table-responsive
+{
+    overflow-x: auto;
+    width: 100%;
+}
+
+.mmr-history-l .mmr-summary-table tbody tr td:first-child
+{
+    text-align: right;
 }
 
 .em-1
