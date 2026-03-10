@@ -37,6 +37,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
+import com.nephest.battlenet.sc2.web.util.TeamLegacyUidValidationUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -467,60 +468,34 @@ public class TeamGroupIT
             .andExpect(status().isBadRequest());
     }
 
-    public static Stream<Arguments> legacyUidValidationUrls()
+    public static Stream<String> legacyUidValidationUrls()
     {
         return Stream.of
         (
-            Arguments.of("/api/teams?field=" + IdField.NAME),
-            Arguments.of("/api/teams?last")
+            "/api/teams?field=" + IdField.NAME,
+            "/api/teams?last"
         );
     }
 
-    @MethodSource("legacyUidValidationUrls")
+    public static Stream<Arguments> legacyUidInvalidValidationArgs()
+    {
+        return legacyUidValidationUrls()
+            .flatMap
+            (
+                url->TeamLegacyUidValidationUtil.invalidTeamLegacyUids()
+                    .map(uid->Arguments.of(url, uid))
+            );
+    }
+
+    @MethodSource("legacyUidInvalidValidationArgs")
     @ParameterizedTest
-    public void whenWildCardLegacyUidWithMultiplePlayers_thenBadRequest(String url)
+    public void testLegacyUidValidation(String url, TeamLegacyUid teamLegacyUid)
     throws Exception
     {
         mvc.perform(get(url)
-            .queryParam
-            (
-                "teamLegacyUid",
-                new TeamLegacyUid
-                (
-                    QueueType.LOTV_2V2,
-                    TeamType.ARRANGED,
-                    Region.EU,
-                    TeamLegacyId.standard(List.of(
-                        new TeamLegacyIdEntry(1, 2L, Race.ZERG),
-                        new TeamLegacyIdEntry(3, 4L, true)
-                    ))
-                ).toPulseString()
-            ))
+            .queryParam("teamLegacyUid", teamLegacyUid.toPulseString()))
             .andExpect(status().isBadRequest());
     }
-
-    @MethodSource("legacyUidValidationUrls")
-    @ParameterizedTest
-    public void whenLegacyUidWithInvalidIdEntryCount_thenBadRequest(String url)
-    throws Exception
-    {
-        mvc.perform(get(url)
-            .queryParam
-            (
-                "teamLegacyUid",
-                new TeamLegacyUid
-                (
-                    QueueType.LOTV_2V2,
-                    TeamType.ARRANGED,
-                    Region.EU,
-                    TeamLegacyId.standard(List.of(
-                        new TeamLegacyIdEntry(1, 2L, Race.ZERG)
-                    ))
-                ).toPulseString()
-            ))
-            .andExpect(status().isBadRequest());
-    }
-
 
     public static Stream<Arguments> testGetLastLadderTeams()
     {
