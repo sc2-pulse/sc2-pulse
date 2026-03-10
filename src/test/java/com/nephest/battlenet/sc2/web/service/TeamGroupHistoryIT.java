@@ -48,6 +48,7 @@ import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
+import com.nephest.battlenet.sc2.web.util.TeamLegacyUidValidationUtil;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -797,7 +798,7 @@ public class TeamGroupHistoryIT
     public Stream<Arguments> verifyParameterValidation()
     {
         OffsetDateTime now = SC2Pulse.offsetDateTime();
-        return Stream.of
+        Stream<Arguments> localArgs = Stream.of
         (
             Arguments.of
             (
@@ -840,6 +841,11 @@ public class TeamGroupHistoryIT
                     "to", now
                 ))
             )
+        );
+        return Stream.concat
+        (
+            localArgs,
+            TeamLegacyUidValidationUtil.invalidTeamLegacyUidValidationArgs()
         );
     }
 

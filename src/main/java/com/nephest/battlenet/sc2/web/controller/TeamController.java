@@ -174,6 +174,8 @@ public class TeamController
     public StreamingResponseBody getHistories
     (
         @RequestParam("teamLegacyUid")
+        @TeamLegacyUids
+        @Valid
         @Size(min = 1, max = TeamGroupArgumentResolver.LEGACY_UIDS_MAX)
         Set<TeamLegacyUid> teamLegacyUIds,
         @RequestParam("history") Set<TeamHistoryDAO.HistoryColumn> historyColumns,
@@ -206,6 +208,8 @@ public class TeamController
     public List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> getHistorySummaries
     (
         @RequestParam("teamLegacyUid")
+        @TeamLegacyUids
+        @Valid
         @Size(min = 1, max = TeamGroupArgumentResolver.LEGACY_UIDS_MAX)
         Set<TeamLegacyUid> teamLegacyUIds,
         @RequestParam("summary") Set<TeamHistoryDAO.SummaryColumn> summaryColumns,
