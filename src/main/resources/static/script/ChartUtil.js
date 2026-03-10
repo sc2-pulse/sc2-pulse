@@ -393,19 +393,26 @@ class ChartUtil
             : (b.index - a.index);
     }
 
+    static hideAndParkTooltip(tooltipEl)
+    {
+        tooltipEl.style.opacity = 0;
+        tooltipEl.style.left = '0px';
+        tooltipEl.style.top = '0px';
+    }
+
     static createHtmlTooltip(context)
     {
         const tooltipModel = context.tooltip;
         const tooltipEl = ChartUtil.getOrCreateTooltipElement(context.chart);
         if (tooltipModel.opacity === 0 || context.chart.config._config.customConfig.zoomModKeyDown == true) {
-            tooltipEl.style.opacity = 0;
+            ChartUtil.hideAndParkTooltip(tooltipEl);
             return;
         }
         // `this` will be the overall tooltip
         const position = context.chart.canvas.getBoundingClientRect();
         if(tooltipModel.caretX < 0 || tooltipModel.caretX > position.width
             || tooltipModel.caretY < 0 || tooltipModel.caretY > position.height) {
-            tooltipEl.style.opacity = 0;
+            ChartUtil.hideAndParkTooltip(tooltipEl);
             return;
         }
         ChartUtil.injectTooltipTableHeaders(tooltipEl, tooltipModel, context);
