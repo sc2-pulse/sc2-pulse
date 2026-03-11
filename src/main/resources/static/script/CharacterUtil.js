@@ -90,7 +90,7 @@ class CharacterUtil
     {
         const request = `${ROOT_CONTEXT_PATH}api/character/report/list/${ids.map(id=>encodeURIComponent(id)).join(",")}`;
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
@@ -119,7 +119,7 @@ class CharacterUtil
     static updateAllCharacterReportsModel(onlyUnreviewed = false)
     {
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list`))
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/character/report/list`))
             .then(Session.verifyJsonResponse)
             .then(json => Model.DATA.get(VIEW.CHARACTER_REPORTS).set("reports", CharacterUtil.filterCharacterReports(json, onlyUnreviewed)));
     }
@@ -280,7 +280,7 @@ class CharacterUtil
     static loadAdditionalCharacterLinks(id)
     {
         return Session.beforeRequest()
-           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character-links?characterId=${encodeURIComponent(id)}`))
+           .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/character-links?characterId=${encodeURIComponent(id)}`))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 500]))
            .then(links=>links ? links[0] : links);
     }
@@ -415,7 +415,7 @@ class CharacterUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/account/" + encodeURIComponent(accountId) + "/linked/external/account";
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
@@ -642,7 +642,7 @@ class CharacterUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/character/" + encodeURIComponent(id) + "/stats/full";
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
@@ -807,7 +807,7 @@ class CharacterUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/characters?query=" + encodeURIComponent(name);
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.SEARCH, json);
@@ -973,7 +973,7 @@ class CharacterUtil
     static updatePersonalCharactersModel()
     {
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/characters"))
+            .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/characters"))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json);
@@ -1226,7 +1226,7 @@ class CharacterUtil
     static voteOnEvidence(id, vote)
     {
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/vote/${id}/${vote}`, Util.addCsrfHeader({method: "POST"})))
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/character/report/vote/${id}/${vote}`, Util.addCsrfHeader({method: "POST"})))
             .then(Session.verifyJsonResponse)
     }
 
@@ -1313,7 +1313,7 @@ class CharacterUtil
     static reportCharacter(fd)
     {
         return Session.beforeRequest()
-           .then(n=>fetch(ROOT_CONTEXT_PATH + "api/character/report/new", Util.addCsrfHeader({method: "POST", body: fd})))
+           .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/character/report/new", Util.addCsrfHeader({method: "POST", body: fd})))
            .then(resp => {
                 if (!resp.ok) {
                     let desc;
@@ -1378,7 +1378,7 @@ class CharacterUtil
     {
         const reqTimestamp = Date.now();
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/characters/suggestions?query=${encodeURIComponent(term)}`))
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/characters/suggestions?query=${encodeURIComponent(term)}`))
             .then(Session.verifyResponse)
             .then(resp=>Promise.all([resp.json(), Promise.resolve(reqTimestamp)]));
     }

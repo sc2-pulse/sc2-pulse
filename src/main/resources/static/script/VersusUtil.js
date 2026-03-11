@@ -49,7 +49,7 @@ class VersusUtil
         Util.addParams(params, "type", types);
         const request = ROOT_CONTEXT_PATH + "api/versus/common?" + params.toString();
         return  Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json=>{
                 Model.DATA.get(VIEW.VERSUS).set(VIEW_DATA.SEARCH, json);
@@ -159,7 +159,7 @@ class VersusUtil
         allParams.append("mapCursor", mapCursor);
         allParams.append("regionCursor", regionCursor);
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/versus/matches?${allParams.toString()}`))
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/versus/matches?${allParams.toString()}`))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 const searchResult = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.SEARCH);

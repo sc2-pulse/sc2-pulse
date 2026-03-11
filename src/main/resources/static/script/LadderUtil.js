@@ -34,7 +34,7 @@ class LadderUtil
 
         const request = `${ROOT_CONTEXT_PATH}api/teams?` + allParams.toString();
         const ladderPromise = Session.beforeRequest()
-        .then(n=>fetch(request))
+        .then(n=>Session.fetch(request))
         .then(Session.verifyJsonResponse)
         .then(json => {
             const direction = cursor?.direction || NAVIGATION_DIRECTION.FORWARD;
@@ -101,7 +101,7 @@ class LadderUtil
     static updateMyLadderModel(formParams)
     {
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/ladder?" + formParams))
+            .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/following/ladder?" + formParams))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 const result =

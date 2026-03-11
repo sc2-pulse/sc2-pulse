@@ -10,7 +10,7 @@ class FollowUtil
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "POST"})))
+            .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "POST"})))
             .then(Session.verifyResponse)
             .then
             (
@@ -31,7 +31,7 @@ class FollowUtil
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "DELETE"})))
+            .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "DELETE"})))
             .then(Session.verifyResponse)
             .then
             (
@@ -54,7 +54,7 @@ class FollowUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following"))
+            .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/following"))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 Session.currentFollowing = json;

@@ -33,7 +33,7 @@ class ClanUtil
             ? `${ROOT_CONTEXT_PATH}api/clans?query=${encodeURIComponent(tagOrName)}`
             : `${ROOT_CONTEXT_PATH}api/clans?${searchParams.toString()}`;
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json=>ClanUtil.extractModelData(json, params, byTagOrName));
     }

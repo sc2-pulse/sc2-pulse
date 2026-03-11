@@ -175,7 +175,7 @@ class CommunityUtil
             lax
         );
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/streams?${params.toString()}`))
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/streams?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 500]))
     }
 

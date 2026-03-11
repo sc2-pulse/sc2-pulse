@@ -8,7 +8,7 @@ class MetaUtil
     {
         const request = `${ROOT_CONTEXT_PATH}api/patches?buildMin=${encodeURIComponent(buildMin)}`;
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(Session.verifyJsonResponse);
     }
 

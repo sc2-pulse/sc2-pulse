@@ -24,6 +24,11 @@ class Session
         Util.setGeneratingStatus(STATUS.ERROR, error.message, error);
     }
 
+    static fetch(url, options)
+    {
+        return Session.REQUEST_RATE_LIMITER.fetch(url, options);
+    }
+
     static beforeRequest()
     {
         return Promise.resolve();
@@ -194,7 +199,7 @@ class Session
     static getCsrf()
     {
         return Session.beforeRequest()
-           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/security/csrf`))
+           .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/security/csrf`))
            .then(Session.verifyJsonResponse);
     }
 
@@ -382,6 +387,7 @@ Session.INVALID_API_VERSION_CODE = 112233;
 Session.confirmActionText = null;
 Session.confirmAction = null;
 Session.multiValueInputSeparator = "\t";
+Session.REQUEST_RATE_LIMITER = new RequestRateLimiter();
 
 Session.sectionParams = new Map();
 
@@ -392,7 +398,7 @@ class PersonalUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         const request = ROOT_CONTEXT_PATH + "api/my/common";
         return Session.beforeRequest()
-            .then(e=>fetch(request))
+            .then(e=>Session.fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json.characters);
@@ -469,7 +475,7 @@ class PersonalUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/discord/unlink", Util.addCsrfHeader({method: "POST"})))
+            .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/discord/unlink", Util.addCsrfHeader({method: "POST"})))
             .then(Session.verifyResponse)
             .then(Session.getMyInfo)
             .then(Util.successStatusPromise)
@@ -480,7 +486,7 @@ class PersonalUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/discord/public/" + evt.target.checked, Util.addCsrfHeader({method: "POST"})))
+            .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/discord/public/" + evt.target.checked, Util.addCsrfHeader({method: "POST"})))
             .then(Session.verifyResponse)
             .then(Session.getMyInfo)
             .then(Util.successStatusPromise)

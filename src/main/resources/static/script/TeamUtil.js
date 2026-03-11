@@ -548,7 +548,7 @@ class TeamUtil
     static getTeams(params)
     {
         return Session.beforeRequest()
-           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/teams?${params.toString()}`))
+           .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/teams?${params.toString()}`))
            .then(Session.verifyJsonResponse);
     }
 
@@ -676,7 +676,7 @@ class TeamUtil
         const request = ROOT_CONTEXT_PATH + "api/team-histories?" + params.toString();
 
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse);
     }
 
@@ -687,7 +687,7 @@ class TeamUtil
         const request = ROOT_CONTEXT_PATH + "api/team-history-summaries?" + params.toString();
 
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse);
     }
 
@@ -698,7 +698,7 @@ class TeamUtil
         const request = ROOT_CONTEXT_PATH + "api/teams?" + params.toString();
 
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse);
     }
 

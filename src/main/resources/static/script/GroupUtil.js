@@ -15,7 +15,7 @@ class GroupUtil
         }
         const request = `${ROOT_CONTEXT_PATH}api/entities?${groupParams.toString()}`;
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(Session.verifyJsonResponse)
            .then(json=>{
                 if(cache) {
@@ -142,7 +142,7 @@ class GroupUtil
     {
         const request = `${ROOT_CONTEXT_PATH}api/character-teams?${params.toString()}`;
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(Session.verifyJsonResponse);
     }
 
@@ -197,7 +197,7 @@ class GroupUtil
     {
         const request = `${ROOT_CONTEXT_PATH}api/characters?${groupParams.toString()}`;
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
@@ -218,7 +218,7 @@ class GroupUtil
     {
         const request = `${ROOT_CONTEXT_PATH}api/character-matches?${params.toString()}`;
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(Session.verifyJsonResponse);
     }
 
@@ -308,7 +308,7 @@ class GroupUtil
     {
         const request = `${ROOT_CONTEXT_PATH}api/clan-histories?${params.toString()}`;
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(Session.verifyJsonResponse);
     }
 
@@ -360,7 +360,7 @@ class GroupUtil
     {
         const request = `${ROOT_CONTEXT_PATH}api/character-links?${params.toString()}`;
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(resp=>Session.verifyJsonResponse(resp, [200, 500]));
     }
 

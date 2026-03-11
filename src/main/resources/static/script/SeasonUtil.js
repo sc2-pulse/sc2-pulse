@@ -21,7 +21,7 @@ class SeasonUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/seasons"))
+            .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/seasons"))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 SeasonUtil.updateSeasons(json);
@@ -101,7 +101,7 @@ class SeasonUtil
     {
         const request = `${ROOT_CONTEXT_PATH}api/season/state/${searchParams.get("to")}/${searchParams.get("period")}`;
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 Model.DATA.get(VIEW.ONLINE).set(VIEW_DATA.SEARCH, json);

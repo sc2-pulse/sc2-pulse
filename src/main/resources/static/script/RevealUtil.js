@@ -77,7 +77,7 @@ class RevealUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/reveal/${accountId}/${proPlayerId}`, Util.addCsrfHeader({method: method})))
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/reveal/${accountId}/${proPlayerId}`, Util.addCsrfHeader({method: method})))
             .then(Session.verifyResponse)
             .then(o=>Util.setGeneratingStatus(STATUS.SUCCESS))
             .catch(error=>Session.onPersonalException(error));
@@ -101,7 +101,7 @@ class RevealUtil
         const fd = new FormData();
         fd.set("url", url);
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/reveal/import`, Util.addCsrfHeader({method: 'POST', body: fd})))
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/reveal/import`, Util.addCsrfHeader({method: 'POST', body: fd})))
             .then(Session.verifyJsonResponse);
     }
 
@@ -147,7 +147,7 @@ class RevealUtil
     static saveProPlayer(data)
     {
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/reveal/player/edit`, Util.addCsrfHeader({
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/reveal/player/edit`, Util.addCsrfHeader({
                 method: "POST",
                 body: JSON.stringify(data),
                 headers: {"Content-Type": "application/json"}})))
@@ -226,7 +226,7 @@ class RevealUtil
         if(excludeSystemAuthor != null) params.append("excludeSystemAuthor", excludeSystemAuthor);
 
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/reveal/log?${params.toString()}`))
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/reveal/log?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
@@ -262,7 +262,7 @@ class RevealUtil
     static getRevealers()
     {
          return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/user/role/REVEALER`))
+            .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/user/role/REVEALER`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 

@@ -11,7 +11,7 @@ class VODUtil
         cursorParams.append("vod", "");
         const request = `${ROOT_CONTEXT_PATH}api/matches?${cursorParams.toString()}`;
         return Session.beforeRequest()
-           .then(n=>fetch(request))
+           .then(n=>Session.fetch(request))
            .then(Session.verifyJsonResponse);
     }
 

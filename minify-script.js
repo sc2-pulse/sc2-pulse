@@ -6,6 +6,7 @@ const root = 'target/js';
 const orderedFiles = [
     root + '/LuxonConfig.js',
     root + '/IntervalExecutor.js',
+    root + '/RequestRateLimiter.js',
     root + '/SortParameter.js',
     root + '/Cursor.js',
     root + '/Util.js',

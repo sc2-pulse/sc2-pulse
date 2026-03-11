@@ -50,7 +50,7 @@ class StatsUtil
         webParams.append("teamType", EnumUtil.enumOfFullName(params.get("teamType"), TEAM_TYPE).fullName);
         const request = `${ROOT_CONTEXT_PATH}api/stats/player-base?${webParams.toString()}`;
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.QUEUE_STATS, json);
@@ -199,7 +199,7 @@ class StatsUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/stats/activity?" + formParams;
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json => json);
     }
@@ -208,7 +208,7 @@ class StatsUtil
     {
         const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/league/${urlParams.get('season')}/${urlParams.get('queue')}/${urlParams.get('teamType')}/${urlParams.getAll("region").join(',')}/${urlParams.getAll("league").join(',')}`;
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json => json);
     }
@@ -501,7 +501,7 @@ class StatsUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/tier-thresholds?" + formParams;
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LEAGUE_BOUNDS, json);
@@ -615,7 +615,7 @@ class StatsUtil
         races.forEach(race=>urlParams.append("race", race.fullName));
         const request = `${ROOT_CONTEXT_PATH}api/stats/balance-reports?${urlParams.toString()}`;
         return Session.beforeRequest()
-            .then(n=>fetch(request))
+            .then(n=>Session.fetch(request))
             .then(Session.verifyJsonResponse);
     }
 
