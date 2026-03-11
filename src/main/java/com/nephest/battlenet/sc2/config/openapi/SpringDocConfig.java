@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.openapi;
@@ -94,9 +94,13 @@ public class SpringDocConfig
                     * Only 1v1 teams have races, the race is null in other team formats,
                     i.e. `member1Realm.member1BnetId.`
                     * The wildcard race `*` can be used for solo teams.
-                    ## Rate limit
-                    See `RateLimit-Limit` HTTP header to check current rate limits. The limit
-                    refreshes every second. Other HTTP headers are not supported.
+                    ## Request rate limit
+                    The request rate limiter uses a token bucket algorithm. Any API request costs
+                    1 token(this may be changed in the future). You start with a full bucket.
+                    ### HTTP headers
+                    * `RateLimit-Burst`: bucket capacity(max tokens)
+                    * `RateLimit-Reset`: interval in seconds at which new tokens are added
+                    * `RateLimit-Limit`: amount of tokens added in each interval/update
                     ## Common ids
                     ### Regions
                     %1$s
