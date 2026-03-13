@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -40,6 +41,14 @@ implements WebMvcConfigurer
         //add /static prefix to static resource URLs
         registry.addResourceHandler("/static/**")
             .addResourceLocations(webProperties.getResources().getStaticLocations());
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/static/script/shared/**")
+            .allowedOrigins("*")
+            .allowedMethods("GET", "OPTIONS")
+            .allowedHeaders("*");
     }
 
     @Override
