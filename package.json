@@ -4,7 +4,8 @@
   "scripts": {
     "set-exact-versions": "npm config set save-exact true",
     "babel-build": "babel src/main/resources/static/script --out-dir target/js",
-    "minify": "node minify-script.js"
+    "minify": "node minify-script.js",
+    "util-build": "node util-build.mjs"
   },
   "devDependencies": {
     "@babel/cli": "7.27.2",

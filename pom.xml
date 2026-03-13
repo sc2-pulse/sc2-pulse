@@ -391,6 +391,16 @@
                                     <arguments>run minify</arguments>
                                 </configuration>
                             </execution>
+                            <execution>
+                                <id>util-build</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>run util-build</arguments>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
                 </plugins>

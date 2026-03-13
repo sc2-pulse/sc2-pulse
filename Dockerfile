@@ -15,7 +15,7 @@ RUN mvn -P prod com.github.eirslett:frontend-maven-plugin:npm@npm-install
 # Build stage
 FROM dependency AS build
 COPY src src
-COPY babel.config.json minify-script.js version.properties .
+COPY babel.config.json minify-script.js util-build.mjs version.properties .
 RUN mvn -P prod clean package -DskipTests -Drevision=$(cat version.properties | grep revision | cut -d'=' -f2)
 
 # Run stage
