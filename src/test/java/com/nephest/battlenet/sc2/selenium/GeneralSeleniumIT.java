@@ -507,11 +507,18 @@ public class GeneralSeleniumIT
         getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
     }
 
+    public static void waitForInvisibilityOfLoadingScreen(WebDriverWait wait)
+    {
+        wait.until(invisibilityOfElementLocated(By.id("status-generating-fullscreen")));
+    }
+
     public static void clickAndWait(WebDriver driver, WebDriverWait wait, String clickSelector, String waitSelector)
     {
+        waitForInvisibilityOfLoadingScreen(wait);
         WebElement e = driver.findElement(By.cssSelector(clickSelector));
         waitToBeClickableAndClick(wait, e);
         wait.until(presenceOfElementLocated(By.cssSelector(waitSelector)));
+        waitForInvisibilityOfLoadingScreen(wait);
     }
 
     public static void waitToBeClickableAndClick(WebDriverWait wait, WebElement element)
