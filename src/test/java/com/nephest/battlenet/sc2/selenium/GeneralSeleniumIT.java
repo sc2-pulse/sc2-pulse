@@ -277,7 +277,7 @@ public class GeneralSeleniumIT
                 + "'"
         );
         clickAndWait(driver, wait, "#form-online button[type=\"submit\"]", "#online-data:not(.d-none)");
-        clickCanvases(driver, "#online-data");
+        clickCanvases(driver, wait, "#online-data");
         checkJsErrors();
     }
 
@@ -498,7 +498,7 @@ public class GeneralSeleniumIT
                 clickAndWait(driver, wait, "#" + l.getAttribute("id") , contentId +  ".show.active");
                 waitForDynamicContent(driver, wait, contentId);
                 toggleInputs(driver, contentId);
-                clickCanvases(driver, contentId);
+                clickCanvases(driver, wait, contentId);
             });
     }
 
@@ -627,9 +627,10 @@ public class GeneralSeleniumIT
         toggleRadios(driver.findElements(By.cssSelector(containerSelector + " input[type=\"radio\"]")));
     }
 
-    public static void clickCanvases(WebDriver driver, String containerSelector)
+    public static void clickCanvases(WebDriver driver, WebDriverWait wait, String containerSelector)
     {
-        driver.findElements(By.cssSelector(containerSelector + " section:not(.d-none) canvas")).forEach(WebElement::click);
+        driver.findElements(By.cssSelector(containerSelector + " section:not(.d-none) canvas"))
+            .forEach(webElement->waitToBeClickableAndClick(wait, webElement));
     }
 
     public static void togglePopovers
