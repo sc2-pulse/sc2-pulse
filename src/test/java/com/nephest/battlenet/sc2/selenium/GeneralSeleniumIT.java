@@ -99,37 +99,52 @@ public class GeneralSeleniumIT
     )
     throws Exception
     {
-        BROWSER_CONTAINER
-            = new BrowserWebDriverContainer(seleniumImageName);
-        driver = initDriver(seleniumImageName, headless);
-        wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
-        js = (JavascriptExecutor) driver;
         port = webServerAppCtxt.getWebServer().getPort();
         root = "http://" + testContainersHost + ":" + port;
+        BROWSER_CONTAINER
+            = new BrowserWebDriverContainer(seleniumImageName);
+        driver = initDriver(seleniumImageName, headless, testContainersHost, root);
+        wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
+        js = (JavascriptExecutor) driver;
         DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
-    private static WebDriver initDriver(String seleniumImageName, boolean headless)
+    private static WebDriver initDriver
+    (
+        String seleniumImageName,
+        boolean headless,
+        String testContainersHost,
+        String root
+    )
     {
         BROWSER_CONTAINER.start();
         return new RemoteWebDriver
         (
             BROWSER_CONTAINER.getSeleniumAddress(),
-            getCapabilities(seleniumImageName, headless)
+            getCapabilities(seleniumImageName, headless, testContainersHost, root)
         );
     }
 
-    public static Capabilities getCapabilities(String seleniumImageName, boolean headless)
+    public static Capabilities getCapabilities
+    (
+        String seleniumImageName,
+        boolean headless,
+        String testContainersHost,
+        String root
+    )
     {
         String seleniumImageNameLower = seleniumImageName.toLowerCase();
-        if(seleniumImageNameLower.contains("firefox")) return getFirefoxCapabilities(headless);
-        if(seleniumImageNameLower.contains("chrome")) return getChromeCapabilities(headless);
+        if(seleniumImageNameLower.contains("firefox"))
+            return getFirefoxCapabilities(headless, testContainersHost);
+        if(seleniumImageNameLower.contains("chrome"))
+            return getChromeCapabilities(headless, root);
         return new MutableCapabilities();
     }
 
-    public static Capabilities getChromeCapabilities(boolean headless)
+    public static Capabilities getChromeCapabilities(boolean headless, String root)
     {
         ChromeOptions options = new ChromeOptions();
+        options.addArguments("--unsafely-treat-insecure-origin-as-secure=" + root);
         if(headless)
         {
             options.addArguments("--headless=new");
@@ -138,9 +153,11 @@ public class GeneralSeleniumIT
         return options;
     }
 
-    public static Capabilities getFirefoxCapabilities(boolean headless)
+    public static Capabilities getFirefoxCapabilities(boolean headless, String testContainersHost)
     {
         FirefoxOptions options = new FirefoxOptions();
+        options.addPreference("dom.securecontext.allowlist", testContainersHost)
+            .addPreference("security.mixed_content.upgrade_display_content", false);
         if(headless)
         {
             options.addArguments("--headless");
