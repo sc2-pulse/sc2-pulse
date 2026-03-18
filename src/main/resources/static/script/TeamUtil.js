@@ -466,6 +466,13 @@ class TeamUtil
     {
         if(searchParams == null) searchParams = TeamUtil.getTeamMmrHistoryParams(Array.from(BufferUtil.teamBuffer.buffer.values()));
         Model.DATA.get(VIEW.TEAM_MMR).set(VIEW_DATA.VAR, {searchParams: searchParams});
+        const teamLegacyUidCount = searchParams.getAll("teamLegacyUid")?.length || 0;
+        if(teamLegacyUidCount < 1 || teamLegacyUidCount > TeamUtil.MMR_HISTORY_TEAM_LEGACY_UID_COUNT_MAX) {
+            Session.onPersonalException(new Error("Invalid teamLegacyUid count: " + teamLegacyUidCount
+                + ", expected: 1-" + TeamUtil.MMR_HISTORY_TEAM_LEGACY_UID_COUNT_MAX))
+            return Promise.resolve();
+        }
+
         const stringParams = searchParams.toString();
         const params = {params: stringParams};
         return TeamUtil.getTeamGroup(null, searchParams.getAll("teamLegacyUid"), null, null, true)
@@ -807,6 +814,7 @@ TeamUtil.TEAM_SEARCH_MMR_OFFSET = 50;
 TeamUtil.TEAM_SEARCH_GAMES_OFFSET = 2;
 TeamUtil.TEAM_ONLINE_DURATION = 60 * 40 * 1000;
 TeamUtil.TEAM_OLD_DURATION = 60 * 60 * 24 * 14 * 1000;
+TeamUtil.MMR_HISTORY_TEAM_LEGACY_UID_COUNT_MAX = 500;
 TeamUtil.MMR_HISTORY = new MmrHistory
 (
     "team-mmr",
