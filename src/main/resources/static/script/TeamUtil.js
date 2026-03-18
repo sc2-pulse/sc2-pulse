@@ -494,7 +494,7 @@ class TeamUtil
 
     static generateTeamMmrTitle(params, hash, maxTeams = 3)
     {
-        const teams = Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH).result;
+        const teams = Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH)?.result;
         if(!teams  || teams.length == 0) return "Team MMR history";
 
         const groups = [];
@@ -507,7 +507,7 @@ class TeamUtil
 
     static generateTeamMmrDescription(params, hash)
     {
-        const histories = TeamUtil.MMR_HISTORY.mmrHistory?.history.data;
+        const histories = TeamUtil.MMR_HISTORY.mmrHistory?.history?.data;
         if(!histories  || histories.length == 0) return "Complete team MMR history";
 
         let count = 0;
