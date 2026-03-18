@@ -576,9 +576,10 @@ class MmrHistory
             || historyData?.completeTimestamps?.has(historyData.history[TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP.fullName][index]);
     }
 
-    updateHistoryWithCompleteData(from)
+    updateHistoryWithCompleteData(date)
     {
-        const to = new Date(from.valueOf() + 1000);
+        const from = new Date(date.getFullYear(), 0);
+        const to = new Date(date.getFullYear() + 1, 0);
 
         return TeamUtil.getHistory(
             this.mmrHistory.parameters.queueData.legacyUids,
@@ -597,12 +598,12 @@ class MmrHistory
             });
     }
 
-    requeueUpdateHistoryWithCompleteData(from, then)
+    requeueUpdateHistoryWithCompleteData(date, then)
     {
         return ElementUtil.clearAndSetInputTimeout(this.completePointTaskName,
             then != null
-                ? ()=>this.updateHistoryWithCompleteData(from).then(then)
-                : ()=>this.updateHistoryWithCompleteData(from),
+                ? ()=>this.updateHistoryWithCompleteData(date).then(then)
+                : ()=>this.updateHistoryWithCompleteData(date),
             this.completePointTimeout);
     }
 
@@ -612,10 +613,10 @@ class MmrHistory
         const historyData = data.history[header];
         const history = historyData.history;
         const historyIx = Object.values(data.index)[ix1][header];
-        const from = new Date(history[TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP.fullName][historyIx] * 1000);
+        const date = new Date(history[TEAM_HISTORY_HISTORY_COLUMN.TIMESTAMP.fullName][historyIx] * 1000);
         ElementUtil.clearInputTimeout(this.completePointTaskName);
         if(!MmrHistory.isHistoryEntryComplete(historyData, historyIx))
-            this.requeueUpdateHistoryWithCompleteData(from, ()=>ChartUtil.CHARTS.get(`${this.domPrefix}-table`).tooltip.update(true, false));
+            this.requeueUpdateHistoryWithCompleteData(date, ()=>ChartUtil.CHARTS.get(`${this.domPrefix}-table`).tooltip.update(true, false));
         const lines = [];
         lines.push(history[TEAM_HISTORY_HISTORY_COLUMN.SEASON.fullName]?.[historyIx] || MmrHistory.MMR_HISTORY_PLACEHOLDER);
         lines.push(MmrHistory.createHistoryLeague(
