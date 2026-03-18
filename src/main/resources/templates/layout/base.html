@@ -194,6 +194,9 @@
             .substring(1, ALTERNATIVE_UPDATE_REGIONS_STR.length - 1)
             .replace(/ /g, '')
             .split(",");
+        const TEAM_ID_COUNT_MAX = /*[[${T(com.nephest.battlenet.sc2.web.controller.TeamController).TEAMS_LIMIT}]]*/ '';
+        const TEAM_LEGACY_UID_COUNT_MAX = /*[[${T(com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver).LEGACY_UIDS_MAX}]]*/ '';
+        const LAST_TEAM_LEGACY_UID_COUNT_MAX = /*[[${T(com.nephest.battlenet.sc2.web.controller.TeamController).LAST_TEAM_IN_GROUP_LEGACY_UID_COUNT_MAX}]]*/ '';
         const MATCH_BATCH_SIZE = /*[[${@ladderMatchDAO.getResultsPerPage()}]]*/ '';
         const MATCH_DURATION_OFFSET = /*[[${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).DURATION_OFFSET}]]*/ '';
         const CLAN_STATS_DEPTH_DAYS = /*[[${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_DEPTH_DAYS}]]*/ '';

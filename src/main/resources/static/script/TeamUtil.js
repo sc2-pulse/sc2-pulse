@@ -671,7 +671,12 @@ class TeamUtil
         return params;
     }
 
-    static getHistory(legacyUids, from, to, historyColumns)
+    static getHistory(legacyUids, from, to, historyColumns, batchSize = TEAM_LEGACY_UID_COUNT_MAX)
+    {
+        return Util.batchExecute(legacyUids, batchSize, batch=>TeamUtil.getHistoryBatch(batch, from, to, historyColumns));
+    }
+
+    static getHistoryBatch(legacyUids, from, to, historyColumns)
     {
         const params = TeamUtil.createHistoryParams(legacyUids, from, to);
         if(historyColumns) historyColumns.forEach(h=>params.append("history", h.fullName));
@@ -682,7 +687,12 @@ class TeamUtil
             .then(Session.verifyJsonResponse);
     }
 
-    static getHistorySummary(legacyUids, from, to, summaryColumns)
+    static getHistorySummary(legacyUids, from, to, summaryColumns, batchSize = TEAM_LEGACY_UID_COUNT_MAX)
+    {
+        return Util.batchExecute(legacyUids, batchSize, batch=>TeamUtil.getHistorySummaryBatch(batch, from, to, summaryColumns));
+    }
+
+    static getHistorySummaryBatch(legacyUids, from, to, summaryColumns)
     {
         const params = TeamUtil.createHistoryParams(legacyUids, from, to);
         if(summaryColumns) summaryColumns.forEach(s=>params.append("summary", s.fullName));
@@ -693,7 +703,23 @@ class TeamUtil
             .then(Session.verifyJsonResponse);
     }
 
-    static getTeamGroup(ids, legacyUids, fromSeason, toSeason, last)
+    static async getTeamGroup(ids, legacyUids, fromSeason, toSeason, last,
+        idBatchSize = TEAM_ID_COUNT_MAX,
+        legacyUidBatchSize = last === true ? LAST_TEAM_LEGACY_UID_COUNT_MAX : TEAM_LEGACY_UID_COUNT_MAX
+    )
+    {
+        return (ids != null
+            ? await Util.batchExecute(ids, idBatchSize,
+                batch=>TeamUtil.getTeamGroupBatch(batch, null, fromSeason, toSeason, last))
+            : []
+        ).concat(legacyUids != null
+            ? await Util.batchExecute(legacyUids, legacyUidBatchSize,
+                batch=>TeamUtil.getTeamGroupBatch(null, batch, fromSeason, toSeason, last))
+            : []
+        )
+    }
+
+    static getTeamGroupBatch(ids, legacyUids, fromSeason, toSeason, last)
     {
         const params = TeamUtil.createTeamGroupBaseParams(ids, legacyUids, fromSeason, toSeason);
         if(last != null) params.append("last", last);
