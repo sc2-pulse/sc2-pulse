@@ -485,15 +485,17 @@ class TeamUtil
             .catch(error => Session.onPersonalException(error));
     }
 
-    static generateTeamMmrTitle(params, hash)
+    static generateTeamMmrTitle(params, hash, maxTeams = 3)
     {
         const teams = Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH).result;
         if(!teams  || teams.length == 0) return "Team MMR history";
 
         const groups = [];
-        for(const team of teams) groups.push(TeamUtil.generateTeamName(team, false));
+        for(let i = 0; i < Math.min(teams.length, maxTeams); i++) groups.push(TeamUtil.generateTeamName(teams[i], false));
 
-        return `${groups.join(" | ")} team MMR history`;
+        return groups.join(" | ")
+        + (groups.length != teams.length ? (" | +" + (teams.length - groups.length)) : "")
+        + " team MMR history";
     }
 
     static generateTeamMmrDescription(params, hash)
