@@ -36,7 +36,7 @@ class Util
         return params;
     }
 
-    static setGeneratingStatus(status, errorText = "Error", error = null)
+    static setGeneratingStatus(status, errorText = "Error", error = null, invalidatePageOnError = false)
     {
         switch(status)
         {
@@ -52,7 +52,7 @@ class Util
                 Session.currentRequests--;
                 if(status === STATUS.ERROR)
                 {
-                    Util.showGlobalError(error != null ? error : {message: errorText});
+                    Util.showGlobalError(error != null ? error : {message: errorText}, invalidatePageOnError);
                 }
                 if(Session.currentRequests > 0) return;
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
@@ -62,10 +62,10 @@ class Util
         }
     }
 
-    static showGlobalError(error)
+    static showGlobalError(error, invalidatePage = false)
     {
         if(DEBUG == true) console.log(error);
-        document.body.classList.add("js-error-detected");
+        Session.onError(error, invalidatePage);
         document.getElementById("error-generation-text").textContent = Util.ERROR_MESSAGES.get(error.message.trim()) || error.message;
         if(!Session.isSilent) $("#error-generation").modal();
     }
@@ -487,12 +487,13 @@ class Util
         return String.fromCodePoint(...codePoints);
     }
 
-    static load(container, lazyPromise, showErrors = false)
+    static load(container, lazyPromise, showErrors = false, invalidatePageOnError = false)
     {
-        return ElementUtil.executeTask(container.id, ()=>Util.doLoad(container, lazyPromise, showErrors));
+        return ElementUtil.executeTask(container.id,
+            ()=>Util.doLoad(container, lazyPromise, showErrors, invalidatePageOnError));
     }
 
-    static doLoad(container, lazyPromise, showErrors = false)
+    static doLoad(container, lazyPromise, showErrors = false, invalidatePageOnError = false)
     {
         if(container.classList.contains(LOADING_STATUS.COMPLETE.className)
             || container.classList.contains(LOADING_STATUS.IN_PROGRESS.className)) return Promise.resolve();
@@ -508,14 +509,18 @@ class Util
                         && ElementUtil.rectContainsRect(
                             ElementUtil.getInfiniteScrollViewportRect(),
                             infiniteScrollElem.getBoundingClientRect()))
-                                return Util.doLoad(container, lazyPromise, showErrors);
+                                return Util.doLoad(container, lazyPromise, showErrors, invalidatePageOnError);
                 }
                 return result;
             })
             .catch(error=>{
                 ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR);
                 if(DEBUG == true && !showErrors) console.log(error);
-                if(showErrors) Util.showGlobalError(error);
+                if(showErrors) {
+                    Util.showGlobalError(error, invalidatePageOnError);
+                } else {
+                    Session.onError(error, invalidatePageOnError);
+                }
             });
     }
 

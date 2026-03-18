@@ -469,7 +469,7 @@ class TeamUtil
         const teamLegacyUidCount = searchParams.getAll("teamLegacyUid")?.length || 0;
         if(teamLegacyUidCount < 1 || teamLegacyUidCount > TeamUtil.MMR_HISTORY_TEAM_LEGACY_UID_COUNT_MAX) {
             Session.onPersonalException(new Error("Invalid teamLegacyUid count: " + teamLegacyUidCount
-                + ", expected: 1-" + TeamUtil.MMR_HISTORY_TEAM_LEGACY_UID_COUNT_MAX))
+                + ", expected: 1-" + TeamUtil.MMR_HISTORY_TEAM_LEGACY_UID_COUNT_MAX), true)
             return Promise.resolve();
         }
 

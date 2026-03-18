@@ -15,13 +15,13 @@ class Session
             });
     }
 
-    static onPersonalException(error)
+    static onPersonalException(error, invalidatePage = false)
     {
         if(error.message.startsWith(Session.INVALID_API_VERSION_CODE)) {
             Session.updateApplicationVersion();
             return;
         }
-        Util.setGeneratingStatus(STATUS.ERROR, error.message, error);
+        Util.setGeneratingStatus(STATUS.ERROR, error.message, error, invalidatePage);
     }
 
     static fetch(url, options)
@@ -351,6 +351,16 @@ class Session
     static isAuthenticated()
     {
         return AUTHENTICATED == "anonymousUser" || AUTHENTICATED == "" || AUTHENTICATED == null ? false : true;
+    }
+
+    static onError(error, invalidatePage = false)
+    {
+        if(invalidatePage && !Array.from(document.head.children)
+            .some(header=>header.tagName == "meta" && header.getAttribute("name") == "robots")
+        )
+            document.head.appendChild(ElementUtil.createElement(
+                "meta", null, null, null, [["name", "robots"], ["content", "noindex, nofollow"]]));
+        document.body.classList.add("js-error-detected");
     }
 
 }
