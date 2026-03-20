@@ -301,7 +301,7 @@ class GroupUtil
         Util.resetLoadingIndicator(section);
         const view = ViewUtil.getView(section);
         ElementUtil.removeChildren(section.querySelector(":scope .matches tbody"));
-        Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = [];
+        delete Model.DATA.get(view).get(VIEW_DATA.SEARCH)?.matches;
     }
 
     static getClanHistory(params)
