@@ -116,7 +116,7 @@ class MmrHistory
             Util.DATE_TIME_FORMAT.format(parameters.from)
             + " - " + Util.DATE_TIME_FORMAT.format(parameters.to)
         );
-        lines.push(this.mmrHistory.history.stats.length + " entries");
+        lines.push((this.mmrHistory.history?.stats?.length || 0) + " entries");
         return "(" + lines.join(", ") + ")";
     }
 
