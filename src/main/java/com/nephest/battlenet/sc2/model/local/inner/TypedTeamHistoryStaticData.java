@@ -11,7 +11,7 @@ import com.nephest.battlenet.sc2.config.convert.jackson.UpperSnakeCaseStrategy;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record TypedTeamHistoryStaticData
 (
-    String teamLegacyUid
+    String legacyUid
 )
 implements TeamHistoryStaticData
 {

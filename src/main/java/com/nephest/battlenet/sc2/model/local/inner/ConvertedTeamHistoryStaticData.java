@@ -18,7 +18,7 @@ public record ConvertedTeamHistoryStaticData
 (
     @JsonSerialize(converter = TeamLegacyUidToStringConverter.class)
     @JsonDeserialize(converter = StringToTeamLegacyIdConverter.class)
-    TeamLegacyUid teamLegacyUid
+    TeamLegacyUid legacyUid
 )
 implements TeamHistoryStaticData
 {
@@ -31,7 +31,7 @@ implements TeamHistoryStaticData
     {
         return new ConvertedTeamHistoryStaticData
         (
-            conversionService.convert(typed.teamLegacyUid(), TeamLegacyUid.class)
+            conversionService.convert(typed.legacyUid(), TeamLegacyUid.class)
         );
     }
 

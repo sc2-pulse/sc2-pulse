@@ -187,7 +187,7 @@ public class Summary1v1Command
         Map<TeamLegacyUid, LadderTeam> teams = ladderSearchDAO.findLegacyTeams
         (
             summaries.stream()
-                .map(s->s.staticData().teamLegacyUid())
+                .map(s->s.staticData().legacyUid())
                 .collect(Collectors.toSet()),
             false
         )
@@ -258,7 +258,7 @@ public class Summary1v1Command
             appendSummary
             (
                 description,
-                summaryData.teams().get(summary.staticData().teamLegacyUid()),
+                summaryData.teams().get(summary.staticData().legacyUid()),
                 summary,
                 discordBootstrap,
                 evt,
@@ -295,7 +295,7 @@ public class Summary1v1Command
             .append(" ").append(discordBootstrap.getRaceEmojiOrName
             (
                 evt,
-                summary.staticData().teamLegacyUid().getId().getEntries().get(0).race())
+                summary.staticData().legacyUid().getId().getEntries().get(0).race())
             )
             .append(" | **`")
             .append(String.format("%" + gamesDigits + "d", summary.summary().games()))
