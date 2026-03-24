@@ -18,6 +18,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import org.springframework.web.servlet.resource.WebJarsResourceResolver;
 
 @Configuration
 public class MVCConfig
@@ -41,12 +42,20 @@ implements WebMvcConfigurer
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry)
     {
+        CacheControl cacheControl = CacheControl.maxAge(Duration.ofDays(365)).mustRevalidate();
+
         //add /static prefix to static resource URLs
         registry.addResourceHandler("/static/**")
             .addResourceLocations(webProperties.getResources().getStaticLocations())
-            .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)).mustRevalidate())
+            .setCacheControl(cacheControl)
             .resourceChain(true)
             .addResolver(new VersionResourceResolver().addContentVersionStrategy("/**"));
+
+        registry.addResourceHandler("/webjars/**")
+            .addResourceLocations("classpath:/META-INF/resources/webjars/")
+            .setCacheControl(cacheControl)
+            .resourceChain(true)
+            .addResolver(new WebJarsResourceResolver());
     }
 
     @Override

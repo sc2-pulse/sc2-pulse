@@ -8,7 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,15 +25,16 @@ public class MvcIT
     @Autowired
     private MockMvc mvc;
 
-    @Test
-    public void staticResourcesMustHaveCacheControl()
+    @CsvSource
+    ({
+        "/static/sc2.css, text/css",
+        "/webjars/bootstrap/css/bootstrap.min.css, text/css"
+    })
+    @ParameterizedTest
+    public void staticResourcesMustHaveCacheControl(String url, String contentType)
     throws Exception
     {
-        mvc.perform
-        (
-            get("/static/sc2.css")
-                .contentType("text/css")
-        )
+        mvc.perform(get(url).contentType(contentType))
             .andExpect(status().isOk())
             // 1 year cache
             .andExpect(header().string("Cache-Control", "max-age=31536000, must-revalidate"));
