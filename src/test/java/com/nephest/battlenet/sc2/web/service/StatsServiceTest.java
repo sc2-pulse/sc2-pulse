@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -45,6 +45,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.web.SeasonService;
@@ -100,6 +101,9 @@ public class StatsServiceTest
 
     @Mock
     private TeamStateDAO teamStateDAO;
+
+    @Mock
+    private TeamHistoryDAO teamHistoryDAO;
 
     @Mock
     private AccountDAO accountDao;
@@ -162,6 +166,7 @@ public class StatsServiceTest
             teamDao,
             fastTeamDAO,
             teamStateDAO,
+            teamHistoryDAO,
             accountDao,
             playerCharacterDao,
             teamMemberDao,

@@ -29,6 +29,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
@@ -47,6 +48,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.LogUtil;
@@ -348,6 +350,7 @@ public class StatsService
     private final Map<Region, LongVar> partialUpdates2 = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdateIndexes = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdateIndexes2 = new EnumMap<>(Region.class);
+    private TimerVar teamHistorySyncTask;
     private final PendingLadderData pendingLadderData = new PendingLadderData();
     private final List<Map<Region, LadderUpdateTaskContext<Void>>> pendingContexts =
         new ArrayList<>();
@@ -361,6 +364,7 @@ public class StatsService
     private TeamDAO teamDao;
     private FastTeamDAO fastTeamDAO;
     private TeamStateDAO teamStateDAO;
+    private TeamHistoryDAO teamHistoryDAO;
     private AccountDAO accountDao;
     private PlayerCharacterDAO playerCharacterDao;
     private TeamMemberDAO teamMemberDao;
@@ -391,6 +395,7 @@ public class StatsService
         TeamDAO teamDao,
         FastTeamDAO fastTeamDAO,
         TeamStateDAO teamStateDAO,
+        TeamHistoryDAO teamHistoryDAO,
         AccountDAO accountDao,
         PlayerCharacterDAO playerCharacterDao,
         TeamMemberDAO teamMemberDao,
@@ -417,6 +422,7 @@ public class StatsService
         this.teamDao = teamDao;
         this.fastTeamDAO = fastTeamDAO;
         this.teamStateDAO = teamStateDAO;
+        this.teamHistoryDAO = teamHistoryDAO;
         this.accountDao = accountDao;
         this.playerCharacterDao = playerCharacterDao;
         this.teamMemberDao = teamMemberDao;
@@ -437,6 +443,14 @@ public class StatsService
     @PostConstruct
     public void init()
     {
+        teamHistorySyncTask = new TimerVar
+        (
+            varDAO,
+            "ladder.team.history.sync.timer.timestamp",
+            false,
+            Duration.ofMinutes(55),
+            teamHistoryDAO::trySync
+        );
         for(Region region : Region.values())
         {
             forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced", false));
@@ -457,7 +471,8 @@ public class StatsService
                 partialUpdates.values().stream(),
                 partialUpdates2.values().stream(),
                 partialUpdateIndexes.values().stream(),
-                partialUpdateIndexes2.values().stream()
+                partialUpdateIndexes2.values().stream(),
+                Stream.of(teamHistorySyncTask)
             )
                 .flatMap(Function.identity())
                 .map(var->(Var<?>) var)
@@ -600,6 +615,7 @@ public class StatsService
         takePopulationSnapshot(pending.getStatsUpdates());
         process(pending);
         process(altPending);
+        teamHistorySyncTask.runIfAvailable().block();
         eventService.createLadderUpdateEvent(new LadderUpdateData(
             allStats, List.of(pending, altPending), contexts));
     }

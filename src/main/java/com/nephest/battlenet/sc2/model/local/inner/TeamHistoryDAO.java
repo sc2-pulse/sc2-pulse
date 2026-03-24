@@ -39,7 +39,6 @@ import org.springframework.boot.autoconfigure.jdbc.JdbcConnectionDetails;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.lang.Nullable;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 import org.springframework.validation.annotation.Validated;
 
@@ -584,7 +583,6 @@ public class TeamHistoryDAO
         this.syncBatchSize = syncBatchSize;
     }
 
-    @Scheduled(cron = "0 0 * * * *")
     public long trySync()
     {
         if(!syncLock.compareAndSet(false, true))
