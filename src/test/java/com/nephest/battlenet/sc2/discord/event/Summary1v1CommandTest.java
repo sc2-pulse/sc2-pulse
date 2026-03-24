@@ -221,9 +221,9 @@ public class Summary1v1CommandTest
                     Map.of
                     (
                         TeamHistoryDAO.SummaryColumn.GAMES, i == 3 ? 9999 : i,
-                        TeamHistoryDAO.SummaryColumn.RATING_LAST, i,
+                        TeamHistoryDAO.SummaryColumn.RATING_LAST, (short) i,
                         TeamHistoryDAO.SummaryColumn.RATING_AVG, i * 2.0d,
-                        TeamHistoryDAO.SummaryColumn.RATING_MAX, i * 3
+                        TeamHistoryDAO.SummaryColumn.RATING_MAX, (short) (i * 3)
                     )
                 )
             ))

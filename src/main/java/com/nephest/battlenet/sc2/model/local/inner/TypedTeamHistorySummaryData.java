@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.inner;
@@ -12,10 +12,10 @@ import com.nephest.battlenet.sc2.config.convert.jackson.UpperSnakeCaseStrategy;
 public record TypedTeamHistorySummaryData
 (
     Integer games,
-    Integer ratingMin,
+    Short ratingMin,
     Double ratingAvg,
-    Integer ratingMax,
-    Integer ratingLast,
+    Short ratingMax,
+    Short ratingLast,
     Integer regionRankLast,
     Integer regionTeamCountLast
 )
@@ -27,10 +27,10 @@ implements TeamHistorySummaryData
         return new TypedTeamHistorySummaryData
         (
             (Integer) raw.data().get(TeamHistoryDAO.SummaryColumn.GAMES),
-            (Integer) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_MIN),
+            (Short) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_MIN),
             (Double) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_AVG),
-            (Integer) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_MAX),
-            (Integer) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_LAST),
+            (Short) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_MAX),
+            (Short) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_LAST),
             (Integer) raw.data().get(TeamHistoryDAO.SummaryColumn.REGION_RANK_LAST),
             (Integer) raw.data().get(TeamHistoryDAO.SummaryColumn.REGION_TEAM_COUNT_LAST)
         );

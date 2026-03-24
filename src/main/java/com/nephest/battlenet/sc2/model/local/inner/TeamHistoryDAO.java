@@ -144,7 +144,8 @@ public class TeamHistoryDAO
         GAMES
         (
             "games",
-            "SUM(games_delta) - argMin(games_delta, timestamp) + 1"
+            "toInt32OrDefault(SUM(games_delta) - argMin(games_delta, timestamp) + 1, "
+                + Integer.MAX_VALUE + "::Int32)"
         ),
 
         RATING_MIN("rating_min",  "MIN(rating)"),

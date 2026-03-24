@@ -43,6 +43,8 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
+import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistoryHistoryData;
+import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistoryStaticData;
 import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistorySummaryData;
 import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -55,6 +57,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1033,7 +1036,7 @@ public class TeamGroupHistoryIT
     public void testHistoryConversion()
     throws Exception
     {
-        List<TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData>> found
+        List<TeamHistory<TypedTeamHistoryStaticData, TypedTeamHistoryHistoryData>> found
             = objectMapper.readValue(mvc.perform(asyncDispatch(mvc.perform(get("/api/team-histories")
                 .queryParam("teamLegacyUid", teamLegacyUidString)
                 .queryParam
@@ -1049,7 +1052,6 @@ public class TeamGroupHistoryIT
                 .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         List<TeamHistory<ConvertedTeamHistoryStaticData, ConvertedTeamHistoryHistoryData>> converted
             = found.stream()
-                .map(TeamHistory::cast)
                 .map(typed->TeamHistory.convert(typed, sc2ConversionService))
                 .toList();
         Map<HistoryColumn, List<?>> data = FULL_HISTORY_LEGACY_UID_GROUP.get(0).history().data();
@@ -1088,23 +1090,14 @@ public class TeamGroupHistoryIT
     
     @Test
     public void testHistorySummaryConversion()
-    throws Exception
     {
         List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> found =
-            objectMapper.readValue(mvc.perform(get("/api/team-history-summaries")
-                .queryParam("teamLegacyUid", teamLegacyUidString)
-                .queryParam
-                (
-                    "summary",
-                    Arrays.stream(SummaryColumn.values())
-                        .map(c->mvcConversionService.convert(c, String.class))
-                        .toArray(String[]::new)
-                )
-                .contentType(MediaType.APPLICATION_JSON)
-            )
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-
+            teamHistoryDAO.findSummary
+            (
+                Set.of(teamLegacyUid),
+                null, null,
+                EnumSet.allOf(SummaryColumn.class)
+            );
         List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> converted
             = found.stream()
                 .map(TeamHistorySummary::cast)
@@ -1120,10 +1113,10 @@ public class TeamGroupHistoryIT
                     new TypedTeamHistorySummaryData
                     (
                         convert(data.get(SummaryColumn.GAMES), Number::intValue),
-                        convert(data.get(SummaryColumn.RATING_MIN), Number::intValue),
+                        convert(data.get(SummaryColumn.RATING_MIN), Number::shortValue),
                         convert(data.get(SummaryColumn.RATING_AVG), Number::doubleValue),
-                        convert(data.get(SummaryColumn.RATING_MAX), Number::intValue),
-                        convert(data.get(SummaryColumn.RATING_LAST), Number::intValue),
+                        convert(data.get(SummaryColumn.RATING_MAX), Number::shortValue),
+                        convert(data.get(SummaryColumn.RATING_LAST), Number::shortValue),
                         convert(data.get(SummaryColumn.REGION_RANK_LAST), Number::intValue),
                         convert(data.get(SummaryColumn.REGION_TEAM_COUNT_LAST), Number::intValue)
                     )
