@@ -48,6 +48,7 @@ import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistoryStaticData;
 import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistorySummaryData;
 import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.UInt32EpochSecondsTemporalAccessorValidatorSimpleIntegrationTest;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.util.TeamLegacyUidValidationUtil;
@@ -845,11 +846,34 @@ public class TeamGroupHistoryIT
                 ))
             )
         );
-        return Stream.concat
+        return Stream.of
         (
             localArgs,
-            TeamLegacyUidValidationUtil.invalidTeamLegacyUidValidationArgs()
-        );
+            TeamLegacyUidValidationUtil.invalidTeamLegacyUidValidationArgs(),
+            UInt32EpochSecondsTemporalAccessorValidatorSimpleIntegrationTest.validationArguments()
+                .filter(args->!((boolean) args.get()[1]))
+                .filter(args->args.get()[0] instanceof OffsetDateTime)
+                .map(args->(OffsetDateTime) args.get()[0])
+                .flatMap(odt->Stream.of(
+                    Arguments.of
+                    (
+                        "Validation failure",
+                        new HashMap<String, Object>(Map.of(
+                            "teamLegacyUid", teamLegacyUidString,
+                            "from", odt
+                        ))
+                    ),
+                    Arguments.of
+                    (
+                        "Validation failure",
+                        new HashMap<String, Object>(Map.of(
+                            "teamLegacyUid", teamLegacyUidString,
+                            "to", odt
+                        ))
+                    )
+                ))
+        )
+            .flatMap(Function.identity());
     }
 
     @ParameterizedTest

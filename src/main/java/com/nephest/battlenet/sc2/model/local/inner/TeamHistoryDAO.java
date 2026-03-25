@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.ClickHouseUtil;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.validation.UInt32EpochSeconds;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
@@ -363,8 +364,8 @@ public class TeamHistoryDAO
     public void findHistoryJson
     (
         @NotNull @Valid Set<TeamLegacyUid> teamLegacyUids,
-        @Nullable OffsetDateTime from,
-        @Nullable OffsetDateTime to,
+        @Nullable @Valid @UInt32EpochSeconds OffsetDateTime from,
+        @Nullable @Valid @UInt32EpochSeconds OffsetDateTime to,
         @NotNull Set<HistoryColumn> historyColumns,
         @NotNull Consumer<InputStream> isConsumer
     )
@@ -441,8 +442,8 @@ public class TeamHistoryDAO
     public List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> findSummary
     (
         @NotNull @Valid Set<TeamLegacyUid> teamLegacyUids,
-        @Nullable OffsetDateTime from,
-        @Nullable OffsetDateTime to,
+        @Nullable @Valid @UInt32EpochSeconds OffsetDateTime from,
+        @Nullable @Valid @UInt32EpochSeconds OffsetDateTime to,
         @NotNull Set<SummaryColumn> summaryColumns
     )
     {

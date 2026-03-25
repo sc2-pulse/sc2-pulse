@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
+import com.nephest.battlenet.sc2.model.validation.UInt32EpochSeconds;
 import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
@@ -179,8 +180,8 @@ public class TeamController
         @Size(min = 1, max = TeamGroupArgumentResolver.LEGACY_UIDS_MAX)
         Set<TeamLegacyUid> teamLegacyUIds,
         @RequestParam("history") Set<TeamHistoryDAO.HistoryColumn> historyColumns,
-        @RequestParam(value = "from", required = false) OffsetDateTime from,
-        @RequestParam(value = "to", required = false) OffsetDateTime to
+        @RequestParam(value = "from", required = false) @UInt32EpochSeconds OffsetDateTime from,
+        @RequestParam(value = "to", required = false) @UInt32EpochSeconds OffsetDateTime to
     )
     {
         WebServiceUtil.throwException(getHistoryParametersError(from, to).orElse(null));
@@ -213,8 +214,8 @@ public class TeamController
         @Size(min = 1, max = TeamGroupArgumentResolver.LEGACY_UIDS_MAX)
         Set<TeamLegacyUid> teamLegacyUIds,
         @RequestParam("summary") Set<TeamHistoryDAO.SummaryColumn> summaryColumns,
-        @RequestParam(value = "from", required = false) OffsetDateTime from,
-        @RequestParam(value = "to", required = false) OffsetDateTime to
+        @RequestParam(value = "from", required = false) @UInt32EpochSeconds OffsetDateTime from,
+        @RequestParam(value = "to", required = false) @UInt32EpochSeconds OffsetDateTime to
     )
     {
         WebServiceUtil.throwException(getHistoryParametersError(from , to).orElse(null));
