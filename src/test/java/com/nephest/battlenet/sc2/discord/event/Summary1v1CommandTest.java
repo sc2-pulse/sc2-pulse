@@ -283,7 +283,7 @@ public class Summary1v1CommandTest
             ))
             .toList();
         when(teamHistoryDAO.findSummary(
-            eq(Set.copyOf(uids)),
+            eq(Set.copyOf(depth == null ? uids.subList(0, 4) : uids)),
             any(), isNull(),
             eq(EnumSet.of(
                 TeamHistoryDAO.SummaryColumn.GAMES,

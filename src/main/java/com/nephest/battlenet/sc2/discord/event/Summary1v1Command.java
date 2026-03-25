@@ -148,7 +148,7 @@ public class Summary1v1Command
         List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries
             = teamHistoryDAO.findSummary
             (
-                uids,
+                teams.keySet(),
                 null, null,
                 SUMMARY_HISTORY_COLUMNS
             ).stream()
