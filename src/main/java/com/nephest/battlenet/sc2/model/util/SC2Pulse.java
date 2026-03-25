@@ -30,6 +30,8 @@ public final class SC2Pulse
             SC2Pulse.offsetDateTime().getOffset()
         )
     );
+    public static final OffsetDateTime UINT32_ODT_MAX
+        = SC2Pulse.offsetDateTime(OffsetDateTime.of(2106, 2, 7, 6, 28, 15, 0, ZoneOffset.UTC));
 
     private SC2Pulse(){}
 
