@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToRaceConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToRegionConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToSourceConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
 import com.nephest.battlenet.sc2.config.convert.StringToAuditLogEntryActionConverter;
 import com.nephest.battlenet.sc2.config.convert.StringToTeamLegacyUidConverter;
@@ -75,6 +76,7 @@ public class CommonBeanConfig
         service.addConverter(new IntegerToPlayerCharacterReportTypeConverter());
         service.addConverter(new IntegerToClanMemberEventTypeConverter());
         service.addConverter(new IntegerToAccountPropertyTypeConverter());
+        service.addConverter(new IntegerToSourceConverter());
         service.addConverter(new StringToTeamLegacyUidConverter());
         service.addConverter(new TeamLegacyUidToStringConverter());
         return service;

@@ -9,6 +9,7 @@ import com.clickhouse.client.api.data_formats.ClickHouseBinaryFormatReader;
 import com.clickhouse.client.api.query.QueryResponse;
 import com.clickhouse.client.api.query.QuerySettings;
 import com.clickhouse.data.ClickHouseFormat;
+import com.nephest.battlenet.sc2.model.Identifiable;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.ClickHouseUtil;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
@@ -53,6 +54,36 @@ public class TeamHistoryDAO
     public static final String SYNC_FROM_VAR_NAME = "team_state.clickhouse.from";
     public static final String TABLE_NAME = "team_state";
     public static final int DEFAULT_SYNC_BATCH_SIZE = 10000;
+
+    public enum Source
+    implements Identifiable
+    {
+
+        SYSTEM(0),
+        USER(1);
+
+        private final int id;
+
+        Source(int id)
+        {
+            this.id = id;
+        }
+
+        public static Source from(int id)
+        {
+            for (Source source : Source.values())
+                if (source.getId() == id) return source;
+
+            throw new IllegalArgumentException("Invalid id");
+        }
+
+        @Override
+        public int getId()
+        {
+            return id;
+        }
+
+    }
 
     public enum HistoryColumn
     {

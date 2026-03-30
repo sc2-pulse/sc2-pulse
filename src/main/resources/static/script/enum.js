@@ -303,6 +303,12 @@ const TEAM_HISTORY_STATIC_COLUMN = Object.freeze
     LEGACY_UID: {code: 1, name: "legacy-uid", fullName: "LEGACY_UID", order: 1}
 });
 
+const TEAM_HISTORY_SOURCE = Object.freeze
+({
+    SYSTEM: Object.freeze({code: 0, name: "system", fullName: "SYSTEM", order: 1}),
+    USER: Object.freeze({code: 1, name: "user", fullName: "USER", order: 2})
+});
+
 const TEAM_HISTORY_HISTORY_COLUMN = Object.freeze
 ({
     TIMESTAMP: {code:1, name: "timestamp", fullName: "TIMESTAMP", order: 1},
