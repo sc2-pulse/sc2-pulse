@@ -30,8 +30,8 @@ extends BaseAPI
 {
 
     public static final String BASE_URL = "https://sc2arcade.com/api";
-    public static final int REQUESTS_PER_PERIOD = 100;
-    public static final Duration REQUEST_SLOT_REFRESH_DURATION = Duration.ofSeconds(40);
+    public static final int REQUESTS_PER_PERIOD = 25;
+    public static final Duration REQUEST_SLOT_REFRESH_DURATION = Duration.ofSeconds(5);
 
     private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
     private final ConversionService conversionService;
