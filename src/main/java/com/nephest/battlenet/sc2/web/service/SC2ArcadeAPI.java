@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -29,7 +29,7 @@ public class SC2ArcadeAPI
 extends BaseAPI
 {
 
-    public static final String BASE_URL = "https://api.sc2arcade.com/";
+    public static final String BASE_URL = "https://sc2arcade.com/api";
     public static final int REQUESTS_PER_PERIOD = 100;
     public static final Duration REQUEST_SLOT_REFRESH_DURATION = Duration.ofSeconds(40);
 
