@@ -90,6 +90,7 @@ public class TeamHistoryDAO
         TIMESTAMP("timestamp", "UInt32"),
         RATING("rating", "Int32"),
         GAMES("games", "Int32"),
+        GAMES_DELTA("games_delta", "Int16"),
         WINS("wins", "Int32", "-1"),
         LEAGUE_TYPE("league_type", "Int8"),
         TIER_TYPE("tier_type", "Int8"),
@@ -100,7 +101,8 @@ public class TeamHistoryDAO
         GLOBAL_TEAM_COUNT("global_team_count", "Int32", "-1"),
         REGION_TEAM_COUNT("region_team_count", "Int32", "-1"),
         LEAGUE_TEAM_COUNT("league_team_count", "Int32", "-1"),
-        SEASON("season", "Int16");
+        SEASON("season", "Int16"),
+        SOURCE("source", "UInt8");
 
         private final String columName, sentinelValue, tupleNameDefinition;
 

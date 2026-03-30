@@ -13,6 +13,7 @@ public record TypedTeamHistoryHistoryData
     @JsonProperty("TIMESTAMP") List<Long> timestamps,
     @JsonProperty("RATING") List<Integer> ratings,
     @JsonProperty("GAMES") List<Integer> games,
+    @JsonProperty("GAMES_DELTA") List<Short> gameDeltas,
     @JsonProperty("WINS") List<Integer> wins,
     @JsonProperty("LEAGUE_TYPE") List<Integer> leagueTypes,
     @JsonProperty("TIER_TYPE") List<Integer> tierTypes,
@@ -23,7 +24,8 @@ public record TypedTeamHistoryHistoryData
     @JsonProperty("GLOBAL_TEAM_COUNT") List<Integer> globalTeamCounts,
     @JsonProperty("REGION_TEAM_COUNT") List<Integer> regionTeamCunts,
     @JsonProperty("LEAGUE_TEAM_COUNT") List<Integer> leagueTeamCounts,
-    @JsonProperty("SEASON") List<Integer> seasons
+    @JsonProperty("SEASON") List<Integer> seasons,
+    @JsonProperty("SOURCE") List<Byte> sources
 )
 implements TeamHistoryHistoryData
 {
@@ -36,6 +38,7 @@ implements TeamHistoryHistoryData
             (List<Long>) raw.data().get(TeamHistoryDAO.HistoryColumn.TIMESTAMP),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.RATING),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.GAMES),
+            (List<Short>) raw.data().get(TeamHistoryDAO.HistoryColumn.GAMES_DELTA),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.WINS),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.LEAGUE_TYPE),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.TIER_TYPE),
@@ -46,7 +49,8 @@ implements TeamHistoryHistoryData
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.GLOBAL_TEAM_COUNT),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.REGION_TEAM_COUNT),
             (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.LEAGUE_TEAM_COUNT),
-            (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.SEASON)
+            (List<Integer>) raw.data().get(TeamHistoryDAO.HistoryColumn.SEASON),
+            (List<Byte>) raw.data().get(TeamHistoryDAO.HistoryColumn.SOURCE)
         );
     }
 

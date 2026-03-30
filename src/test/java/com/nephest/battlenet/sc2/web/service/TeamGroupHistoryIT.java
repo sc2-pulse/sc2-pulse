@@ -486,6 +486,7 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.RATING, List.of(0, 0, 0)),
                     entry(HistoryColumn.WINS, Stream.of(0, 0, 0).toList()),
                     entry(HistoryColumn.GAMES, List.of(3, 3, 3)),
+                    entry(HistoryColumn.GAMES_DELTA, List.of(3, 0, 0)),
                     entry(HistoryColumn.LEAGUE_TYPE, List.of(0, 0, 0)),
                     entry(HistoryColumn.TIER_TYPE, List.of(0, 0, 0)),
 
@@ -496,7 +497,8 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.LEAGUE_RANK, Stream.of(null, 3, 3).toList()),
                     entry(HistoryColumn.LEAGUE_TEAM_COUNT, Stream.of(null, 3, 3).toList()),
 
-                    entry(HistoryColumn.SEASON, List.of(1, 1, 1))
+                    entry(HistoryColumn.SEASON, List.of(1, 1, 1)),
+                    entry(HistoryColumn.SOURCE, List.of(1, 0, 0))
                 ))
             ),
             new TeamHistory<>
@@ -524,6 +526,7 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.RATING, List.of(12, 112, 113)),
                     entry(HistoryColumn.WINS, List.of(12, 13, 14)),
                     entry(HistoryColumn.GAMES, List.of(39, 42, 45)),
+                    entry(HistoryColumn.GAMES_DELTA, List.of(39, 3, 3)),
                     entry(HistoryColumn.LEAGUE_TYPE, List.of(0, 5, 1)),
                     entry(HistoryColumn.TIER_TYPE, List.of(0, 1, 0)),
 
@@ -534,7 +537,8 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.LEAGUE_RANK, Stream.of(null, 1, 2).toList()),
                     entry(HistoryColumn.LEAGUE_TEAM_COUNT, Stream.of(null, 1, 4).toList()),
 
-                    entry(HistoryColumn.SEASON, List.of(2, 2, 2))
+                    entry(HistoryColumn.SEASON, List.of(2, 2, 2)),
+                    entry(HistoryColumn.SOURCE, List.of(1, 1, 1))
                 ))
             ),
             new TeamHistory<>
@@ -562,6 +566,7 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.RATING, List.of(24, 24)),
                     entry(HistoryColumn.WINS, Stream.of(24, 24).toList()),
                     entry(HistoryColumn.GAMES, List.of(75, 75)),
+                    entry(HistoryColumn.GAMES_DELTA, List.of(75, 0)),
                     entry(HistoryColumn.LEAGUE_TYPE, List.of(0, 0)),
                     entry(HistoryColumn.TIER_TYPE, List.of(0, 0)),
 
@@ -572,7 +577,8 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.LEAGUE_RANK, Stream.of(null, 3).toList()),
                     entry(HistoryColumn.LEAGUE_TEAM_COUNT, Stream.of(null, 3).toList()),
 
-                    entry(HistoryColumn.SEASON, List.of(3, 3))
+                    entry(HistoryColumn.SEASON, List.of(3, 3)),
+                    entry(HistoryColumn.SOURCE, List.of(1, 0))
                 ))
             )
         );
@@ -1092,6 +1098,7 @@ public class TeamGroupHistoryIT
                         convert(data.get(HistoryColumn.TIMESTAMP), Number::longValue),
                         convert(data.get(HistoryColumn.RATING), Number::intValue),
                         convert(data.get(HistoryColumn.GAMES), Number::intValue),
+                        convert(data.get(HistoryColumn.GAMES_DELTA), Number::shortValue),
                         convert(data.get(HistoryColumn.WINS), Number::intValue),
                         data.get(HistoryColumn.LEAGUE_TYPE).stream()
                             .map(l->sc2ConversionService.convert(l, BaseLeague.LeagueType.class))
@@ -1106,7 +1113,10 @@ public class TeamGroupHistoryIT
                         convert(data.get(HistoryColumn.GLOBAL_TEAM_COUNT), Number::intValue),
                         convert(data.get(HistoryColumn.REGION_TEAM_COUNT), Number::intValue),
                         convert(data.get(HistoryColumn.LEAGUE_TEAM_COUNT), Number::intValue),
-                        convert(data.get(HistoryColumn.SEASON), Number::intValue)
+                        convert(data.get(HistoryColumn.SEASON), Number::intValue),
+                        data.get(HistoryColumn.SOURCE).stream()
+                            .map(l->sc2ConversionService.convert(l, TeamHistoryDAO.Source.class))
+                            .toList()
                     )
                 )
             ));

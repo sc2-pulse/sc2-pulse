@@ -325,6 +325,8 @@ const TEAM_HISTORY_HISTORY_COLUMN = Object.freeze
     REGION_TEAM_COUNT: {code:12, name: "region-team-count", fullName: "REGION_TEAM_COUNT", order: 12},
     LEAGUE_TEAM_COUNT: {code:13, name: "league-team-count", fullName: "LEAGUE_TEAM_COUNT", order: 13},
     SEASON: {code:14, name: "season", fullName: "SEASON", order: 14},
+    GAMES_DELTA: Object.freeze({code: 15, name: "games-delta", fullName: "GAMES_DELTA", order: 15}),
+    SOURCE: Object.freeze({code: 16, name: "source", fullName: "SOURCE", order: 16})
 });
 
 const TEAM_HISTORY_SUMMARY_COLUMN = Object.freeze

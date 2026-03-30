@@ -16,6 +16,7 @@ public record ConvertedTeamHistoryHistoryData
     @JsonProperty("TIMESTAMP") List<Long> timestamps,
     @JsonProperty("RATING") List<Integer> ratings,
     @JsonProperty("GAMES") List<Integer> games,
+    @JsonProperty("GAMES_DELTA") List<Short> gameDeltas,
     @JsonProperty("WINS") List<Integer> wins,
     @JsonProperty("LEAGUE_TYPE") List<BaseLeague.LeagueType> leagueTypes,
     @JsonProperty("TIER_TYPE") List<BaseLeagueTier.LeagueTierType> tierTypes,
@@ -26,7 +27,8 @@ public record ConvertedTeamHistoryHistoryData
     @JsonProperty("GLOBAL_TEAM_COUNT") List<Integer> globalTeamCounts,
     @JsonProperty("REGION_TEAM_COUNT") List<Integer> regionTeamCunts,
     @JsonProperty("LEAGUE_TEAM_COUNT") List<Integer> leagueTeamCounts,
-    @JsonProperty("SEASON") List<Integer> seasons
+    @JsonProperty("SEASON") List<Integer> seasons,
+    @JsonProperty("SOURCE") List<TeamHistoryDAO.Source> sources
 )
 implements TeamHistoryHistoryData
 {
@@ -42,6 +44,7 @@ implements TeamHistoryHistoryData
             typed.timestamps(),
             typed.ratings(),
             typed.games(),
+            typed.gameDeltas(),
             typed.wins(),
             typed.leagueTypes() == null
                 ? null
@@ -60,7 +63,13 @@ implements TeamHistoryHistoryData
             typed.globalTeamCounts(),
             typed.regionTeamCunts(),
             typed.leagueTeamCounts(),
-            typed.seasons()
+            typed.seasons(),
+            typed.sources() == null
+                ? null
+                : typed.sources().stream()
+                    .map(Byte::intValue)
+                    .map(s->conversionService.convert(s, TeamHistoryDAO.Source.class))
+                    .toList()
         );
     }
 
