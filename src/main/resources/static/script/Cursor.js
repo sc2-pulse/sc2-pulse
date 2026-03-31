@@ -24,6 +24,17 @@ class Cursor {
         return null;
     }
 
+    static parseNavigation(navigation) {
+        const cursors = {};
+        for(const direction of Object.values(NAVIGATION_DIRECTION)) {
+            const token = navigation[direction.relativePosition];
+            if(token == null) continue;
+
+            cursors[direction.fullName] = new Cursor(token, direction);
+        }
+        return cursors;
+    }
+
     get token() {
         return this.#token;
     }
