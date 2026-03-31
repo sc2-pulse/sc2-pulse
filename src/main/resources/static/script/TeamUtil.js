@@ -475,7 +475,7 @@ class TeamUtil
 
         const stringParams = searchParams.toString();
         const params = {params: stringParams};
-        return TeamUtil.getTeamGroup(null, searchParams.getAll("teamLegacyUid"), null, null, true)
+        return Session.SC2_PULSE_API.getTeams({legacyUids: searchParams.getAll("teamLegacyUid"), last: true})
             .then(teams=>{
                 teams.sort((a, b)=>b.rating - a.rating);
                 const result = {result: teams};
@@ -657,84 +657,6 @@ class TeamUtil
         if(form) form.addEventListener("submit", TeamUtil.onTeamSearch);
         const sortCtl = document.querySelector("#search-team-sort");
         if(sortCtl) sortCtl.addEventListener("change", ()=>window.setTimeout(TeamUtil.onTeamSort, 1));
-    }
-
-    static createTeamGroupBaseParams(ids, legacyUids, fromSeason, toSeason)
-    {
-        const params = new URLSearchParams();
-        if(ids) ids.forEach(id=>params.append("id", id));
-        if(legacyUids) legacyUids.forEach(l=>params.append("teamLegacyUid", l));
-        if(fromSeason != null) params.append("seasonMin", fromSeason);
-        if(toSeason != null) params.append("seasonMax", toSeason);
-        return params;
-    }
-
-    static createHistoryParams(legacyUids, from, to)
-    {
-        const params = TeamUtil.createTeamGroupBaseParams(null, legacyUids);
-        if(from) params.append("from", from.toISOString());
-        if(to) params.append("to", to.toISOString());
-
-        return params;
-    }
-
-    static getHistory(legacyUids, from, to, historyColumns, batchSize = TEAM_LEGACY_UID_COUNT_MAX)
-    {
-        return Util.batchExecute(legacyUids, batchSize, batch=>TeamUtil.getHistoryBatch(batch, from, to, historyColumns));
-    }
-
-    static getHistoryBatch(legacyUids, from, to, historyColumns)
-    {
-        const params = TeamUtil.createHistoryParams(legacyUids, from, to);
-        if(historyColumns) historyColumns.forEach(h=>params.append("history", h.fullName));
-        const request = ROOT_CONTEXT_PATH + "api/team-histories?" + params.toString();
-
-        return Session.beforeRequest()
-            .then(n=>Session.fetch(request))
-            .then(Session.verifyJsonResponse);
-    }
-
-    static getHistorySummary(legacyUids, from, to, summaryColumns, batchSize = TEAM_LEGACY_UID_COUNT_MAX)
-    {
-        return Util.batchExecute(legacyUids, batchSize, batch=>TeamUtil.getHistorySummaryBatch(batch, from, to, summaryColumns));
-    }
-
-    static getHistorySummaryBatch(legacyUids, from, to, summaryColumns)
-    {
-        const params = TeamUtil.createHistoryParams(legacyUids, from, to);
-        if(summaryColumns) summaryColumns.forEach(s=>params.append("summary", s.fullName));
-        const request = ROOT_CONTEXT_PATH + "api/team-history-summaries?" + params.toString();
-
-        return Session.beforeRequest()
-            .then(n=>Session.fetch(request))
-            .then(Session.verifyJsonResponse);
-    }
-
-    static async getTeamGroup(ids, legacyUids, fromSeason, toSeason, last,
-        idBatchSize = TEAM_ID_COUNT_MAX,
-        legacyUidBatchSize = last === true ? LAST_TEAM_LEGACY_UID_COUNT_MAX : TEAM_LEGACY_UID_COUNT_MAX
-    )
-    {
-        return (ids != null
-            ? await Util.batchExecute(ids, idBatchSize,
-                batch=>TeamUtil.getTeamGroupBatch(batch, null, fromSeason, toSeason, last))
-            : []
-        ).concat(legacyUids != null
-            ? await Util.batchExecute(legacyUids, legacyUidBatchSize,
-                batch=>TeamUtil.getTeamGroupBatch(null, batch, fromSeason, toSeason, last))
-            : []
-        )
-    }
-
-    static getTeamGroupBatch(ids, legacyUids, fromSeason, toSeason, last)
-    {
-        const params = TeamUtil.createTeamGroupBaseParams(ids, legacyUids, fromSeason, toSeason);
-        if(last != null) params.append("last", last);
-        const request = ROOT_CONTEXT_PATH + "api/teams?" + params.toString();
-
-        return Session.beforeRequest()
-            .then(n=>Session.fetch(request))
-            .then(Session.verifyJsonResponse);
     }
 
     static createLegacyUid(queue, teamType, region, legacyId)

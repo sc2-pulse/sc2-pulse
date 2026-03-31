@@ -29,13 +29,15 @@ class LadderUtil
     static chainLadderPromise(params, formParams, cursor, sort)
     {
         const allParams = new URLSearchParams(params.form);
-        allParams.append("sort", sort.toPrefixedString());
-        if(cursor != null) allParams.append(cursor.direction.relativePosition, cursor.token);
-
-        const request = `${ROOT_CONTEXT_PATH}api/teams?` + allParams.toString();
-        const ladderPromise = Session.beforeRequest()
-        .then(n=>Session.fetch(request))
-        .then(Session.verifyJsonResponse)
+        const ladderPromise = Session.SC2_PULSE_API.getTeamLadder({
+            queue: EnumUtil.enumOfFullName(allParams.get("queue"), TEAM_FORMAT),
+            teamType: EnumUtil.enumOfFullName(allParams.get("teamType"), TEAM_TYPE),
+            season: allParams.get("season"),
+            regions: allParams.getAll("region").map(r=>EnumUtil.enumOfFullName(r, REGION)),
+            leagues: allParams.getAll("league").map(l=>EnumUtil.enumOfFullName(l, LEAGUE)),
+            cursor,
+            sort
+        })
         .then(json => {
             const direction = cursor?.direction || NAVIGATION_DIRECTION.FORWARD;
             json.meta = PaginationUtil.createCursorMeta(

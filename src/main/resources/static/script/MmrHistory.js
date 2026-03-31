@@ -92,7 +92,7 @@ class MmrHistory
 
     updateHistoryModel(legacyUids, from, to, historyColumns)
     {
-        return TeamUtil.getHistory(legacyUids, from, to, historyColumns)
+        return Session.SC2_PULSE_API.getTeamHistories({legacyUids, from, to, historyColumns})
             .then(history=>{
                 const dataHistory = {};
                 this.mmrHistory.history = dataHistory;
@@ -353,8 +353,8 @@ class MmrHistory
     updateSummaryModel(legacyUids, from, to, summaryColumns)
     {
         return Promise.all([
-            TeamUtil.getHistorySummary(legacyUids, from, to, summaryColumns),
-            TeamUtil.getTeamGroup(null, legacyUids, Session.currentSeasons[0].battlenetId)
+            Session.SC2_PULSE_API.getTeamHistorySummaries({legacyUids, from, to, summaryColumns}),
+            Session.SC2_PULSE_API.getTeams({legacyUids, fromSeason: Session.currentSeasons[0].battlenetId})
         ])
             .then(summaryBatch=>{
                 const summary = summaryBatch[0];
@@ -581,11 +581,11 @@ class MmrHistory
         const from = new Date(date.getFullYear(), 0);
         const to = new Date(date.getFullYear() + 1, 0);
 
-        return TeamUtil.getHistory(
-            this.mmrHistory.parameters.queueData.legacyUids,
+        return Session.SC2_PULSE_API.getTeamHistories({
+            legacyUids: this.mmrHistory.parameters.queueData.legacyUids,
             from, to,
-            MmrHistory.COMPLETE_HISTORY_DATA_COLUMNS
-        )
+            historyColumns: MmrHistory.COMPLETE_HISTORY_DATA_COLUMNS
+        })
             .then(historyArray=>{
                 historyArray.forEach(history=>{
                     const existingHistory = this.mmrHistory.history.data.find(h=>h.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_UID.fullName]

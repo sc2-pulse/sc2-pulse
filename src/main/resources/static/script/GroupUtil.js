@@ -140,10 +140,17 @@ class GroupUtil
 
     static getTeams(params)
     {
-        const request = `${ROOT_CONTEXT_PATH}api/character-teams?${params.toString()}`;
-        return Session.beforeRequest()
-           .then(n=>Session.fetch(request))
-           .then(Session.verifyJsonResponse);
+        return Session.SC2_PULSE_API.getCharacterTeams({
+            characterIds: params.getAll("characterId"),
+            accountIds: params.getAll("accountId"),
+            proPlayerIds: params.getAll("proPlayerId"),
+            toonHandles: params.getAll("toonHandle"),
+            clanIds: params.getAll("clanId"),
+            queue: params.get("queue") == null ? null : EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT),
+            season: params.get("season"),
+            races: params.getAll("race").map(race=>EnumUtil.enumOfFullName(race, RACE)),
+            limit: params.get("limit")
+        });
     }
 
     static createTeamParams(groupParams, queue, season)

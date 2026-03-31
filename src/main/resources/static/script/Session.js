@@ -34,28 +34,14 @@ class Session
         return Promise.resolve();
     }
 
-    static verifyResponse(resp, allowedStatus = [200])
+    static verifyResponse(resp, validStatuses = [200])
     {
-        if (!allowedStatus.includes(resp.status)) throw new Error(resp.status + " " + resp.statusText);
-
-        Session.verifyResponseVersion(resp);
-        return Promise.resolve(resp);
+        return Session.SC2_PULSE_API.verifyResponse(resp, {validStatuses});
     }
 
-    static verifyResponseVersion(resp)
+    static verifyJsonResponse(resp, validStatuses = [200])
     {
-        const versionHeader = resp.headers.get("X-Application-Version");
-        const cacheHeader = resp.headers.get("Cache-Control");
-        if((!cacheHeader || cacheHeader.toLowerCase().includes("max-age=0")) && versionHeader && versionHeader != Session.APPLICATION_VERSION)
-            throw new Error(Session.INVALID_API_VERSION_CODE + " API version has changed");
-    }
-
-    static verifyJsonResponse(resp, allowedStatus = [200])
-    {
-        return Session.verifyResponse(resp, allowedStatus)
-            .then(resp=>resp.text())
-            .then(body=>body && (body.startsWith("{") || body.startsWith("[")) ? JSON.parse(body) : null)
-            .then(json=>Util.isErrorDetails(json) ? null : json);
+        return Session.SC2_PULSE_API.verifyJsonResponse(resp, {validStatuses});
     }
 
     static updateApplicationVersion()
@@ -398,6 +384,13 @@ Session.confirmActionText = null;
 Session.confirmAction = null;
 Session.multiValueInputSeparator = "\t";
 Session.REQUEST_RATE_LIMITER = new RequestRateLimiter();
+Session.SC2_PULSE_API = new SC2PulseAPI({
+    baseUrl: ROOT_CONTEXT_PATH + "api",
+    requestRateLimiter: Session.REQUEST_RATE_LIMITER,
+    beforeRequest: Session.beforeRequest,
+    apiVersion: APPLICATION_VERSION,
+    errorCodeOnInvalidVersion: Session.INVALID_API_VERSION_CODE
+});
 
 Session.sectionParams = new Map();
 

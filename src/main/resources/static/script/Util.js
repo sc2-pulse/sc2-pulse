@@ -584,30 +584,12 @@ class Util
         return [EnumUtil.enumOfNamePrefix(prefixes[0], RACE), EnumUtil.enumOfNamePrefix(prefixes[1], RACE)];
     }
 
-    static isErrorDetails(json)
-    {
-        return json != null && json.status != null && json.type != null;
-    }
-
     static getLeagueRange(rank, teamCount)
     {
         if(rank <= SC2Restful.GM_COUNT) return {league: LEAGUE.GRANDMASTER, tierType: 0};
 
         const topPercentage = (rank / teamCount) * 100;
         return Object.values(TIER_RANGE).find(r=>topPercentage <= r.bottomThreshold);
-    }
-
-    static async batchExecute(params, batchSize, consumer)
-    {
-        if(params == null || params.length == 0) return [];
-        if(params.length <= batchSize) return consumer(params);
-
-        const promises = [];
-        for (let i = 0; i < params.length; i += batchSize)
-            promises.push(consumer(params.slice(i, i + batchSize)));
-        const allBatchResults = await Promise.all(promises);
-
-        return allBatchResults.flat();
     }
 
 }

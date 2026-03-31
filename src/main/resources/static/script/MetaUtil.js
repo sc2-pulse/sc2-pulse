@@ -4,19 +4,11 @@
 class MetaUtil
 {
 
-    static getPatches(buildMin)
-    {
-        const request = `${ROOT_CONTEXT_PATH}api/patches?buildMin=${encodeURIComponent(buildMin)}`;
-        return Session.beforeRequest()
-           .then(n=>Session.fetch(request))
-           .then(Session.verifyJsonResponse);
-    }
-
     static loadPatches()
     {
         let patches = JSON.parse(localStorage.getItem("internal-meta-patches") || "[]");
         const buildMin = parseInt(localStorage.getItem("internal-meta-patches-build-last") || -1) + 1;
-        return MetaUtil.getPatches(buildMin)
+        return Session.SC2_PULSE_API.getPatches({buildMin})
             .then(newPatches=>{
                 if(newPatches.length > 0) {
                     patches = newPatches.concat(patches);

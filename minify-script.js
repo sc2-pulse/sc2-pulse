@@ -14,6 +14,7 @@ const orderedFiles = [
     root + '/ElementUtil.js',
     root + '/enum.js',
     root + '/EnumUtil.js',
+    root + '/SC2PulseAPI.js',
     root + '/MmrHistory.js',
     root + '/CharacterUtil.js',
     root + '/FollowUtil.js',

@@ -20,9 +20,7 @@ class SeasonUtil
     static getSeasons()
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return Session.beforeRequest()
-            .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/seasons"))
-            .then(Session.verifyJsonResponse)
+        return Session.SC2_PULSE_API.getSeasons()
             .then(json => {
                 SeasonUtil.updateSeasons(json);
                 Util.setGeneratingStatus(STATUS.SUCCESS);
