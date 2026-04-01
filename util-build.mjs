@@ -4,7 +4,15 @@ import * as babel from '@babel/core';
 import { minify } from 'terser';
 
 const inputDir = 'src/main/resources/static/script';
-const inputFiles = ['RequestRateLimiter.js'];
+const inputFiles = [
+    'enum.js',
+    'Util.js',
+    'EnumUtil.js',
+    'Cursor.js',
+    'SortParameter.js',
+    'RequestRateLimiter.js',
+    'SC2PulseAPI.js'
+];
 const outputDir = 'target/classes/static/script/shared';
 const outputFile = 'sc2pulse-util.min.js';
 
