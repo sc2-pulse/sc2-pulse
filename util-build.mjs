@@ -25,6 +25,15 @@ const babelResult = babel.transformSync(rawCombinedCode, {
                 if (path.parent.type !== 'ExportNamedDeclaration') {
                     path.replaceWith(babel.types.exportNamedDeclaration(path.node));
                 }
+            },
+            VariableDeclaration(path) {
+                if (
+                    path.node.kind === 'const' &&
+                    path.parent.type === 'Program' &&
+                    path.parent.type !== 'ExportNamedDeclaration'
+                ) {
+                    path.replaceWith(babel.types.exportNamedDeclaration(path.node));
+                }
             }
         }
     }
