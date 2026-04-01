@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -171,8 +172,8 @@ public class TeamController
         );
     }
 
-    @GetMapping("/team-histories")
-    public StreamingResponseBody getHistories
+    @GetMapping(path = "/team-histories", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<StreamingResponseBody> getHistories
     (
         @RequestParam("teamLegacyUid")
         @TeamLegacyUids
@@ -186,7 +187,7 @@ public class TeamController
     {
         WebServiceUtil.throwException(getHistoryParametersError(from, to).orElse(null));
 
-        return os -> teamHistoryDAO.findHistoryJson
+        StreamingResponseBody srb = os -> teamHistoryDAO.findHistoryJson
         (
             teamLegacyUIds,
             from, to,
@@ -203,6 +204,9 @@ public class TeamController
                 }
             }
         );
+        return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(srb);
     }
 
     @GetMapping("/team-history-summaries")
