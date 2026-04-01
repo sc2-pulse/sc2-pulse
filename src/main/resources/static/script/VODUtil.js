@@ -54,11 +54,11 @@ class VODUtil
 
     static update(params, cursor = null)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return VODUtil.updateModel(params, cursor)
             .then(VODUtil.updateView)
             .then(e=>{
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
                 const searchParams = new URLSearchParams(params);
                 searchParams.append("type", "vod-search");
                 const stringParams = searchParams.toString();

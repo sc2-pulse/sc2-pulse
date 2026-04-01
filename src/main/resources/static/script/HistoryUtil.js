@@ -160,7 +160,7 @@ class HistoryUtil
     {
         if(hash == null || hash.length == 0) return Promise.resolve();
 
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         const promises = [];
         let prevTab = document.querySelector(hash);
         HistoryUtil.showAnchoredTab(prevTab, promises, activateOnly);
@@ -171,7 +171,7 @@ class HistoryUtil
             HistoryUtil.showAnchoredTab(curTab, promises, activateOnly);
             prevTab = curTab;
         }
-        return Promise.all(promises).then(e=>Util.setGeneratingStatus(STATUS.SUCCESS));
+        return Promise.all(promises).then(e=>Session.setGeneratingStatus(STATUS.SUCCESS));
     }
 
     static showAnchoredTab(tab, promises, activateOnly = false)
@@ -199,7 +199,7 @@ class HistoryUtil
     static doRestoreState(e)
     {
         if(e != null && e.state == null) return;
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         Session.isHistorical = true;
         const locationSearch = (e != null && e.state.locationSearch != null) ? e.state.locationSearch : window.location.search;
         const hash = (e != null && e.state.locationHash != null) ? e.state.locationHash : window.location.hash;
@@ -227,7 +227,7 @@ class HistoryUtil
             .then(e => {
                 HistoryUtil.updateActiveTabs();
                 Session.statesRestored += 1;
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
                 ElementUtil.executeActiveTabTask();
             });
 
@@ -323,7 +323,7 @@ class HistoryUtil
         .then(e => {
             HistoryUtil.updateActiveTabs();
             Session.statesRestored += 1;
-            Util.setGeneratingStatus(STATUS.SUCCESS);
+            Session.setGeneratingStatus(STATUS.SUCCESS);
             Session.isHistorical = false;
             if(scrollTo != null) Util.scrollIntoViewById(scrollTo);
             ElementUtil.executeActiveTabTask();

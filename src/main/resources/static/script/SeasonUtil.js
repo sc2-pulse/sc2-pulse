@@ -19,11 +19,11 @@ class SeasonUtil
 
     static getSeasons()
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return Session.SC2_PULSE_API.getSeasons()
             .then(json => {
                 SeasonUtil.updateSeasons(json);
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }
@@ -83,11 +83,11 @@ class SeasonUtil
         searchParams.append("type", "online");
         const stringParams = searchParams.toString();
         const params = {params: stringParams};
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return SeasonUtil.updateSeasonStateModel(searchParams)
             .then(e=>{
                 SeasonUtil.updateSeasonStateView(searchParams);
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + stringParams + "#online");
                 Session.currentSearchParams = stringParams;
                 if(!Session.isHistorical) HistoryUtil.updateActiveTabs();

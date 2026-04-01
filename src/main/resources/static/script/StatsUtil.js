@@ -143,11 +143,11 @@ class StatsUtil
 
     static updateQueueStats(formParams)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateQueueStatsModel(formParams)
             .then(json => {
                 StatsUtil.updateQueueStatsView();
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }
@@ -487,12 +487,12 @@ class StatsUtil
 
     static updateLadderStats(formParams)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         StatsUtil.init();
         return StatsUtil.updateLadderStatsModel(formParams)
             .then(json => {
                 StatsUtil.updateLadderStatsView();
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }
@@ -577,11 +577,11 @@ class StatsUtil
 
     static updateLeagueBounds(formParams)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateLeagueBoundsModel(formParams)
             .then(json => {
                 StatsUtil.updateLeagueBoundsView();
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }
@@ -987,7 +987,7 @@ class StatsUtil
 
     static updateMapStatsFilmAsync()
     {
-        return Util.load(document.querySelector("#stats-match-up-container"), StatsUtil.updateMapStatsFilm);
+        return Session.load(document.querySelector("#stats-match-up-container"), StatsUtil.updateMapStatsFilm);
     }
 
     static resetAndUpdateMapStatsFilmAsync()

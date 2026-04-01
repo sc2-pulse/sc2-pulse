@@ -36,46 +36,6 @@ class Util
         return params;
     }
 
-    static setGeneratingStatus(status, errorText = "Error", error = null, invalidatePageOnError = false)
-    {
-        switch(status)
-        {
-            case STATUS.BEGIN:
-                Session.currentRequests++;
-                if (Session.currentRequests > 1) return;
-                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), true);
-                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-success"), false);
-                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-error"), false);
-            break;
-            case STATUS.SUCCESS:
-            case STATUS.ERROR:
-                Session.currentRequests--;
-                if(status === STATUS.ERROR)
-                {
-                    Util.showGlobalError(error != null ? error : {message: errorText}, invalidatePageOnError);
-                }
-                if(Session.currentRequests > 0) return;
-                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
-                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-" + status.name), true);
-                Session.isHistorical = false;
-            break;
-        }
-    }
-
-    static showGlobalError(error, invalidatePage = false)
-    {
-        if(DEBUG == true) console.log(error);
-        Session.onError(error, invalidatePage);
-        document.getElementById("error-generation-text").textContent = Util.ERROR_MESSAGES.get(error.message.trim()) || error.message;
-        if(!Session.isSilent) $("#error-generation").modal();
-    }
-
-    static successStatusPromise(e)
-    {
-        Util.setGeneratingStatus(STATUS.SUCCESS);
-        return Promise.resolve(e);
-    }
-
     static getCookie(cname)
     {
         var name = cname + "=";
@@ -463,17 +423,7 @@ class Util
         return name == FAKE_NAME ? member.character.id : name;
     }
 
-    static reload(id, ifLoaded = true)
-    {
-        ElementUtil.INPUT_TIMEOUTS.set(id, window.setTimeout(e=>{
-                if(!ifLoaded || Session.currentRequests < 1) {
-                    document.location.reload();
-                } else {
-                    Util.reload(id);
-                }
-            }, SC2Restful.REDIRECT_PAGE_TIMEOUT_MILLIS)
-        );
-    }
+
 
     static rectContains(rect, x, y)
     {
@@ -485,62 +435,6 @@ class Util
     {
         const codePoints = [...iso].map(c=>c.codePointAt() + 127397);
         return String.fromCodePoint(...codePoints);
-    }
-
-    static load(container, lazyPromise, showErrors = false, invalidatePageOnError = false)
-    {
-        return ElementUtil.executeTask(container.id,
-            ()=>Util.doLoad(container, lazyPromise, showErrors, invalidatePageOnError));
-    }
-
-    static doLoad(container, lazyPromise, showErrors = false, invalidatePageOnError = false)
-    {
-        if(container.classList.contains(LOADING_STATUS.COMPLETE.className)
-            || container.classList.contains(LOADING_STATUS.IN_PROGRESS.className)) return Promise.resolve();
-
-        ElementUtil.setLoadingIndicator(container, LOADING_STATUS.IN_PROGRESS);
-        return lazyPromise()
-            .then(result=>{
-                ElementUtil.setLoadingIndicator(container, result.status);
-                if(result.status != LOADING_STATUS.COMPLETE && result.status != LOADING_STATUS.ERROR) {
-                    const infiniteScrollElem = container.querySelector(":scope .indicator-loading-scroll-infinite");
-                    if(infiniteScrollElem
-                        && ElementUtil.isElementVisible(infiniteScrollElem)
-                        && ElementUtil.rectContainsRect(
-                            ElementUtil.getInfiniteScrollViewportRect(),
-                            infiniteScrollElem.getBoundingClientRect()))
-                                return Util.doLoad(container, lazyPromise, showErrors, invalidatePageOnError);
-                }
-                return result;
-            })
-            .catch(error=>{
-                ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR);
-                if(DEBUG == true && !showErrors) console.log(error);
-                if(showErrors) {
-                    Util.showGlobalError(error, invalidatePageOnError);
-                } else {
-                    Session.onError(error, invalidatePageOnError);
-                }
-            });
-    }
-
-    static resetLoadingIndicatorTree(container)
-    {
-        return Promise.allSettled([
-            Util.resetLoadingIndicator(container),
-            Util.resetNestedLoadingIndicators(container)
-        ]);
-    }
-
-    static resetNestedLoadingIndicators(container)
-    {
-        return Promise.allSettled(Array.from(container.querySelectorAll(".container-loading"))
-            .map(Util.resetLoadingIndicator));
-    }
-
-    static resetLoadingIndicator(container)
-    {
-        return ElementUtil.executeTask(container.id, ()=>ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE));
     }
 
     static getAllSettledLoadingStatus(results, fulfilledStatus = LOADING_STATUS.COMPLETE)

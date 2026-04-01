@@ -6,7 +6,7 @@ class FollowUtil
 
     static follow()
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
         return Session.beforeRequest()
@@ -21,13 +21,13 @@ class FollowUtil
                     return FollowUtil.getMyFollowing();
                 }
             )
-            .then(o => Util.setGeneratingStatus(STATUS.SUCCESS))
+            .then(o => Session.setGeneratingStatus(STATUS.SUCCESS))
             .catch(error => Session.onPersonalException(error));
     }
 
     static unfollow()
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
         return Session.beforeRequest()
@@ -46,19 +46,19 @@ class FollowUtil
                     return FollowUtil.getMyFollowing();
                 }
             )
-            .then(o => Util.setGeneratingStatus(STATUS.SUCCESS))
+            .then(o => Session.setGeneratingStatus(STATUS.SUCCESS))
             .catch(error => Session.onPersonalException(error));
     }
 
     static getMyFollowing()
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
             .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/following"))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 Session.currentFollowing = json;
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }

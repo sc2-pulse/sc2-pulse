@@ -81,7 +81,7 @@ class MmrHistory
     {
         this.resetHistoryModel();
         this.resetHistoryView();
-        if(resetLoading) Util.resetLoadingIndicator(document.querySelector(`#${this.domPrefix}-history-loading`));
+        if(resetLoading) Session.resetLoadingIndicator(document.querySelector(`#${this.domPrefix}-history-loading`));
     }
 
     resetHistoryAll(resetLoading = false)
@@ -278,12 +278,12 @@ class MmrHistory
 
     enqueueUpdateHistory()
     {
-        return Util.load(document.querySelector(`#${this.domPrefix}-history-loading`), n=>this.updateHistory());
+        return Session.load(document.querySelector(`#${this.domPrefix}-history-loading`), n=>this.updateHistory());
     }
 
     resetUpdateHistoryAllLoading()
     {
-        Util.resetLoadingIndicator(document.querySelector(`#${this.domPrefix}-history-all-loading`));
+        Session.resetLoadingIndicator(document.querySelector(`#${this.domPrefix}-history-all-loading`));
     }
 
     updateHistoryAll(resetParameters = true)
@@ -302,7 +302,7 @@ class MmrHistory
 
     enqueueUpdateHistoryAll(resetParameters = true)
     {
-        return Util.load(document.querySelector(`#${this.domPrefix}-history-all-loading`), n=>this.updateHistoryAll(resetParameters));
+        return Session.load(document.querySelector(`#${this.domPrefix}-history-all-loading`), n=>this.updateHistoryAll(resetParameters));
     }
 
     resetSummaryNumericView()
@@ -328,7 +328,7 @@ class MmrHistory
 
     resetSummaryLoading()
     {
-        Util.resetLoadingIndicator(document.querySelector(`#${this.domPrefix}-summary-table-container`));
+        Session.resetLoadingIndicator(document.querySelector(`#${this.domPrefix}-summary-table-container`));
     }
 
     resetSummary(resetLoading = false)
@@ -424,7 +424,7 @@ class MmrHistory
 
     enqueueUpdateSummary()
     {
-        return Util.load(document.querySelector(`#${this.domPrefix}-summary-table-container`), n=>this.updateSummary());
+        return Session.load(document.querySelector(`#${this.domPrefix}-summary-table-container`), n=>this.updateSummary());
     }
 
     static updateSummaryTableBody(tbody, summaries, summaryColumns, createTeamNameElementFn)

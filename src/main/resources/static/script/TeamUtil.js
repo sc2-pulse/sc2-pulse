@@ -618,12 +618,12 @@ class TeamUtil
 
     static updateTeams(params)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return TeamUtil.loadTeamSearchModel(params)
             .then(e=>{
                 TeamUtil.updateTeamSearchModel();
                 TeamUtil.updateTeamSearchView();
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
 
                 const fullParams = new URLSearchParams(params);
                 fullParams.append("type", "team-search");

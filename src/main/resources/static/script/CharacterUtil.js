@@ -18,7 +18,7 @@ class CharacterUtil
 
     static showCharacterInfo(e = null, explicitId = null, fullReload = true)
     {
-        Util.resetLoadingIndicatorTree(document.querySelector("#player-info"));
+        Session.resetLoadingIndicatorTree(document.querySelector("#player-info"));
         if (e != null) e.preventDefault();
         const id = explicitId || e.currentTarget.getAttribute("data-character-id");
 
@@ -76,7 +76,7 @@ class CharacterUtil
 
     static resetCharacterReportsLoading()
     {
-        Util.resetLoadingIndicator(document.querySelector("#character-reports"));
+        Session.resetLoadingIndicator(document.querySelector("#character-reports"));
     }
 
     static resetCharacterReports(resetLoading = false)
@@ -113,7 +113,7 @@ class CharacterUtil
 
     static enqueueUpdateCharacterReports()
     {
-        return Util.load(document.querySelector("#character-reports"), n=>CharacterUtil.updateCharacterReports());
+        return Session.load(document.querySelector("#character-reports"), n=>CharacterUtil.updateCharacterReports());
     }
 
     static updateAllCharacterReportsModel(onlyUnreviewed = false)
@@ -139,11 +139,11 @@ class CharacterUtil
     {
         if(!document.querySelector("#all-character-reports")) return Promise.resolve();
 
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updateAllCharacterReportsModel(onlyUnreviewed)
             .then(e=>{
                 CharacterUtil.updateAllCharacterReportsView();
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }
@@ -162,7 +162,7 @@ class CharacterUtil
 
     static resetCharacterTeamsLoading()
     {
-        Util.resetLoadingIndicator(document.querySelector("#player-stats-history"));
+        Session.resetLoadingIndicator(document.querySelector("#player-stats-history"));
     }
 
     static resetCharacterTeams(resetLoading = false)
@@ -201,7 +201,7 @@ class CharacterUtil
 
     static enqueueUpdateCharacterTeams()
     {
-         return Util.load(document.querySelector("#player-stats-history"), n=>CharacterUtil.updateCharacterTeams());
+         return Session.load(document.querySelector("#player-stats-history"), n=>CharacterUtil.updateCharacterTeams());
     }
 
     static updateCharacterTeamsView()
@@ -231,7 +231,7 @@ class CharacterUtil
 
     static updateCharacter(id)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return Promise.allSettled(CharacterUtil.getCharacterUpdateTasks())
             .then(r=>CharacterUtil.updateCharacterModel(id))
             .then(jsons => {
@@ -244,20 +244,20 @@ class CharacterUtil
                 );
                 for(const link of document.querySelectorAll(".character-link-follow-only[rel~=nofollow]")) link.relList.remove("nofollow");
                 CharacterUtil.enqueueUpdateCharacterReports();
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }
 
     static resetAdditionalLinks()
     {
-        Util.resetLoadingIndicator(document.querySelector("#character-links-section"));
+        Session.resetLoadingIndicator(document.querySelector("#character-links-section"));
         ElementUtil.executeTask("character-links-section", ()=>Model.DATA.get(VIEW.CHARACTER).delete("additionalLinks"));
     }
 
     static enqueueUpdateAdditionalCharacterLinks()
     {
-        return Util.load(document.querySelector("#additional-link-loading"),
+        return Session.load(document.querySelector("#additional-link-loading"),
             n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id));
     }
 
@@ -353,7 +353,7 @@ class CharacterUtil
 
     static enqueueUpdateCharacterLinks()
     {
-        return Util.load(document.querySelector("#player-stats-player-loading"), n=>CharacterUtil.updateCharacterLinks());
+        return Session.load(document.querySelector("#player-stats-player-loading"), n=>CharacterUtil.updateCharacterLinks());
     }
 
     static updateCharacterLinks()
@@ -441,7 +441,7 @@ class CharacterUtil
 
     static enqueueUpdateCharacterLinkedExternalAccounts()
     {
-        return Util.load(document.querySelector("#linked-external-accounts"), n=>CharacterUtil.updateCharacterLinkedExternalAccounts());
+        return Session.load(document.querySelector("#linked-external-accounts"), n=>CharacterUtil.updateCharacterLinkedExternalAccounts());
     }
 
     static updateCharacterLinkedExternalAccountsView()
@@ -519,7 +519,7 @@ class CharacterUtil
 
     static enqueueUpdateCharacterProInfo()
     {
-        return Util.load(document.querySelector("#pro-player-info"), n=>CharacterUtil.updateCharacterProInfo());
+        return Session.load(document.querySelector("#pro-player-info"), n=>CharacterUtil.updateCharacterProInfo());
     }
 
     static doUpdateCharacterProInfo(proPlayer)
@@ -624,7 +624,7 @@ class CharacterUtil
 
     static enqueueUpdateCharacterStats()
     {
-        return Util.load(document.querySelector("#player-stats"), n=>CharacterUtil.updateCharacterStats());
+        return Session.load(document.querySelector("#player-stats"), n=>CharacterUtil.updateCharacterStats());
     }
 
     static updateCharacterStats()
@@ -749,7 +749,7 @@ class CharacterUtil
 
     static enqueueUpdateCharacterLinkedCharacters()
     {
-        return Util.load(document.querySelector("#player-stats-characters"), n=>CharacterUtil.updateCharacterLinkedCharacters());
+        return Session.load(document.querySelector("#player-stats-characters"), n=>CharacterUtil.updateCharacterLinkedCharacters());
     }
 
     static resetCharacterLinkedCharacters()
@@ -891,12 +891,12 @@ class CharacterUtil
     {
         CharacterUtil.resetNextMatchesModel();
         CharacterUtil.resetNextMatchesView();
-        Util.resetLoadingIndicator(document.querySelector("#player-stats-matches"));
+        Session.resetLoadingIndicator(document.querySelector("#player-stats-matches"));
     }
 
     static enqueueResetNextMatchesView()
     {
-        return Util.load(document.querySelector("#player-stats-matches-reset-loading"), n=>{
+        return Session.load(document.querySelector("#player-stats-matches-reset-loading"), n=>{
             CharacterUtil.resetNextMatchesView();
             return Promise.resolve({data: null, status: LOADING_STATUS.COMPLETE});
         });
@@ -904,7 +904,7 @@ class CharacterUtil
 
     static enqueueUpdateNextMatches()
     {
-        return Util.load(document.querySelector("#player-stats-matches"), n=>CharacterUtil.updateNextMatches());
+        return Session.load(document.querySelector("#player-stats-matches"), n=>CharacterUtil.updateNextMatches());
     }
 
     static updateNextMatches()
@@ -948,7 +948,7 @@ class CharacterUtil
 
     static updateCharacterSearch(name)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         name = name.trim();
         name = CharacterUtil.autoCompleteIfClanSearch(name);
         const searchParams = new URLSearchParams();
@@ -958,7 +958,7 @@ class CharacterUtil
         return CharacterUtil.updateCharacterSearchModel(name)
             .then(json => {
                 CharacterUtil.updateCharacterSearchView();
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
                 if(!Session.isHistorical) HistoryUtil.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString() + "#search");
                 Session.currentSearchParams = stringParams;
             })
@@ -991,11 +991,11 @@ class CharacterUtil
 
     static updatePersonalCharacters()
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updatePersonalCharactersModel()
             .then(json => {
                 CharacterUtil.updatePersonalCharactersView();
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }
@@ -1233,7 +1233,7 @@ class CharacterUtil
     static onEvidenceVote(evt)
     {
         const td = evt.target;
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         //remove popovers to avoid the popover bug on td removal
         document.querySelectorAll(".popover").forEach(e=>e.remove());
         CharacterUtil.voteOnEvidence(td.closest("[data-evidence-id]").getAttribute("data-evidence-id"), td.getAttribute("data-vote"))
@@ -1250,7 +1250,7 @@ class CharacterUtil
                     row.appendChild(CharacterUtil.createEvidenceFooter(evidence));
                 }
                 Session.updateReportsNotifications();
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }
@@ -1284,9 +1284,9 @@ class CharacterUtil
             e.preventDefault();
             const fd = new FormData(document.querySelector("#report-character-form"));
             fd.set("playerCharacterId", Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id);
-            Util.setGeneratingStatus(STATUS.BEGIN);
+            Session.setGeneratingStatus(STATUS.BEGIN);
             CharacterUtil.reportCharacter(fd)
-                .then(e => Util.setGeneratingStatus(STATUS.SUCCESS))
+                .then(e => Session.setGeneratingStatus(STATUS.SUCCESS))
                 .catch(error => Session.onPersonalException(error));
         })
     }

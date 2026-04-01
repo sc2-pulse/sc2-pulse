@@ -14,7 +14,7 @@ class CommunityUtil
         const streamUpdater = new IntervalExecutor(
             ()=>{
                 ElementUtil.setLoadingIndicator(document.querySelector("#search-stream"), LOADING_STATUS.NONE);
-                return Util.load(document.querySelector("#search-stream"), ()=>CommunityUtil.updateStreams());
+                return Session.load(document.querySelector("#search-stream"), ()=>CommunityUtil.updateStreams());
             },
             ()=>window.location.hash == "#search-stream",
             60000,

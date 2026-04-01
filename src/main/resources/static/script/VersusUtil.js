@@ -24,11 +24,11 @@ class VersusUtil
 
     static updateVersus(clans1, teams1, clans2, teams2, types)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return VersusUtil.updateVersusModel(clans1, teams1, clans2, teams2, types)
             .then(VersusUtil.updateVersusView)
             .then(e=>{
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
                 const varData = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.VAR);
                 const urlParams = VersusUtil.apiParamsToUrlParams(varData.params);
                 const stringParams = urlParams.toString();
@@ -139,14 +139,14 @@ class VersusUtil
     static loadNextMatches(evt)
     {
         evt.preventDefault();
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         const matches = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.SEARCH).matches.result;
         const lastMatch = matches[matches.length - 1];
         VersusUtil.loadNextMatchesModel(lastMatch.match.date, lastMatch.match.type, lastMatch.map.id, lastMatch.match.region, Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.VAR).params)
             .then(json => {
                 if(json.result.length > 0) VersusUtil.updateVersusView();
                 if(json.result.length < MATCH_BATCH_SIZE) document.querySelector("#load-more-matches-versus").classList.add("d-none");
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }

@@ -75,11 +75,11 @@ class RevealUtil
 
     static reveal(accountId, proPlayerId, method)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
             .then(n=>Session.fetch(`${ROOT_CONTEXT_PATH}api/reveal/${accountId}/${proPlayerId}`, Util.addCsrfHeader({method: method})))
             .then(Session.verifyResponse)
-            .then(o=>Util.setGeneratingStatus(STATUS.SUCCESS))
+            .then(o=>Session.setGeneratingStatus(STATUS.SUCCESS))
             .catch(error=>Session.onPersonalException(error));
     }
 
@@ -87,11 +87,11 @@ class RevealUtil
     {
         evt.preventDefault();
         const fd = new FormData(evt.target);
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return RevealUtil.importProfile(fd.get("url"))
             .then(proPlayer=>{
                 RevealUtil.renderAndSelectProPlayer(proPlayer, document.querySelector("#modal-reveal-player-players"));
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error=>Session.onPersonalException(error));
     }
@@ -140,8 +140,8 @@ class RevealUtil
             .map(url=>url.trim())
             .filter(url=>url != "");
         const container = evt.target.closest(".container-loading");
-        Util.resetLoadingIndicator(container);
-        return Util.load(container, ()=>RevealUtil.saveProPlayer({proPlayer: proPlayer, links: links}), true);
+        Session.resetLoadingIndicator(container);
+        return Session.load(container, ()=>RevealUtil.saveProPlayer({proPlayer: proPlayer, links: links}), true);
     }
 
     static saveProPlayer(data)
@@ -167,8 +167,8 @@ class RevealUtil
             return;
         }
         const container = evt.target.closest(".container-loading");
-        Util.resetLoadingIndicator(container);
-        Util.load(container, ()=>RevealUtil.getPlayer(playerId).then(player=>{
+        Session.resetLoadingIndicator(container);
+        Session.load(container, ()=>RevealUtil.getPlayer(playerId).then(player=>{
             const result = RevealUtil.editProPlayer(player);
             $("#reveal-player-edit-form").collapse("show");
             return result;
@@ -457,7 +457,7 @@ class RevealUtil
     static resetLogEntries()
     {
         ElementUtil.removeChildren(document.querySelector('#reveal-log-entries'));
-        Util.resetLoadingIndicator(document.querySelector('#reveal-log-entries-container'));
+        Session.resetLoadingIndicator(document.querySelector('#reveal-log-entries-container'));
         Model.DATA.get(RevealUtil.MODEL_NAME).log.entries = [];
     }
 
@@ -470,7 +470,7 @@ class RevealUtil
     static updateLogEntriesContainer()
     {
         const container = document.querySelector('#reveal-log-entries-container');
-        return Util.load(container, RevealUtil.updateLogEntries);
+        return Session.load(container, RevealUtil.updateLogEntries);
     }
 
     static updateLog()

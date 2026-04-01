@@ -21,7 +21,7 @@ class Session
             Session.updateApplicationVersion();
             return;
         }
-        Util.setGeneratingStatus(STATUS.ERROR, error.message, error, invalidatePage);
+        Session.setGeneratingStatus(STATUS.ERROR, error.message, error, invalidatePage);
     }
 
     static fetch(url, options)
@@ -46,7 +46,7 @@ class Session
 
     static updateApplicationVersion()
     {
-        Util.setGeneratingStatus(STATUS.SUCCESS);
+        Session.setGeneratingStatus(STATUS.SUCCESS);
         $("#application-version-update").modal();
     }
 
@@ -55,7 +55,7 @@ class Session
     {
         if(Session.currentAccount != null)
         {
-            Util.setGeneratingStatus(STATUS.SUCCESS);
+            Session.setGeneratingStatus(STATUS.SUCCESS);
             $("#error-session").modal();
         }
         else
@@ -66,7 +66,7 @@ class Session
 
     static doRenewBlizzardRegistration()
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         Session.isSilent = true;
         document.cookie = "pre-auth-path=" + encodeURI(Util.getCurrentPathInContext() + window.location.search + window.location.hash)
             + ";path=" + ROOT_CONTEXT_PATH
@@ -349,6 +349,114 @@ class Session
         document.body.classList.add("js-error-detected");
     }
 
+    static setGeneratingStatus(status, errorText = "Error", error = null, invalidatePageOnError = false)
+    {
+        switch(status)
+        {
+            case STATUS.BEGIN:
+                Session.currentRequests++;
+                if (Session.currentRequests > 1) return;
+                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), true);
+                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-success"), false);
+                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-error"), false);
+            break;
+            case STATUS.SUCCESS:
+            case STATUS.ERROR:
+                Session.currentRequests--;
+                if(status === STATUS.ERROR)
+                {
+                    Session.showGlobalError(error != null ? error : {message: errorText}, invalidatePageOnError);
+                }
+                if(Session.currentRequests > 0) return;
+                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
+                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-" + status.name), true);
+                Session.isHistorical = false;
+            break;
+        }
+    }
+
+    static showGlobalError(error, invalidatePage = false)
+    {
+        if(DEBUG == true) console.log(error);
+        Session.onError(error, invalidatePage);
+        document.getElementById("error-generation-text").textContent = Util.ERROR_MESSAGES.get(error.message.trim()) || error.message;
+        if(!Session.isSilent) $("#error-generation").modal();
+    }
+
+    static successStatusPromise(e)
+    {
+        Session.setGeneratingStatus(STATUS.SUCCESS);
+        return Promise.resolve(e);
+    }
+
+    static reload(id, ifLoaded = true)
+    {
+        ElementUtil.INPUT_TIMEOUTS.set(id, window.setTimeout(e=>{
+                if(!ifLoaded || Session.currentRequests < 1) {
+                    document.location.reload();
+                } else {
+                    Session.reload(id);
+                }
+            }, SC2Restful.REDIRECT_PAGE_TIMEOUT_MILLIS)
+        );
+    }
+
+    static load(container, lazyPromise, showErrors = false, invalidatePageOnError = false)
+    {
+        return ElementUtil.executeTask(container.id,
+            ()=>Session.doLoad(container, lazyPromise, showErrors, invalidatePageOnError));
+    }
+
+    static doLoad(container, lazyPromise, showErrors = false, invalidatePageOnError = false)
+    {
+        if(container.classList.contains(LOADING_STATUS.COMPLETE.className)
+            || container.classList.contains(LOADING_STATUS.IN_PROGRESS.className)) return Promise.resolve();
+
+        ElementUtil.setLoadingIndicator(container, LOADING_STATUS.IN_PROGRESS);
+        return lazyPromise()
+            .then(result=>{
+                ElementUtil.setLoadingIndicator(container, result.status);
+                if(result.status != LOADING_STATUS.COMPLETE && result.status != LOADING_STATUS.ERROR) {
+                    const infiniteScrollElem = container.querySelector(":scope .indicator-loading-scroll-infinite");
+                    if(infiniteScrollElem
+                        && ElementUtil.isElementVisible(infiniteScrollElem)
+                        && ElementUtil.rectContainsRect(
+                            ElementUtil.getInfiniteScrollViewportRect(),
+                            infiniteScrollElem.getBoundingClientRect()))
+                                return Session.doLoad(container, lazyPromise, showErrors, invalidatePageOnError);
+                }
+                return result;
+            })
+            .catch(error=>{
+                ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR);
+                if(DEBUG == true && !showErrors) console.log(error);
+                if(showErrors) {
+                    Session.showGlobalError(error, invalidatePageOnError);
+                } else {
+                    Session.onError(error, invalidatePageOnError);
+                }
+            });
+    }
+
+    static resetLoadingIndicatorTree(container)
+    {
+        return Promise.allSettled([
+            Session.resetLoadingIndicator(container),
+            Session.resetNestedLoadingIndicators(container)
+        ]);
+    }
+
+    static resetNestedLoadingIndicators(container)
+    {
+        return Promise.allSettled(Array.from(container.querySelectorAll(".container-loading"))
+            .map(Session.resetLoadingIndicator));
+    }
+
+    static resetLoadingIndicator(container)
+    {
+        return ElementUtil.executeTask(container.id, ()=>ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE));
+    }
+
 }
 
 Session.isSilent = false;
@@ -398,7 +506,7 @@ class PersonalUtil
 {
     static getMyAccount()
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         const request = ROOT_CONTEXT_PATH + "api/my/common";
         return Session.beforeRequest()
             .then(e=>Session.fetch(request))
@@ -409,7 +517,7 @@ class PersonalUtil
                 Session.currentFollowing = json.accountFollowings;
                 Session.currentRoles = json.roles;
                 PersonalUtil.updateMyAccount(json);
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
     }
@@ -476,23 +584,23 @@ class PersonalUtil
 
     static unlinkDiscordAccount()
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
             .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/discord/unlink", Util.addCsrfHeader({method: "POST"})))
             .then(Session.verifyResponse)
             .then(Session.getMyInfo)
-            .then(Util.successStatusPromise)
+            .then(Session.successStatusPromise)
             .catch(error => Session.onPersonalException(error));
     }
 
     static updateDiscordAccountVisibility(evt)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
             .then(n=>Session.fetch(ROOT_CONTEXT_PATH + "api/my/discord/public/" + evt.target.checked, Util.addCsrfHeader({method: "POST"})))
             .then(Session.verifyResponse)
             .then(Session.getMyInfo)
-            .then(Util.successStatusPromise)
+            .then(Session.successStatusPromise)
             .catch(error => Session.onPersonalException(error));
     }
 

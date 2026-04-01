@@ -73,7 +73,7 @@ class LadderUtil
         sort = LadderUtil.DEFAULT_SORT,
     )
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         const params =
         {
             form: formParams,
@@ -90,7 +90,7 @@ class LadderUtil
                 const stringParams = searchParams.toString();
 
                 LadderUtil.updateLadderView();
-                Util.setGeneratingStatus(STATUS.SUCCESS, null, "generated-info-all");
+                Session.setGeneratingStatus(STATUS.SUCCESS, null, "generated-info-all");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString() + "#ladder-top");
                 Session.currentSeason = searchParams.get("season");
                 Session.currentTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
@@ -133,7 +133,7 @@ class LadderUtil
 
     static updateMyLadder(formParams)
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
 
         const params = {form: formParams}
         const searchParams = new URLSearchParams(formParams);
@@ -143,7 +143,7 @@ class LadderUtil
         return LadderUtil.updateMyLadderModel(formParams)
             .then(jsons =>{
                 LadderUtil.updateMyLadderView();
-                Util.setGeneratingStatus(STATUS.SUCCESS, null, "following-ladder");
+                Session.setGeneratingStatus(STATUS.SUCCESS, null, "following-ladder");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString() + "#personal-following");
                 Session.currentPersonalSeasonSeason = searchParams.get("season");
                 Session.currentPersonalTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);

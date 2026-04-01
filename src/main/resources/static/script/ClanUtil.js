@@ -118,7 +118,7 @@ class ClanUtil
         sort = ClanUtil.DEFAULT_SORT
     )
     {
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return ClanUtil.updateClanSearchModel(formParams, navigationCursor, sort)
             .then(e => {
                 const executedParams = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH).params;
@@ -131,7 +131,7 @@ class ClanUtil
 
                 ClanUtil.updateClanSearchView();
                 Util.scrollIntoViewById("search-result-clan-all");
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
                 if(!Session.isHistorical) HistoryUtil.pushState({}, document.title, "?" + stringParams + "#search-clan");
                 Session.currentSearchParams = stringParams;
             })

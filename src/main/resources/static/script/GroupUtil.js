@@ -194,7 +194,7 @@ class GroupUtil
 
     static resetTeams(container)
     {
-        Util.resetLoadingIndicator(container);
+        Session.resetLoadingIndicator(container);
         const view = ViewUtil.getView(container);
         Model.DATA.get(view).get(VIEW_DATA.SEARCH).teams = [];
         ElementUtil.removeChildren(container.querySelector(":scope .teams tbody"));
@@ -218,7 +218,7 @@ class GroupUtil
                 CharacterUtil.updateCharacters(container.querySelector(":scope .table-character"), characters);
                 return {data: characters, status: LOADING_STATUS.COMPLETE};
             });
-        return Util.load(container, promise);
+        return Session.load(container, promise);
     }
 
     static getMatches(params)
@@ -305,7 +305,7 @@ class GroupUtil
 
     static resetMatches(section)
     {
-        Util.resetLoadingIndicator(section);
+        Session.resetLoadingIndicator(section);
         const view = ViewUtil.getView(section);
         ElementUtil.removeChildren(section.querySelector(":scope .matches tbody"));
         delete Model.DATA.get(view).get(VIEW_DATA.SEARCH)?.matches;
@@ -385,7 +385,7 @@ class GroupUtil
     {
         GroupUtil.resetLinksModel(ViewUtil.getView(section));
         GroupUtil.resetLinksView(section);
-        if(clearLoading) Util.resetLoadingIndicatorTree(section.querySelector(":scope .group-links"));
+        if(clearLoading) Session.resetLoadingIndicatorTree(section.querySelector(":scope .group-links"));
     }
 
     static groupLinkData(links, type)
@@ -552,7 +552,7 @@ class GroupUtil
     {
         const groupSection = document.querySelector("#group");
         const linksContainer = groupSection.querySelector("#group-links");
-        return Util.load(linksContainer, ()=>GroupUtil.updateLinks(groupSection));
+        return Session.load(linksContainer, ()=>GroupUtil.updateLinks(groupSection));
     }
 
     static loadAndShowGroup(groupIds)
@@ -564,13 +564,13 @@ class GroupUtil
         const fullParams = GroupUtil.fullUrlSearchParams(groupParams);
         Model.DATA.get(VIEW.GROUP).set(VIEW_DATA.VAR, {groupParams: groupParams, fullGroupParams: fullParams});
         Model.reset(VIEW.GROUP, [VIEW_DATA.SEARCH, VIEW_DATA.TEAMS]);
-        document.querySelectorAll("#group .container-loading").forEach(Util.resetLoadingIndicator);
+        document.querySelectorAll("#group .container-loading").forEach(Session.resetLoadingIndicator);
         const modal = document.querySelector("#group");
-        Util.setGeneratingStatus(STATUS.BEGIN);
+        Session.setGeneratingStatus(STATUS.BEGIN);
         return GroupUtil.updateRequiredMetadata(groupParams, modal)
             .then(e=>{
                 BootstrapUtil.showModal("group");
-                Util.setGeneratingStatus(STATUS.SUCCESS);
+                Session.setGeneratingStatus(STATUS.SUCCESS);
                 const stringParams = fullParams.toString();
                 if(!Session.isHistorical) HistoryUtil.pushState({}, document.title, "?" + stringParams + "#group-group");
                 Session.currentSearchParams = stringParams;
@@ -626,7 +626,7 @@ class GroupUtil
         const groupSection = document.querySelector("#group");
         const teamsContainer = groupSection.querySelector(":scope .group-teams");
         const fd = new FormData(document.querySelector("#group-teams-form"));
-        return Util.load(teamsContainer, ()=>GroupUtil.updateTeams(groupSection, fd.get("queue"), fd.get("season")));
+        return Session.load(teamsContainer, ()=>GroupUtil.updateTeams(groupSection, fd.get("queue"), fd.get("season")));
     }
 
     static enhanceTeams()
@@ -646,7 +646,7 @@ class GroupUtil
         const groupSection = document.querySelector("#group");
         const matchContainer = groupSection.querySelector(":scope .group-matches");
         ElementUtil.infiniteScroll(document.querySelector("#group .group-matches .container-indicator-loading-default"),
-            ()=>Util.load(matchContainer, e=>GroupUtil.updateMatches(
+            ()=>Session.load(matchContainer, e=>GroupUtil.updateMatches(
                 document.querySelector("#group"),
                 localStorage.getItem("matches-type-group") || "all")));
 
@@ -660,7 +660,7 @@ class GroupUtil
             evt=>window.setTimeout(timeout=>{
                 ElementUtil.executeTask(matchContainer.id, ()=>{
                     GroupUtil.resetMatches(matchContainer);
-                    Util.load(matchContainer, ()=>GroupUtil.updateMatches(
+                    Session.load(matchContainer, ()=>GroupUtil.updateMatches(
                         groupSection,
                         localStorage.getItem("matches-type-group") || "all"
                     ));
@@ -671,7 +671,7 @@ class GroupUtil
     static enhanceClanHistory()
     {
         ElementUtil.infiniteScroll(document.querySelector("#group .group-clan .container-indicator-loading-default"),
-            ()=>Util.load(document.querySelector("#group .group-clan"),
+            ()=>Session.load(document.querySelector("#group .group-clan"),
                 e=>GroupUtil.updateClanHistory(document.querySelector("#group"))));
     }
 
