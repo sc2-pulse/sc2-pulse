@@ -40,7 +40,8 @@ public class MvcIT
     @CsvSource
     ({
         "/static/sc2.css, text/css",
-        "/webjars/bootstrap/css/bootstrap.min.css, text/css"
+        "/webjars/bootstrap/css/bootstrap.min.css, text/css",
+        "/static/script/shared/sc2pulse-util.min.js, application/javascript"
     })
     @ParameterizedTest
     public void staticResourcesMustHaveCacheControl(String url, String contentType)
