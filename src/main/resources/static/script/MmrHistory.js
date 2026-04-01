@@ -10,7 +10,7 @@ class MmrHistory
         getChartRegionFn,
         getTeamNameFn,
         teamNameHeader = "Team",
-        createTeamNameElementFn = legacyUidData=>document.createTextNode(getTeamNameFn(legacyUidData.id)),
+        createTeamNameElementFn = legacyUidData=>document.createTextNode(getTeamNameFn(legacyUidData.toPulseString())),
         completePointTimeout = MmrHistory.MMR_HISTORY_COMPLETE_POINT_TIMEOUT,
     )
     {
@@ -548,7 +548,7 @@ class MmrHistory
 
     static addLegacyUidData(history)
     {
-        history.legacyUidData = TeamUtil.parseLegacyUid(history.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_UID.fullName]);
+        history.legacyUidData = TeamLegacyUid.fromPulseString(history.staticData[TEAM_HISTORY_STATIC_COLUMN.LEGACY_UID.fullName]);
     }
 
     static copyHistory(src, dest)

@@ -659,59 +659,18 @@ class TeamUtil
         if(sortCtl) sortCtl.addEventListener("change", ()=>window.setTimeout(TeamUtil.onTeamSort, 1));
     }
 
-    static createLegacyUid(queue, teamType, region, legacyId)
-    {
-        return queue.code + "-" + teamType.code + "-" + region.code + "-" + legacyId;
-    }
-
-    static createLegacyIdSection(member)
-    {
-        return member.realm + "." + member.id + "." + (member.race || "");
-    }
-
-    static createLegacyId(members)
-    {
-        return members.map(TeamUtil.createLegacyIdSection).join("~");
-    }
-
-    static parseLegacyId(legacyId)
-    {
-        const split = legacyId.split(".");
-        return {
-            realm: parseInt(split[0]),
-            id: parseInt(split[1]),
-            race: split[2] !=='' ? EnumUtil.enumOfId(parseInt(split[2]), RACE) : null
-        };
-    }
-
-    static parseLegacyUid(legacyUid)
-    {
-        const split = legacyUid.split("-");
-        return {
-            id: legacyUid,
-            queueType: EnumUtil.enumOfId(split[0], TEAM_FORMAT),
-            teamType: EnumUtil.enumOfId(split[1], TEAM_TYPE),
-            region: EnumUtil.enumOfId(split[2], REGION),
-            legacyId: {
-                id: split[3],
-                entries: split[3].split("~").map(TeamUtil.parseLegacyId)
-            }
-        };
-    }
-
     static createLegacyIdsForAllRaces(member)
     {
         const memberClone = structuredClone(member);
-        return Object.values(RACE).map(race=>{
-            memberClone.race = race.code;
-            return TeamUtil.createLegacyIdSection(memberClone);
-        });
+        return Object.values(RACE).map(race=>new TeamLegacyId([new TeamLegacyIdEntry(
+            member.realm, member.id, race)
+        ]));
     }
     
     static createLegacyUidsForAllRaces(queue, teamType, region, member)
     {
         return TeamUtil.createLegacyIdsForAllRaces(member)
-            .map(legacyId=>TeamUtil.createLegacyUid(queue, teamType, region, legacyId));
+            .map(legacyId=>new TeamLegacyUid(queue, teamType, region, legacyId).toPulseString());
     }
 
     static getTeamMmrHistoryQueueData()

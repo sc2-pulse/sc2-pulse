@@ -9,6 +9,9 @@ const inputFiles = [
     'Util.js',
     'EnumUtil.js',
     'Cursor.js',
+    'TeamLegacyIdEntry.js',
+    'TeamLegacyId.js',
+    'TeamLegacyUid.js',
     'SortParameter.js',
     'RequestRateLimiter.js',
     'SC2PulseAPI.js'

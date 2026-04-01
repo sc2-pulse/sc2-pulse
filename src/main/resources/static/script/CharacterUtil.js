@@ -728,7 +728,9 @@ class CharacterUtil
         const teamType = queue == TEAM_FORMAT._1V1 ? TEAM_TYPE.ARRANGED : TEAM_TYPE.RANDOM;
         const legacyUids = queue == TEAM_FORMAT._1V1
             ? TeamUtil.createLegacyUidsForAllRaces(queue, teamType, region, member)
-            : [TeamUtil.createLegacyUid(queue, teamType, region, TeamUtil.createLegacyIdSection(member))];
+            : [new TeamLegacyUid(queue, teamType, region,
+                new TeamLegacyId([new TeamLegacyIdEntry(character.realm, character.battlenetId)]))
+                    .toPulseString()];
         return {
             queue: queue,
             teamType: teamType,
@@ -1470,7 +1472,7 @@ class CharacterUtil
 
     static getMmrHistoryTeamName(legacyUidString)
     {
-        const legacyUidData = TeamUtil.parseLegacyUid(legacyUidString);
+        const legacyUidData = TeamLegacyUid.fromPulseString(legacyUidString);
         const race = legacyUidData.legacyId.entries.length == 1
             ? legacyUidData.legacyId.entries[0].race || MmrHistory.ALL_RACE
             : MmrHistory.ALL_RACE;
