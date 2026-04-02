@@ -65,7 +65,4 @@ minify(babelResult.code, {
     .then(minified=>{
         if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
         fs.writeFileSync(path.join(outputDir, outputFile), minified.code);
-    })
-    .catch(error => {
-      console.error(error);
     });
