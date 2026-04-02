@@ -1,70 +1,71 @@
 const { minify } = require("terser");
+const babel = require("@babel/core");
 const fs = require('fs');
 const path = require('path');
 
-const root = 'target/js';
+const inputDir = 'src/main/resources/static/script';
+const outputDir = 'target/classes/static/script';
+const outputFile = 'sc2-restful.min.js';
 const orderedFiles = [
-    root + '/LuxonConfig.js',
-    root + '/IntervalExecutor.js',
-    root + '/RequestRateLimiter.js',
-    root + '/SortParameter.js',
-    root + '/Cursor.js',
-    root + '/TeamLegacyIdEntry.js',
-    root + '/TeamLegacyId.js',
-    root + '/TeamLegacyUid.js',
-    root + '/Util.js',
-    root + '/BootstrapUtil.js',
-    root + '/ElementUtil.js',
-    root + '/enum.js',
-    root + '/EnumUtil.js',
-    root + '/SC2PulseAPI.js',
-    root + '/MmrHistory.js',
-    root + '/CharacterUtil.js',
-    root + '/FollowUtil.js',
-    root + '/HistoryUtil.js',
-    root + '/LadderUtil.js',
-    root + '/Model.js',
-    root + '/Pagination.js',
-    root + '/PaginationUtil.js',
-    root + '/SeasonUtil.js',
-    root + '/MetaUtil.js',
-    root + '/Session.js',
-    root + '/SC2Restful.js',
-    root + '/ChartUtil.js',
-    root + '/StatsUtil.js',
-    root + '/TableUtil.js',
-    root + '/TeamUtil.js',
-    root + '/ViewUtil.js',
-    root + '/FormUtil.js',
-    root + '/ClanUtil.js',
-    root + '/Buffer.js',
-    root + '/BufferUtil.js',
-    root + '/MatchUtil.js',
-    root + '/VersusUtil.js',
-    root + '/VODUtil.js',
-    root + '/RevealUtil.js',
-    root + '/GroupUtil.js',
-    root + '/CommunityUtil.js',
-    root + '/MatrixUI.js',
-    root + '/EnhancementUtil.js'
+    'LuxonConfig.js',
+    'IntervalExecutor.js',
+    'RequestRateLimiter.js',
+    'SortParameter.js',
+    'Cursor.js',
+    'TeamLegacyIdEntry.js',
+    'TeamLegacyId.js',
+    'TeamLegacyUid.js',
+    'Util.js',
+    'BootstrapUtil.js',
+    'ElementUtil.js',
+    'enum.js',
+    'EnumUtil.js',
+    'SC2PulseAPI.js',
+    'MmrHistory.js',
+    'CharacterUtil.js',
+    'FollowUtil.js',
+    'HistoryUtil.js',
+    'LadderUtil.js',
+    'Model.js',
+    'Pagination.js',
+    'PaginationUtil.js',
+    'SeasonUtil.js',
+    'MetaUtil.js',
+    'Session.js',
+    'SC2Restful.js',
+    'ChartUtil.js',
+    'StatsUtil.js',
+    'TableUtil.js',
+    'TeamUtil.js',
+    'ViewUtil.js',
+    'FormUtil.js',
+    'ClanUtil.js',
+    'Buffer.js',
+    'BufferUtil.js',
+    'MatchUtil.js',
+    'VersusUtil.js',
+    'VODUtil.js',
+    'RevealUtil.js',
+    'GroupUtil.js',
+    'CommunityUtil.js',
+    'MatrixUI.js',
+    'EnhancementUtil.js'
 ];
 
-const fileContents = orderedFiles.reduce((acc, filePath) => {
-  acc[path.basename(filePath)] = fs.readFileSync(filePath, 'utf8');
-  return acc;
-}, {});
-
-minify(fileContents, {
+let rawCombinedCode = '';
+for (const file of orderedFiles) {
+    const content = fs.readFileSync(path.join(inputDir, file), 'utf8');
+    rawCombinedCode += `\n/* Source: ${file} */\n${content}\n`;
+}
+const babelResult = babel.transformSync(rawCombinedCode);
+minify(babelResult.code, {
     compress: true,
     mangle: true
 })
-.then(result => {
-    const outputDir = 'target/classes/static/script';
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-    fs.writeFileSync(outputDir + '/sc2-restful.min.js', result.code);
-})
-.catch(error => {
-  console.error(error);
-});
+    .then(minified=>{
+        if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+        fs.writeFileSync(path.join(outputDir, outputFile), minified.code);
+    })
+    .catch(error => {
+      console.error(error);
+    });
