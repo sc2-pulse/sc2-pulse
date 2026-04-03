@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -22,7 +22,7 @@ public class AligulacAPI
 extends BaseAPI
 {
 
-    public static final String BASE_URL = "http://aligulac.com/api/v1/";
+    public static final String BASE_URL = "https://aligulac.com/api/v1/";
     public static final int SLOTS_PER_PERIOD = 2;
 
     private final String apiKey;
