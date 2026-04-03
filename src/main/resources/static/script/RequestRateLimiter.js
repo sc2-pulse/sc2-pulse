@@ -48,13 +48,26 @@ class RequestRateLimiter {
 
     destroy() {
         this.#channel.close();
-        clearInterval(this.#refillTimer);
+        clearTimeout(this.#refillTimer);
     }
 
-    #resetRefillTimer()
+    #tryResetRefillTimer()
     {
-        clearInterval(this.#refillTimer);
-        this.#refillTimer = setInterval(() => this.#refill(), this.#refillInterval);
+        if(this.#refillTimer != null) return false;
+
+        const now = Date.now();
+        const delay = now >= this.#lastRefillTimestamp + this.#refillInterval
+            ? 0
+            : now - this.#lastRefillTimestamp;
+        this.#refillTimer = setTimeout(()=>this.#refillTimerTask(), delay);
+        return true;
+    }
+
+    #refillTimerTask()
+    {
+        this.#refill();
+        this.#refillTimer = null;
+        if(this.#leaderQueue.length > 0) this.#tryResetRefillTimer();
     }
 
     #electLeader(channelName) {
@@ -65,8 +78,7 @@ class RequestRateLimiter {
             async () => {
                 this.#isLeader = true;
                 this.#lastRefillTimestamp = Date.now();
-                this.#resetRefillTimer();
-                this.#localQueue.entries().forEach(([id, res])=>this.#leaderQueue.push({id: id, tabId: this.#tabId, resolve: res}));
+                this.#localQueue.entries().forEach(([id, res])=>this.#enqueue({id: id, tabId: this.#tabId, resolve: res}));
                 this.#channel.postMessage({ type: 'LEADER_READY' });
                 // Hold lock until tab closes
                 await new Promise(() => {});
@@ -86,6 +98,11 @@ class RequestRateLimiter {
                 this.#tokenCount = 0;
             }
         );
+    }
+
+    #enqueue(request) {
+        this.#leaderQueue.push(request);
+        this.#tryResetRefillTimer();
     }
 
     #refill() {
@@ -148,7 +165,7 @@ class RequestRateLimiter {
         this.#bucketCapacity = bucketParameters.bucketCapacity;
         if(this.#refillInterval != bucketParameters.refillInterval) {
             this.#refillInterval = bucketParameters.refillInterval;
-            if(this.#isLeader) this.#resetRefillTimer();
+            if(this.#isLeader) this.#tryResetRefillTimer();
         }
         this.#tokenCount = Math.min(this.#tokenCount, this.#bucketCapacity);
         return changed;
@@ -165,7 +182,7 @@ class RequestRateLimiter {
                 this.#tokenCount--;
                 return Promise.resolve();
             }
-            return new Promise(resolve => this.#leaderQueue.push({ id: this.#requestId++, tabId: this.#tabId, resolve: resolve}));
+            return new Promise(resolve => this.#enqueue({ id: this.#requestId++, tabId: this.#tabId, resolve: resolve}));
         }
 
         return new Promise((resolve) => {
@@ -184,7 +201,7 @@ class RequestRateLimiter {
             this.#tokenCount--;
             this.#channel.postMessage({ type: 'GO', id: data.id, tabId: data.tabId });
         } else {
-            this.#leaderQueue.push({ id: data.id, tabId: data.tabId });
+            this.#enqueue({ id: data.id, tabId: data.tabId });
         }
     }
 
