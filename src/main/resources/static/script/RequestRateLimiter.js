@@ -6,6 +6,7 @@ class RequestRateLimiter {
     #bucketCapacity;
     #refillRate;
     #refillInterval;
+    #isLeaky;
     #lastRefillTimestamp;
     #leaderQueue = [];
     #localQueue = new Map();
@@ -17,10 +18,10 @@ class RequestRateLimiter {
         bucketCapacity = 12,
         refillRate = 4,
         refillInterval = 1000,
+        isLeaky = true
     } = {}) {
-        this.#bucketCapacity = bucketCapacity;
-        this.#refillRate = refillRate;
-        this.#refillInterval = refillInterval;
+        this.#isLeaky = isLeaky;
+        this.#normalizeAndSetBucketParameters({refillRate, refillInterval, bucketCapacity});
         this.#tokenCount = bucketCapacity;
         this.#tabId = crypto.randomUUID();
         this.#channel = new BroadcastChannel(channelName);
@@ -35,7 +36,7 @@ class RequestRateLimiter {
             .then(response=>{
                 const bucketParameters = this.#parseHeaders(response.headers);
                 if(bucketParameters != null) {
-                    if(this.#setBucketParameters(bucketParameters))
+                    if(this.#normalizeAndSetBucketParameters(bucketParameters))
                         this.#channel.postMessage({
                             type: 'BUCKET_PARAMETERS',
                             bucketParameters: bucketParameters,
@@ -130,6 +131,11 @@ class RequestRateLimiter {
         return {refillRate: limit, bucketCapacity: burst, refillInterval: resetMs};
     }
 
+    static #normalizeBucketParameters(bucketParameters) {
+        bucketParameters.refillInterval = bucketParameters.refillInterval / bucketParameters.refillRate;
+        bucketParameters.refillRate = 1;
+    }
+
     #setBucketParameters(bucketParameters) {
         if(bucketParameters == null) return false;
         const changed = this.#refillRate != bucketParameters.refillRate
@@ -146,6 +152,11 @@ class RequestRateLimiter {
         }
         this.#tokenCount = Math.min(this.#tokenCount, this.#bucketCapacity);
         return changed;
+    }
+
+    #normalizeAndSetBucketParameters(bucketParameters) {
+        if(this.#isLeaky) RequestRateLimiter.#normalizeBucketParameters(bucketParameters);
+        return this.#setBucketParameters(bucketParameters);
     }
 
     #acquireToken() {
