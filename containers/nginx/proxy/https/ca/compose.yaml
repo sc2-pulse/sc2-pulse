@@ -15,7 +15,7 @@ services:
       - "443:443"
     volumes:
       - ./containers/nginx/cloudflare-ip-sync/conf/cloudflare-ips.conf:/etc/nginx/conf.d/cloudflare-ips.conf:ro
-      - ./containers/nginx/proxy/https/ca/sc2pulse.conf:/etc/nginx/conf.d/sc2pulse.conf:ro
+      - ./containers/nginx/proxy/https/ca/sc2pulse.conf:/etc/nginx/conf.d/default.conf:ro
       - ./containers/nginx/proxy/https/ca/sc2pulse-proxy.conf:/usr/local/etc/nginx/sc2pulse-proxy.conf:ro
       - ./containers/nginx/proxy/https/ca/sc2pulse.pem:/etc/ssl/certs/sc2pulse.pem:ro
       - ./containers/nginx/proxy/https/ca/sc2pulse.key:/etc/ssl/private/sc2pulse.key:ro
