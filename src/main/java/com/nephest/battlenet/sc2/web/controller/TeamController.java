@@ -35,7 +35,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -192,17 +191,7 @@ public class TeamController
             teamLegacyUIds,
             from, to,
             historyColumns,
-            is->
-            {
-                try
-                {
-                    is.transferTo(os);
-                }
-                catch (IOException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            }
+            is->is.transferTo(os)
         );
         return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_JSON)

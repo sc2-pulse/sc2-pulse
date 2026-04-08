@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -42,6 +41,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.function.ThrowingConsumer;
 import org.springframework.validation.annotation.Validated;
 
 @Repository
@@ -400,7 +400,7 @@ public class TeamHistoryDAO
         @Nullable @Valid @UInt32EpochSeconds OffsetDateTime from,
         @Nullable @Valid @UInt32EpochSeconds OffsetDateTime to,
         @NotNull Set<HistoryColumn> historyColumns,
-        @NotNull Consumer<InputStream> isConsumer
+        @NotNull ThrowingConsumer<InputStream> isConsumer
     )
     {
         if(teamLegacyUids.isEmpty() || historyColumns.isEmpty())
