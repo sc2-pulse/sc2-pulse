@@ -55,7 +55,7 @@ services:
       - COM_NEPHEST_BATTLENET_SC2_API_BLIZZARD_LADDER_ID_PREVIOUS_KR=87855
       - COM_NEPHEST_BATTLENET_SC2_API_BLIZZARD_LADDER_ID_PREVIOUS_CN=73354
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/sc2/" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/sc2/status" ]
       interval: 5s
       timeout: 10s
       retries: 5
