@@ -158,9 +158,9 @@ public class CommonBeanConfig
     public ThreadPoolTaskExecutor asyncTaskExecutor()
     {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(10);
-        executor.setQueueCapacity(600);
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(150);
+        executor.setQueueCapacity(0);
         executor.setKeepAliveSeconds(600);
         executor.setThreadNamePrefix("async-");
         executor.initialize();
