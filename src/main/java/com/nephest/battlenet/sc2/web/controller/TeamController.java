@@ -40,6 +40,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -56,6 +58,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @RequestMapping("/api")
 public class TeamController
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TeamController.class);
 
     public static final int RECENT_TEAMS_LIMIT = 250;
     public static final int TEAMS_LIMIT = 250;
@@ -186,13 +190,23 @@ public class TeamController
     {
         WebServiceUtil.throwException(getHistoryParametersError(from, to).orElse(null));
 
-        StreamingResponseBody srb = os -> teamHistoryDAO.findHistoryJson
-        (
-            teamLegacyUIds,
-            from, to,
-            historyColumns,
-            is->is.transferTo(os)
-        );
+        StreamingResponseBody srb = os ->
+        {
+            try
+            {
+                teamHistoryDAO.findHistoryJson
+                (
+                    teamLegacyUIds,
+                    from, to,
+                    historyColumns,
+                    is->is.transferTo(os)
+                );
+            }
+            catch (Exception e)
+            {
+                LOG.error("Exception thrown during response streaming", e);
+            }
+        };
         return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_JSON)
             .body(srb);
