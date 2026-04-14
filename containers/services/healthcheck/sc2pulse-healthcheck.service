@@ -1,0 +1,9 @@
+[Unit]
+Description=sc2pulse health monitor and regenerator
+Wants=sc2pulse.service
+After=sc2pulse.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/sc2pulse/compose/containers/services/healthcheck
+ExecStart=/opt/sc2pulse/compose/containers/services/healthcheck/healthcheck.sh

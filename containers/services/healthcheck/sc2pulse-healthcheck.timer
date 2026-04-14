@@ -1,0 +1,11 @@
+[Unit]
+Description=SC2pulse health monitor
+
+[Timer]
+AccuracySec=1us
+OnBootSec=120s
+OnUnitActiveSec=120s
+Persistent=true
+
+[Install]
+WantedBy=timers.target
