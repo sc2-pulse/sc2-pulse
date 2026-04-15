@@ -170,6 +170,7 @@ To ensure that the potential violation is a minor one, the following rules are a
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
 ## Common application properties
 * `com.nephest.battlenet.sc2.cron.enabled` controls [Cron](src/main/java/com/nephest/battlenet/sc2/config/Cron.java)
+* `com.nephest.battlenet.sc2.cors.allowed-origin-patterns` Allowed CORS origin patterns for SC2Pulse API.
 * `com.nephest.battlenet.sc2.url.public` public URL of your service
 * `com.nephest.battlenet.sc2.mmr.history.main.length` 1v1 mmr history length in days, 180 by default.
 * `com.nephest.battlenet.sc2.mmr.history.secondary.length` team mmr history length in days, 180 by default.

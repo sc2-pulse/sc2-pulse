@@ -21,9 +21,11 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
 import jakarta.servlet.ServletContext;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.springdoc.core.customizers.RouterOperationCustomizer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,8 +33,15 @@ import org.springframework.context.annotation.Configuration;
 public class SpringDocConfig
 {
 
+
     @Bean
-    public OpenAPI customOpenAPI(@Autowired ServletContext servletContext) {
+    public OpenAPI customOpenAPI
+    (
+        @Autowired ServletContext servletContext,
+        @Value("${com.nephest.battlenet.sc2.cors.allowed-origin-patterns:#{''}}")
+        List<String> corsAllowedOriginPatterns
+    )
+    {
         return new OpenAPI()
             .components(new Components()
                 .addSchemas
@@ -101,20 +110,33 @@ public class SpringDocConfig
                     * `RateLimit-Burst`: bucket capacity(max tokens)
                     * `RateLimit-Reset`: interval in seconds at which new tokens are added
                     * `RateLimit-Limit`: amount of tokens added in each interval/update
+                    %1$s
                     ## Common ids
                     ### Regions
-                    %1$s
-                    ### Queues
                     %2$s
-                    ### Team types
+                    ### Queues
                     %3$s
-                    ### Leagues
+                    ### Team types
                     %4$s
-                    ### Tiers
+                    ### Leagues
                     %5$s
-                    ### Races
+                    ### Tiers
                     %6$s
+                    ### Races
+                    %7$s
                     """.formatted(
+                        corsAllowedOriginPatterns.isEmpty()
+                            ? ""
+                            : """
+                                ## CORS
+                                CORS is supported for the following origins:
+                                %1$s
+                                """.formatted
+                                (
+                                    corsAllowedOriginPatterns.stream()
+                                        .map(origin->"* " + origin)
+                                        .collect(Collectors.joining("\n"))
+                                ),
                         Arrays.stream(Region.values())
                             .map(r->"* " + r.name() + ": " + r.getId())
                             .collect(Collectors.joining("\n")),

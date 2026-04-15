@@ -6,8 +6,11 @@ package com.nephest.battlenet.sc2.config.mvc;
 import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
@@ -25,6 +28,8 @@ public class MVCConfig
 implements WebMvcConfigurer
 {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MVCConfig.class);
+
     private final WebProperties webProperties;
 
     public MVCConfig(WebProperties webProperties)
@@ -34,6 +39,9 @@ implements WebMvcConfigurer
 
     @Autowired
     private List<HandlerMethodArgumentResolver> customArgumentResolvers;
+
+    @Value("${com.nephest.battlenet.sc2.cors.allowed-origin-patterns:#{''}}")
+    private List<String> corsAllowedOriginPatterns;
 
     @Autowired
     @Qualifier("asyncTaskExecutor")
@@ -64,6 +72,18 @@ implements WebMvcConfigurer
             .allowedOrigins("*")
             .allowedMethods("GET", "OPTIONS")
             .allowedHeaders("*");
+
+        if(!corsAllowedOriginPatterns.isEmpty())
+        {
+            registry.addMapping("/api/**")
+                .allowedOriginPatterns(corsAllowedOriginPatterns.toArray(String[]::new))
+                .allowedMethods("*")
+                .allowedHeaders("*")
+                .maxAge(3600)
+                .allowCredentials(false);
+            LOG.info("Registered global CORS API patterns : {}", corsAllowedOriginPatterns);
+        }
+
     }
 
     @Override

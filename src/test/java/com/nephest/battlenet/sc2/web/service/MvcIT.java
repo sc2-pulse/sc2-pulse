@@ -3,7 +3,13 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static com.nephest.battlenet.sc2.web.util.MvcTestUtil.flattened;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItems;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -13,6 +19,7 @@ import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.filter.NoCacheFilter;
 import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
@@ -25,6 +32,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -41,6 +50,9 @@ public class MvcIT
 
     @Value("classpath:/static/script/shared/sc2pulse-util.min.js")
     private Resource sc2PulseUtilResource;
+
+    @Value("${com.nephest.battlenet.sc2.cors.allowed-origin-patterns:#{''}}")
+    private List<String> corsAllowedOriginPatterns;
 
     @BeforeAll
     public static void beforeAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
@@ -70,6 +82,82 @@ public class MvcIT
             .andExpect(status().isOk())
             // 1 year cache
             .andExpect(header().string("Cache-Control", "max-age=31536000, must-revalidate"));
+    }
+
+    @Test
+    public void whenSupportedApiOrigin_then200AndCors()
+    throws Exception
+    {
+        String origin = "https://sub.cors.test.localhost";
+        mvc.perform
+        (
+            get("/api/seasons")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.ORIGIN, origin)
+                .with(csrf())
+        )
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin))
+            .andExpect(header().string(HttpHeaders.VARY, containsString(HttpHeaders.ORIGIN)));
+    }
+
+    @Test
+    public void whenSupportedApiOriginPreflight_then200AndCors()
+    throws Exception
+    {
+        String origin = "https://sub.cors.test.localhost";
+        mvc.perform
+        (
+            options("/api/seasons")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.ORIGIN, origin)
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+                .header
+                (
+                    HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS,
+
+                    HttpHeaders.CONTENT_TYPE,
+                    "Custom-Header"
+                )
+                .with(csrf())
+        )
+            .andExpect(status().isOk())
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin))
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET"))
+            .andExpect(header().stringValues(
+                HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
+
+                flattened(containsInAnyOrder(
+                    HttpHeaders.CONTENT_TYPE,
+                    "Custom-Header"
+                ))
+            ))
+            .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_MAX_AGE, "3600"))
+            .andExpect(header().stringValues(
+                HttpHeaders.VARY,
+
+                flattened(hasItems(
+                    HttpHeaders.ORIGIN,
+                    HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD,
+                    HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS
+                ))
+            ))
+            .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS));
+    }
+
+    @Test
+    public void whenUnsupportedApiOrigin_then403AndNoCors()
+    throws Exception
+    {
+        mvc.perform
+        (
+            get("/api/seasons")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.ORIGIN, "https://sub.cors1.test.localhost")
+                .with(csrf())
+        )
+            .andExpect(status().isForbidden())
+            .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
     }
 
     @Test
