@@ -8,10 +8,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.filter.NoCacheFilter;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.io.InputStream;
 import java.util.Map;
+import javax.sql.DataSource;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -36,6 +41,20 @@ public class MvcIT
 
     @Value("classpath:/static/script/shared/sc2pulse-util.min.js")
     private Resource sc2PulseUtilResource;
+
+    @BeforeAll
+    public static void beforeAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
+    {
+        DbTestUtil.initDb(dataSource, clickHouseClient);
+    }
+
+    @AfterAll
+    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
+    {
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
+    }
 
     @CsvSource
     ({
