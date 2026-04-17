@@ -31,6 +31,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistoryHistoryData;
 import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistorySummaryData;
 import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryHistoryData;
 import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
 import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistorySummaryData;
@@ -1130,7 +1131,7 @@ public class TeamGroupHistoryIT
                 null, null,
                 EnumSet.allOf(SummaryColumn.class)
             );
-        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> converted
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>> converted
             = found.stream()
                 .map(TeamHistorySummary::cast)
                 .map(typed->TeamHistorySummary.convert(typed, sc2ConversionService))
@@ -1138,10 +1139,10 @@ public class TeamGroupHistoryIT
         Map<SummaryColumn, ?> data = FULL_SUMMARY_LEGACY_UID_GROUP.get(0).summary().data();
         Assertions.assertThat(converted)
             .usingRecursiveComparison()
-            .isEqualTo(List.of(
+            .isEqualTo(Stream.of(
                 new TeamHistorySummary<>
                 (
-                    new ConvertedTeamHistoryStaticData(teamLegacyUid),
+                    new TypedTeamHistoryStaticData(teamLegacyUidString),
                     new TypedTeamHistorySummaryData
                     (
                         convert(data.get(SummaryColumn.GAMES), Number::intValue),
@@ -1154,7 +1155,9 @@ public class TeamGroupHistoryIT
                         convert(data.get(SummaryColumn.REGION_TEAM_COUNT_LAST), Number::intValue)
                     )
                 )
-            ));
+            )
+                .map(typed->TeamHistorySummary.convert(typed, sc2ConversionService))
+                .toList());
     }
 
 }

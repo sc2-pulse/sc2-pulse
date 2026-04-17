@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.inner;
@@ -25,7 +25,7 @@ public record TeamHistorySummary<S extends TeamHistoryStaticData, U extends Team
         );
     }
 
-    public static TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData> convert
+    public static TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData> convert
     (
         TeamHistorySummary<TypedTeamHistoryStaticData, TypedTeamHistorySummaryData> typed,
         ConversionService conversionService
@@ -34,7 +34,7 @@ public record TeamHistorySummary<S extends TeamHistoryStaticData, U extends Team
         return new TeamHistorySummary<>
         (
             ConvertedTeamHistoryStaticData.from(typed.staticData(), conversionService),
-            typed.summary()
+            ConvertedTeamHistorySummaryData.from(typed.summary(), conversionService)
         );
     }
 

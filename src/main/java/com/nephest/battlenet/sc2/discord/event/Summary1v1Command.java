@@ -11,12 +11,12 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistorySummaryData;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
-import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistorySummaryData;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
@@ -61,7 +61,7 @@ public class Summary1v1Command
     (
         LadderCharacterDAO.SearchType.CLAN_TAG, 10
     );
-    public static final Comparator<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> SUMMARY_COMPARATOR =
+    public static final Comparator<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>> SUMMARY_COMPARATOR =
         Comparator.comparing(s->s.summary().ratingLast(), Comparator.reverseOrder());
     public static final Comparator<LadderTeam> TEAM_COMPARATOR =
         Comparator.comparing(LadderTeam::getRating, Comparator.reverseOrder());
@@ -145,7 +145,7 @@ public class Summary1v1Command
             .collect(Collectors.toMap(LadderTeam::getLegacyUid, Function.identity()));
         if(teams.isEmpty()) return null;
 
-        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>> summaries
             = teamHistoryDAO.findSummary
             (
                 teams.keySet(),
@@ -170,7 +170,7 @@ public class Summary1v1Command
     {
         if(depth == null) return getData(uids, maxLines);
 
-        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>> summaries
             = teamHistoryDAO.findSummary
                 (
                     uids,
@@ -253,7 +253,7 @@ public class Summary1v1Command
             .map(MiscUtil::stringLength)
             .max()
             .orElseThrow();
-        for(TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData> summary : summaryData.summaries())
+        for(TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData> summary : summaryData.summaries())
         {
             appendSummary
             (
@@ -281,7 +281,7 @@ public class Summary1v1Command
     (
         StringBuilder sb,
         LadderTeam team,
-        TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData> summary,
+        TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData> summary,
         DiscordBootstrap discordBootstrap,
         ApplicationCommandInteractionEvent evt,
         long gamesDigits
@@ -382,7 +382,7 @@ public class Summary1v1Command
 
     private record SummaryData
     (
-        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, TypedTeamHistorySummaryData>> summaries,
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>> summaries,
         Map<TeamLegacyUid, LadderTeam> teams
     )
     {}
