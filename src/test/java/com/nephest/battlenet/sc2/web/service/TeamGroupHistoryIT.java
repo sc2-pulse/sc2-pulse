@@ -379,12 +379,15 @@ public class TeamGroupHistoryIT
         List<Integer> teamCount =
             mapValues(history.get(HistoryColumn.REGION_TEAM_COUNT), Number::intValue).toList();
         List<Integer> rating = mapValues(history.get(HistoryColumn.RATING), Number::intValue).toList();
+        List<Integer> leagueTypes
+            = mapValues(history.get(HistoryColumn.LEAGUE_TYPE), Number::intValue).toList();
         if(rating.isEmpty()) return RawTeamHistorySummaryData.EMPTY;
 
         List<Integer> season = mapValues(history.get(HistoryColumn.SEASON), Number::intValue).toList();
         List<Integer> games = mapValues(history.get(HistoryColumn.GAMES), Number::intValue).toList();
         Map<SummaryColumn, Object> summary = new EnumMap<>(SummaryColumn.class);
         summary.put(SummaryColumn.GAMES, calculateGames(season, rating, games, isFromPresent));
+        summary.put(SummaryColumn.LEAGUE_TYPE_MAX, Collections.max(leagueTypes));
         summary.put(SummaryColumn.RATING_MIN, Collections.min(rating));
         summary.put(SummaryColumn.RATING_MAX, Collections.max(rating));
         summary.put(SummaryColumn.RATING_AVG, rating.stream().mapToInt(i->i).average().orElseThrow());
@@ -1154,6 +1157,7 @@ public class TeamGroupHistoryIT
                     new TypedTeamHistorySummaryData
                     (
                         convert(data.get(SummaryColumn.GAMES), Number::intValue),
+                        convert(data.get(SummaryColumn.LEAGUE_TYPE_MAX), Number::shortValue),
                         convert(data.get(SummaryColumn.RATING_MIN), Number::shortValue),
                         convert(data.get(SummaryColumn.RATING_AVG), Number::doubleValue),
                         convert(data.get(SummaryColumn.RATING_MAX), Number::shortValue),

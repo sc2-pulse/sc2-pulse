@@ -183,6 +183,8 @@ public class TeamHistoryDAO
             "toInt32OrDefault(SUM(games_delta), " + Integer.MAX_VALUE + "::Int32)"
         ),
 
+        LEAGUE_TYPE_MAX("league_type_max", "MAX(league_type::UInt8)"),
+
         RATING_MIN("rating_min",  "MIN(rating)"),
         RATING_AVG("rating_avg", "AVG(rating)"),
         RATING_MAX("rating_max", "MAX(rating)"),

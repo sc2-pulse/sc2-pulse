@@ -338,6 +338,7 @@ const TEAM_HISTORY_SUMMARY_COLUMN = Object.freeze
     RATING_LAST: {code:5, name: "rating-last", fullName: "RATING_LAST", textContent: "Last MMR", order: 5},
     REGION_RANK_LAST: {code:6, name: "region-rank-last", fullName: "REGION_RANK_LAST", textContent: "Last rank", order: 6},
     REGION_TEAM_COUNT_LAST: {code:7, name: "region-team-count-last", fullName: "REGION_TEAM_COUNT_LAST", textContent: "Last teams", order: 7},
+    LEAGUE_TYPE_MAX: {code:8, name: "league-type-max", fullName: "LEAGUE_TYPE_MAX", textContent: "Max league", order: 8},
 });
 
 const SOCIAL_MEDIA = Object.freeze

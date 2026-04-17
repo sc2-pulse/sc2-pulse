@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.config.convert.jackson.UpperSnakeCaseStrategy;
 public record TypedTeamHistorySummaryData
 (
     Integer games,
+    Short leagueTypeMax,
     Short ratingMin,
     Double ratingAvg,
     Short ratingMax,
@@ -27,6 +28,7 @@ implements TeamHistorySummaryData
         return new TypedTeamHistorySummaryData
         (
             (Integer) raw.data().get(TeamHistoryDAO.SummaryColumn.GAMES),
+            (Short) raw.data().get(TeamHistoryDAO.SummaryColumn.LEAGUE_TYPE_MAX),
             (Short) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_MIN),
             (Double) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_AVG),
             (Short) raw.data().get(TeamHistoryDAO.SummaryColumn.RATING_MAX),
