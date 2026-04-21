@@ -326,10 +326,6 @@
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>
                         <configuration>
-                            <profiles>
-                                <profile>default</profile>
-                                <profile>dev</profile>
-                            </profiles>
                             <jvmArguments>-Dsun.net.client.defaultConnectTimeout=30000 -Dsun.net.client.defaultReadTimeout=30000</jvmArguments>
                         </configuration>
                     </plugin>

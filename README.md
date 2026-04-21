@@ -66,6 +66,7 @@ mvn verify
 
 ## Development
 Execute `mvn spring-boot:test-run` command to launch the project in dev mode.
+* Set `spring.profiles.active` app property to `default,dev` + any desired additional profiles.
 * Default ephemeral tempfs storage with predefined data.
 * Optional persistent storage. Create docker volume `docker volume create volume-name` and add the following app 
 properties: `org.testcontainers.dev.postgres.volume.name=volume-name`,
