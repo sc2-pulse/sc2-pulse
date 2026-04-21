@@ -179,7 +179,7 @@ public class CommunityVideoStreamIT
     public void beforeEach
     (
         @Autowired DataSource dataSource,
-        @Autowired TwitchVideoStreamSupplier twitchVideoStreamSupplier
+        @Autowired(required = false) TwitchVideoStreamSupplier twitchVideoStreamSupplier
     )
     throws SQLException
     {
@@ -188,7 +188,8 @@ public class CommunityVideoStreamIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
             when(otherStreamSupplier.getStreams()).thenReturn(Flux.empty());
-            when(twitchVideoStreamSupplier.getStreams()).thenReturn(Flux.empty());
+            if(twitchVideoStreamSupplier != null)
+                when(twitchVideoStreamSupplier.getStreams()).thenReturn(Flux.empty());
         }
     }
 

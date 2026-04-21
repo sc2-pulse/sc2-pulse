@@ -33,6 +33,19 @@ create files with app property names, their content will be used as values.
 * Properties. Add a `SPRING_CONFIG_IMPORT=optional:file:/dir/file.properties` env variable. Use the supplied file as 
 a regular properties file (name-value map).
 
+## Optional features
+Some features are optional and disabled by default. To enable them, add a corresponding profile to
+the `spring.profiles.active` app property, and add feature specific app properties.
+
+### Twitch
+Profile name: `twitch`.
+
+Required app properties:
+```
+spring.security.oauth2.client.twitch.client-id={client_id}
+spring.security.oauth2.client.twitch.client-secret={client_secret}
+```
+
 ## Podman(rootless)
 The container config is compatible with rootless podman.
 Requirements:
@@ -54,8 +67,6 @@ spring.security.oauth2.client.blizzard.client-secret={client_secret}
 com.nephest.battlenet.sc2.discord.bot.token={token}
 spring.security.oauth2.client.discord.client-id={client_id}
 spring.security.oauth2.client.discord.client-secret={client_secret}
-spring.security.oauth2.client.twitch.client-id={client_id}
-spring.security.oauth2.client.twitch.client-secret={client_secret}
 com.nephest.battlenet.sc2.api.aligulac.key={api_key}
 ```
 

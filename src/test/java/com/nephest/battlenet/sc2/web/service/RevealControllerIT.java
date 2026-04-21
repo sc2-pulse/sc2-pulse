@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -48,16 +48,20 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -99,6 +103,17 @@ public class RevealControllerIT
     private ObjectMapper objectMapper;
 
     private MockMvc mvc;
+
+    private static Set<SocialMedia> SOCIAL_MEDIA_SERVICES;
+
+    @BeforeAll
+    public static void beforeAll(@Autowired Environment environment)
+    {
+        SOCIAL_MEDIA_SERVICES = Arrays.stream(environment.getActiveProfiles())
+            .map(SocialMedia::from)
+            .filter(sm->sm != SocialMedia.UNKNOWN)
+            .collect(Collectors.toSet());
+    }
 
     @BeforeEach
     public void beforeEach
@@ -348,8 +363,11 @@ public class RevealControllerIT
                 (
                     new SocialMediaLink
                     (
-                        1L, SocialMedia.TWITCH, "https://www.twitch.tv/serral",
-                        minUpdated, "39775590", false
+                        1L, SocialMedia.TWITCH, "https://www.twitch.tv/"
+                            + (SOCIAL_MEDIA_SERVICES.contains(SocialMedia.TWITCH) ? "serral" : "sErRaL"),
+                        minUpdated,
+                        SOCIAL_MEDIA_SERVICES.contains(SocialMedia.TWITCH) ? "39775590" : null,
+                        false
                     ),
                     new SocialMediaLink
                     (
@@ -424,7 +442,9 @@ public class RevealControllerIT
                     new SocialMediaLink
                     (
                         1L, SocialMedia.TWITCH, "https://www.twitch.tv/nephest0x",
-                        minUpdated2, "132530558", false
+                        minUpdated2,
+                        SOCIAL_MEDIA_SERVICES.contains(SocialMedia.TWITCH) ? "132530558" : null,
+                        false
                     )
                 )
             ));
