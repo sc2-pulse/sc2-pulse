@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.community;
@@ -140,7 +140,7 @@ public class CommunityVideoStreamIT
     @Autowired @Qualifier("mvcConversionService")
     private ConversionService conversionService;
 
-    @Autowired @Qualifier("twitchVideoStreamSupplier")
+    @Autowired @Qualifier("primaryVideoStreamSupplier")
     private VideoStreamSupplier videoStreamSupplier;
 
     @Autowired @Qualifier("secondaryVideoStreamSupplier")
@@ -158,23 +158,28 @@ public class CommunityVideoStreamIT
     @TestConfiguration
     static class InitConfiguration {
 
-        @MockBean(classes = {TwitchVideoStreamSupplier.class})
+        @MockBean(classes = {PrimaryVideoStreamSupplier.class})
         private VideoStreamSupplier videoStreamSupplier;
 
         @MockBean(classes = {SecondaryVideoStreamSupplier.class})
         private VideoStreamSupplier secondaryVideoStreamSupplier;
 
+        @MockBean(classes = {TwitchVideoStreamSupplier.class})
+        private VideoStreamSupplier twitchVideoStreamSupplier;
+
         @PostConstruct
         public void initMock(){
             when(videoStreamSupplier.getService()).thenReturn(SocialMedia.TWITCH);
             when(secondaryVideoStreamSupplier.getService()).thenReturn(SocialMedia.BILIBILI);
+            when(twitchVideoStreamSupplier.getService()).thenReturn(SocialMedia.UNKNOWN);
         }
     }
 
     @BeforeEach
     public void beforeEach
     (
-        @Autowired DataSource dataSource
+        @Autowired DataSource dataSource,
+        @Autowired TwitchVideoStreamSupplier twitchVideoStreamSupplier
     )
     throws SQLException
     {
@@ -183,6 +188,7 @@ public class CommunityVideoStreamIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
             when(otherStreamSupplier.getStreams()).thenReturn(Flux.empty());
+            when(twitchVideoStreamSupplier.getStreams()).thenReturn(Flux.empty());
         }
     }
 
