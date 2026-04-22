@@ -51,7 +51,7 @@ public class SecurityConfig
     @Autowired
     private RegistrationDelegatingOauth2UserService registrationDelegatingOauth2UserService;
 
-    @Autowired @Qualifier("updateDataAuthenticationSuccessHandler")
+    @Autowired(required = false) @Qualifier("updateDataAuthenticationSuccessHandler")
     private AuthenticationSuccessHandler authenticationSuccessHandler;
 
     @Autowired @Qualifier("rateLimitedOAuth2AuthorizationCodeClient")
@@ -122,16 +122,18 @@ public class SecurityConfig
                 ))
                 .anyRequest().permitAll())
             .logout(logout->logout.logoutSuccessUrl("/?#stats"))
-            .oauth2Login(oauth2Login->oauth2Login
-                .loginPage("/login")
-                .successHandler(authenticationSuccessHandler)
-                .failureUrl("/login?oauthError=1")
-                .userInfoEndpoint(userInfoEndpoint->
-                    userInfoEndpoint.userService(registrationDelegatingOauth2UserService))
-                .tokenEndpoint(tokenEndpoint->
-                    tokenEndpoint.accessTokenResponseClient(oAuth2AuthorizationCodeClient))
-                .authorizationEndpoint(c->
-                    c.authorizationRequestResolver(delegatingAuthorizationRequestResolver)))
+            .oauth2Login(oauth2Login->{
+                var configurer = oauth2Login.loginPage("/login");
+                if(authenticationSuccessHandler != null) configurer = configurer
+                    .successHandler(authenticationSuccessHandler);
+                configurer
+                    .failureUrl("/login?oauthError=1")
+                    .userInfoEndpoint(userInfoEndpoint->
+                        userInfoEndpoint.userService(registrationDelegatingOauth2UserService))
+                    .tokenEndpoint(tokenEndpoint->
+                        tokenEndpoint.accessTokenResponseClient(oAuth2AuthorizationCodeClient))
+                    .authorizationEndpoint(c->
+                        c.authorizationRequestResolver(delegatingAuthorizationRequestResolver));})
             .rememberMe(rememberMe->rememberMe
                 .key(rememberMeKey)
                 .alwaysRemember(true)

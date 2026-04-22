@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -16,6 +16,9 @@ public class CoreHtmlController
 
     @Value("#{environment['com.nephest.battlenet.sc2.donate'] != null}")
     private boolean donate;
+
+    @Value("#{environment.acceptsProfiles('discord')}")
+    private boolean discordEnabled;
 
     @GetMapping("/")
     public String home()
@@ -76,7 +79,10 @@ public class CoreHtmlController
 
     @GetMapping("/discord/bot")
     public String discordBot()
+    throws NoResourceFoundException
     {
+        if(!discordEnabled) throw new NoResourceFoundException(HttpMethod.GET, "/discord/bot");
+
         return "discord-bot";
     }
 

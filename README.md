@@ -37,6 +37,16 @@ a regular properties file (name-value map).
 Some features are optional and disabled by default. To enable them, add a corresponding profile to
 the `spring.profiles.active` app property, and add feature specific app properties.
 
+### Discord
+Profile name: `discord`.
+
+Required app properties:
+```
+spring.security.oauth2.client.discord.client-id={client_id}
+spring.security.oauth2.client.discord.client-secret={client_secret}
+com.nephest.battlenet.sc2.discord.bot.token={token}
+```
+
 ### Twitch
 Profile name: `twitch`.
 
@@ -64,9 +74,6 @@ Required properties:
 ```
 spring.security.oauth2.client.blizzard.client-id={client_id}
 spring.security.oauth2.client.blizzard.client-secret={client_secret}
-com.nephest.battlenet.sc2.discord.bot.token={token}
-spring.security.oauth2.client.discord.client-id={client_id}
-spring.security.oauth2.client.discord.client-secret={client_secret}
 com.nephest.battlenet.sc2.api.aligulac.key={api_key}
 ```
 

@@ -17,6 +17,7 @@ import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOf;
 
 import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.discord.DiscordTest;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.util.DbTestUtil;
@@ -210,6 +211,7 @@ public class GeneralSeleniumIT
     }
 
     @Test
+    @DiscordTest
     public void testDiscordBotUI()
     {
         getAndWaitAndCheckJsErrors(driver, wait, root + "/discord/bot", "#faq");

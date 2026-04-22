@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.config.security.DiscordAuthorizationRequestResolver;
 import com.nephest.battlenet.sc2.config.security.DiscordOauth2State;
+import com.nephest.battlenet.sc2.discord.Discord;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller @Hidden
 @RequestMapping("/verify")
+@Discord
 public class VerificationController
 {
 

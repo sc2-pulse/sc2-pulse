@@ -105,7 +105,11 @@
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/terms-of-service}" class="text-secondary">ToS</a></span>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/privacy-policy}" class="text-secondary">Privacy Policy</a></span>
             <address class="c-divider d-inline-block mb-3"><a th:href="@{/contacts}" class="text-secondary">Contacts</a></address>
-            <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/discord/bot}" class="text-secondary">Discord bot</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"
+                  th:if="${@environment.acceptsProfiles('discord')}"
+            >
+                <a th:href="@{/discord/bot}" class="text-secondary">Discord bot</a>
+            </span>
             <span class="c-divider d-inline-block mb-3 text-nowrap" th:if="${@environment.getProperty('com.nephest.battlenet.sc2.donate') != null}"><a th:href="@{/donate}" class="text-secondary">
                 <img class="table-image table-image-square mr-1" th:src="@{/static/icon/misc/heart.svg}" alt="heart image"/><span>Donate</span>
             </a></span>

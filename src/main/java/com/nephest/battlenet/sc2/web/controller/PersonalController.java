@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -23,7 +23,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.service.AccountFollowingService;
-import com.nephest.battlenet.sc2.web.service.DiscordService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.util.List;
 import java.util.Set;
@@ -66,9 +65,6 @@ public class PersonalController
 
     @Autowired
     private AccountFollowingService accountFollowingService;
-
-    @Autowired
-    private DiscordService discordService;
 
     @GetMapping("/common")
     public CommonPersonalData getCommon(@AuthenticationPrincipal AccountUser user)
@@ -156,22 +152,6 @@ public class PersonalController
             queue,
             teamType
         );
-    }
-
-    @PostMapping("/discord/unlink")
-    public void unlinkDiscordUser(@AuthenticationPrincipal AccountUser user)
-    {
-        discordService.unlinkAccountFromDiscordUser(user.getAccount().getId(), null);
-    }
-
-    @PostMapping("/discord/public/{public}")
-    public void setPublicFlag
-    (
-        @AuthenticationPrincipal AccountUser user,
-        @PathVariable("public") Boolean isPublic
-    )
-    {
-        discordService.setVisibility(user.getAccount().getId(), isPublic);
     }
 
 }

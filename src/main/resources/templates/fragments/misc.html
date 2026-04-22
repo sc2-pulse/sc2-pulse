@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2025 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2026 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -8,7 +8,10 @@
     <title>Pulse</title>
 </head>
 <body>
-<a th:fragment="discord-bot-tile" th:href="@{/discord/bot}" class="d-inline-block link-tile link-tile-discord-bot">
+<a th:fragment="discord-bot-tile"
+   th:if="${@environment.acceptsProfiles('discord')}"
+   th:href="@{/discord/bot}" class="d-inline-block link-tile link-tile-discord-bot"
+>
     <img src="#" th:src="@{/static/icon/logo/discord.svg}" alt="Discord Logo" class="logo">
     <div class="d-inline-flex flex-center-wrap-gap gap-tiny mb-0">
         <div>Bot</div>
