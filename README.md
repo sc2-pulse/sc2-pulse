@@ -56,6 +56,10 @@ spring.security.oauth2.client.twitch.client-id={client_id}
 spring.security.oauth2.client.twitch.client-secret={client_secret}
 ```
 
+### Other
+These features have no profiles, only app properties are required.
+* aligulac: `com.nephest.battlenet.sc2.api.aligulac.key={api_key}`
+
 ## Podman(rootless)
 The container config is compatible with rootless podman.
 Requirements:
@@ -74,7 +78,6 @@ Required properties:
 ```
 spring.security.oauth2.client.blizzard.client-id={client_id}
 spring.security.oauth2.client.blizzard.client-secret={client_secret}
-com.nephest.battlenet.sc2.api.aligulac.key={api_key}
 ```
 
 To run all the tests execute the following command in a terminal

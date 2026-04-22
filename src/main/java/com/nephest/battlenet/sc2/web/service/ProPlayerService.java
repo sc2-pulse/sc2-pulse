@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -126,7 +126,7 @@ public class ProPlayerService
         LadderProPlayerDAO ladderProPlayerDAO,
         PersonalService personalService,
         SC2RevealedAPI sc2RevealedAPI,
-        AligulacAPI aligulacAPI,
+        @Autowired(required = false) AligulacAPI aligulacAPI,
         LiquipediaAPI liquipediaAPI,
         List<SocialMediaLinkResolver> resolvers,
         List<SocialMediaLinkUpdater> updaters
@@ -201,8 +201,16 @@ public class ProPlayerService
         }
     }
 
+    /*TODO
+        Any external update/resolution(such as aligulac) should be abstracted via interfaces and
+        configured dynamically via Spring beans in the future. Similar to streams and character
+        links. There should be no direct API calls. Aligulac API will be optional until it's
+        properly done.
+     */
     private Mono<Integer> updateAligulac()
     {
+        if(aligulacAPI == null) return Mono.empty();
+
         return Mono.fromCallable(proPlayerDAO::findAligulacList)
             .flatMapIterable(Function.identity())
             .buffer(getAligulacBatchSize())
@@ -220,6 +228,8 @@ public class ProPlayerService
         List<ProPlayer> proPlayers
     )
     {
+        if(aligulacAPI == null) return Mono.empty();
+
         Set<Long> aligulacIds = proPlayers.stream()
             .map(ProPlayer::getAligulacId)
             .collect(Collectors.toSet());
@@ -312,6 +322,8 @@ public class ProPlayerService
 
     public Optional<ProPlayer> importProfile(String url)
     {
+        if(aligulacAPI == null) return Optional.empty();
+
         Long aligulacId = getAligulacProfileId(url);
         AligulacProPlayerRoot root = aligulacAPI.getPlayers(Set.of(aligulacId)).block();
         if(root == null || root.getObjects().length == 0) return Optional.empty();

@@ -21,6 +21,7 @@ import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProTeam;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProTeamRoot;
+import com.nephest.battlenet.sc2.model.aligulac.AligulacTest;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
@@ -87,7 +88,7 @@ public class ProPlayerServiceIT
     @Autowired
     private SC2RevealedAPI revealedAPI;
 
-    @Autowired
+    @Autowired(required = false)
     private AligulacAPI aligulacAPI;
 
     @Autowired
@@ -143,6 +144,7 @@ public class ProPlayerServiceIT
     }
 
     @Test @SuppressWarnings("deprecation")
+    @AligulacTest
     public void testUpdate()
     throws IOException
     {

@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.web.service;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.model.aligulac.Aligulac;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import java.util.Set;
@@ -17,6 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+@Aligulac
 @Service
 public class AligulacAPI
 extends BaseAPI

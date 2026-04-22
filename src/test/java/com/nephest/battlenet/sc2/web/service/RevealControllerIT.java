@@ -91,9 +91,7 @@ public class RevealControllerIT
     @Autowired
     private ProPlayerService proPlayerService;
 
-    @Autowired
-    private AligulacAPI realApi;
-
+    private static AligulacAPI realApi;
     private AligulacAPI mockApi;
 
     @Autowired
@@ -107,12 +105,17 @@ public class RevealControllerIT
     private static Set<SocialMedia> SOCIAL_MEDIA_SERVICES;
 
     @BeforeAll
-    public static void beforeAll(@Autowired Environment environment)
+    public static void beforeAll
+    (
+        @Autowired Environment environment,
+        @Autowired ProPlayerService proPlayerService
+    )
     {
         SOCIAL_MEDIA_SERVICES = Arrays.stream(environment.getActiveProfiles())
             .map(SocialMedia::from)
             .filter(sm->sm != SocialMedia.UNKNOWN)
             .collect(Collectors.toSet());
+        realApi = proPlayerService.getAligulacAPI();
     }
 
     @BeforeEach
