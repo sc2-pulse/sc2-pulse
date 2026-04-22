@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.notification;
@@ -9,6 +9,8 @@ import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -17,6 +19,8 @@ import reactor.core.publisher.Flux;
 public class NotificationService
 {
 
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationService.class);
+
     private final NotificationDAO notificationDAO;
     private final NotificationSender notificationSender;
 
@@ -24,11 +28,12 @@ public class NotificationService
     public NotificationService
     (
         NotificationDAO notificationDAO,
-        NotificationSender notificationSender
+        @Autowired(required = false) NotificationSender notificationSender
     )
     {
         this.notificationDAO = notificationDAO;
         this.notificationSender = notificationSender;
+        if(notificationSender == null) LOG.warn("No notification sender configured");
     }
 
     public void enqueueNotifications(String msg, Set<Long> recipientAccountIds)
@@ -38,6 +43,8 @@ public class NotificationService
 
     public synchronized int sendNotifications()
     {
+        if(notificationSender == null) return 0;
+
         Set<Long> sentNotifications = Flux.fromStream
         (
             notificationDAO.findAll().stream()
