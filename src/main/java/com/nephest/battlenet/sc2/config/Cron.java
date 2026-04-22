@@ -17,7 +17,6 @@ import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.SingleRunnable;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
-import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.GlobalContext;
 import com.nephest.battlenet.sc2.web.service.LadderUpdateContext;
 import com.nephest.battlenet.sc2.web.service.LadderUpdateTaskContext;
@@ -68,7 +67,6 @@ public class Cron
     private TimerVar calculateHeavyStatsTask;
     private TimerVar maintenanceFrequentTask;
     private TimerVar maintenanceInfrequentTask;
-    private TimerVar updateDiscordTask;
     private boolean updateLadder = true;
 
     @Autowired
@@ -123,9 +121,6 @@ public class Cron
     private StatusService statusService;
 
     @Autowired
-    private DiscordService discordService;
-
-    @Autowired
     private BlizzardPrivacyService blizzardPrivacyService;
 
     @Autowired
@@ -162,14 +157,6 @@ public class Cron
                 true,
                 MAINTENANCE_INFREQUENT_FRAME,
                 this::commenceInfrequentMaintenance
-            );
-            updateDiscordTask = new TimerVar
-            (
-                varDAO,
-                "discord.update.timestamp",
-                true,
-                DISCORD_UPDATE_FRAME,
-                ()->webExecutorService.submit(discordService::update)
             );
         }
         catch(RuntimeException ex) {
@@ -213,12 +200,6 @@ public class Cron
     public void updateSeasonState()
     {
         seasonStateDAO.merge(SC2Pulse.offsetDateTime(), seasonDAO.getMaxBattlenetId());
-    }
-
-    @Scheduled(cron="0 0/10 * * * *")
-    public void updateBackgroundServices()
-    {
-        updateDiscordTask.runIfAvailable().block();
     }
 
     @Scheduled(cron="0 0/10 * * * *")
