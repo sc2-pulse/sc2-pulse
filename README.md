@@ -59,6 +59,7 @@ spring.security.oauth2.client.twitch.client-secret={client_secret}
 ### Other
 These features have no profiles, only app properties are required.
 * aligulac: `com.nephest.battlenet.sc2.api.aligulac.key={api_key}`
+* replaystats: `com.nephest.battlenet.sc2.api.replaystats.key={api_key}`
 
 ## Podman(rootless)
 The container config is compatible with rootless podman.
@@ -94,12 +95,6 @@ properties: `org.testcontainers.dev.postgres.volume.name=volume-name`,
 `org.testcontainers.dev.clickhouse.volume.name=volume-name`
 * By default, the HTTP server uses a random free port which is displayed in the log. You can use the
 `org.testcontainers.dev.http.server.port` app property to pin the port if needed.
-
-### Optional application properties 
-The server will run without errors if these properties are missing, but the corresponding features will be disabled.
-```
-com.nephest.battlenet.sc2.api.replaystats.key
-```
 
 ### Misc
 Use [DB init script](src/main/resources/schema-postgres.sql) to create a fresh DB.
