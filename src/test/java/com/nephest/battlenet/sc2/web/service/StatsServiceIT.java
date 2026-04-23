@@ -36,6 +36,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTest;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
@@ -68,6 +69,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
 import org.springframework.web.context.WebApplicationContext;
 
+@BlizzardTest
 @SpringBootTest(classes = {AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")

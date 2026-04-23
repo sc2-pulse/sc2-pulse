@@ -37,6 +37,15 @@ a regular properties file (name-value map).
 Some features are optional and disabled by default. To enable them, add a corresponding profile to
 the `spring.profiles.active` app property, and add feature specific app properties.
 
+### Blizzard
+Profile name: `blizzard`.
+
+Required app properties:
+```
+spring.security.oauth2.client.blizzard.client-id={client_id}
+spring.security.oauth2.client.blizzard.client-secret={client_secret}
+```
+
 ### Discord
 Profile name: `discord`.
 
@@ -74,12 +83,6 @@ Systemd socket activation (`systemctl --user enable podman.socket`) doesn't work
 ## Testing
 Run the tests to ensure that you have a valid environment set up. You must also pass the tests
 before creating a PR.
-
-Required properties:
-```
-spring.security.oauth2.client.blizzard.client-id={client_id}
-spring.security.oauth2.client.blizzard.client-secret={client_secret}
-```
 
 To run all the tests execute the following command in a terminal
 ```

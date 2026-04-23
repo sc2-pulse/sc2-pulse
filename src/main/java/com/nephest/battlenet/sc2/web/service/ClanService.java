@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -101,7 +101,7 @@ public class ClanService
         ClanMemberDAO clanMemberDAO,
         ClanMemberEventDAO clanMemberEventDAO,
         VarDAO varDAO,
-        BlizzardSC2API api,
+        @Autowired(required = false) BlizzardSC2API api,
         EventService eventService,
         @Lazy AlternativeLadderService alternativeLadderService,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
@@ -289,7 +289,7 @@ public class ClanService
     private void updateClanMembers()
     {
         dbExecutorService.submit(clanService::removeExpiredClanMembers);
-        if(inactiveClanMembersUpdateTask.isDone())
+        if(api != null && inactiveClanMembersUpdateTask.isDone())
             inactiveClanMembersUpdateTask = webExecutorService.submit(this::updateInactiveClanMembers);
     }
 
@@ -323,6 +323,8 @@ public class ClanService
 
     private void updateInactiveClanMembersBatch(List<PlayerCharacter> clanMembers)
     {
+        if(api == null) throw new IllegalArgumentException("Blizzard API is not configured");
+
         List<Future<Void>> dbTasks = new ArrayList<>();
         Flux.fromIterable
         (
@@ -347,6 +349,8 @@ public class ClanService
 
     private void updateInactiveClanMembers()
     {
+        if(api == null) throw new IllegalArgumentException("Blizzard API is not configured");
+
         int batchSize = getInactiveClanMembersBatchSize();
         if(batchSize < 1) return;
 

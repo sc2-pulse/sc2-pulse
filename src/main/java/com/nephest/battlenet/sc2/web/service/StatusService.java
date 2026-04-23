@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.blizzard.Blizzard;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.util.ClickHouseUtil;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@Blizzard
 public class StatusService
 {
 

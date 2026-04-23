@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.filter;
@@ -424,7 +424,7 @@ public class HtmlUrlParameterRedirectFilterIT
     {
         mvc.perform
         (
-            get("/status").queryParam("type", "ladder")
+            get("/about").queryParam("type", "ladder")
                 .queryParam("idAnchor", "anchorValueAnchor")
                 .contentType(MediaType.TEXT_HTML)
         )

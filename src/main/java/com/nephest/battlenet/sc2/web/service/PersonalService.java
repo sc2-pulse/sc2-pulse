@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -27,7 +27,7 @@ public class PersonalService
 
 
     @Autowired
-    public PersonalService(BlizzardSC2API api, PostgreSQLUtils postgreSQLUtils)
+    public PersonalService(@Autowired(required = false) BlizzardSC2API api, PostgreSQLUtils postgreSQLUtils)
     {
         this.api = api;
         this.postgreSQLUtils = postgreSQLUtils;
@@ -46,7 +46,7 @@ public class PersonalService
     public List<BlizzardFullPlayerCharacter> getCharacters()
     {
         return getOidcUser()
-            .map(u->u.getAccount().getPartition() == Partition.GLOBAL
+            .map(u->api != null && u.getAccount().getPartition() == Partition.GLOBAL
                 ? api.getPlayerCharacters(Region.EU, Long.parseLong(u.getSubject()))
                     .onErrorComplete()
                     .collectList()

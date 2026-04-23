@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.Blizzard;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
@@ -77,6 +78,7 @@ import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 @Service
+@Blizzard
 public class AlternativeLadderService
 {
 

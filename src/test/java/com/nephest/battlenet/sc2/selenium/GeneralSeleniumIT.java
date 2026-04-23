@@ -18,6 +18,7 @@ import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOf;
 import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.discord.DiscordTest;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTest;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.util.DbTestUtil;
@@ -199,6 +200,7 @@ public class GeneralSeleniumIT
     }
 
     @Test
+    @BlizzardTest
     public void testStatusUI()
     {
         getAndWaitAndCheckJsErrors(driver, wait, root + "/status", "#status");

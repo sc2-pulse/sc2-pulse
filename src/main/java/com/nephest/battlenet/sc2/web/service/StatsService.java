@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.Version;
+import com.nephest.battlenet.sc2.model.blizzard.Blizzard;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadderLeagueKey;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
@@ -95,6 +96,7 @@ import reactor.util.function.Tuple5;
 import reactor.util.function.Tuples;
 
 @Service
+@Blizzard
 public class StatsService
 {
 

@@ -101,7 +101,11 @@
         </div>
         <div class="container text-secondary">
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/about}" class="text-secondary">About</a></span>
-            <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/status}" class="text-secondary">Status</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"
+                  th:if="${@environment.acceptsProfiles('blizzard')}"
+            >
+                <a th:href="@{/status}" class="text-secondary">Status</a>
+            </span>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/terms-of-service}" class="text-secondary">ToS</a></span>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/privacy-policy}" class="text-secondary">Privacy Policy</a></span>
             <address class="c-divider d-inline-block mb-3"><a th:href="@{/contacts}" class="text-secondary">Contacts</a></address>
@@ -193,7 +197,7 @@
         const ROOT_CONTEXT_PATH = /*[[@{/}]]*/ '';
         const RESOURCE_PATH = ROOT_CONTEXT_PATH + "static/";
         const DEBUG = /*[[${#arrays.contains(@environment.getActiveProfiles(), 'dev')}]]*/ '';
-        const ALTERNATIVE_UPDATE_REGIONS_STR = /*[[${#strings.toString(@statsService.getAlternativeRegions())}]]*/ '';
+        const ALTERNATIVE_UPDATE_REGIONS_STR = /*[[${@environment.acceptsProfiles('blizzard') ? #strings.toString(@statsService.getAlternativeRegions()) : '[]'}]]*/ '';
         const ALTERNATIVE_UPDATE_REGIONS = ALTERNATIVE_UPDATE_REGIONS_STR
             .substring(1, ALTERNATIVE_UPDATE_REGIONS_STR.length - 1)
             .replace(/ /g, '')

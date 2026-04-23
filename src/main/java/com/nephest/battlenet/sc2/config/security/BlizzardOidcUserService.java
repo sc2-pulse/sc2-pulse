@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
 
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.blizzard.Blizzard;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -28,6 +29,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 
 @Service
+@Blizzard
 public class BlizzardOidcUserService
 implements Oauth2UserServiceRegistration<OidcUserRequest, OidcUser>
 {

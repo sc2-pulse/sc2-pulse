@@ -17,6 +17,9 @@ public class CoreHtmlController
     @Value("#{environment['com.nephest.battlenet.sc2.donate'] != null}")
     private boolean donate;
 
+    @Value("#{environment.acceptsProfiles('blizzard')}")
+    private boolean blizzardEnabled;
+
     @Value("#{environment.acceptsProfiles('discord')}")
     private boolean discordEnabled;
 
@@ -52,7 +55,10 @@ public class CoreHtmlController
 
     @GetMapping("/status")
     public String status()
+    throws NoResourceFoundException
     {
+        if(!blizzardEnabled) throw new NoResourceFoundException(HttpMethod.GET, "/status");
+
         return "status";
     }
 

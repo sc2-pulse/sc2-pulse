@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.blizzard.Blizzard;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
@@ -65,6 +66,7 @@ import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
 @Service
+@Blizzard
 public class BlizzardPrivacyService
 {
 

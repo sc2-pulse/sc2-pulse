@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.Blizzard;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardDataSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
@@ -89,6 +90,7 @@ import reactor.util.function.Tuples;
 import reactor.util.retry.RetrySpec;
 
 @Service
+@Blizzard
 public class BlizzardSC2API
 extends BaseAPI
 {

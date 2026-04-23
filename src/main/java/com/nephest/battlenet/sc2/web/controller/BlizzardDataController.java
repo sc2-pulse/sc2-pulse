@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.config.security.BlizzardOidcUser;
+import com.nephest.battlenet.sc2.model.blizzard.Blizzard;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
 import com.nephest.battlenet.sc2.web.service.BlizzardDataService;
 import com.nephest.battlenet.sc2.web.service.PersonalService;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.SessionAttributes;
 
+@Blizzard
 @Controller @HtmlController @Hidden
 @RequestMapping("/data")
 @SessionAttributes({"blizzardOidcUser, blizzardCharacters"})
