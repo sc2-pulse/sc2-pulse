@@ -5,9 +5,9 @@ package com.nephest.battlenet.sc2.config.security;
 
 import com.nephest.battlenet.sc2.config.filter.CsrfCookieFilter;
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,12 +21,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
-import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -49,18 +45,6 @@ public class SecurityConfig
     );
 
     @Autowired
-    private RegistrationDelegatingOauth2UserService registrationDelegatingOauth2UserService;
-
-    @Autowired(required = false) @Qualifier("updateDataAuthenticationSuccessHandler")
-    private AuthenticationSuccessHandler authenticationSuccessHandler;
-
-    @Autowired @Qualifier("rateLimitedOAuth2AuthorizationCodeClient")
-    OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> oAuth2AuthorizationCodeClient;
-
-    @Autowired @Qualifier("delegatingAuthorizationRequestResolver")
-    private OAuth2AuthorizationRequestResolver delegatingAuthorizationRequestResolver;
-
-    @Autowired
     private Environment environment;
 
     @Autowired
@@ -76,13 +60,17 @@ public class SecurityConfig
     private Duration rememberMeDuration;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http)
+    public SecurityFilterChain filterChain
+    (
+        HttpSecurity http,
+        List<Customizer<HttpSecurity>> customizers
+    )
     throws Exception
     {
         ResetSessionStrategy resetSessionStrategy
             = new ResetSessionStrategy(sessionCookieName, "/", "/api/");
         checkConfig();
-        SecurityFilterChain chain = http
+        HttpSecurity security = http
             .securityMatcher("/**")
             .cors(Customizer.withDefaults())
             .sessionManagement(sessionManagement->sessionManagement
@@ -122,25 +110,15 @@ public class SecurityConfig
                 ))
                 .anyRequest().permitAll())
             .logout(logout->logout.logoutSuccessUrl("/?#stats"))
-            .oauth2Login(oauth2Login->{
-                var configurer = oauth2Login.loginPage("/login");
-                if(authenticationSuccessHandler != null) configurer = configurer
-                    .successHandler(authenticationSuccessHandler);
-                configurer
-                    .failureUrl("/login?oauthError=1")
-                    .userInfoEndpoint(userInfoEndpoint->
-                        userInfoEndpoint.userService(registrationDelegatingOauth2UserService))
-                    .tokenEndpoint(tokenEndpoint->
-                        tokenEndpoint.accessTokenResponseClient(oAuth2AuthorizationCodeClient))
-                    .authorizationEndpoint(c->
-                        c.authorizationRequestResolver(delegatingAuthorizationRequestResolver));})
             .rememberMe(rememberMe->rememberMe
                 .key(rememberMeKey)
                 .alwaysRemember(true)
                 .rememberMeCookieName(REMEMBER_ME_COOKIE_NAME)
                 .tokenValiditySeconds((int) rememberMeDuration.toSeconds())
-                .useSecureCookie(true))
-            .build();
+                .useSecureCookie(true));
+        customizers.forEach(customizer->customizer.customize(http));
+
+        SecurityFilterChain chain = security.build();
         init(chain);
         return chain;
     }
