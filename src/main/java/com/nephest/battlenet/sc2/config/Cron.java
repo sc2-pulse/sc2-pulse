@@ -16,7 +16,6 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.SingleRunnable;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
-import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.GlobalContext;
 import com.nephest.battlenet.sc2.web.service.LadderUpdateContext;
 import com.nephest.battlenet.sc2.web.service.LadderUpdateTaskContext;
@@ -71,9 +70,6 @@ public class Cron
 
     @Autowired
     private GlobalContext globalContext;
-
-    @Autowired
-    private BlizzardSC2API sc2API;
 
     @Autowired
     private StatsService statsService;
