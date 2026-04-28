@@ -263,7 +263,7 @@ public class TeamGroupHistoryCornerCaseIT
                     teamLegacyUidString
                 )),
                 //1 + 0 + 3 + 3 + 6
-                new RawTeamHistorySummaryData(Map.of(TeamHistoryDAO.SummaryColumn.GAMES, 13))
+                new RawTeamHistorySummaryData(Map.of(TeamHistoryDAO.SummaryColumn.GAMES, 15))
             )));
     }
 

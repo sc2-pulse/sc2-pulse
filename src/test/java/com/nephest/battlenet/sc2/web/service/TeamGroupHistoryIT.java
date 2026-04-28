@@ -334,16 +334,21 @@ public class TeamGroupHistoryIT
             ))
             .toList();
         FULL_SUMMARY_LEGACY_UID_GROUP = FULL_HISTORY_LEGACY_UID_GROUP_PLAYER_ACTIONS.stream()
-            .map(TeamGroupHistoryIT::toSummary)
+            .map(history->toSummary(history, false))
             .toList();
     }
 
     private static TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData> toSummary
     (
-        TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> history
+        TeamHistory<RawTeamHistoryStaticData, RawTeamHistoryHistoryData> history,
+        boolean isFromPresent
     )
     {
-        return new TeamHistorySummary<>(history.staticData(), calculateSummary(history.history()));
+        return new TeamHistorySummary<>
+        (
+            history.staticData(),
+            calculateSummary(history.history(), isFromPresent)
+        );
     }
 
     public static <T> Stream<T> mapValues
@@ -364,7 +369,8 @@ public class TeamGroupHistoryIT
 
     private static RawTeamHistorySummaryData calculateSummary
     (
-        RawTeamHistoryHistoryData data
+        RawTeamHistoryHistoryData data,
+        boolean isFromPresent
     )
     {
         Map<HistoryColumn, List<?>> history = data.data();
@@ -378,7 +384,7 @@ public class TeamGroupHistoryIT
         List<Integer> season = mapValues(history.get(HistoryColumn.SEASON), Number::intValue).toList();
         List<Integer> games = mapValues(history.get(HistoryColumn.GAMES), Number::intValue).toList();
         Map<SummaryColumn, Object> summary = new EnumMap<>(SummaryColumn.class);
-        summary.put(SummaryColumn.GAMES, calculateGames(season, rating, games));
+        summary.put(SummaryColumn.GAMES, calculateGames(season, rating, games, isFromPresent));
         summary.put(SummaryColumn.RATING_MIN, Collections.min(rating));
         summary.put(SummaryColumn.RATING_MAX, Collections.max(rating));
         summary.put(SummaryColumn.RATING_AVG, rating.stream().mapToInt(i->i).average().orElseThrow());
@@ -420,7 +426,8 @@ public class TeamGroupHistoryIT
     (
         List<Integer> season,
         List<Integer> rating,
-        List<Integer> games
+        List<Integer> games,
+        boolean isFromPresent
     )
     {
 
@@ -429,7 +436,7 @@ public class TeamGroupHistoryIT
         {
             int prevI = i - 1;
             gamesDiff.add(i == 0
-                ? 1
+                ? (isFromPresent ? 1 : games.get(i))
                 : !season.get(i).equals(season.get(prevI))
                     || games.get(i).equals(games.get(prevI))
                         && !rating.get(i).equals(rating.get(prevI))
@@ -937,7 +944,7 @@ public class TeamGroupHistoryIT
                     FULL_HISTORY_LEGACY_UID_GROUP_PLAYER_ACTIONS.stream()
                         .map(h->filterByFromAndTo(h, from , to))
                         .filter(Objects::nonNull)
-                        .map(TeamGroupHistoryIT::toSummary)
+                        .map(history->toSummary(history, from != null))
                         .toList()
                 );
             });

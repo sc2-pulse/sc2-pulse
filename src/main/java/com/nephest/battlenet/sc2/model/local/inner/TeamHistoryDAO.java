@@ -179,7 +179,8 @@ public class TeamHistoryDAO
         (
             "games",
             "toInt32OrDefault(SUM(games_delta) - argMin(games_delta, timestamp) + 1, "
-                + Integer.MAX_VALUE + "::Int32)"
+                + Integer.MAX_VALUE + "::Int32)",
+            "toInt32OrDefault(SUM(games_delta), " + Integer.MAX_VALUE + "::Int32)"
         ),
 
         RATING_MIN("rating_min",  "MIN(rating)"),
@@ -197,17 +198,24 @@ public class TeamHistoryDAO
             "nullIf(argMax(region_team_count, timestamp), -1)"
         );
 
-        private final String name, function, aliasedFunction;
+        private final String name, function, aliasedFunction, noFromAliasedFunction;
 
         SummaryColumn
         (
             String name,
-            String function
+            String function,
+            String noFromFunction
         )
         {
             this.name = name;
             this.function = function;
             this.aliasedFunction = function + " AS " + name;
+            this.noFromAliasedFunction = noFromFunction + " AS " + name;
+        }
+
+        SummaryColumn(String name, String function)
+        {
+            this(name, function, function);
         }
 
         public String getName()
@@ -223,6 +231,11 @@ public class TeamHistoryDAO
         public String getAliasedFunction()
         {
             return aliasedFunction;
+        }
+
+        public String getNoFromAliasedFunction()
+        {
+            return noFromAliasedFunction;
         }
 
     }
@@ -465,7 +478,12 @@ public class TeamHistoryDAO
         return FIND_SUMMARY_TEMPLATE.formatted
         (
             summaryColumns.stream()
-                .map(SummaryColumn::getAliasedFunction)
+                .map
+                (
+                    from != null
+                        ? SummaryColumn::getAliasedFunction
+                        : SummaryColumn::getNoFromAliasedFunction
+                )
                 .collect(Collectors.joining(", ")),
             from == null ? "" : "AND timestamp >= {from:DateTime}",
             to == null ? "" : "AND timestamp < {to:DateTime}"
