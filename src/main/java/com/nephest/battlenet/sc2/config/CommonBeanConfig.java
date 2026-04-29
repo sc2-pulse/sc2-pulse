@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.config.convert.min.IdentifiableToMinimalObjectC
 import com.nephest.battlenet.sc2.config.convert.min.TemporalAccessorToMinimalObjectConverter;
 import com.nephest.battlenet.sc2.config.convert.min.TimestampToMinimalObjectConverter;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.util.ConcurrencyUtil;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
@@ -157,15 +158,7 @@ public class CommonBeanConfig
     @Bean
     public ThreadPoolTaskExecutor asyncTaskExecutor()
     {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(150);
-        executor.setQueueCapacity(0);
-        executor.setKeepAliveSeconds(600);
-        executor.setThreadNamePrefix("async-");
-        executor.initialize();
-
-        return executor;
+        return ConcurrencyUtil.THREAD_POOL_TASK_EXECUTOR;
     }
 
 }
