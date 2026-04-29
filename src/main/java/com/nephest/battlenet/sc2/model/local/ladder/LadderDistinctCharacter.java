@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -13,13 +13,13 @@ public class LadderDistinctCharacter
 {
 
     @NotNull
-    private final BaseLeague.LeagueType leagueMax;
+    private BaseLeague.LeagueType leagueMax;
 
     @NotNull
-    private final Integer ratingMax;
+    private Integer ratingMax;
 
     @NotNull
-    private final Integer totalGamesPlayed;
+    private Integer totalGamesPlayed;
 
     @NotNull
     private final LadderPlayerSearchStats previousStats;
@@ -76,14 +76,29 @@ public class LadderDistinctCharacter
         return leagueMax;
     }
 
+    public void setLeagueMax(BaseLeague.LeagueType leagueMax)
+    {
+        this.leagueMax = leagueMax;
+    }
+
     public Integer getRatingMax()
     {
         return ratingMax;
     }
 
+    public void setRatingMax(Integer ratingMax)
+    {
+        this.ratingMax = ratingMax;
+    }
+
     public Integer getTotalGamesPlayed()
     {
         return totalGamesPlayed;
+    }
+
+    public void setTotalGamesPlayed(Integer totalGamesPlayed)
+    {
+        this.totalGamesPlayed = totalGamesPlayed;
     }
 
     public LadderTeamMember getMembers()
