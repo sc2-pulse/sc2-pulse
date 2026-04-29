@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.util.ClickHouseUtil;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.UInt32EpochSeconds;
+import com.nephest.battlenet.sc2.util.ConcurrencyUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,6 +56,7 @@ public class TeamHistoryDAO
     public static final String SYNC_FROM_VAR_NAME = "team_state.clickhouse.from";
     public static final String TABLE_NAME = "team_state";
     public static final int DEFAULT_SYNC_BATCH_SIZE = 10000;
+    private static final int SUMMARY_LEGACY_UID_BATCH_SIZE = 4000;
 
     public enum Source
     implements Identifiable
@@ -502,10 +505,27 @@ public class TeamHistoryDAO
     {
         if(teamLegacyUids.isEmpty() || summaryColumns.isEmpty()) return List.of();
         checkParameters(from, to);
-
-        List<TeamLegacyUid> expandedTeamLegacyUids = teamLegacyUids.stream()
+        Set<TeamLegacyUid> expandedTeamLegacyUids = teamLegacyUids.stream()
             .flatMap(TeamLegacyUid::expandWildcards)
-            .toList();
+            .collect(Collectors.toSet());
+
+        return ConcurrencyUtil.batchCallFlatMap
+        (
+            expandedTeamLegacyUids,
+            SUMMARY_LEGACY_UID_BATCH_SIZE,
+            HashSet::new,
+            teamLegacyUidBatch->findSummaryBatch(teamLegacyUidBatch, from, to, summaryColumns)
+        );
+    }
+
+    private List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> findSummaryBatch
+    (
+        @NotNull Set<TeamLegacyUid> expandedTeamLegacyUids,
+        @Nullable OffsetDateTime from,
+        @Nullable OffsetDateTime to,
+        @NotNull Set<SummaryColumn> summaryColumns
+    )
+    {
         Map<String, Object> queryParams = new HashMap<>(3);
         queryParams.put
         (
