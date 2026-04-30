@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -27,10 +27,10 @@ import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
@@ -71,6 +71,9 @@ public class GroupIT
     private MockMvc mvc;
 
     @Autowired
+    private TeamHistoryDAO teamHistoryDAO;
+
+    @Autowired
     private ClanDAO clanDAO;
 
     @Autowired
@@ -84,9 +87,6 @@ public class GroupIT
 
     @Autowired
     private LadderProPlayerDAO ladderProPlayerDAO;
-
-    @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -106,7 +106,7 @@ public class GroupIT
     throws Exception
     {
         Group initGroup = init();
-        playerCharacterStatsDAO.mergeCalculate();
+        teamHistoryDAO.trySync();
 
         Group result = objectMapper.readValue(mvc.perform
         (

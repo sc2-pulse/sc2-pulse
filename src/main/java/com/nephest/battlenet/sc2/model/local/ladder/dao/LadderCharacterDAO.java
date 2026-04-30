@@ -1,26 +1,39 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Clan;
-import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
-import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.ConvertedTeamHistorySummaryData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
+import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistorySummaryData;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import jakarta.validation.constraints.NotNull;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -55,27 +68,6 @@ public class LadderCharacterDAO
         + "FROM player_character "
         + "%1$s"
     + "), "
-    + "player_character_stats_filtered AS "
-    + "( "
-        + "SELECT DISTINCT ON(player_character_stats.player_character_id) "
-        + "player_character_stats.id, player_character_stats.player_character_id "
-        + "FROM player_character_filtered "
-        + "INNER JOIN player_character_stats ON player_character_stats.player_character_id = player_character_filtered.id "
-        + "ORDER BY player_character_stats.player_character_id, player_character_stats.rating_max DESC, "
-        + "player_character_stats.race, " //prevent summary selection where racial stats are available
-        + "player_character_stats.games_played DESC, player_character_stats.league_max DESC, "
-        + "player_character_stats.queue_type, player_character_stats.team_type "
-    + "), "
-    + "player_character_stats_max AS "
-    + "("
-        + "SELECT player_character_stats.player_character_id, "
-        + "SUM(games_played) AS games_played, "
-        + "MAX(league_max) AS league_max "
-        + "FROM player_character_filtered "
-        + "INNER JOIN player_character_stats ON player_character_stats.player_character_id = player_character_filtered.id "
-        + "WHERE COALESCE(race, -32768) = -32768 "
-        + "GROUP BY player_character_stats.player_character_id"
-    + "), "
     + "player_character_stats_previous AS "
     + "( "
         + String.format(SEARCH_STATS_TEMPLATE, "-1")
@@ -83,17 +75,6 @@ public class LadderCharacterDAO
     + "player_character_stats_current AS "
     + "( "
         + String.format(SEARCH_STATS_TEMPLATE, "")
-    + "), "
-    + "player_character_recent_race AS "
-    + "("
-        + "SELECT DISTINCT ON(player_character_filtered.id) "
-        + "player_character_filtered.id AS player_character_id, "
-        + TeamMemberDAO.FAVORITE_RACE_SELECT + " AS race "
-        + "FROM player_character_filtered "
-        + "INNER JOIN team_member ON player_character_filtered.id = team_member.player_character_id "
-        + "INNER JOIN team ON team_member.team_id = team.id "
-        + "WHERE team_member.team_season >= :season - 1 "
-        + "ORDER BY player_character_filtered.id DESC, team_member.team_season DESC, team.rating DESC "
     + ") "
 
     + "SELECT "
@@ -104,10 +85,6 @@ public class LadderCharacterDAO
     + AccountDAO.STD_SELECT + ", "
     + PlayerCharacterDAO.STD_SELECT + ", "
     + ClanDAO.STD_SELECT + ", "
-    + "COALESCE(player_character_recent_race.race, player_character_stats.race) AS \"race\", "
-    + "player_character_stats_max.league_max AS \"league_max\", "
-    + "player_character_stats.rating_max AS \"rating_max\", "
-    + "player_character_stats_max.games_played AS \"games_played\", "
     + "player_character_stats_previous.rating as \"rating_prev\", "
     + "player_character_stats_previous.games_played as \"games_played_prev\", "
     + "player_character_stats_previous.global_rank as \"rank_prev\", "
@@ -118,11 +95,6 @@ public class LadderCharacterDAO
     + "FROM player_character_filtered "
     + "INNER JOIN player_character ON player_character.id = player_character_filtered.id "
     + "INNER JOIN account ON player_character.account_id = account.id "
-    + "LEFT JOIN player_character_stats_filtered ON player_character_filtered.id "
-        + "= player_character_stats_filtered.player_character_id "
-    + "LEFT JOIN player_character_stats_max ON player_character.id = player_character_stats_max.player_character_id "
-    + "LEFT JOIN player_character_stats ON player_character_stats_filtered.id = player_character_stats.id "
-    + "LEFT JOIN player_character_recent_race ON player_character.id = player_character_recent_race.player_character_id "
     + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
     + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
     + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
@@ -133,11 +105,8 @@ public class LadderCharacterDAO
         + "ON player_character.id = confirmed_cheater_report.player_character_id "
         + "AND confirmed_cheater_report.type = :cheaterReportType "
         + "AND confirmed_cheater_report.status = true "
-    + "LEFT JOIN player_character_stats_current ON player_character_stats_current.player_character_id = player_character_stats_filtered.player_character_id "
-    + "LEFT JOIN player_character_stats_previous ON player_character_stats_previous.player_character_id = player_character_stats_filtered.player_character_id "
-
-    + "ORDER BY COALESCE(player_character_stats_current.rating, player_character_stats_previous.rating) DESC NULLS LAST, "
-        + "rating_max DESC";
+    + "LEFT JOIN player_character_stats_current ON player_character_stats_current.player_character_id = player_character.id "
+    + "LEFT JOIN player_character_stats_previous ON player_character_stats_previous.player_character_id = player_character.id ";
 
     private static final String FIND_DISTINCT_CHARACTER_BY_NAME_OR_BATTLE_TAG_OR_PRO_NICKNAME_QUERY = String.format
     (
@@ -282,33 +251,48 @@ public class LadderCharacterDAO
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
     private final SeasonDAO seasonDAO;
+    private final TeamHistoryDAO teamHistoryDAO;
 
     private final RowMapper<LadderDistinctCharacter> DISTINCT_CHARACTER_ROW_MAPPER;
     private final ResultSetExtractor<LadderDistinctCharacter> DISTINCT_CHARACTER_EXTRACTOR;
+
+    private static final Comparator<LadderDistinctCharacter> RECENT_COMPARATOR =
+        Comparator.comparing
+        (
+            ldc->ldc.getCurrentStats().getRating() != null
+                ? ldc.getCurrentStats().getRating()
+                : ldc.getPreviousStats().getRating(),
+            Comparator.nullsLast(Comparator.reverseOrder())
+        );
+    private static final Comparator<LadderDistinctCharacter> COMPARATOR
+        = RECENT_COMPARATOR.thenComparing
+        (
+            LadderDistinctCharacter::getRatingMax,
+            Comparator.nullsLast(Comparator.reverseOrder())
+        );
 
     @Autowired
     public LadderCharacterDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
-        SeasonDAO seasonDAO
+        SeasonDAO seasonDAO,
+        TeamHistoryDAO teamHistoryDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
         this.seasonDAO = seasonDAO;
+        this.teamHistoryDAO = teamHistoryDAO;
         DISTINCT_CHARACTER_ROW_MAPPER =
         (rs, num)->
         {
-            Integer gamesPlayed = DAOUtils.getInteger(rs, "games_played");
-            Race race = DAOUtils.getConvertedObjectFromInteger(rs, "race", conversionService, Race.class);
             Clan clan = DAOUtils.getInteger(rs, "clan.id") == null
                 ? null
                 : ClanDAO.getStdRowMapper().mapRow(rs, num);
             return new LadderDistinctCharacter
             (
-                conversionService.convert(DAOUtils.getInteger(rs,"league_max"), League.LeagueType.class),
-                DAOUtils.getInteger(rs, "rating_max"),
+                null, null,
                 AccountDAO.getStdRowMapper().mapRow(rs, num),
                 PlayerCharacterDAO.getStdRowMapper().mapRow(rs, num),
                 clan,
@@ -316,11 +300,7 @@ public class LadderCharacterDAO
                 rs.getString("pro_player.nickname"),
                 rs.getString("pro_player.team"),
                 DAOUtils.getBoolean(rs, "confirmed_cheater_report.restrictions"),
-                race == Race.TERRAN ? gamesPlayed : null,
-                race == Race.PROTOSS ? gamesPlayed : null,
-                race == Race.ZERG ? gamesPlayed : null,
-                race == Race.RANDOM ? gamesPlayed : null,
-                gamesPlayed,
+                null, null, null, null, null,
                 new LadderPlayerSearchStats
                 (
                     DAOUtils.getInteger(rs, "rating_prev"),
@@ -339,6 +319,167 @@ public class LadderCharacterDAO
             if(!rs.next()) return null;
             return DISTINCT_CHARACTER_ROW_MAPPER.mapRow(rs, 0);
         };
+    }
+
+    public void attachStatsAndSort
+    (
+        List<LadderDistinctCharacter> chars,
+        @NotNull Comparator<LadderDistinctCharacter> comparator
+    )
+    {
+        if(chars.isEmpty()) return;
+
+        attachStats(chars);
+        chars.sort(comparator);
+    }
+
+    public void attachStatsAndSort(List<LadderDistinctCharacter> chars)
+    {
+        attachStatsAndSort(chars, COMPARATOR);
+    }
+
+    public List<TeamHistorySummary<RawTeamHistoryStaticData, RawTeamHistorySummaryData>> getRawStats
+    (
+        List<LadderDistinctCharacter> chars
+    )
+    {
+        if(chars.isEmpty()) return List.of();
+
+        Set<TeamLegacyUid> teamLegacyUids = chars.stream()
+            .map(ldc->new TeamLegacyUid(
+                QueueType.LOTV_1V1,
+                TeamType.ARRANGED,
+                ldc.getMembers().getCharacter().getRegion(),
+                TeamLegacyId.standard(List.of(new TeamLegacyIdEntry(
+                    ldc.getMembers().getCharacter().getRealm(),
+                    ldc.getMembers().getCharacter().getBattlenetId(),
+                    true
+                )))
+            ))
+            .collect(Collectors.toSet());
+        return teamHistoryDAO.findSummary
+        (
+            teamLegacyUids,
+            null, null,
+            Set.of
+            (
+                TeamHistoryDAO.SummaryColumn.GAMES,
+                TeamHistoryDAO.SummaryColumn.LEAGUE_TYPE_MAX,
+                TeamHistoryDAO.SummaryColumn.RATING_MAX
+            )
+        );
+    }
+
+    public Map<PlayerCharacterNaturalId, List<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>>> getStatsMap
+    (
+        List<LadderDistinctCharacter> chars
+    )
+    {
+        if(chars.isEmpty()) return Map.of();
+
+        return getRawStats(chars).stream()
+            .map(TeamHistorySummary::cast)
+            .map(typed->TeamHistorySummary.convert(typed, conversionService))
+            .collect(Collectors.<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>, PlayerCharacterNaturalId>groupingBy(
+                summary->
+                PlayerCharacterNaturalId.of
+                (
+                    summary.staticData().legacyUid().getRegion(),
+                    summary.staticData().legacyUid().getId().getEntries().get(0).realm(),
+                    summary.staticData().legacyUid().getId().getEntries().get(0).id()
+                )
+            ));
+    }
+
+    public void attachStats
+    (
+        @NotNull LadderDistinctCharacter lds,
+        List<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>> stats
+    )
+    {
+        if(stats.isEmpty()) return;
+
+        lds.setLeagueMax
+        (
+            stats.stream()
+                .map(s->s.summary().leagueTypeMax())
+                .max(Comparator.comparing(BaseLeague.LeagueType::getId))
+                .orElseThrow()
+        );
+        lds.setRatingMax
+        (
+            stats.stream()
+                .map(s->s.summary().ratingMax())
+                .max(Comparator.naturalOrder())
+                .map(Short::intValue)
+                .orElseThrow()
+        );
+
+        lds.setTotalGamesPlayed(0);
+        for(TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData> curCharStats : stats)
+        {
+            if(curCharStats.staticData().legacyUid().getId().getEntries().get(0).race() != null)
+                lds.getMembers().setGamesPlayed
+                (
+                    curCharStats.staticData().legacyUid().getId().getEntries().get(0).race(),
+                    curCharStats.summary().games()
+                );
+            lds.setTotalGamesPlayed(lds.getTotalGamesPlayed() + curCharStats.summary().games());
+        }
+    }
+
+    public void attachStats
+    (
+        List<LadderDistinctCharacter> chars,
+        Map<PlayerCharacterNaturalId, List<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>>> stats
+    )
+    {
+        if(chars.isEmpty() || stats.isEmpty()) return;
+
+        for(LadderDistinctCharacter lds : chars)
+        {
+            List<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>> charStats
+                = stats.get(PlayerCharacterNaturalId.of(
+                lds.getMembers().getCharacter().getRegion(),
+                lds.getMembers().getCharacter().getRealm(),
+                lds.getMembers().getCharacter().getBattlenetId()
+            ));
+            if(charStats == null || charStats.isEmpty()) continue;
+
+            attachStats(lds, charStats);
+        }
+    }
+
+    public void attachStats(List<LadderDistinctCharacter> chars)
+    {
+        if(chars.isEmpty()) return;
+
+        attachStats(chars, getStatsMap(chars));
+    }
+
+    public List<LadderDistinctCharacter> findDistinctCharacters
+    (
+        String query,
+        MapSqlParameterSource params
+    )
+    {
+        List<LadderDistinctCharacter> characters
+            = template.query(query, params, DISTINCT_CHARACTER_ROW_MAPPER);
+        attachStatsAndSort(characters);
+        return characters;
+    }
+
+    public Optional<LadderDistinctCharacter> findDistinctCharacter
+    (
+        String query,
+        MapSqlParameterSource params
+    )
+    {
+        LadderDistinctCharacter character
+            = template.query(query, params, DISTINCT_CHARACTER_EXTRACTOR);
+        if(character != null) attachStats(List.of(character));
+
+        return Optional.ofNullable(character);
     }
 
     public List<LadderDistinctCharacter> findDistinctCharacters(String term)
@@ -366,8 +507,11 @@ public class LadderCharacterDAO
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template
-            .query(FIND_DISTINCT_CHARACTER_BY_NAME_OR_BATTLE_TAG_OR_PRO_NICKNAME_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+        return findDistinctCharacters
+        (
+            FIND_DISTINCT_CHARACTER_BY_NAME_OR_BATTLE_TAG_OR_PRO_NICKNAME_QUERY,
+            params
+        );
     }
 
     private List<LadderDistinctCharacter> findDistinctCharactersByFullBattleTag(String battleTag)
@@ -378,8 +522,7 @@ public class LadderCharacterDAO
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template
-            .query(FIND_DISTINCT_CHARACTER_BY_FULL_BATTLE_TAG_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+        return findDistinctCharacters(FIND_DISTINCT_CHARACTER_BY_FULL_BATTLE_TAG_QUERY, params);
     }
 
     public List<LadderDistinctCharacter> findDistinctCharactersByAccountId(Long accountId)
@@ -390,8 +533,7 @@ public class LadderCharacterDAO
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template
-            .query(FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+        return findDistinctCharacters(FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY, params);
     }
 
     public Optional<LadderDistinctCharacter> findDistinctCharacterByProfileLink(String profile)
@@ -406,7 +548,7 @@ public class LadderCharacterDAO
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return Optional.ofNullable(template.query(FIND_DISTINCT_CHARACTER_BY_PROFILE_LINK_QUERY, params, DISTINCT_CHARACTER_EXTRACTOR));
+        return findDistinctCharacter(FIND_DISTINCT_CHARACTER_BY_PROFILE_LINK_QUERY, params);
     }
 
     public Optional<LadderDistinctCharacter> findDistinctCharacterByCharacterId(Long playerCharacterId)
@@ -417,15 +559,7 @@ public class LadderCharacterDAO
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return Optional.ofNullable
-        (
-            template.query
-            (
-                FIND_DISTINCT_CHARACTER_BY_CHARACTER_ID_QUERY,
-                params,
-                DISTINCT_CHARACTER_EXTRACTOR
-            )
-        );
+        return findDistinctCharacter(FIND_DISTINCT_CHARACTER_BY_CHARACTER_ID_QUERY, params);
     }
 
     public List<LadderDistinctCharacter> findDistinctCharactersByCharacterIds(Set<Long> playerCharacterIds)
@@ -438,12 +572,7 @@ public class LadderCharacterDAO
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template.query
-        (
-            FIND_DISTINCT_CHARACTERS_BY_CHARACTER_IDS_QUERY,
-            params,
-            DISTINCT_CHARACTER_ROW_MAPPER
-        );
+        return findDistinctCharacters(FIND_DISTINCT_CHARACTERS_BY_CHARACTER_IDS_QUERY, params);
     }
 
     public List<LadderDistinctCharacter> findDistinctCharactersByClanTag(String clanTag)
@@ -456,8 +585,7 @@ public class LadderCharacterDAO
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template
-            .query(FIND_DISTINCT_CHARACTER_BY_CLAN_TAG_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+        return findDistinctCharacters(FIND_DISTINCT_CHARACTER_BY_CLAN_TAG_QUERY, params);
     }
 
     public List<LadderDistinctCharacter> findDistinctCharactersByFollowing(Long accountId)
@@ -470,8 +598,7 @@ public class LadderCharacterDAO
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template
-            .query(FIND_DISTINCT_CHARACTER_BY_FOLLOWING_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+        return findDistinctCharacters(FIND_DISTINCT_CHARACTER_BY_FOLLOWING_QUERY, params);
     }
 
     public List<LadderDistinctCharacter> findLinkedDistinctCharactersByCharacterId(Long playerCharacterId)
@@ -484,8 +611,7 @@ public class LadderCharacterDAO
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))
             .addValue("linkedReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.LINK, Integer.class));
-        return template
-            .query(FIND_LINKED_DISTINCT_CHARACTERS_BY_PLAYER_CHARACTER_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+        return findDistinctCharacters(FIND_LINKED_DISTINCT_CHARACTERS_BY_PLAYER_CHARACTER_ID_QUERY, params);
     }
 
     public List<LadderDistinctCharacter> findLinkedDistinctCharactersByAccountId(Long accountId)
@@ -498,8 +624,7 @@ public class LadderCharacterDAO
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))
             .addValue("linkedReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.LINK, Integer.class));
-        return template
-            .query(FIND_LINKED_DISTINCT_CHARACTERS_BY_ACCOUNT_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+        return findDistinctCharacters(FIND_LINKED_DISTINCT_CHARACTERS_BY_ACCOUNT_ID_QUERY, params);
     }
 
 }

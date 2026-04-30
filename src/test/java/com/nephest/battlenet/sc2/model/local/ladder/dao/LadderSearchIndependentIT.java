@@ -40,12 +40,14 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -53,6 +55,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,10 +92,13 @@ public class LadderSearchIndependentIT
     private TeamMemberDAO teamMemberDAO;
 
     @Autowired
-    private DivisionDAO divisionDAO;
+    private TeamStateDAO teamStateDAO;
 
     @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
+    private TeamHistoryDAO teamHistoryDAO;
+
+    @Autowired
+    private DivisionDAO divisionDAO;
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
@@ -181,7 +187,15 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("11111"), silver1.getId(),
+            TeamLegacyId.standard(List.of(
+                new TeamLegacyIdEntry
+                (
+                    character1.getRealm(),
+                    character1.getBattlenetId(),
+                    Race.TERRAN
+                )
+            )),
+            silver1.getId(),
             100L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -196,7 +210,15 @@ public class LadderSearchIndependentIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("11114"), bronze2.getId(),
+            TeamLegacyId.standard(List.of(
+                new TeamLegacyIdEntry
+                (
+                    character1.getRealm(),
+                    character1.getBattlenetId(),
+                    Race.TERRAN
+                )
+            )),
+            bronze2.getId(),
             98L, 99, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -211,7 +233,15 @@ public class LadderSearchIndependentIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("11115"), bronze2.getId(),
+            TeamLegacyId.standard(List.of(
+                new TeamLegacyIdEntry
+                (
+                    character1.getRealm(),
+                    character1.getBattlenetId(),
+                    Race.PROTOSS
+                )
+            )),
+            bronze2.getId(),
             97L, 50, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -226,7 +256,15 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("11112"), bronze1.getId(),
+            TeamLegacyId.standard(List.of(
+                new TeamLegacyIdEntry
+                (
+                    character2.getRealm(),
+                    character2.getBattlenetId(),
+                    Race.PROTOSS
+                )
+            )),
+            bronze1.getId(),
             101L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -241,7 +279,15 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("11113"), bronze1.getId(),
+            TeamLegacyId.standard(List.of(
+                new TeamLegacyIdEntry
+                (
+                    character3.getRealm(),
+                    character3.getBattlenetId(),
+                    Race.ZERG
+                )
+            )),
+            bronze1.getId(),
             102L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -257,7 +303,15 @@ public class LadderSearchIndependentIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("11113"), bronze2.getId(),
+            TeamLegacyId.standard(List.of(
+                new TeamLegacyIdEntry
+                (
+                    character3.getRealm(),
+                    character3.getBattlenetId(),
+                    Race.ZERG
+                )
+            )),
+            bronze2.getId(),
             102L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -268,7 +322,9 @@ public class LadderSearchIndependentIT
             0, 0, 100, 0
         );
         teamMemberDAO.create(member3_2);
-        playerCharacterStatsDAO.mergeCalculate();
+        List<Team> teams = List.of(team1, team1_2, team1_3, team2, team3, team3_2);
+        teamStateDAO.takeSnapshot(teams.stream().map(Team::getId).toList());
+        teamHistoryDAO.trySync();
 
         List<LadderDistinctCharacter> byName = ladderCharacterDAO.findDistinctCharacters("refchar1");
         assertEquals(1, byName.size());
@@ -449,44 +505,63 @@ public class LadderSearchIndependentIT
             new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#1"));
         PlayerCharacter[] characters = new PlayerCharacter[]{character};
 
-        //top mmr, but old season
+        //top mmr, but fewer games played
         Team team1 = Team.joined
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("10001"), d1.getId(),
-            3L, 100, 0, 0, 0,
+            TeamLegacyId.standard(List.of(
+                new TeamLegacyIdEntry
+                (
+                    character.getRealm(),
+                    character.getBattlenetId(),
+                    Race.TERRAN
+                )
+            )),
+            d1.getId(),
+            3L, 99, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
-        //2nd mmr, but prev season
+        //most games played in 1v1
         Team team2 = Team.joined
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("10002"), d2.getId(),
+            TeamLegacyId.standard(List.of(
+                new TeamLegacyIdEntry
+                (
+                    character.getRealm(),
+                    character.getBattlenetId(),
+                    Race.PROTOSS
+                )
+            )),
+            d2.getId(),
             2L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
-        //3rd mmr, picked because it's the latest team
+        //most games played, but not 1v1
         Team team3 = Team.joined
         (
             null, season3.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("10003"), d3.getId(),
-            1L, 100, 0, 0, 0,
+            TeamLegacyId.standard(List.of(
+                new TeamLegacyIdEntry(character.getRealm(), character.getBattlenetId())
+            )),
+            d3.getId(),
+            1L, 101, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
         teamDAO.merge(Set.of(team1, team2, team3));
         teamMemberDAO.merge(Set.of(
-            new TeamMember(team1.getId(), character.getId(), 100, 0, 0, 0),
+            new TeamMember(team1.getId(), character.getId(), 99, 0, 0, 0),
             new TeamMember(team2.getId(), character.getId(), 0, 100, 0, 0),
-            new TeamMember(team3.getId(), character.getId(), 20, 30, 40, 10)
+            new TeamMember(team3.getId(), character.getId(), 20, 30, 41, 10)
         ));
-
-        playerCharacterStatsDAO.mergeCalculate();
+        teamStateDAO.takeSnapshot(Stream.of(team1, team2, team3).map(Team::getId).toList());
+        teamHistoryDAO.trySync();
 
         LadderDistinctCharacter foundCharacter = ladderCharacterDAO.findDistinctCharacters("name").get(0);
-        assertEquals(Race.ZERG, foundCharacter.getMembers().getFavoriteRace());
+        assertEquals(Race.PROTOSS, foundCharacter.getMembers().getFavoriteRace());
     }
     
     public static void verify

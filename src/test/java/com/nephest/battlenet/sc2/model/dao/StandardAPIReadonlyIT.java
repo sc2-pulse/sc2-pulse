@@ -22,9 +22,9 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchIndependentIT;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
@@ -66,9 +66,9 @@ public class StandardAPIReadonlyIT
         @Autowired WebApplicationContext webApplicationContext,
         @Autowired SeasonGenerator generator,
         @Autowired TeamDAO teamDAO,
+        @Autowired TeamHistoryDAO teamHistoryDAO,
         @Autowired LeagueStatsDAO leagueStatsDAO,
-        @Autowired PopulationStateDAO populationStateDAO,
-        @Autowired PlayerCharacterStatsDAO playerCharacterStatsDAO
+        @Autowired PopulationStateDAO populationStateDAO
     )
     throws Exception
     {
@@ -84,7 +84,7 @@ public class StandardAPIReadonlyIT
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
-        playerCharacterStatsDAO.mergeCalculate();
+        teamHistoryDAO.trySync();
 
         mvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)

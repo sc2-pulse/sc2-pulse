@@ -23,10 +23,12 @@ import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
@@ -59,6 +61,12 @@ public class ClanMemberEventIT
 {
 
     @Autowired
+    private TeamStateDAO teamStateDAO;
+
+    @Autowired
+    private TeamHistoryDAO teamHistoryDAO;
+
+    @Autowired
     private ClanDAO clanDAO;
 
     @Autowired
@@ -66,9 +74,6 @@ public class ClanMemberEventIT
 
     @Autowired
     private ClanMemberEventDAO clanMemberEventDAO;
-
-    @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -93,8 +98,9 @@ public class ClanMemberEventIT
         accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "acc", 10);
         characters = seasonGenerator.generateCharacters("name", accounts, Region.EU, 100L);
         seasonGenerator.generateDefaultSeason(0);
-        seasonGenerator.createTeams(characters);
-        playerCharacterStatsDAO.mergeCalculate();
+        List<Team> teams = seasonGenerator.createTeams(characters);
+        teamStateDAO.takeSnapshot(teams.stream().map(Team::getId).toList());
+        teamHistoryDAO.trySync();
         clans = clanDAO.merge(new LinkedHashSet<>(List.of(
             new Clan(null, "tag1", Region.EU, "name1"),
             new Clan(null, "tag2", Region.EU, "name2"),

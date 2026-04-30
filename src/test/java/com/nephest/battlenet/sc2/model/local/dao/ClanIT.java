@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
+import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -60,6 +61,9 @@ public class ClanIT
 {
 
     @Autowired
+    private TeamHistoryDAO teamHistoryDAO;
+
+    @Autowired
     private ClanDAO clanDAO;
 
     @Autowired
@@ -67,9 +71,6 @@ public class ClanIT
 
     @Autowired
     private ClanMemberDAO clanMemberDAO;
-
-    @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @Autowired
     private ClanService clanService;
@@ -245,7 +246,7 @@ public class ClanIT
     throws Exception
     {
         seasonGenerator.generateDefaultSeason(10);
-        playerCharacterStatsDAO.mergeCalculate();
+        teamHistoryDAO.trySync();
         Clan clan = new Clan(1, "tag123", Region.EU, "name");
         Instant now = SC2Pulse.instant();
         clanService.saveClans(List.of(
@@ -330,7 +331,7 @@ public class ClanIT
         Clan clan3 = new Clan(3, "tag12345", Region.EU, "name");
         PlayerCharacter pChar = new PlayerCharacter(1L, 1L, Region.EU, 1L, 1, "name");
         seasonGenerator.generateDefaultSeason(1);
-        playerCharacterStatsDAO.mergeCalculate();
+        teamHistoryDAO.trySync();
         Instant start = SC2Pulse.instant().minusSeconds(60);
         clanService.removeClanUpdates();
         clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan1, start)));
@@ -404,7 +405,7 @@ public class ClanIT
     throws Exception
     {
         seasonGenerator.generateDefaultSeason(3);
-        playerCharacterStatsDAO.mergeCalculate();
+        teamHistoryDAO.trySync();
         PlayerCharacter[] chars = LongStream.range(0, 3)
             .boxed()
             .map(i->i + 1)
