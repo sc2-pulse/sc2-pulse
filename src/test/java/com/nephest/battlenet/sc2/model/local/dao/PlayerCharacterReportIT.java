@@ -985,6 +985,7 @@ public class PlayerCharacterReportIT
             .andReturn();
 
         evidenceVoteDAO.merge(new EvidenceVote(1, SC2Pulse.offsetDateTime(), 10L, true, SC2Pulse.offsetDateTime()));
+        template.update("UPDATE player_character_report SET status = true");
         LadderEvidenceVote voteAll = getReports()[0].getEvidence().get(0).getVotes().get(0);
         assertNull(voteAll.getVoterAccount());
         assertNull(voteAll.getVote().getVoterAccountId());
@@ -1033,6 +1034,7 @@ public class PlayerCharacterReportIT
             .andExpect(status().isOk())
             .andReturn();
 
+        template.update("UPDATE player_character_report SET status = true");
         verifyLinkedReports
         (
             WebServiceTestUtil.getObject
@@ -1169,6 +1171,12 @@ public class PlayerCharacterReportIT
     }
 
     @Test
+    @WithBlizzardMockUser
+    (
+        partition = Partition.GLOBAL,
+        username = BATTLETAG,
+        roles={SC2PulseAuthority.USER, SC2PulseAuthority.MODERATOR}
+    )
     public void whenReportHasDeniedStatusAndNewEvidenceReceived_thenResetReportStatus()
     throws Exception
     {
@@ -1215,6 +1223,39 @@ public class PlayerCharacterReportIT
 
         reportService.update(start);
         verifyStatus(getReports()[0], null, null, false);
+    }
+
+    @Test
+    public void whenNotInSecureRole_thenOnlyConfirmedReportsVisible()
+    throws Exception
+    {
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+                .param("playerCharacterId", "1")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence1")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        LadderPlayerCharacterReport[] reports = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, LadderPlayerCharacterReport[].class,
+            "/api/character/report/list/1"
+        );
+        assertEquals(0, reports.length);
+
+        template.update("UPDATE player_character_report SET status = true");
+        reports = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, LadderPlayerCharacterReport[].class,
+            "/api/character/report/list/1"
+        );
+        assertEquals(1, reports.length);
+        assertEquals(Boolean.TRUE, reports[0].getReport().getStatus());
     }
 
 }

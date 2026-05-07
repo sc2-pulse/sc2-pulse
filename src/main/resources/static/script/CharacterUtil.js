@@ -1336,13 +1336,8 @@ class CharacterUtil
                 return Session.verifyJsonResponse(resp);
             })
             .then(e=>{
-                CharacterUtil.resetCharacterReports(true);
-                return CharacterUtil.enqueueUpdateCharacterReports();
-            })
-            .then(e=>{
                 $("#report-character-modal").modal('hide');
-                $("#character-reports").collapse('show');
-                window.setTimeout(e=>Util.scrollIntoViewById("character-reports"), 500);
+                return BootstrapUtil.showGenericModal("Report submitted", "Report has been submitted. Thanks!");
             });
     }
 

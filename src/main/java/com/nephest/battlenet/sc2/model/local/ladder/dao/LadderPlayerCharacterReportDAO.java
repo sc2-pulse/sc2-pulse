@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2025 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterReportDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,21 +56,19 @@ public class LadderPlayerCharacterReportDAO
             + "AND confirmed_cheater_report.status = true "
             + "%1$s";
 
+    private static final String STATUS_FILTER =
+        "(:includeTrue AND player_character_report.status = true) "
+        + "OR (:includeNull AND player_character_report.status IS NULL) "
+        + "OR (:includeFalse AND player_character_report.status = false "
+            + "AND player_character_report.status_change_timestamp >= :from)";
+
     private static final String FIND_REPORTS =
-        String.format(FIND_REPORTS_TEMPLATE,
-            "WHERE player_character_report.status IS NULL "
-            + "OR player_character_report.status = true "
-            + "OR player_character_report.status_change_timestamp >= :from");
+        String.format(FIND_REPORTS_TEMPLATE, "WHERE " + STATUS_FILTER);
 
     private static final String FIND_REPORTS_BY_CHARACTER_IDS =
         String.format(FIND_REPORTS_TEMPLATE,
             "WHERE player_character_report.player_character_id IN(:characterIds) "
-            + "AND "
-            + "("
-                + "player_character_report.status IS NULL "
-                + "OR player_character_report.status = true "
-                + "OR player_character_report.status_change_timestamp >= :from"
-            + ")");
+            + "AND (" + STATUS_FILTER + ")");
 
     private static RowMapper<LadderPlayerCharacterReport> STD_MAPPER;
 
@@ -101,25 +100,36 @@ public class LadderPlayerCharacterReportDAO
         return STD_MAPPER;
     }
 
-    public List<LadderPlayerCharacterReport> findAll()
+    public List<LadderPlayerCharacterReport> findAll(Set<PlayerCharacterReport.ReportStatus> statuses)
     {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_REPORTS_DAYS))
-            .addValue("cheaterReportType", conversionService
-                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template.query(FIND_REPORTS, params, STD_MAPPER);
+        return template.query(FIND_REPORTS, buildParams(statuses), STD_MAPPER);
     }
 
-    public List<LadderPlayerCharacterReport> findByCharacterIds(Set<Long> characterIds)
+    public List<LadderPlayerCharacterReport> findByCharacterIds
+    (Set<Long> characterIds, Set<PlayerCharacterReport.ReportStatus> statuses)
     {
         if(characterIds.isEmpty()) return List.of();
 
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("characterIds",  characterIds)
-            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_REPORTS_DAYS))
+        MapSqlParameterSource params = buildParams(statuses)
+            .addValue("characterIds", characterIds);
+        return template.query(FIND_REPORTS_BY_CHARACTER_IDS, params, STD_MAPPER);
+    }
+
+    private MapSqlParameterSource buildParams(Set<PlayerCharacterReport.ReportStatus> statuses)
+    {
+        boolean includeTrue = statuses.contains(PlayerCharacterReport.ReportStatus.CONFIRMED);
+        boolean includeNull = statuses.contains(PlayerCharacterReport.ReportStatus.UNDECIDED);
+        boolean includeFalse = statuses.contains(PlayerCharacterReport.ReportStatus.DENIED);
+        OffsetDateTime from = includeFalse
+            ? SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_REPORTS_DAYS)
+            : null;
+        return new MapSqlParameterSource()
+            .addValue("includeTrue", includeTrue)
+            .addValue("includeNull", includeNull)
+            .addValue("includeFalse", includeFalse)
+            .addValue("from", from)
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template.query(FIND_REPORTS_BY_CHARACTER_IDS, params, STD_MAPPER);
     }
 
 }

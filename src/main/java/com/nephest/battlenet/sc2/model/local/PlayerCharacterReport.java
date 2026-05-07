@@ -56,6 +56,32 @@ implements java.io.Serializable
 
     }
 
+    public enum ReportStatus
+    {
+        CONFIRMED(true),
+        DENIED(false),
+        UNDECIDED(null);
+
+        private final Boolean value;
+
+        ReportStatus(Boolean value)
+        {
+            this.value = value;
+        }
+
+        public Boolean getValue()
+        {
+            return value;
+        }
+
+        public static ReportStatus from(Boolean value)
+        {
+            for(ReportStatus status : ReportStatus.values())
+                if(Objects.equals(status.value, value)) return status;
+            throw new IllegalArgumentException("Invalid value " + value);
+        }
+    }
+
     private static final long serialVersionUID = 1L;
 
     private Integer id;

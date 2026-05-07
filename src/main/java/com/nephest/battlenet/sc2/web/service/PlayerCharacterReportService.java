@@ -27,8 +27,12 @@ import com.nephest.battlenet.sc2.util.MarkdownUtil;
 import com.nephest.battlenet.sc2.web.service.notification.NotificationService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,6 +61,15 @@ public class PlayerCharacterReportService
     public static final Set<String> SECURE_ROLE_NAMES = SECURE_ROLES.stream()
         .map(SC2PulseAuthority::getAuthority)
         .collect(Collectors.toSet());
+
+    public static final Map<Boolean, Set<PlayerCharacterReport.ReportStatus>> REPORT_STATUSES_BY_SECURE_ROLE;
+    static
+    {
+        REPORT_STATUSES_BY_SECURE_ROLE = Map.of(
+            Boolean.TRUE, Collections.unmodifiableSet(EnumSet.allOf(PlayerCharacterReport.ReportStatus.class)),
+            Boolean.FALSE, Set.of(PlayerCharacterReport.ReportStatus.CONFIRMED)
+        );
+    }
 
     public static final int EVIDENCE_PER_DAY = 10;
     public static final int CONFIRMED_EVIDENCE_MAX = 3;
@@ -224,7 +237,9 @@ public class PlayerCharacterReportService
 
     public List<LadderPlayerCharacterReport> findReports()
     {
-        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findAll();
+        Authentication auth = getAuthentication().orElseThrow();
+        List<LadderPlayerCharacterReport> reports =
+            ladderPlayerCharacterReportDAO.findAll(getReportStatuses(auth));
         Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll(true).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
         /*TODO
@@ -255,14 +270,16 @@ public class PlayerCharacterReportService
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
         if(!reports.isEmpty()) reports.sort(comparator.reversed());
-        return clearSensitiveData(reports, getAuthentication().orElseThrow());
+        return clearSensitiveData(reports, auth);
     }
 
     public List<LadderPlayerCharacterReport> findReportsByCharacterIds(Set<Long> characterIds)
     {
         if(characterIds.isEmpty()) return List.of();
 
-        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findByCharacterIds(characterIds);
+        Authentication auth = getAuthentication().orElseThrow();
+        List<LadderPlayerCharacterReport> reports =
+            ladderPlayerCharacterReportDAO.findByCharacterIds(characterIds, getReportStatuses(auth));
         Map<Integer, List<Evidence>> evidences = evidenceDAO
             .findByReportIds(true, reports.stream().map(r->r.getReport().getId()).collect(Collectors.toSet())).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
@@ -295,7 +312,15 @@ public class PlayerCharacterReportService
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
         if(!reports.isEmpty()) reports.sort(comparator.reversed());
-        return clearSensitiveData(reports, getAuthentication().orElseThrow());
+        return clearSensitiveData(reports, auth);
+    }
+
+    private Set<PlayerCharacterReport.ReportStatus> getReportStatuses(Authentication auth)
+    {
+        boolean isSecureRole = auth.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(SECURE_ROLE_NAMES::contains);
+        return REPORT_STATUSES_BY_SECURE_ROLE.get(isSecureRole);
     }
 
     private Map<Long, List<Account>> getReporters(Map<Integer, List<Evidence>> evidences)
