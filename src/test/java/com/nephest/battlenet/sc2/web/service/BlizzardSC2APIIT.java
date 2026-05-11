@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
@@ -34,9 +35,8 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTest;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -54,9 +54,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -110,26 +108,29 @@ public class BlizzardSC2APIIT
     private static WebClient originalClient;
 
     @BeforeAll
-    public static void beforeAll(@Autowired BlizzardSC2API api, @Autowired DataSource dataSource)
-    throws SQLException
+    public static void beforeAll
+    (
+        @Autowired BlizzardSC2API api,
+        @Autowired DataSource dataSource,
+        @Autowired Client clickHouseClient
+    )
+    throws Exception
     {
         originalClient = WebServiceTestUtil.fastTimers(api);
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
     @AfterAll
-    public static void afterAll(@Autowired BlizzardSC2API api, @Autowired DataSource dataSource)
-    throws SQLException
+    public static void afterAll
+    (
+        @Autowired BlizzardSC2API api,
+        @Autowired DataSource dataSource,
+        @Autowired Client clickHouseClient
+    )
+    throws Exception
     {
         WebServiceTestUtil.revertFastTimers(api, originalClient);
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test @Order(1) @Disabled("Blizzard API fails too often now, ignore this test until it becomes more stable")

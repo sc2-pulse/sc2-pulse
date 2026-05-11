@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
@@ -29,10 +30,9 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchVideoDAO;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
@@ -43,9 +43,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -121,24 +119,17 @@ public class SqlSyntaxIT
     private JdbcTemplate template;
 
     @BeforeAll
-    public static void beforeAll(@Autowired DataSource dataSource)
-    throws SQLException
+    public static void beforeAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
-        throws SQLException
+    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+        throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     /*TODO

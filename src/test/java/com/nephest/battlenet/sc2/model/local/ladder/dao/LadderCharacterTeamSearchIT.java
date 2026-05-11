@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
@@ -28,10 +29,9 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.LongStream;
 import javax.sql.DataSource;
@@ -45,9 +45,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -81,15 +79,12 @@ public class LadderCharacterTeamSearchIT
     (
         @Autowired DivisionDAO divisionDAO,
         @Autowired SeasonGenerator seasonGenerator,
-        @Autowired DataSource dataSource
+        @Autowired DataSource dataSource,
+        @Autowired Client clickHouseClient
     )
-    throws SQLException
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
 
         Region region = Region.EU;
         Season season1 = new Season(null, 1, region, 2020, 1,
@@ -147,13 +142,10 @@ public class LadderCharacterTeamSearchIT
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
-    throws SQLException
+    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

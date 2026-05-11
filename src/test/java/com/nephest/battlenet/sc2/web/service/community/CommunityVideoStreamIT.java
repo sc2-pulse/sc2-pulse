@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
@@ -43,12 +44,11 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import jakarta.annotation.PostConstruct;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -82,10 +82,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import reactor.core.publisher.Flux;
@@ -179,18 +177,15 @@ public class CommunityVideoStreamIT
     public void beforeEach
     (
         @Autowired DataSource dataSource,
-        @Autowired(required = false) TwitchVideoStreamSupplier twitchVideoStreamSupplier
+        @Autowired(required = false) TwitchVideoStreamSupplier twitchVideoStreamSupplier,
+        @Autowired Client clickHouseClient
     )
-    throws SQLException
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            when(otherStreamSupplier.getStreams()).thenReturn(Flux.empty());
-            if(twitchVideoStreamSupplier != null)
-                when(twitchVideoStreamSupplier.getStreams()).thenReturn(Flux.empty());
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
+        when(otherStreamSupplier.getStreams()).thenReturn(Flux.empty());
+        if(twitchVideoStreamSupplier != null)
+            when(twitchVideoStreamSupplier.getStreams()).thenReturn(Flux.empty());
     }
 
     private void init
@@ -247,13 +242,10 @@ public class CommunityVideoStreamIT
     }
 
     @AfterEach
-    public void afterEach(@Autowired DataSource dataSource)
-    throws SQLException
+    public void afterEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @AfterEach

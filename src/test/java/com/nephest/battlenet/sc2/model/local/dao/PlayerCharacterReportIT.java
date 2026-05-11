@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
@@ -53,13 +54,12 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -79,10 +79,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -169,40 +167,34 @@ public class PlayerCharacterReportIT
         @Autowired AccountDAO accountDAO,
         @Autowired AccountRoleDAO accountRoleDAO,
         @Autowired WebApplicationContext webApplicationContext,
-        @Autowired SeasonGenerator seasonGenerator
+        @Autowired SeasonGenerator seasonGenerator,
+        @Autowired Client clickHouseClient
     )
-    throws SQLException
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            account = accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
-            seasonGenerator.generateDefaultSeason
-            (
-                List.of(Region.EU),
-                List.of(BaseLeague.LeagueType.BRONZE),
-                List.of(QueueType.LOTV_1V1),
-                TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST, 10
-            );
-            accountRoleDAO.addRoles(10L, EnumSet.of(SC2PulseAuthority.ADMIN));
-            accountRoleDAO.addRoles(11L, EnumSet.of(SC2PulseAuthority.MODERATOR));
-            mvc = MockMvcBuilders
-                .webAppContextSetup(webApplicationContext)
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
+        account = accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.EU),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST, 10
+        );
+        accountRoleDAO.addRoles(10L, EnumSet.of(SC2PulseAuthority.ADMIN));
+        accountRoleDAO.addRoles(11L, EnumSet.of(SC2PulseAuthority.MODERATOR));
+        mvc = MockMvcBuilders
+            .webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
+            .alwaysDo(print())
+            .build();
     }
 
     @AfterEach
-    public void afterEach(@Autowired DataSource dataSource)
-    throws SQLException
+    public void afterEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

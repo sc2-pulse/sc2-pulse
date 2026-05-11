@@ -56,12 +56,12 @@ public class DbTestUtil
             clickHouseClearTask.get().close();
         }
     }
-    
+
     public static boolean isBatchUpdateValid(int rowsChanged, int expected)
     {
         return rowsChanged == expected || rowsChanged == Statement.SUCCESS_NO_INFO;
     }
-    
+
     public static boolean isBatchUpdateValid(int rowsChanged)
     {
         return isBatchUpdateValid(rowsChanged, 1);
@@ -92,5 +92,5 @@ public class DbTestUtil
         Arrays.fill(expected, 1);
         assertBatchUpdate(rowsChanged, expected);
     }
-    
+
 }

@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
@@ -21,10 +22,9 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.TeamController;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -40,10 +40,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -72,20 +70,17 @@ public class RecentTeamIT
         @Autowired DataSource dataSource,
         @Autowired JdbcTemplate jdbc,
         @Autowired SeasonGenerator seasonGenerator,
-        @Autowired @Qualifier("mvcConversionService") ConversionService cs
+        @Autowired @Qualifier("mvcConversionService") ConversionService cs,
+        @Autowired Client clickHouseClient
     )
-    throws SQLException
+    throws Exception
     {
         RecentTeamIT.cs = cs;
         RecentTeamIT.jdbc = jdbc;
         urlStart1v1 = "/api/teams?queue=" + cs.convert(QueueType.LOTV_1V1, String.class)
             + "&league=" + cs.convert(BaseLeague.LeagueType.GOLD, String.class)
             + "&recent=true";
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
         seasonGenerator.generateDefaultSeason
         (
             List.of(Region.EU, Region.US),
@@ -106,13 +101,10 @@ public class RecentTeamIT
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
-    throws SQLException
+    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
-        try (Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     public static Stream<Arguments> testFindRecentTeams()

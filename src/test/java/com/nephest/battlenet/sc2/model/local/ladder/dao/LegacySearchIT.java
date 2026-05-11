@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
@@ -28,10 +29,9 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +46,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -88,58 +86,55 @@ public class LegacySearchIT
         @Autowired DivisionDAO divisionDAO,
         @Autowired TeamDAO teamDAO,
         @Autowired TeamMemberDAO teamMemberDAO,
-        @Autowired TeamStateDAO teamStateDAO
+        @Autowired TeamStateDAO teamStateDAO,
+        @Autowired Client clickHouseClient
     )
-    throws SQLException
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            ODT = SC2Pulse.offsetDateTime().minusDays(180);
-            OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
-            List<Season> seasons = List.of
-            (
-                new Season(null, 1, Region.EU, 2020, 1,
-                    start, start.plusMonths(1)),
-                new Season(null, 1, Region.US, 2020, 1,
-                    start, start.plusMonths(1)),
-                new Season(null, 2, Region.EU, 2020, 2,
-                    start.plusMonths(1), start.plusMonths(2)),
-                new Season(null, 2, Region.US, 2020, 2,
-                    start.plusMonths(1), start.plusMonths(2))
-            );
-            seasonGenerator.generateSeason
-            (
-                seasons,
-                List.of(BaseLeague.LeagueType.values()),
-                new ArrayList<>(QueueType.getTypes(StatsService.VERSION)),
-                TeamType.ARRANGED,
-                BaseLeagueTier.LeagueTierType.FIRST,
-                1
-            );
-            setupTeam(QueueType.LOTV_4V4, Region.EU, 1, LEGACY_ID_1, BaseLeague.LeagueType.BRONZE, 3,
-                seasons.get(0).getStart(),
-                divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
-            setupTeam(QueueType.LOTV_1V1, Region.US, 1, LEGACY_ID_2, BaseLeague.LeagueType.BRONZE, 3,
-                seasons.get(1).getStart(),
-                divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
+        DbTestUtil.initDb(dataSource, clickHouseClient);
+        ODT = SC2Pulse.offsetDateTime().minusDays(180);
+        OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
+        List<Season> seasons = List.of
+        (
+            new Season(null, 1, Region.EU, 2020, 1,
+                start, start.plusMonths(1)),
+            new Season(null, 1, Region.US, 2020, 1,
+                start, start.plusMonths(1)),
+            new Season(null, 2, Region.EU, 2020, 2,
+                start.plusMonths(1), start.plusMonths(2)),
+            new Season(null, 2, Region.US, 2020, 2,
+                start.plusMonths(1), start.plusMonths(2))
+        );
+        seasonGenerator.generateSeason
+        (
+            seasons,
+            List.of(BaseLeague.LeagueType.values()),
+            new ArrayList<>(QueueType.getTypes(StatsService.VERSION)),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            1
+        );
+        setupTeam(QueueType.LOTV_4V4, Region.EU, 1, LEGACY_ID_1, BaseLeague.LeagueType.BRONZE, 3,
+            seasons.get(0).getStart(),
+            divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
+        setupTeam(QueueType.LOTV_1V1, Region.US, 1, LEGACY_ID_2, BaseLeague.LeagueType.BRONZE, 3,
+            seasons.get(1).getStart(),
+            divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
 
-            setupTeam(QueueType.LOTV_4V4,  Region.EU, 2, LEGACY_ID_1, BaseLeague.LeagueType.GOLD, 10,
-                seasons.get(2).getStart(),
-                divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
-            setupTeam(QueueType.LOTV_1V1, Region.US, 2, LEGACY_ID_2, BaseLeague.LeagueType.GOLD, 10,
-                seasons.get(3).getStart(),
-                divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
+        setupTeam(QueueType.LOTV_4V4,  Region.EU, 2, LEGACY_ID_1, BaseLeague.LeagueType.GOLD, 10,
+            seasons.get(2).getStart(),
+            divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
+        setupTeam(QueueType.LOTV_1V1, Region.US, 2, LEGACY_ID_2, BaseLeague.LeagueType.GOLD, 10,
+            seasons.get(3).getStart(),
+            divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
 
-            Team team3 = setupTeam(QueueType.LOTV_1V1, Region.US, 1, LEGACY_ID_3, BaseLeague.LeagueType.BRONZE, 3,
-                seasons.get(1).getStart(),
-                divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
-            team3.setRating(0L);
-            teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(1))));
-            team3.setRating(300L);
-            teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(3))));
-        }
+        Team team3 = setupTeam(QueueType.LOTV_1V1, Region.US, 1, LEGACY_ID_3, BaseLeague.LeagueType.BRONZE, 3,
+            seasons.get(1).getStart(),
+            divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
+        team3.setRating(0L);
+        teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(1))));
+        team3.setRating(300L);
+        teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(3))));
     }
 
     public static Team setupTeam
@@ -212,13 +207,10 @@ public class LegacySearchIT
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
-    throws SQLException
+    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

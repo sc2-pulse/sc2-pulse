@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -7,13 +7,13 @@ import static com.nephest.battlenet.sc2.web.service.community.TwitchVideoStreamS
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.twitch.dto.TwitchStreamDto;
 import com.nephest.battlenet.sc2.model.twitch.dto.TwitchUserDto;
 import com.nephest.battlenet.sc2.model.twitch.dto.TwitchVideoDto;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.twitch.TwitchTest;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -29,8 +29,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Flux;
 
@@ -43,25 +41,27 @@ public class TwitchAPIIT
     private static TwitchAPI api;
 
     @BeforeAll
-    public static void beforeAll(@Autowired DataSource dataSource, @Autowired TwitchAPI api)
-    throws SQLException
+    public static void beforeAll
+    (
+        @Autowired DataSource dataSource,
+        @Autowired TwitchAPI api,
+        @Autowired Client clickHouseClient
+    )
+    throws Exception
     {
         TwitchAPIIT.api = api;
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
-    throws SQLException
+    public static void afterAll
+    (
+        @Autowired DataSource dataSource,
+        @Autowired Client clickHouseClient
+    )
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     public static Stream<Arguments> whenExceedingMaxUserBatchSize_thenSplitRequestOnSubBatches()

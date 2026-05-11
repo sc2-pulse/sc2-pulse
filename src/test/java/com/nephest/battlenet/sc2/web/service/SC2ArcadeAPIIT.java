@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -6,13 +6,13 @@ package com.nephest.battlenet.sc2.web.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.arcade.ArcadePlayerCharacter;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
 import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -20,8 +20,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -36,26 +34,29 @@ public class SC2ArcadeAPIIT
     private static WebClient originalClient;
 
     @BeforeAll
-    public static void beforeAll(@Autowired SC2ArcadeAPI api, @Autowired DataSource dataSource)
-    throws SQLException
+    public static void beforeAll
+    (
+        @Autowired SC2ArcadeAPI api,
+        @Autowired DataSource dataSource,
+        @Autowired Client clickHouseClient
+    )
+    throws Exception
     {
         originalClient = WebServiceTestUtil.fastTimers(api);
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
     @AfterAll
-    public static void afterAll(@Autowired SC2ArcadeAPI api, @Autowired DataSource dataSource)
-    throws SQLException
+    public static void afterAll
+    (
+        @Autowired SC2ArcadeAPI api,
+        @Autowired DataSource dataSource,
+        @Autowired Client clickHouseClient
+    )
+    throws Exception
     {
         WebServiceTestUtil.revertFastTimers(api, originalClient);
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

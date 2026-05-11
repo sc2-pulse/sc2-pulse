@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
@@ -18,11 +19,10 @@ import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -41,10 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -71,50 +69,43 @@ public class ClanSearchIT
         @Autowired DataSource dataSource,
         @Autowired WebApplicationContext webApplicationContext,
         @Autowired JdbcTemplate template,
-        @Autowired ClanDAO clanDAO
+        @Autowired ClanDAO clanDAO,
+        @Autowired Client clickHouseClient
     )
-    throws SQLException
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+        DbTestUtil.initDb(dataSource, clickHouseClient);
+        Region[] regions = Region.values();
+        clans = IntStream.range(0, CLAN_COUNT)
+            .boxed()
+            .map(i->new Clan(
+                null,
+                i == 0 ? "c" : ("clan" + i),
+                regions[i % regions.length],
+                "name" + i))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+        clanDAO.merge(clans);
+        template.execute
+        (
+            "UPDATE clan "
+                + "SET active_members = id, "
+                + "avg_rating = id + 1, "
+                + "members = id + 3, "
+                + "games = id * 2"
+        );
 
-            Region[] regions = Region.values();
-            clans = IntStream.range(0, CLAN_COUNT)
-                .boxed()
-                .map(i->new Clan(
-                    null,
-                    i == 0 ? "c" : ("clan" + i),
-                    regions[i % regions.length],
-                    "name" + i))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-            clanDAO.merge(clans);
-            template.execute
-            (
-                "UPDATE clan "
-                    + "SET active_members = id, "
-                    + "avg_rating = id + 1, "
-                    + "members = id + 3, "
-                    + "games = id * 2"
-            );
-
-            mvc = MockMvcBuilders
-                .webAppContextSetup(webApplicationContext)
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-        }
+        mvc = MockMvcBuilders
+            .webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
+            .alwaysDo(print())
+            .build();
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
-    throws SQLException
+    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord.dao;
@@ -6,12 +6,12 @@ package com.nephest.battlenet.sc2.model.discord.dao;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
+import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.web.service.DiscordIT;
 import discord4j.common.util.Snowflake;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
@@ -19,8 +19,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -36,30 +34,24 @@ public class DiscordCursorSearchIT
     public static void beforeAll
     (
         @Autowired DataSource dataSource,
-        @Autowired DiscordUserDAO discordUserDAO
+        @Autowired DiscordUserDAO discordUserDAO,
+        @Autowired Client clickHouseClient
     )
-    throws SQLException
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            discordUserDAO.merge(Set.of(
-                new DiscordUser(Snowflake.of(1L), "name1", 1),
-                new DiscordUser(Snowflake.of(2L), "name2", 2),
-                new DiscordUser(Snowflake.of(3L), "name3", 3)
-            ));
-        }
+        DbTestUtil.initDb(dataSource, clickHouseClient);
+        discordUserDAO.merge(Set.of(
+            new DiscordUser(Snowflake.of(1L), "name1", 1),
+            new DiscordUser(Snowflake.of(2L), "name2", 2),
+            new DiscordUser(Snowflake.of(3L), "name3", 3)
+        ));
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
-    throws SQLException
+    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    throws Exception
     {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
+        DbTestUtil.clearDb(dataSource, clickHouseClient);
 
     }
 
