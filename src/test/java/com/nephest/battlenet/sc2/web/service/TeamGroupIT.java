@@ -8,10 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.IdField;
@@ -36,7 +36,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.util.TeamLegacyUidValidationUtil;
@@ -51,9 +50,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -71,6 +68,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class TeamGroupIT
 {
 
@@ -87,18 +85,15 @@ public class TeamGroupIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
         @Autowired TeamDAO teamDAO,
         @Autowired TeamMemberDAO teamMemberDAO,
         @Autowired PopulationStateDAO populationStateDAO,
         @Autowired LeagueStatsDAO leagueStatsDAO,
         @Autowired SeasonGenerator seasonGenerator,
-        @Autowired @Qualifier("mvcConversionService") ConversionService conversionService,
-        @Autowired Client clickHouseClient
+        @Autowired @Qualifier("mvcConversionService") ConversionService conversionService
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         init(teamDAO, teamMemberDAO, populationStateDAO, leagueStatsDAO, seasonGenerator);
         TeamGroupIT.conversionService = conversionService;
     }
@@ -204,13 +199,6 @@ public class TeamGroupIT
         leagueStatsDAO.mergeCalculateForSeason(statsSeason);
         populationStateDAO.takeSnapshot(List.of(statsSeason));
         teamDAO.updateRanks(statsSeason);
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     public static LadderTeam fromId(Long id)

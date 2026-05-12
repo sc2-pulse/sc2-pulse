@@ -6,20 +6,17 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +25,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class SeasonIT
 {
 
@@ -39,13 +37,10 @@ public class SeasonIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired SeasonDAO seasonDAO,
-        @Autowired Client clickHouseClient
+        @Autowired SeasonDAO seasonDAO
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         OffsetDateTime start = SC2Pulse.offsetDateTime(2020, 1, 1);
         seasons = new ArrayList<>();
         for(Region region : Region.values())
@@ -53,13 +48,6 @@ public class SeasonIT
                 start, start.plusMonths(1))));
         seasons.add(seasonDAO.create(new Season(null, 2, Region.EU, 2020, 2,
             start.plusMonths(1), start.plusMonths(2))));
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

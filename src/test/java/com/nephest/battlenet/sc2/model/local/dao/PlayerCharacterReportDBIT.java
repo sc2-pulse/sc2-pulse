@@ -5,8 +5,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -15,13 +15,10 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Evidence;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +27,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class PlayerCharacterReportDBIT
 {
 
@@ -42,13 +40,10 @@ public class PlayerCharacterReportDBIT
     @BeforeEach
     public void beforeEach
     (
-        @Autowired DataSource dataSource,
-        @Autowired SeasonGenerator seasonGenerator,
-        @Autowired Client clickHouseClient
+        @Autowired SeasonGenerator seasonGenerator
         )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         seasonGenerator.generateDefaultSeason
         (
             List.of(Region.EU),
@@ -57,13 +52,6 @@ public class PlayerCharacterReportDBIT
             TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST, 10
         );
 
-    }
-
-    @AfterEach
-    public void afterEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

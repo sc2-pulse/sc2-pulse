@@ -12,10 +12,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
@@ -26,16 +26,13 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.BlizzardDataController;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
-import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +46,7 @@ import org.springframework.web.context.WebApplicationContext;
 @BlizzardTest
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class BlizzardDataServiceIT
 {
 
@@ -87,12 +85,9 @@ public class BlizzardDataServiceIT
     @BeforeEach
     public void beforeEach
     (
-        @Autowired DataSource dataSource,
-        @Autowired WebApplicationContext webApplicationContext,
-        @Autowired Client clickHouseClient
+        @Autowired WebApplicationContext webApplicationContext
     ) throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         mvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
@@ -118,13 +113,6 @@ public class BlizzardDataServiceIT
         acc2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "user#2"));
         char2_1 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 3L, 3, "name#3"));
-    }
-
-    @AfterEach
-    public void afterEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

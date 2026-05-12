@@ -6,10 +6,10 @@ package com.nephest.battlenet.sc2.web.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -36,7 +36,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.util.Collection;
 import java.util.List;
@@ -44,9 +43,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -57,6 +53,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
 @AutoConfigureMockMvc
+@AutoConfigureDatabase
 public class PlayerCharacterStatsIT
 {
 
@@ -99,20 +96,6 @@ public class PlayerCharacterStatsIT
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
-    @AfterEach
-    public void afterEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
-    }
 
     @Test
     public void testGlobalStatsCalculation()

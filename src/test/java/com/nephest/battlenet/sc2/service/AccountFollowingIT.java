@@ -13,9 +13,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -36,11 +36,8 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.util.List;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +50,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class AccountFollowingIT
 {
 
@@ -93,25 +91,15 @@ public class AccountFollowingIT
     @BeforeEach
     public void beforeEach
     (
-        @Autowired DataSource dataSource,
-        @Autowired WebApplicationContext webApplicationContext,
-        @Autowired Client clickHouseClient
+        @Autowired WebApplicationContext webApplicationContext
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         mvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
             .alwaysDo(print())
             .build();
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

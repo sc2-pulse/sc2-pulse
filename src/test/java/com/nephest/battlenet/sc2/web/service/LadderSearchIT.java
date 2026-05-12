@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -12,10 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -48,7 +48,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.time.OffsetDateTime;
@@ -63,7 +62,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -85,6 +83,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class LadderSearchIT
 {
 
@@ -138,7 +137,6 @@ public class LadderSearchIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
         @Autowired SeasonGenerator generator,
         @Autowired QueueStatsDAO queueStatsDAO,
         @Autowired LeagueStatsDAO leagueStatsDAO,
@@ -149,13 +147,10 @@ public class LadderSearchIT
         @Autowired TeamStateDAO teamStateDAO,
         @Autowired PopulationStateDAO populationStateDAO,
         @Autowired LadderSearchDAO ladderSearchDAO,
-        @Autowired JdbcTemplate template,
-        @Autowired Client clickHouseClient
+        @Autowired JdbcTemplate template
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-
         List<Season> seasons = new ArrayList<>();
         for(Region region : REGIONS) seasons.add(new Season(
             null, DEFAULT_SEASON_ID, region,
@@ -237,13 +232,10 @@ public class LadderSearchIT
     @AfterAll
     public static void afterAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired LadderSearchDAO ladderSearchDAO,
-        @Autowired Client clickHouseClient
+        @Autowired LadderSearchDAO ladderSearchDAO
     )
         throws Exception
     {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
         ladderSearchDAO.setResultsPerPage(initialResultsPerPage);
     }
 

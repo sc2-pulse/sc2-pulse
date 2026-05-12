@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.dao;
@@ -9,10 +9,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -27,7 +27,6 @@ import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchIndependentIT;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
@@ -37,7 +36,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +48,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class StandardAPIReadonlyIT
 {
 
@@ -64,19 +63,15 @@ public class StandardAPIReadonlyIT
     @BeforeAll
     public static void init
     (
-        @Autowired DataSource dataSource,
         @Autowired WebApplicationContext webApplicationContext,
         @Autowired SeasonGenerator generator,
         @Autowired TeamDAO teamDAO,
         @Autowired LeagueStatsDAO leagueStatsDAO,
         @Autowired PopulationStateDAO populationStateDAO,
-        @Autowired PlayerCharacterStatsDAO playerCharacterStatsDAO,
-        @Autowired Client clickHouseClient
+        @Autowired PlayerCharacterStatsDAO playerCharacterStatsDAO
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-
         generator.generateDefaultSeason
         (
             List.of(Region.values()),

@@ -9,9 +9,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
@@ -21,11 +21,8 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import java.util.Set;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +38,7 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class SearchServiceIT
 {
 
@@ -53,17 +51,14 @@ public class SearchServiceIT
     @BeforeAll
     public static void init
     (
-        @Autowired DataSource dataSource,
         @Autowired WebApplicationContext webApplicationContext,
         @Autowired AccountDAO accountDAO,
         @Autowired PlayerCharacterDAO playerCharacterDAO,
         @Autowired ClanDAO clanDAO,
-        @Autowired JdbcTemplate template,
-        @Autowired Client clickHouseClient
+        @Autowired JdbcTemplate template
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         for(int i = 0; i < CharacterController.SEARCH_SUGGESTIONS_SIZE + 1; i++)
             accountDAO.merge(new Account(null, Partition.GLOBAL, "ab#" + i));
         accountDAO.merge(new Account(null, Partition.GLOBAL, "aa#1"));
@@ -99,13 +94,6 @@ public class SearchServiceIT
             clanDAO.merge(Set.of(new Clan(null, "a" + Character.toString('a' + i), Region.EU, null)));
         clanDAO.merge(Set.of(new Clan(null, "b" + Character.toString('a' + (int) bIx), Region.EU, null)));
         template.update("UPDATE clan SET active_members = id");
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     private String[] getSuggestions(String query)

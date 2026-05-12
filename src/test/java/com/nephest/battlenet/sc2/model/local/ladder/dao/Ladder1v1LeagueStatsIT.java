@@ -1,12 +1,12 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -16,14 +16,10 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,6 +30,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class Ladder1v1LeagueStatsIT
 {
 
@@ -51,24 +48,6 @@ public class Ladder1v1LeagueStatsIT
 
     @Autowired @Qualifier("sc2StatsConversionService")
     ConversionService conversionService;
-
-    @BeforeEach
-    public void beforeEach
-    (
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient
-    )
-    throws Exception
-    {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
-    }
 
     @Test
     public void testRaceTeamCount()

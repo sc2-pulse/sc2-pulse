@@ -9,10 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BaseMatch;
@@ -60,7 +60,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.time.Duration;
@@ -71,10 +70,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -91,6 +87,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = {AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class MatchIT
 {
 
@@ -160,20 +157,6 @@ public class MatchIT
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @BeforeEach
-    public void beforeAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
-    @AfterEach
-    public void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
-    }
 
     /*TODO
         Split this abomination into proper tests

@@ -7,8 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
@@ -16,17 +16,14 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,6 +42,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class HtmlUrlParameterRedirectFilterIT
 {
 
@@ -57,21 +55,11 @@ public class HtmlUrlParameterRedirectFilterIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired SeasonGenerator seasonGenerator,
-        @Autowired Client clickHouseClient
+        @Autowired SeasonGenerator seasonGenerator
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         seasonGenerator.generateDefaultSeason(1);
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @ValueSource(strings = {"ladder", "following-ladder"})

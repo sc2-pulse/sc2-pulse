@@ -6,9 +6,9 @@ package com.nephest.battlenet.sc2.web.service;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
@@ -23,17 +23,13 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -49,6 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = {AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class CharacterIdSearchIT
 {
 
@@ -69,20 +66,6 @@ public class CharacterIdSearchIT
 
     @Autowired @Qualifier("mvcConversionService")
     private ConversionService mvcConversionService;
-
-    @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
-    }
 
     public static PlayerCharacter fromId(Long id)
     {

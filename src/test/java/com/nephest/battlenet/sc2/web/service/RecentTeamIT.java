@@ -10,10 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -22,14 +22,11 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.TeamController;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,6 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class RecentTeamIT
 {
 
@@ -67,11 +65,9 @@ public class RecentTeamIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
         @Autowired JdbcTemplate jdbc,
         @Autowired SeasonGenerator seasonGenerator,
-        @Autowired @Qualifier("mvcConversionService") ConversionService cs,
-        @Autowired Client clickHouseClient
+        @Autowired @Qualifier("mvcConversionService") ConversionService cs
     )
     throws Exception
     {
@@ -80,7 +76,6 @@ public class RecentTeamIT
         urlStart1v1 = "/api/teams?queue=" + cs.convert(QueueType.LOTV_1V1, String.class)
             + "&league=" + cs.convert(BaseLeague.LeagueType.GOLD, String.class)
             + "&recent=true";
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         seasonGenerator.generateDefaultSeason
         (
             List.of(Region.EU, Region.US),
@@ -98,13 +93,6 @@ public class RecentTeamIT
         );
         jdbc.update("UPDATE team SET wins = id");
         jdbc.update("UPDATE team SET rating = wins * 2");
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     public static Stream<Arguments> testFindRecentTeams()

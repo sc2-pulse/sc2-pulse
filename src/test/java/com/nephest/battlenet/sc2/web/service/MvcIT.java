@@ -14,16 +14,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.filter.NoCacheFilter;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -42,6 +38,7 @@ import org.springframework.util.DigestUtils;
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class MvcIT
 {
 
@@ -53,20 +50,6 @@ public class MvcIT
 
     @Value("${com.nephest.battlenet.sc2.cors.allowed-origin-patterns:#{''}}")
     private List<String> corsAllowedOriginPatterns;
-
-    @BeforeAll
-    public static void beforeAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
-    }
 
     @CsvSource
     ({

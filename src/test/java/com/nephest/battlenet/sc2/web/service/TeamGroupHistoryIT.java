@@ -10,10 +10,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -46,7 +46,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistoryHistoryData;
 import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistoryStaticData;
 import com.nephest.battlenet.sc2.model.local.inner.TypedTeamHistorySummaryData;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.UInt32EpochSecondsTemporalAccessorValidatorSimpleIntegrationTest;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
@@ -69,10 +68,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -95,6 +92,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class TeamGroupHistoryIT
 {
 
@@ -128,8 +126,6 @@ public class TeamGroupHistoryIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseCLient,
         @Autowired DivisionDAO divisionDAO,
         @Autowired TeamDAO teamDAO,
         @Autowired TeamStateDAO teamStateDAO,
@@ -142,7 +138,6 @@ public class TeamGroupHistoryIT
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseCLient);
         teamLegacyUid = new TeamLegacyUid
         (
             QueueType.LOTV_1V1,
@@ -163,13 +158,6 @@ public class TeamGroupHistoryIT
             jdbcTemplate,
             mvcConversionService
         );
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     private static void init

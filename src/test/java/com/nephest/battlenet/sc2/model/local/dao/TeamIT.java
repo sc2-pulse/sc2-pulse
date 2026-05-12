@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -21,7 +21,6 @@ import com.nephest.battlenet.sc2.model.local.StatefulBasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.time.OffsetDateTime;
@@ -32,12 +31,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.apache.commons.lang3.SerializationUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -50,6 +47,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class TeamIT
 {
 
@@ -73,26 +71,16 @@ public class TeamIT
         TeamIT.operations = operations;
     }
 
-    @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
     @AfterEach
     public void afterEach
     (
-        @Autowired DataSource dataSource,
-        @Autowired List<StatefulBasicEntityOperations<Team>> statefulBasicEntityOperations,
-        @Autowired Client clickHouseClient
+        @Autowired List<StatefulBasicEntityOperations<Team>> statefulBasicEntityOperations
     )
     throws Exception
     {
         for(StatefulBasicEntityOperations<Team> ops : statefulBasicEntityOperations)
             for(Region region : Region.values())
                 ops.clear(region);
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -9,10 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -29,13 +29,10 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import java.util.List;
 import java.util.stream.LongStream;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -52,6 +49,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class LadderCharacterTeamSearchIT
 {
 
@@ -78,14 +76,10 @@ public class LadderCharacterTeamSearchIT
     public static void beforeAll
     (
         @Autowired DivisionDAO divisionDAO,
-        @Autowired SeasonGenerator seasonGenerator,
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient
+        @Autowired SeasonGenerator seasonGenerator
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-
         Region region = Region.EU;
         Season season1 = new Season(null, 1, region, 2020, 1,
             SC2Pulse.offsetDateTime(2020, 1, 1), SC2Pulse.offsetDateTime(2020, 2, 1));
@@ -139,13 +133,6 @@ public class LadderCharacterTeamSearchIT
             season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, bronze1v1,
             TeamLegacyId.trusted("10005"), 0L, 1, 2, 3, 4, characters[2]
         );
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

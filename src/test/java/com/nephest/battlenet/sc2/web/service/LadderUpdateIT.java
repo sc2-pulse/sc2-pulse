@@ -7,15 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.LadderUpdate;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.LadderUpdateDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Duration;
@@ -27,9 +26,7 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +36,7 @@ import reactor.core.Disposable;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class LadderUpdateIT
 {
 
@@ -52,18 +50,10 @@ public class LadderUpdateIT
     private UpdateService updateService;
 
     @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    public void beforeEach()
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         updateService.setPreviousLadderUpdateOffsetDateTime(null);
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

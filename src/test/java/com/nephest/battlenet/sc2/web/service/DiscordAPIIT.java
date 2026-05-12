@@ -8,16 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.discord.DiscordTest;
 import com.nephest.battlenet.sc2.discord.IdentifiableEntity;
 import com.nephest.battlenet.sc2.discord.InstallationData;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Partition;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.io.IOException;
-import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -37,6 +35,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @DiscordTest
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class DiscordAPIIT
 {
 
@@ -52,19 +51,17 @@ public class DiscordAPIIT
     private static WebClient originalClient;
 
     @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    public void beforeEach()
     throws Exception
     {
         originalClient = WebServiceTestUtil.fastTimers(api);
-        DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
     @AfterEach
-    public void afterEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    public void afterEach()
     throws Exception
     {
         WebServiceTestUtil.revertFastTimers(api, originalClient);
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

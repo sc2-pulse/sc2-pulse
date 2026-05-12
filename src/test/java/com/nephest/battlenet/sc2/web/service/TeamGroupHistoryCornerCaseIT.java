@@ -11,10 +11,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -34,7 +34,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.util.ClickHouseUtil;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
 import java.time.OffsetDateTime;
@@ -45,10 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.IntStream;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -63,6 +59,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class TeamGroupHistoryCornerCaseIT
 {
 
@@ -95,20 +92,6 @@ public class TeamGroupHistoryCornerCaseIT
 
     @Autowired
     private SeasonGenerator seasonGenerator;
-
-    @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
-    }
 
     @Test
     public void whenTeamSnapshotsOverstepCurrentSeasonBoundaries_thenIgnoreBoundaries()

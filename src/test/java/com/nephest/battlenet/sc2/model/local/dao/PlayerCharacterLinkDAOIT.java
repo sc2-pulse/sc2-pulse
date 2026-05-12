@@ -6,22 +6,19 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import jakarta.validation.ConstraintViolationException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +27,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class PlayerCharacterLinkDAOIT
 {
 
@@ -46,20 +44,12 @@ public class PlayerCharacterLinkDAOIT
     private PlayerCharacter character;
 
     @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    public void beforeEach()
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         character = playerCharacterDAO.merge(
             new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#1"));
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

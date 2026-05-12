@@ -16,10 +16,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
@@ -44,7 +44,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
@@ -65,7 +64,6 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,6 +89,7 @@ import reactor.core.publisher.Flux;
 @SpringBootTest(classes = {CommunityVideoStreamIT.InitConfiguration.class, AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class CommunityVideoStreamIT
 {
 
@@ -176,13 +175,10 @@ public class CommunityVideoStreamIT
     @BeforeEach
     public void beforeEach
     (
-        @Autowired DataSource dataSource,
-        @Autowired(required = false) TwitchVideoStreamSupplier twitchVideoStreamSupplier,
-        @Autowired Client clickHouseClient
+        @Autowired(required = false) TwitchVideoStreamSupplier twitchVideoStreamSupplier
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         when(otherStreamSupplier.getStreams()).thenReturn(Flux.empty());
         if(twitchVideoStreamSupplier != null)
             when(twitchVideoStreamSupplier.getStreams()).thenReturn(Flux.empty());
@@ -239,13 +235,6 @@ public class CommunityVideoStreamIT
             .map(i->new ProPlayerAccount(proPlayers[i].getId(), accounts[i].getId()))
             .collect(Collectors.toSet())
         );
-    }
-
-    @AfterEach
-    public void afterEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @AfterEach

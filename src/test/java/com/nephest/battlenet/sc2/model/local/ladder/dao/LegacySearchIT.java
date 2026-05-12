@@ -5,8 +5,8 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -29,7 +29,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.time.OffsetDateTime;
@@ -39,8 +38,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +48,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class LegacySearchIT
 {
 
@@ -81,17 +79,14 @@ public class LegacySearchIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
         @Autowired SeasonGenerator seasonGenerator,
         @Autowired DivisionDAO divisionDAO,
         @Autowired TeamDAO teamDAO,
         @Autowired TeamMemberDAO teamMemberDAO,
-        @Autowired TeamStateDAO teamStateDAO,
-        @Autowired Client clickHouseClient
+        @Autowired TeamStateDAO teamStateDAO
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         ODT = SC2Pulse.offsetDateTime().minusDays(180);
         OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
         List<Season> seasons = List.of
@@ -204,13 +199,6 @@ public class LegacySearchIT
         teamDAO.merge(Set.of(team1));
         teamStateDAO.saveState(Set.of(TeamState.of(team1)));
         return team1;
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

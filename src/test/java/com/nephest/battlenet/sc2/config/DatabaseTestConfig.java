@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.config;
 import com.nephest.battlenet.sc2.config.data.DataConfig;
 import com.nephest.battlenet.sc2.model.local.DBTestService;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.util.TestDatabaseLifecycleService;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
@@ -25,7 +26,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
     {
         @ComponentScan.Filter(type = FilterType.ANNOTATION, value = Repository.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SeasonGenerator.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DBTestService.class)
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DBTestService.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TestDatabaseLifecycleService.class)
     }
 )
 @Import({CoreTestConfig.class, DataConfig.class, CommonBeanConfig.class})

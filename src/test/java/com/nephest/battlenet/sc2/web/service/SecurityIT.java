@@ -1,18 +1,15 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -28,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @ActiveProfiles({"default", "prod", "test"})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class SecurityIT
 {
 
@@ -37,22 +35,11 @@ public class SecurityIT
     @BeforeAll
     public static void init
     (
-        @Autowired DataSource dataSource,
-        @Autowired AccountDAO accountDAO,
-        @Autowired Client clickHouseClient
+        @Autowired AccountDAO accountDAO
     ) throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         accountDAO.merge(new Account(1L, Partition.GLOBAL, "user"));
     }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
-    }
-
 
     @ParameterizedTest
     @CsvSource

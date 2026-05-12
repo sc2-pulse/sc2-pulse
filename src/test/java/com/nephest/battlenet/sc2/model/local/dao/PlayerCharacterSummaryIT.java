@@ -9,9 +9,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -30,7 +30,6 @@ import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.CharacterControllerLegacy;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
@@ -40,8 +39,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +51,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class PlayerCharacterSummaryIT
 {
 
@@ -86,25 +84,15 @@ public class PlayerCharacterSummaryIT
     @BeforeEach
     public void beforeAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired WebApplicationContext webApplicationContext,
-        @Autowired Client clickHouseClient
+        @Autowired WebApplicationContext webApplicationContext
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         mvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
             .alwaysDo(print())
             .build();
-    }
-
-    @AfterEach
-    public void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

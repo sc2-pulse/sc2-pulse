@@ -7,12 +7,11 @@ import static com.nephest.battlenet.sc2.web.service.community.TwitchVideoStreamS
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.twitch.dto.TwitchStreamDto;
 import com.nephest.battlenet.sc2.model.twitch.dto.TwitchUserDto;
 import com.nephest.battlenet.sc2.model.twitch.dto.TwitchVideoDto;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.twitch.TwitchTest;
 import java.util.List;
 import java.util.Set;
@@ -20,8 +19,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,6 +32,7 @@ import reactor.core.publisher.Flux;
 @TwitchTest
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class TwitchAPIIT
 {
 
@@ -43,25 +41,11 @@ public class TwitchAPIIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired TwitchAPI api,
-        @Autowired Client clickHouseClient
+        @Autowired TwitchAPI api
     )
     throws Exception
     {
         TwitchAPIIT.api = api;
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
-    @AfterAll
-    public static void afterAll
-    (
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient
-    )
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     public static Stream<Arguments> whenExceedingMaxUserBatchSize_thenSplitRequestOnSubBatches()

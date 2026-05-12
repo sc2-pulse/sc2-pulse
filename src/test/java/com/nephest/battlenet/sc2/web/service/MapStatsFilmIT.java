@@ -12,9 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BaseMatch;
@@ -34,7 +34,6 @@ import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStatsFilm;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Instant;
@@ -48,7 +47,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,6 +67,7 @@ import reactor.core.Disposable;
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class MapStatsFilmIT
 {
 
@@ -118,10 +117,9 @@ public class MapStatsFilmIT
     private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    public void beforeEach()
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         mapService.getMapStatsInstant().setValue(SC2Pulse.instant());
         mapService.setDbInitialized(false);
     }
@@ -129,13 +127,10 @@ public class MapStatsFilmIT
     @AfterAll
     public static void afterAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired MapService mapService,
-        @Autowired Client clickHouseClient
+        @Autowired MapService mapService
     )
     throws Exception
     {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
         mapService.getMapStatsInstant().setValue(SC2Pulse.instant());
         mapService.setDbInitialized(false);
     }

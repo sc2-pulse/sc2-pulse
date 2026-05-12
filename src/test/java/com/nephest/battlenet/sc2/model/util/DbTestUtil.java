@@ -5,57 +5,11 @@ package com.nephest.battlenet.sc2.model.util;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.clickhouse.client.api.Client;
-import com.clickhouse.client.api.command.CommandResponse;
-import com.nephest.battlenet.sc2.util.TestUtil;
-import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import javax.sql.DataSource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 
 public class DbTestUtil
 {
-
-    public static void initDb(DataSource dataSource, Client clickHouseClient)
-    throws Exception
-    {
-        clearDb(dataSource, clickHouseClient);
-        CompletableFuture<CommandResponse> clickHouseInitTask
-            = clickHouseClient.execute(TestUtil.readResource(
-                DbTestUtil.class,
-                "schema-clickhouse.sql"
-        ));
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
-        finally
-        {
-            clickHouseInitTask.get().close();
-        }
-    }
-
-    public static void clearDb(DataSource dataSource, Client clickHouseClient)
-    throws Exception
-    {
-        CompletableFuture<CommandResponse> clickHouseClearTask
-            = clickHouseClient.execute(TestUtil.readResource(
-                DbTestUtil.class,
-                "schema-drop-clickhouse.sql"
-        ));
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-        }
-        finally
-        {
-            clickHouseClearTask.get().close();
-        }
-    }
 
     public static boolean isBatchUpdateValid(int rowsChanged, int expected)
     {

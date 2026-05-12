@@ -14,10 +14,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
@@ -35,7 +35,6 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTest;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.Duration;
 import java.util.Arrays;
@@ -43,7 +42,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -69,6 +67,7 @@ import reactor.util.function.Tuples;
 @SpringBootTest(classes = {AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class BlizzardSC2APIIT
 {
 
@@ -110,27 +109,21 @@ public class BlizzardSC2APIIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired BlizzardSC2API api,
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient
+        @Autowired BlizzardSC2API api
     )
     throws Exception
     {
         originalClient = WebServiceTestUtil.fastTimers(api);
-        DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
     @AfterAll
     public static void afterAll
     (
-        @Autowired BlizzardSC2API api,
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient
+        @Autowired BlizzardSC2API api
     )
     throws Exception
     {
         WebServiceTestUtil.revertFastTimers(api, originalClient);
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test @Order(1) @Disabled("Blizzard API fails too often now, ignore this test until it becomes more stable")

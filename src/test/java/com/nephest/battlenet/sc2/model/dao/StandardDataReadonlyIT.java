@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.dao;
@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -31,7 +31,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
@@ -39,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -56,6 +54,7 @@ import reactor.util.function.Tuple3;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class StandardDataReadonlyIT
 {
 
@@ -88,16 +87,12 @@ public class StandardDataReadonlyIT
     @BeforeAll
     public static void init
     (
-        @Autowired DataSource dataSource,
         @Autowired SeasonGenerator generator,
         @Autowired LeagueStatsDAO leagueStatsDAO,
-        @Autowired PopulationStateDAO populationStateDAO,
-        @Autowired Client clickHouseClient
+        @Autowired PopulationStateDAO populationStateDAO
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-
         generator.generateDefaultSeason
         (
             List.of(Region.values()),

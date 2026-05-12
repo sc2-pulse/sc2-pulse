@@ -6,14 +6,12 @@ package com.nephest.battlenet.sc2.web.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.arcade.ArcadePlayerCharacter;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.io.IOException;
-import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,6 +23,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class SC2ArcadeAPIIT
 {
 
@@ -36,27 +35,21 @@ public class SC2ArcadeAPIIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired SC2ArcadeAPI api,
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient
+        @Autowired SC2ArcadeAPI api
     )
     throws Exception
     {
         originalClient = WebServiceTestUtil.fastTimers(api);
-        DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
     @AfterAll
     public static void afterAll
     (
-        @Autowired SC2ArcadeAPI api,
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient
+        @Autowired SC2ArcadeAPI api
     )
     throws Exception
     {
         WebServiceTestUtil.revertFastTimers(api, originalClient);
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

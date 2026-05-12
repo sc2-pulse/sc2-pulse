@@ -9,9 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -35,7 +35,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedPlayers;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.twitch.TwitchTest;
 import java.io.IOException;
@@ -50,13 +49,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -67,6 +63,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class ProPlayerServiceIT
 {
 
@@ -106,19 +103,6 @@ public class ProPlayerServiceIT
 
     private static Set<SocialMedia> SOCIAL_MEDIA_SERVICES;
 
-    @BeforeEach
-    public void beforeEach
-    (
-        @Autowired DataSource dataSource,
-        @Autowired SeasonGenerator seasonGenerator,
-        @Autowired PlayerCharacterStatsDAO playerCharacterStatsDAO,
-        @Autowired Client clickHouseClient
-    )
-    throws Exception
-    {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
     @BeforeAll
     public static void beforeAll(@Autowired Environment environment)
     {
@@ -126,13 +110,6 @@ public class ProPlayerServiceIT
             .map(SocialMedia::from)
             .filter(sm->sm != SocialMedia.UNKNOWN)
             .collect(Collectors.toSet());
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test @SuppressWarnings("deprecation")

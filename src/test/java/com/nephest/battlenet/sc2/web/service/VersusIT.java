@@ -10,10 +10,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BaseMatch;
@@ -54,15 +54,12 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.Versus;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +76,7 @@ import reactor.util.function.Tuples;
 
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class VersusIT
 {
 
@@ -136,7 +134,6 @@ public class VersusIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
         @Autowired SeasonGenerator seasonGenerator,
         @Autowired DivisionDAO divisionDAO,
         @Autowired ClanDAO clanDAO,
@@ -149,12 +146,10 @@ public class VersusIT
         @Autowired MatchParticipantDAO matchParticipantDAO,
         @Autowired TeamStateDAO teamStateDAO,
         @Autowired SC2MapDAO mapDAO,
-        @Autowired WebApplicationContext webApplicationContext,
-        @Autowired Client clickHouseClient
+        @Autowired WebApplicationContext webApplicationContext
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         mvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
@@ -259,13 +254,6 @@ public class VersusIT
         ));
 
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, OffsetDateTime.MIN);
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     private static Team createTeam(TeamDAO teamDAO, PlayerCharacter character, Division division)

@@ -7,10 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
@@ -19,13 +19,10 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -41,6 +38,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
 @AutoConfigureMockMvc
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class LadderSearchIndependentEmptyIT
 {
 
@@ -56,24 +54,14 @@ public class LadderSearchIndependentEmptyIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
         @Autowired AccountDAO accountDAO,
-        @Autowired PlayerCharacterDAO playerCharacterDAO,
-        @Autowired Client clickHouseClient
+        @Autowired PlayerCharacterDAO playerCharacterDAO
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         account = accountDAO.merge(new Account(null, Partition.GLOBAL, "btag#1"));
         character = playerCharacterDAO.merge(new PlayerCharacter(
             null, account.getId(), Region.EU, 1L, 1, "name#1"));
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     public static Stream<Arguments> testEmptyStats()

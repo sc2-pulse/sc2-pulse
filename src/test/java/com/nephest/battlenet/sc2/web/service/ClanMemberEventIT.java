@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -10,10 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
@@ -30,7 +30,6 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.time.Duration;
@@ -40,9 +39,7 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +54,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = {AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class ClanMemberEventIT
 {
 
@@ -89,11 +87,9 @@ public class ClanMemberEventIT
     private Clan[] clans;
 
     @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    public void beforeEach()
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-
         accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "acc", 10);
         characters = seasonGenerator.generateCharacters("name", accounts, Region.EU, 100L);
         seasonGenerator.generateDefaultSeason(0);
@@ -116,13 +112,6 @@ public class ClanMemberEventIT
             new ClanMember(characters[4].getId(), clans[3].getId()),
             new ClanMember(characters[5].getId(), clans[4].getId())
         ));
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

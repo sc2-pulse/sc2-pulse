@@ -15,19 +15,17 @@ import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfEl
 import static org.openqa.selenium.support.ui.ExpectedConditions.presenceOfElementLocated;
 import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOf;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.discord.DiscordTest;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTest;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.TestDbInitializer;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +61,7 @@ import org.testcontainers.selenium.BrowserWebDriverContainer;
 )
 @ActiveProfiles({"dev", "default"})
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class GeneralSeleniumIT
 {
 
@@ -91,8 +90,6 @@ public class GeneralSeleniumIT
     @BeforeAll
     public static void init
     (
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient,
         @Autowired AccountDAO accountDAO,
         @Autowired ServletWebServerApplicationContext webServerAppCtxt,
         @Value("${org.testcontainers.selenium.image.name}") String seleniumImageName,
@@ -108,7 +105,6 @@ public class GeneralSeleniumIT
         driver = initDriver(seleniumImageName, headless, testContainersHost, root);
         wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
         js = (JavascriptExecutor) driver;
-        DbTestUtil.initDb(dataSource, clickHouseClient);
     }
 
     private static WebDriver initDriver
@@ -179,12 +175,11 @@ public class GeneralSeleniumIT
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    public static void afterAll()
     throws Exception
     {
         driver.close();
         BROWSER_CONTAINER.close();
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

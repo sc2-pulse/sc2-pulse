@@ -19,11 +19,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.SpyBeanConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -41,8 +41,8 @@ import com.nephest.battlenet.sc2.model.local.inner.RawTeamHistoryStaticData;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistory;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import com.nephest.battlenet.sc2.model.util.TestDatabaseLifecycleService;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.AssertionUtil;
 import java.time.Instant;
@@ -56,7 +56,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,6 +79,7 @@ import reactor.core.scheduler.Schedulers;
 @SpringBootTest(classes = {AllTestConfig.class, SpyBeanConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class TeamStateServiceIT
 {
 
@@ -130,10 +130,9 @@ public class TeamStateServiceIT
     private static int secondaryLengthBefore;
 
     @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    public void beforeEach()
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         teamStateService.reset();
         updateService.updated(Instant.MIN);
         mainLengthBefore = teamStateService.getMainLengthDays();
@@ -154,14 +153,20 @@ public class TeamStateServiceIT
     @AfterAll
     public static void afterAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient,
+        @Autowired TestDatabaseLifecycleService lifecycleService,
         @Autowired TeamStateService teamStateService
     )
     throws Exception
     {
-        teamStateService.reset();
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
+        try
+        {
+            lifecycleService.initDb();
+            teamStateService.reset();
+        }
+        finally
+        {
+            lifecycleService.clearDb();
+        }
     }
 
     private static LadderUpdateData createUpdateData(int season)

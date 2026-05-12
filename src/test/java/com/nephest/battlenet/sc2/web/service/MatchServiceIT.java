@@ -11,22 +11,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTest;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -44,6 +40,7 @@ import org.springframework.web.context.WebApplicationContext;
 @BlizzardTest
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class MatchServiceIT
 {
 
@@ -61,36 +58,12 @@ public class MatchServiceIT
     @Autowired
     private GlobalContext globalContext;
 
-    @BeforeAll
-    public static void beforeAll
-    (
-        @Autowired BlizzardSC2API api,
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient
-    )
-    throws Exception
-    {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-    }
-
     @BeforeEach
     public void beforeEach()
     {
         matchService.getUpdateMatchesTask()
             .setValue(SC2Pulse.instant().minus(MatchService.MATCH_UPDATE_FRAME));
         matchService.setUpdateContext(null);
-    }
-
-    @AfterAll
-    public static void afterAll
-    (
-        @Autowired BlizzardSC2API api,
-        @Autowired DataSource dataSource,
-        @Autowired Client clickHouseClient
-    )
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     /*TODO

@@ -11,8 +11,8 @@ import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.THIR
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -22,7 +22,6 @@ import com.nephest.battlenet.sc2.model.Version;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -34,9 +33,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,6 +45,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class SeasonStructureIT
 {
 
@@ -67,15 +65,12 @@ public class SeasonStructureIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
         @Autowired SeasonDAO seasonDAO,
         @Autowired LeagueDAO leagueDAO,
-        @Autowired LeagueTierDAO leagueTierDAO,
-        @Autowired Client clickHouseClient
+        @Autowired LeagueTierDAO leagueTierDAO
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         OffsetDateTime seasonStart = SC2Pulse.offsetDateTime();
         SEASONS = Arrays.stream(Region.values())
             .map(region->new Season(null, 1, region, seasonStart.getYear(), 1,
@@ -98,13 +93,6 @@ public class SeasonStructureIT
                     Integer.parseInt("" + league.getId() + type.ordinal()),
                     Integer.parseInt("" + league.getId() + type.ordinal()) + 1));
         TIERS.forEach(leagueTierDAO::create);
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     public static Stream<Arguments> testFindLeaguesByUids()

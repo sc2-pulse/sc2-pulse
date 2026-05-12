@@ -17,11 +17,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -43,7 +43,6 @@ import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.twitch.TwitchTest;
 import java.time.LocalDate;
@@ -53,7 +52,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -71,6 +69,7 @@ import reactor.core.publisher.Mono;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class RevealControllerIT
 {
 
@@ -119,13 +118,10 @@ public class RevealControllerIT
     @BeforeEach
     public void beforeEach
     (
-        @Autowired DataSource dataSource,
-        @Autowired WebApplicationContext webApplicationContext,
-        @Autowired Client clickHouseClient
+        @Autowired WebApplicationContext webApplicationContext
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity())
             .alwaysDo(print()).build();
         mockApi = mock(AligulacAPI.class);
@@ -133,10 +129,9 @@ public class RevealControllerIT
     }
 
     @AfterEach
-    public void afterEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
+    public void afterEach()
     throws Exception
     {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
         proPlayerService.setAligulacAPI(realApi);
     }
 

@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.clickhouse.client.api.Client;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -33,15 +33,12 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderSeasonState;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +47,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class LadderSeasonStateDAOIT
 {
 
@@ -80,13 +78,10 @@ public class LadderSeasonStateDAOIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired SeasonGenerator seasonGenerator,
-        @Autowired Client clickHouseClient
+        @Autowired SeasonGenerator seasonGenerator
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         seasonGenerator.generateDefaultSeason
         (
             List.of(Region.values()),
@@ -96,13 +91,6 @@ public class LadderSeasonStateDAOIT
             BaseLeagueTier.LeagueTierType.FIRST,
             0
         );
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

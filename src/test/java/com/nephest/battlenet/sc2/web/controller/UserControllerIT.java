@@ -6,21 +6,18 @@ package com.nephest.battlenet.sc2.web.controller;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -38,6 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = {AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class UserControllerIT
 {
 
@@ -56,14 +54,11 @@ public class UserControllerIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
         @Autowired SeasonGenerator seasonGenerator,
-        @Autowired AccountRoleDAO accountRoleDAO,
-        @Autowired Client clickHouseClient
+        @Autowired AccountRoleDAO accountRoleDAO
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "tag", 10);
         accountRoleDAO.addRoles
         (
@@ -73,13 +68,6 @@ public class UserControllerIT
         accountRoleDAO.addRoles(2L, EnumSet.of(SC2PulseAuthority.MODERATOR));
         accountRoleDAO.addRoles(3L, EnumSet.of(SC2PulseAuthority.REVEALER));
         accountRoleDAO.addRoles(4L, EnumSet.of(SC2PulseAuthority.ADMIN));
-    }
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     public static Stream<Arguments> testGetByRole()

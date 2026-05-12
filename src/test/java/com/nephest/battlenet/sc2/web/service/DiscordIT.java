@@ -20,13 +20,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.discord.DiscordTest;
 import com.nephest.battlenet.sc2.discord.SpringDiscordClient;
 import com.nephest.battlenet.sc2.discord.connection.ApplicationRoleConnection;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -52,14 +52,12 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.web.util.MonoUtil;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.User;
-import java.sql.Connection;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -68,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -96,6 +93,7 @@ import reactor.util.function.Tuples;
 @DiscordTest
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class DiscordIT
 {
 
@@ -144,14 +142,10 @@ public class DiscordIT
     @BeforeEach
     public void beforeEach
     (
-        @Autowired DataSource dataSource,
-        @Autowired WebApplicationContext webApplicationContext,
-        @Autowired Client clickHouseClient
+        @Autowired WebApplicationContext webApplicationContext
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
-
         mvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
@@ -171,14 +165,11 @@ public class DiscordIT
     @AfterAll
     public static void afterAll
     (
-        @Autowired DataSource dataSource,
-        @Autowired DiscordService discordService,
-        @Autowired Client clickHouseClient
+        @Autowired DiscordService discordService
     )
     throws Exception
     {
         discordService.setDiscordAPI(originalAPI);
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test

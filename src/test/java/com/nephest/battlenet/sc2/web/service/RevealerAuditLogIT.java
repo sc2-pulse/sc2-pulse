@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
@@ -21,6 +20,7 @@ import com.nephest.battlenet.sc2.config.security.AccountSecurityContextFactory;
 import com.nephest.battlenet.sc2.config.security.AccountUser;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -32,14 +32,11 @@ import com.nephest.battlenet.sc2.model.local.AuditLogEntry;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.time.OffsetDateTime;
 import java.util.List;
-import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +54,7 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
 @AutoConfigureMockMvc
+@AutoConfigureDatabase(AutoConfigureDatabase.ExecutionPhase.CLASS)
 public class RevealerAuditLogIT
 {
 
@@ -99,16 +97,13 @@ public class RevealerAuditLogIT
     @BeforeAll
     public static void beforeAll
     (
-        @Autowired DataSource dataSource,
         @Autowired WebApplicationContext webApplicationContext,
         @Autowired SeasonGenerator generator,
         @Autowired ProPlayerDAO proPlayerDAO,
-        @Autowired AccountSecurityContextFactory accountSecurityContextFactory,
-        @Autowired Client clickHouseClient
+        @Autowired AccountSecurityContextFactory accountSecurityContextFactory
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         MockMvc mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
             .alwaysDo(print())
@@ -152,13 +147,6 @@ public class RevealerAuditLogIT
             .andReturn();
     }
 
-
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
-    }
 
     @Test
     @WithBlizzardMockUser

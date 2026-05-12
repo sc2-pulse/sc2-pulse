@@ -17,11 +17,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.clickhouse.client.api.Client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BaseMatch;
@@ -54,7 +54,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
-import com.nephest.battlenet.sc2.model.util.DbTestUtil;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
@@ -70,8 +69,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -89,6 +86,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
+@AutoConfigureDatabase
 public class PlayerCharacterReportIT
 {
 
@@ -163,16 +161,13 @@ public class PlayerCharacterReportIT
     @BeforeEach
     public void beforeEach
     (
-        @Autowired DataSource dataSource,
         @Autowired AccountDAO accountDAO,
         @Autowired AccountRoleDAO accountRoleDAO,
         @Autowired WebApplicationContext webApplicationContext,
-        @Autowired SeasonGenerator seasonGenerator,
-        @Autowired Client clickHouseClient
+        @Autowired SeasonGenerator seasonGenerator
     )
     throws Exception
     {
-        DbTestUtil.initDb(dataSource, clickHouseClient);
         account = accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
         seasonGenerator.generateDefaultSeason
         (
@@ -188,13 +183,6 @@ public class PlayerCharacterReportIT
             .apply(springSecurity())
             .alwaysDo(print())
             .build();
-    }
-
-    @AfterEach
-    public void afterEach(@Autowired DataSource dataSource, @Autowired Client clickHouseClient)
-    throws Exception
-    {
-        DbTestUtil.clearDb(dataSource, clickHouseClient);
     }
 
     @Test
