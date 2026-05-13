@@ -124,6 +124,7 @@ public class PlayerCharacterReportService
             null, report.getId(), reporterId, reporterIp, evidence, null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
         ));
         playerCharacterReportDAO.updateStatus(Set.of(report.getId()));
+        playerCharacterReportDAO.updateArchive(report.getId());
         /*TODO
          * Notifications are temporarily disabled until the notification service provides better
          * options such as group notifications.
@@ -224,13 +225,9 @@ public class PlayerCharacterReportService
 
     public List<LadderPlayerCharacterReport> findReports()
     {
-        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findAll();
-        Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll(true).stream()
+        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findAll(Set.of(false));
+        Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll(Set.of(false)).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
-        /*TODO
-           This filter should be replaced by "confirmedOnly" or "excludeDenied" filter after
-           denied evidence visibility rework is complete.
-         */
         reports.removeIf(r->!evidences.containsKey(r.getReport().getId()));
         if(reports.isEmpty()) return reports;
 
@@ -262,14 +259,10 @@ public class PlayerCharacterReportService
     {
         if(characterIds.isEmpty()) return List.of();
 
-        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findByCharacterIds(characterIds);
+        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findByCharacterIds(characterIds, Set.of(false));
         Map<Integer, List<Evidence>> evidences = evidenceDAO
-            .findByReportIds(true, reports.stream().map(r->r.getReport().getId()).collect(Collectors.toSet())).stream()
+            .findByReportIds(Set.of(false), reports.stream().map(r->r.getReport().getId()).collect(Collectors.toSet())).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
-        /*TODO
-           This filter should be replaced by "confirmedOnly" or "excludeDenied" filter after
-           denied evidence visibility rework is complete.
-         */
         reports.removeIf(r->!evidences.containsKey(r.getReport().getId()));
         if(reports.isEmpty()) return reports;
 
@@ -316,7 +309,8 @@ public class PlayerCharacterReportService
         playerCharacterReportDAO.updateStatus(from);
         evidenceDAO.evictRequiredVotesCache();
         evidenceDAO.getRequiredVotes();
-        playerCharacterReportDAO.removeEmpty(Set.copyOf(evidenceDAO.removeExpired()));
+        evidenceDAO.updateArchive(from);
+        playerCharacterReportDAO.updateArchive(from);
     }
 
 }

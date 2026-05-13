@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -6,10 +6,10 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterReportDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
-import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +23,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class LadderPlayerCharacterReportDAO
 {
-
-    public static final int HIDE_DENIED_REPORTS_DAYS = 30;
 
     private static final String FIND_REPORTS_TEMPLATE =
         "SELECT "
@@ -55,21 +53,16 @@ public class LadderPlayerCharacterReportDAO
             + "AND confirmed_cheater_report.status = true "
             + "%1$s";
 
-    private static final String FIND_REPORTS =
-        String.format(FIND_REPORTS_TEMPLATE,
-            "WHERE player_character_report.status IS NULL "
-            + "OR player_character_report.status = true "
-            + "OR player_character_report.status_change_timestamp >= :from");
+    private static final String FIND_REPORTS
+        = String.format(FIND_REPORTS_TEMPLATE, "WHERE " + PlayerCharacterReportDAO.ARCHIVED_FILTER);
 
     private static final String FIND_REPORTS_BY_CHARACTER_IDS =
-        String.format(FIND_REPORTS_TEMPLATE,
+        String.format
+        (
+            FIND_REPORTS_TEMPLATE,
             "WHERE player_character_report.player_character_id IN(:characterIds) "
-            + "AND "
-            + "("
-                + "player_character_report.status IS NULL "
-                + "OR player_character_report.status = true "
-                + "OR player_character_report.status_change_timestamp >= :from"
-            + ")");
+            + "AND " + PlayerCharacterReportDAO.ARCHIVED_FILTER
+        );
 
     private static RowMapper<LadderPlayerCharacterReport> STD_MAPPER;
 
@@ -101,24 +94,24 @@ public class LadderPlayerCharacterReportDAO
         return STD_MAPPER;
     }
 
-    public List<LadderPlayerCharacterReport> findAll()
+    public List<LadderPlayerCharacterReport> findAll(Set<Boolean> archivedFilter)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_REPORTS_DAYS))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
+        params = EvidenceDAO.archivedFilterParams(params, archivedFilter);
         return template.query(FIND_REPORTS, params, STD_MAPPER);
     }
 
-    public List<LadderPlayerCharacterReport> findByCharacterIds(Set<Long> characterIds)
+    public List<LadderPlayerCharacterReport> findByCharacterIds(Set<Long> characterIds, Set<Boolean> archivedFilter)
     {
         if(characterIds.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("characterIds",  characterIds)
-            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_REPORTS_DAYS))
+            .addValue("characterIds", characterIds)
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
+        params = EvidenceDAO.archivedFilterParams(params, archivedFilter);
         return template.query(FIND_REPORTS_BY_CHARACTER_IDS, params, STD_MAPPER);
     }
 

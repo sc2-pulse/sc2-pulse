@@ -549,7 +549,7 @@ public class PlayerCharacterDAOIT
         assertEquals(4L, followingsRebound2.get(0).getAccountId());
         assertEquals(4L, followingsRebound2.get(0).getFollowingAccountId());
 
-        assertEquals(4, evidenceDAO.findById(false, 3).orElseThrow().getReporterAccountId());
+        assertEquals(4, evidenceDAO.findById(Set.of(), 3).orElseThrow().getReporterAccountId());
 
         List<EvidenceVote> reboundVotes = evidenceVoteDAO.findByEvidenceIds(Set.of(3));
         assertEquals(1, reboundVotes.size());

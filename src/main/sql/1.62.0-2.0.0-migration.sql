@@ -49,4 +49,7 @@ LEFT JOIN LATERAL
     ORDER BY ts2.timestamp DESC
     LIMIT 1
 ) prev_team_state ON true
-ORDER BY team_state.timestamp
+ORDER BY team_state.timestamp;
+
+ALTER TABLE evidence ADD COLUMN archived BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE player_character_report ADD COLUMN archived BOOLEAN NOT NULL DEFAULT false;

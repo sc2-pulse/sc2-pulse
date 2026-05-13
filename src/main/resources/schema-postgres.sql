@@ -1215,6 +1215,7 @@ CREATE TABLE "player_character_report"
     "status" BOOLEAN,
     "restrictions" BOOLEAN NOT NULL DEFAULT false,
     "status_change_timestamp" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "archived" BOOLEAN NOT NULL DEFAULT false,
 
     PRIMARY KEY("id"),
 
@@ -1245,6 +1246,7 @@ CREATE TABLE "evidence"
     "status" BOOLEAN,
     "status_change_timestamp" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     "created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "archived" BOOLEAN NOT NULL DEFAULT false,
 
     PRIMARY KEY("id"),
 

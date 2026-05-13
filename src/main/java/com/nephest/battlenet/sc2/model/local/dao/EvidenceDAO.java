@@ -1,10 +1,13 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.Evidence;
-import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
+import java.sql.Types;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -31,8 +34,11 @@ public class EvidenceDAO
     private static final Logger LOG = LoggerFactory.getLogger(EvidenceDAO.class);
 
     public static final int ACTIVE_MOD_THRESHOLD_DAYS = 14;
-    public static final int HIDE_DENIED_EVIDENCE_DAYS = 3;
-    public static final int DENIED_EVIDENCE_TTL_DAYS = 180;
+    public static final int UNTIL_ARCHIVED_DAYS = 180;
+
+    private static final String ARCHIVED_FILTER =
+        "(array_length(:archivedFilter::boolean[], 1) IS NULL "
+        + "OR archived = ANY(:archivedFilter::boolean[]))";
 
     public static final String STD_SELECT =
         "evidence.id AS \"evidence.id\", "
@@ -42,7 +48,8 @@ public class EvidenceDAO
         + "evidence.description AS \"evidence.description\", "
         + "evidence.status AS \"evidence.status\", "
         + "evidence.status_change_timestamp AS \"evidence.status_change_timestamp\", "
-        + "evidence.created AS \"evidence.created\" ";
+        + "evidence.created AS \"evidence.created\", "
+        + "evidence.archived AS \"evidence.archived\" ";
 
     public static final RowMapper<Evidence> STD_ROW_MAPPER = (rs, i)-> new Evidence
     (
@@ -54,23 +61,18 @@ public class EvidenceDAO
         rs.getString("evidence.description"),
         DAOUtils.getBoolean(rs, "evidence.status"),
         rs.getObject("evidence.status_change_timestamp", OffsetDateTime.class),
-        rs.getObject("evidence.created", OffsetDateTime.class)
+        rs.getObject("evidence.created", OffsetDateTime.class),
+        rs.getBoolean("evidence.archived")
     );
 
     public static final ResultSetExtractor<Evidence> STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
 
-    private static final String VISIBLE_AND =
-        "("
-            + "status IS NULL "
-            + "OR status = true "
-            + "OR status_change_timestamp >= :from "
-        + ") ";
     private static final String CREATE_QUERY =
         "INSERT INTO evidence "
         + "(player_character_report_id, reporter_account_id, reporter_ip, description, status, "
-            + "status_change_timestamp, created) "
+            + "status_change_timestamp, created, archived) "
         + "VALUES(:playerCharacterReportId, :reporterAccountId, :reporterIp, :description, :status, "
-            + ":statusChangeTimestamp, :created)";
+            + ":statusChangeTimestamp, :created, :archived)";
     private static final String GET_COUNT_BY_REPORTER_AND_TIMESTAMP_QUERY =
         "SELECT COUNT(*) "
         + "FROM evidence "
@@ -81,15 +83,16 @@ public class EvidenceDAO
         + "FROM evidence "
         + "WHERE player_character_report_id = :playerCharacterReportId "
         + "AND status = true";
-    private static final String GET_ALL_QUERY = "SELECT " + STD_SELECT + "FROM evidence ORDER BY created DESC";
-    private static final String GET_ALL_HIDE_DENIED_QUERY =
+    private static final String GET_ALL_QUERY =
         "SELECT " + STD_SELECT
         + "FROM evidence "
-        + "WHERE "
-        + VISIBLE_AND
+        + "WHERE " + ARCHIVED_FILTER
         + "ORDER BY created DESC";
-    private static final String GET_BY_ID = "SELECT " + STD_SELECT + " FROM evidence WHERE id = :id";
-    private static final String GET_BY_ID_HIDE_DENIED = GET_BY_ID + " AND " + VISIBLE_AND;
+    private static final String GET_BY_ID =
+        "SELECT " + STD_SELECT
+        + "FROM evidence "
+        + "WHERE id = :id "
+        + "AND " + ARCHIVED_FILTER;
     private static final String GET_BY_ID_CURSOR =
         "SELECT " + STD_SELECT
         + "FROM evidence "
@@ -100,12 +103,7 @@ public class EvidenceDAO
         "SELECT " + STD_SELECT
         + "FROM evidence "
         + "WHERE player_character_report_id IN (:reportIds) "
-        + "ORDER BY created DESC";
-    private static final String GET_BY_REPORT_IDS_HIDE_DENIED =
-        "SELECT " + STD_SELECT
-        + "FROM evidence "
-        + "WHERE player_character_report_id IN (:reportIds) "
-        + "AND " + VISIBLE_AND
+        + "AND " + ARCHIVED_FILTER
         + "ORDER BY created DESC";
     private static final String UPDATE_STATUS_QUERY =
         "WITH recent_evidence AS "
@@ -159,11 +157,6 @@ public class EvidenceDAO
         + ") "
         + "SELECT last_not_reviewed.count "
         + "FROM last_not_reviewed";
-    private static final String REMOVE_EXPIRED_QUERY =
-        "DELETE FROM evidence "
-        + "WHERE status = false "
-        + "AND status_change_timestamp < :from "
-        + "RETURNING player_character_report_id";
 
     private static final String NULLIFY_REPORTER_IPS_QUERY =
         "UPDATE evidence "
@@ -171,11 +164,39 @@ public class EvidenceDAO
         + "WHERE created >= :from";
 
     private final NamedParameterJdbcTemplate template;
+    private final ArchivingDAO<Integer> archivingDAO;
 
     @Autowired
-    public EvidenceDAO(@Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template)
+    public EvidenceDAO
+    (
+        @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
+        VarDAO varDAO
+    )
     {
         this.template = template;
+        String archiveTemplate =
+        """
+            UPDATE evidence
+            SET archived = true
+            WHERE %1$s
+            AND status IS DISTINCT FROM true
+        """;
+        this.archivingDAO = new ArchivingDAO<>
+        (
+            template,
+            varDAO,
+            "evidence",
+            String.format
+            (
+                archiveTemplate,
+                """
+                    status_change_timestamp >= :from
+                    AND status_change_timestamp < :to
+                """
+            ),
+            String.format(archiveTemplate, "id = :id"),
+            Duration.ofDays(UNTIL_ARCHIVED_DAYS)
+        );
     }
 
     public Evidence create(Evidence evidence)
@@ -206,19 +227,18 @@ public class EvidenceDAO
         );
     }
 
-    public List<Evidence> findAll(boolean hideDenied)
+    public List<Evidence> findAll(Set<Boolean> archivedFilter)
     {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_EVIDENCE_DAYS));
-        return template.query(hideDenied ? GET_ALL_HIDE_DENIED_QUERY : GET_ALL_QUERY, params, STD_ROW_MAPPER);
+        MapSqlParameterSource params = archivedFilterParams(archivedFilter);
+        return template.query(GET_ALL_QUERY, params, STD_ROW_MAPPER);
     }
 
-    public Optional<Evidence> findById(boolean hideDenied, int id)
+    public Optional<Evidence> findById(Set<Boolean> archivedFilter, int id)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
             .addValue("id", id);
-        return Optional.ofNullable(template.query(hideDenied ? GET_BY_ID_HIDE_DENIED : GET_BY_ID, params, STD_EXTRACTOR));
+        params = archivedFilterParams(params, archivedFilter);
+        return Optional.ofNullable(template.query(GET_BY_ID, params, STD_EXTRACTOR));
     }
 
     public List<Evidence> findByIdCursor(int idCursor, int limit)
@@ -229,14 +249,14 @@ public class EvidenceDAO
         return template.query(GET_BY_ID_CURSOR, params, STD_ROW_MAPPER);
     }
 
-    public List<Evidence> findByReportIds(boolean hideDenied, Set<Integer> reportIds)
+    public List<Evidence> findByReportIds(Set<Boolean> archivedFilter, Set<Integer> reportIds)
     {
         if(reportIds.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
             .addValue("reportIds", reportIds);
-        return template.query(hideDenied ? GET_BY_REPORT_IDS_HIDE_DENIED : GET_BY_REPORT_IDS, params, STD_ROW_MAPPER);
+        params = archivedFilterParams(params, archivedFilter);
+        return template.query(GET_BY_REPORT_IDS, params, STD_ROW_MAPPER);
     }
 
     public int getActiveModCount()
@@ -261,11 +281,14 @@ public class EvidenceDAO
         return template.update(UPDATE_STATUS_QUERY, params);
     }
 
-    public List<Integer> removeExpired()
+    public int updateArchive(@Nullable OffsetDateTime from)
     {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", SC2Pulse.offsetDateTime().minusDays(DENIED_EVIDENCE_TTL_DAYS));
-        return template.query(REMOVE_EXPIRED_QUERY, params, DAOUtils.INT_MAPPER);
+        return archivingDAO.archive(from);
+    }
+
+    public int updateArchive(@NotNull Integer id)
+    {
+        return archivingDAO.archive(id);
     }
 
     public int nullifyReporterIps(OffsetDateTime from)
@@ -285,7 +308,27 @@ public class EvidenceDAO
             .addValue("description", evidence.getDescription())
             .addValue("status", evidence.getStatus())
             .addValue("statusChangeTimestamp", evidence.getStatusChangeDateTime())
-            .addValue("created", evidence.getCreated());
+            .addValue("created", evidence.getCreated())
+            .addValue("archived", evidence.getArchived());
+    }
+
+    public static MapSqlParameterSource archivedFilterParams(Set<Boolean> archivedFilter)
+    {
+        return archivedFilterParams(new MapSqlParameterSource(), archivedFilter);
+    }
+
+    public static MapSqlParameterSource archivedFilterParams
+    (
+        MapSqlParameterSource params,
+        Set<Boolean> archivedFilter
+    )
+    {
+        return params.addValue
+        (
+            "archivedFilter",
+            archivedFilter.isEmpty() ? null : archivedFilter.toArray(Boolean[]::new),
+            Types.ARRAY
+        );
     }
 
 }

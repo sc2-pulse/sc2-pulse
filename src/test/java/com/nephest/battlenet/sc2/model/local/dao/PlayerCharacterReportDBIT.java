@@ -87,13 +87,13 @@ public class PlayerCharacterReportDBIT
             SC2Pulse.offsetDateTime()));
         Evidence evidence1 = evidenceDAO.create(new Evidence(
             null, report.getId(), null, localhost, "description asda",false,
-            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));
+            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS) ,SC2Pulse.offsetDateTime()));
         Evidence evidence2 = evidenceDAO.create(new Evidence(
             null, report.getId(), null, localhost, "description asda",false,
-            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));
+            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS) ,SC2Pulse.offsetDateTime()));
         Evidence evidence3 = evidenceDAO.create(new Evidence(
             null, report.getId(), null, localhost, "description asda",false,
-            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));
+            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS) ,SC2Pulse.offsetDateTime()));
 
         List<Evidence> evidences = evidenceDAO.findByIdCursor(1, 2);
         assertEquals(2, evidences.size());

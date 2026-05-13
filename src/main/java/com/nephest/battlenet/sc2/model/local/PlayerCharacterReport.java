@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -56,7 +56,7 @@ implements java.io.Serializable
 
     }
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private Integer id;
 
@@ -76,6 +76,9 @@ implements java.io.Serializable
     @NotNull
     private OffsetDateTime statusChangeDateTime;
 
+    @NotNull
+    private Boolean archived;
+
     public PlayerCharacterReport(){}
 
     public PlayerCharacterReport
@@ -89,6 +92,31 @@ implements java.io.Serializable
         OffsetDateTime statusChangeDateTime
     )
     {
+        this
+        (
+            id,
+            playerCharacterId,
+            additionalPlayerCharacterId,
+            type,
+            status,
+            restrictions,
+            statusChangeDateTime,
+            false
+        );
+    }
+
+    public PlayerCharacterReport
+    (
+        Integer id,
+        Long playerCharacterId,
+        Long additionalPlayerCharacterId,
+        PlayerCharacterReportType type,
+        Boolean status,
+        Boolean restrictions,
+        OffsetDateTime statusChangeDateTime,
+        Boolean archived
+    )
+    {
         this.id = id;
         this.playerCharacterId = playerCharacterId;
         this.additionalPlayerCharacterId = additionalPlayerCharacterId;
@@ -96,6 +124,7 @@ implements java.io.Serializable
         this.status = status;
         this.restrictions = restrictions;
         this.statusChangeDateTime = statusChangeDateTime;
+        this.archived = archived;
     }
 
     @Override
@@ -195,6 +224,16 @@ implements java.io.Serializable
     public void setStatusChangeDateTime(OffsetDateTime statusChangeDateTime)
     {
         this.statusChangeDateTime = statusChangeDateTime;
+    }
+
+    public Boolean getArchived()
+    {
+        return archived;
+    }
+
+    public void setArchived(Boolean archived)
+    {
+        this.archived = archived;
     }
 
 }

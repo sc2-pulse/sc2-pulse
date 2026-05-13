@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -11,7 +11,7 @@ public class Evidence
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     public static final int MAX_LENGTH = 2000;
 
     private Integer id;
@@ -34,6 +34,9 @@ implements java.io.Serializable
     @NotNull
     private OffsetDateTime created;
 
+    @NotNull
+    private Boolean archived;
+
     public Evidence(){}
 
     public Evidence
@@ -48,6 +51,33 @@ implements java.io.Serializable
         OffsetDateTime created
     )
     {
+        this
+        (
+            id,
+            playerCharacterReportId,
+            reporterAccountId,
+            reporterIp,
+            description,
+            status,
+            statusChangeDateTime,
+            created,
+            false
+        );
+    }
+
+    public Evidence
+    (
+        Integer id,
+        Integer playerCharacterReportId,
+        Long reporterAccountId,
+        byte[] reporterIp,
+        String description,
+        Boolean status,
+        OffsetDateTime statusChangeDateTime,
+        OffsetDateTime created,
+        Boolean archived
+    )
+    {
         this.id = id;
         this.playerCharacterReportId = playerCharacterReportId;
         this.reporterAccountId = reporterAccountId;
@@ -56,6 +86,7 @@ implements java.io.Serializable
         this.status = status;
         this.statusChangeDateTime = statusChangeDateTime;
         this.created = created;
+        this.archived = archived;
     }
 
     public Integer getId()
@@ -136,6 +167,16 @@ implements java.io.Serializable
     public void setCreated(OffsetDateTime created)
     {
         this.created = created;
+    }
+
+    public Boolean getArchived()
+    {
+        return archived;
+    }
+
+    public void setArchived(Boolean archived)
+    {
+        this.archived = archived;
     }
 
 }

@@ -1,10 +1,13 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
 import java.sql.Types;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -28,7 +31,12 @@ public class PlayerCharacterReportDAO
         + "player_character_report.type AS \"player_character_report.type\", "
         + "player_character_report.status AS \"player_character_report.status\", "
         + "player_character_report.restrictions AS \"player_character_report.restrictions\", "
-        + "player_character_report.status_change_timestamp AS \"player_character_report.status_change_timestamp\" ";
+        + "player_character_report.status_change_timestamp AS \"player_character_report.status_change_timestamp\", "
+        + "player_character_report.archived AS \"player_character_report.archived\" ";
+
+    public static final String ARCHIVED_FILTER =
+        "(array_length(:archivedFilter::boolean[], 1) IS NULL "
+        + "OR player_character_report.archived = ANY(:archivedFilter::boolean[]))";
 
     private static final String MERGE_QUERY =
         "WITH existing AS ("
@@ -40,8 +48,21 @@ public class PlayerCharacterReportDAO
         + "), "
         + "inserted AS ("
             + "INSERT INTO "
-            + "player_character_report(player_character_id, additional_player_character_id, type, status, status_change_timestamp) "
-            + "SELECT :playerCharacterId, :additionalPlayerCharacterId, :type, :status, :statusChangeTimestamp "
+            + "player_character_report"
+            + "("
+                + "player_character_id, "
+                + "additional_player_character_id, "
+                + "type, "
+                + "status, "
+                + "status_change_timestamp, "
+                + "archived"
+            + ") "
+            + "SELECT :playerCharacterId, "
+            + ":additionalPlayerCharacterId, "
+            + ":type, "
+            + ":status, "
+            + ":statusChangeTimestamp, "
+            + ":archived "
             + "WHERE NOT EXISTS(SELECT 1 FROM existing) "
             + "ON CONFLICT(player_character_id, type, COALESCE(additional_player_character_id, -1)) DO UPDATE SET "
             + "type = excluded.type, "
@@ -54,7 +75,7 @@ public class PlayerCharacterReportDAO
         + "SELECT id FROM inserted";
 
     private static final String GET_ALL_QUERY =
-        "SELECT " + STD_SELECT + " FROM player_character_report";
+        "SELECT " + STD_SELECT + " FROM player_character_report WHERE " + ARCHIVED_FILTER;
 
     private static final String FIND_BY_ID_CURSOR =
         "SELECT " + STD_SELECT
@@ -102,31 +123,86 @@ public class PlayerCharacterReportDAO
         "WITH report_filter AS (SELECT * FROM unnest(:ids) AS id), "
         + UPDATE_STATUS_TAIL;
 
-    private static final String REMOVE_EMPTY_QUERY =
-        """
-        DELETE FROM player_character_report
-        USING player_character_report r
-        LEFT JOIN evidence ON evidence.player_character_report_id = r.id
-        WHERE r.id IN(:ids)
-        AND evidence.id IS NULL
-        AND player_character_report.id = r.id 
-        """;
-
     private static RowMapper<PlayerCharacterReport> STD_ROW_MAPPER;
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
+    private final ArchivingDAO<Integer> archivingDAO;
 
     @Autowired
     public PlayerCharacterReportDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService,
+        VarDAO varDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
+        this.archivingDAO = createArchivingDAO(template, varDAO);
         initMappers(conversionService);
+    }
+
+    private static ArchivingDAO<Integer> createArchivingDAO
+    (
+        NamedParameterJdbcTemplate template,
+        VarDAO varDAO
+    )
+    {
+        String archiveTemplate =
+        """
+            WITH report_filter AS
+            (
+                %1$s
+            ),
+            report_archive AS
+            (
+                SELECT player_character_report_id,
+                true = ALL(archived) AS archived
+                FROM report_filter
+            )
+            UPDATE player_character_report
+            SET archived = report_archive.archived
+            FROM report_archive
+            WHERE player_character_report.id = report_archive.player_character_report_id
+            AND player_character_report.archived != report_archive.archived
+        """;
+        String filterTemplate =
+        """
+            SELECT player_character_report_id,
+            array_agg(archived) AS archived
+            FROM evidence
+            WHERE %1$s
+            GROUP BY player_character_report_id
+        """;
+        return new ArchivingDAO<>
+        (
+            template,
+            varDAO,
+            "player_character_report",
+            String.format
+            (
+                archiveTemplate,
+                String.format
+                (
+                    filterTemplate,
+                    """
+                        status_change_timestamp >= :from
+                        AND status_change_timestamp < :to
+                    """
+                )
+            ),
+            String.format
+            (
+                archiveTemplate,
+                String.format
+                (
+                    filterTemplate,
+                    "player_character_report_id = :id"
+                )
+            ),
+            Duration.ofDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS)
+        );
     }
 
     private static void initMappers(ConversionService conversionService)
@@ -140,7 +216,8 @@ public class PlayerCharacterReportDAO
                 PlayerCharacterReport.PlayerCharacterReportType.class),
             DAOUtils.getBoolean(rs, "player_character_report.status"),
             rs.getBoolean("player_character_report.restrictions"),
-            rs.getObject("player_character_report.status_change_timestamp", OffsetDateTime.class)
+            rs.getObject("player_character_report.status_change_timestamp", OffsetDateTime.class),
+            rs.getBoolean("player_character_report.archived")
         );
     }
 
@@ -160,9 +237,10 @@ public class PlayerCharacterReportDAO
         return report;
     }
 
-    public List<PlayerCharacterReport> getAll()
+    public List<PlayerCharacterReport> getAll(Set<Boolean> archivedFilter)
     {
-        return template.query(GET_ALL_QUERY, STD_ROW_MAPPER);
+        MapSqlParameterSource params = EvidenceDAO.archivedFilterParams(archivedFilter);
+        return template.query(GET_ALL_QUERY, params, STD_ROW_MAPPER);
     }
 
     public List<PlayerCharacterReport> findByIdCursor(int idCursor, int limit)
@@ -187,13 +265,14 @@ public class PlayerCharacterReportDAO
         return template.update(UPDATE_STATUS_BY_IDS_QUERY, params);
     }
 
-    public int removeEmpty(Set<Integer> ids)
+    public int updateArchive(@Nullable OffsetDateTime from)
     {
-        if(ids.isEmpty()) return 0;
+        return archivingDAO.archive(from);
+    }
 
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("ids", ids);
-        return template.update(REMOVE_EMPTY_QUERY, params);
+    public int updateArchive(@NotNull Integer id)
+    {
+        return archivingDAO.archive(id);
     }
 
     private MapSqlParameterSource createParameterSource(PlayerCharacterReport report)
@@ -204,7 +283,8 @@ public class PlayerCharacterReportDAO
             .addValue("type", conversionService.convert(report.getType(), Integer.class))
             .addValue("status", report.getStatus())
             .addValue("restrictions", report.getRestrictions())
-            .addValue("statusChangeTimestamp", report.getStatusChangeDateTime());
+            .addValue("statusChangeTimestamp", report.getStatusChangeDateTime())
+            .addValue("archived", report.getArchived());
     }
 
 }

@@ -653,7 +653,7 @@ public class PlayerCharacterReportIT
         .andExpect(content().json("{\"message\":\"Reports per day cap reached\"}"))
         .andReturn();
 
-        //verify removal and hiding
+        //verify archiving
         reports = getReports();
         assertEquals(5, reports.length);
         long evidenceCountEnd = Arrays.stream(reports).flatMap(r->r.getEvidence().stream()).count();
@@ -665,28 +665,38 @@ public class PlayerCharacterReportIT
             null, 9L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             true, false,
             SC2Pulse.offsetDateTime()));
+        PlayerCharacterReport expiredUndecidedReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
+            null, 10L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            null, false,
+            SC2Pulse.offsetDateTime()));
         Evidence expiredEvidence = evidenceDAO.create(
             new Evidence(null, expiredReport.getId(), null, localhost, "description asda",
-            false, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),SC2Pulse.offsetDateTime()));
+            false, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS), SC2Pulse.offsetDateTime()));
         Evidence expiredConfirmedEvidence = evidenceDAO.create(
             new Evidence(null, expiredConfirmedReport.getId(), null, localhost, "description asda",
-                true, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),SC2Pulse.offsetDateTime()));
-        assertEquals(7, playerCharacterReportDAO.getAll().size());
-        assertEquals(evidenceCountEnd + 2, evidenceDAO.findAll(false).size());
-        reports = getReports();
-        //hidden
-        assertEquals(6, reports.length);
-        assertEquals(evidenceCountEnd + 1, evidenceDAO.findAll(true).size());
+                true, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS), SC2Pulse.offsetDateTime()));
+        Evidence expiredUndecidedEvidence = evidenceDAO.create(
+            new Evidence(null, expiredUndecidedReport.getId(), null, localhost, "description asda",
+            null, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS), SC2Pulse.offsetDateTime()));
+        assertEquals(8, playerCharacterReportDAO.getAll(Set.of()).size());
+        assertEquals(evidenceCountEnd + 3, evidenceDAO.findAll(Set.of()).size());
 
-        reportService.update(SC2Pulse.offsetDateTime());
-        //expired and denied report and evidence are removed
-        List<PlayerCharacterReport> endReports = playerCharacterReportDAO.getAll();
-        List<Evidence> endEvidences = evidenceDAO.findAll(false);
-        assertEquals(6, endReports.size());
-        assertEquals(evidenceCountEnd + 1, endEvidences.size());
-        //expired and confirmed report and evidence are not removed
-        assertTrue(endReports.stream().anyMatch(r->r.getId().equals(expiredConfirmedReport.getId())));
-        assertTrue(endEvidences.stream().anyMatch(e->e.getId().equals(expiredConfirmedEvidence.getId())));
+        reportService.update(SC2Pulse.EPOCH_ODT);
+        Set<Integer> visibleEvidenceIds = evidenceDAO.findAll(Set.of(false)).stream()
+            .map(Evidence::getId)
+            .collect(Collectors.toSet());
+        assertEquals(evidenceCountEnd + 1, visibleEvidenceIds.size());
+        assertFalse(visibleEvidenceIds.contains(expiredEvidence.getId()));
+        assertFalse(visibleEvidenceIds.contains(expiredUndecidedEvidence.getId()));
+        assertTrue(visibleEvidenceIds.contains(expiredConfirmedEvidence.getId()));
+
+        Set<Integer> visibleReportIds = playerCharacterReportDAO.getAll(Set.of(false)).stream()
+            .map(PlayerCharacterReport::getId)
+            .collect(Collectors.toSet());
+        assertEquals(6, visibleReportIds.size());
+        assertFalse(visibleReportIds.contains(expiredReport.getId()));
+        assertFalse(visibleReportIds.contains(expiredUndecidedReport.getId()));
+        assertTrue(visibleReportIds.contains(expiredConfirmedReport.getId()));
 
         Team secondCheaterTeam = teamDAO.merge(Set.of(Team.joined
         (
@@ -932,7 +942,7 @@ public class PlayerCharacterReportIT
             SC2Pulse.offsetDateTime()));
         Evidence evidence = evidenceDAO.create(new Evidence(
             null, report.getId(), null, privateIp, "description asda",false,
-            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));
+            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS) ,SC2Pulse.offsetDateTime()));
 
         LadderPlayerCharacterReport[] reports = getReports();
         Arrays.stream(reports)
@@ -1195,6 +1205,52 @@ public class PlayerCharacterReportIT
 
         reportService.update(start);
         verifyStatus(getReports()[0], null, null, false);
+    }
+
+    @Test
+    public void reportArchivedIsTiedToEvidenceArchived()
+    throws Exception
+    {
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+                .param("playerCharacterId", "1")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence1")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        assertFalse(getReports()[0].getReport().getArchived());
+
+        //archive evidence which in turn archives the report because all evidences are archived
+        template.update
+        (
+            "UPDATE evidence SET status_change_timestamp = ?",
+            SC2Pulse.offsetDateTime()
+                .minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS)
+        );
+        reportService.update(SC2Pulse.EPOCH_ODT);
+        //archived reports are not returned
+        assertEquals(0, getReports().length);
+
+        /*
+            Add a new evidence. Now there is 1 archived and 1 not archived evidence.
+            The report is not archived because at least 1 evidence is not archived.
+         */
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+                .param("playerCharacterId", "1")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence2")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        assertFalse(getReports()[0].getReport().getArchived());
     }
 
 }
