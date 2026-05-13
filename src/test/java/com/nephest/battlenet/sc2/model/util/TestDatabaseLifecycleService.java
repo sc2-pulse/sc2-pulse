@@ -42,7 +42,6 @@ public class TestDatabaseLifecycleService
             );
             try(var connection = dataSource.getConnection())
             {
-                ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
                 ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
             }
             finally
