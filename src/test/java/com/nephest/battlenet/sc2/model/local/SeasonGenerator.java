@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -342,6 +343,7 @@ public class SeasonGenerator
         List<Team> teams = new ArrayList<>();
         for(int i = 0; i < members.length; i++)
         {
+            Race race = spreadRaces ? Race.values()[i % Race.values().length] : Race.RANDOM;
             Team team = Team.joined
             (
                 null, DEFAULT_SEASON_ID, members[i].getRegion(),
@@ -352,14 +354,22 @@ public class SeasonGenerator
                     TeamType.ARRANGED
                 ),
                 BaseLeagueTier.LeagueTierType.FIRST,
-                TeamLegacyId.trusted(String.valueOf(i)), 1,
+                TeamLegacyId.standard(List.of(
+                    new TeamLegacyIdEntry
+                    (
+                        members[i].getRealm(),
+                        members[i].getBattlenetId(),
+                        race
+                    )
+                )),
+                1,
                 (long) i, i, 0, 0, 0,
                 SC2Pulse.offsetDateTime()
             );
             teams.add(team);
             teamDAO.create(team);
             TeamMember member = new TeamMember(team.getId(), members[i].getId(), null, null, null, null);
-            member.setGamesPlayed(spreadRaces ? Race.values()[i % Race.values().length] : Race.RANDOM, i);
+            member.setGamesPlayed(race, i);
             teamMemberDAO.create(member);
         }
         return teams;
