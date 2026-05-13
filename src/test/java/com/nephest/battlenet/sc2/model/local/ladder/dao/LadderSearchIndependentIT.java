@@ -157,6 +157,7 @@ public class LadderSearchIndependentIT
         Division bronze1 = divisionDAO.findListByLadder(season1.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
         Division bronze2 = divisionDAO.findListByLadder(season2.getBattlenetId(), region,
             BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
+        Division silver1 = divisionDAO.findListByLadder(season1.getBattlenetId(), region, BaseLeague.LeagueType.SILVER, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
         Account acc = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount#123"));
         Account acc2 = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount2#123"));
         //the names should be updated
@@ -180,7 +181,7 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("11111"), bronze1.getId(),
+            TeamLegacyId.trusted("11111"), silver1.getId(),
             100L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
@@ -256,7 +257,7 @@ public class LadderSearchIndependentIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            TeamLegacyId.trusted("11113"), bronze1.getId(),
+            TeamLegacyId.trusted("11113"), bronze2.getId(),
             102L, 100, 0, 0, 0,
             SC2Pulse.offsetDateTime()
         );
