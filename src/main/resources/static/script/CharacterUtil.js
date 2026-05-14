@@ -377,6 +377,7 @@ class CharacterUtil
         const profileLinkElement = document.getElementById("link-sc2");
         const profileSuffix = `/${region.code}/${fullChar.members.character.realm}/${fullChar.members.character.battlenetId}`;
         document.getElementById("link-sc2arcade").setAttribute("href", "https://sc2arcade.com/profile" + profileSuffix + "/lobbies-history");
+        document.getElementById("link-nonapa").setAttribute("href", "https://nonapa.com/profile" + profileSuffix);
         if(region == REGION.CN)
         {
             //the upstream site is not supporting the CN region.
