@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -110,7 +110,6 @@ public class PlayerCharacterReportService
     {
         if(evidenceDAO.getCount(reporterIp, reporterId, SC2Pulse.offsetDateTime().minusDays(1)) >= EVIDENCE_PER_DAY) return -2;
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null,
             id,
             additionalId,
             type,
@@ -121,7 +120,7 @@ public class PlayerCharacterReportService
         if(evidenceDAO.getConfirmedCount(report.getId()) >= CONFIRMED_EVIDENCE_MAX) return -3;
 
         Evidence evidenceObj = evidenceDAO.create(new Evidence(
-            null, report.getId(), reporterId, reporterIp, evidence, null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
+            report.getId(), reporterId, reporterIp, evidence, null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
         ));
         playerCharacterReportDAO.updateStatus(Set.of(report.getId()));
         playerCharacterReportDAO.updateArchive(report.getId());

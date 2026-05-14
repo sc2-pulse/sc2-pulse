@@ -41,7 +41,6 @@ implements java.io.Serializable
 
     public Evidence
     (
-        Integer id,
         Integer playerCharacterReportId,
         Long reporterAccountId,
         byte[] reporterIp,
@@ -53,7 +52,7 @@ implements java.io.Serializable
     {
         this
         (
-            id,
+            null,
             playerCharacterReportId,
             reporterAccountId,
             reporterIp,

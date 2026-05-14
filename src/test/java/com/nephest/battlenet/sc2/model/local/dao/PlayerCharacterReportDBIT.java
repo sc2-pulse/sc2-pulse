@@ -58,15 +58,15 @@ public class PlayerCharacterReportDBIT
     public void testFindReportByCursorId()
     {
         PlayerCharacterReport report1 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
             SC2Pulse.offsetDateTime()));
         PlayerCharacterReport report2 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 2L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            2L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
             SC2Pulse.offsetDateTime()));
         PlayerCharacterReport report3 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 3L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            3L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
             SC2Pulse.offsetDateTime()));
 
@@ -82,17 +82,17 @@ public class PlayerCharacterReportDBIT
     {
         byte[] localhost = InetAddress.getByName("127.0.0.1").getAddress();
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
             SC2Pulse.offsetDateTime()));
         Evidence evidence1 = evidenceDAO.create(new Evidence(
-            null, report.getId(), null, localhost, "description asda",false,
+            report.getId(), null, localhost, "description asda",false,
             SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS) ,SC2Pulse.offsetDateTime()));
         Evidence evidence2 = evidenceDAO.create(new Evidence(
-            null, report.getId(), null, localhost, "description asda",false,
+            report.getId(), null, localhost, "description asda",false,
             SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS) ,SC2Pulse.offsetDateTime()));
         Evidence evidence3 = evidenceDAO.create(new Evidence(
-            null, report.getId(), null, localhost, "description asda",false,
+            report.getId(), null, localhost, "description asda",false,
             SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS) ,SC2Pulse.offsetDateTime()));
 
         List<Evidence> evidences = evidenceDAO.findByIdCursor(1, 2);

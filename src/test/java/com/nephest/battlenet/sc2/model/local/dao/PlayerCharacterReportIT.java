@@ -525,10 +525,10 @@ public class PlayerCharacterReportIT
 
         OffsetDateTime oldTime = start.minusDays(EvidenceDAO.ACTIVE_MOD_THRESHOLD_DAYS + 1);
         PlayerCharacterReport oldReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 5L, null,
+            5L, null,
             PlayerCharacterReport.PlayerCharacterReportType.CHEATER, null, false, oldTime));
         Evidence oldEvidence = evidenceDAO.create(new Evidence(
-            null, oldReport.getId(), null, localhost, "old evidence", null, oldTime, oldTime));
+            oldReport.getId(), null, localhost, "old evidence", null, oldTime, oldTime));
         evidenceVoteDAO.merge(new EvidenceVote(
             oldEvidence.getId(),
             oldEvidence.getCreated(),
@@ -543,10 +543,10 @@ public class PlayerCharacterReportIT
 
         OffsetDateTime veryOldTime = oldTime.minusDays(1);
         PlayerCharacterReport veryOldReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 6L, null,
+            6L, null,
             PlayerCharacterReport.PlayerCharacterReportType.CHEATER, null, false, veryOldTime));
         Evidence veryOldEvidence = evidenceDAO.create(new Evidence(
-            null, veryOldReport.getId(), null, localhost, "very old evidence", null, veryOldTime, veryOldTime));
+            veryOldReport.getId(), null, localhost, "very old evidence", null, veryOldTime, veryOldTime));
         evidenceVoteDAO.merge(new EvidenceVote(
             veryOldEvidence.getId(),
             veryOldEvidence.getCreated(),
@@ -590,7 +590,7 @@ public class PlayerCharacterReportIT
         for(int i = 0; i < PlayerCharacterReportService.CONFIRMED_EVIDENCE_MAX; i++)
         {
             Evidence oldEvidenceLoop = evidenceDAO.create(new Evidence(
-                null, oldReport.getId(), null, localhost, "old evidence", null, oldTime, oldTime));
+                oldReport.getId(), null, localhost, "old evidence", null, oldTime, oldTime));
             evidenceVoteDAO.merge(new EvidenceVote(
                 oldEvidenceLoop.getId(),
                 oldEvidenceLoop.getCreated(),
@@ -658,25 +658,25 @@ public class PlayerCharacterReportIT
         assertEquals(5, reports.length);
         long evidenceCountEnd = Arrays.stream(reports).flatMap(r->r.getEvidence().stream()).count();
         PlayerCharacterReport expiredReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
             SC2Pulse.offsetDateTime()));
         PlayerCharacterReport expiredConfirmedReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 9L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            9L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             true, false,
             SC2Pulse.offsetDateTime()));
         PlayerCharacterReport expiredUndecidedReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 10L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            10L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             null, false,
             SC2Pulse.offsetDateTime()));
         Evidence expiredEvidence = evidenceDAO.create(
-            new Evidence(null, expiredReport.getId(), null, localhost, "description asda",
+            new Evidence(expiredReport.getId(), null, localhost, "description asda",
             false, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS), SC2Pulse.offsetDateTime()));
         Evidence expiredConfirmedEvidence = evidenceDAO.create(
-            new Evidence(null, expiredConfirmedReport.getId(), null, localhost, "description asda",
+            new Evidence(expiredConfirmedReport.getId(), null, localhost, "description asda",
                 true, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS), SC2Pulse.offsetDateTime()));
         Evidence expiredUndecidedEvidence = evidenceDAO.create(
-            new Evidence(null, expiredUndecidedReport.getId(), null, localhost, "description asda",
+            new Evidence(expiredUndecidedReport.getId(), null, localhost, "description asda",
             null, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS), SC2Pulse.offsetDateTime()));
         assertEquals(8, playerCharacterReportDAO.getAll(Set.of()).size());
         assertEquals(evidenceCountEnd + 3, evidenceDAO.findAll(Set.of()).size());
@@ -937,11 +937,11 @@ public class PlayerCharacterReportIT
     {
         byte[] privateIp = InetAddress.getByName("192.168.1.2").getAddress();
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
-            null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
             SC2Pulse.offsetDateTime()));
         Evidence evidence = evidenceDAO.create(new Evidence(
-            null, report.getId(), null, privateIp, "description asda",false,
+            report.getId(), null, privateIp, "description asda",false,
             SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS) ,SC2Pulse.offsetDateTime()));
 
         LadderPlayerCharacterReport[] reports = getReports();

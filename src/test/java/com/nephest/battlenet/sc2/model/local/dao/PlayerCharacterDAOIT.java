@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2025 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -566,7 +566,6 @@ public class PlayerCharacterDAOIT
         (
             new PlayerCharacterReport
             (
-                null,
                 accountId,
                 null,
                 PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
@@ -579,7 +578,6 @@ public class PlayerCharacterDAOIT
         (
             new Evidence
             (
-                null,
                 report.getId(),
                 accountId,
                 null,
@@ -614,7 +612,6 @@ public class PlayerCharacterDAOIT
         (
             new Evidence
             (
-                null,
                 report.getId(),
                 accountId2,
                 null,

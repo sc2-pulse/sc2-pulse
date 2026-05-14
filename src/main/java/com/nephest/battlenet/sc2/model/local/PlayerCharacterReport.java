@@ -83,7 +83,6 @@ implements java.io.Serializable
 
     public PlayerCharacterReport
     (
-        Integer id,
         Long playerCharacterId,
         Long additionalPlayerCharacterId,
         PlayerCharacterReportType type,
@@ -94,7 +93,7 @@ implements java.io.Serializable
     {
         this
         (
-            id,
+            null,
             playerCharacterId,
             additionalPlayerCharacterId,
             type,
