@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -21,6 +21,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -40,6 +41,12 @@ public class WebServiceTestUtil
 {
 
     public static final Duration OPERATION_DURATION = Duration.ofMillis(100);
+    /*
+        This variable is used in tests where temporary redirection is tested. Spring RedirectView
+        uses 302 to for temporary redirects. It will be easy to change required code in case
+        Spring or custom config will use 307 in the future,
+     */
+    public static final HttpStatus TEMPORARY_REDIRECT = HttpStatus.FOUND;
 
     public static WebClient createTimeoutClient()
     {
