@@ -105,7 +105,9 @@ public class PlayerCharacterReportController
         @PathVariable(name = "vote") Boolean vote
     )
     {
-        OffsetDateTime evidenceCreated = evidenceDAO.findById(Set.of(), evidenceId).orElseThrow().getCreated();
+        OffsetDateTime evidenceCreated = evidenceDAO.findById(Set.of(), Set.of(), evidenceId)
+            .orElseThrow()
+            .getCreated();
         evidenceVoteDAO.merge(new EvidenceVote(
             evidenceId,
             evidenceCreated,

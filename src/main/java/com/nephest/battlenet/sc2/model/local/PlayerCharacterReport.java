@@ -12,6 +12,24 @@ public class PlayerCharacterReport
 implements java.io.Serializable
 {
 
+    public enum Status
+    {
+        CONFIRMED(true), DENIED(false), UNDECIDED(null);
+
+        private final Boolean status;
+
+        Status(Boolean status)
+        {
+            this.status = status;
+        }
+
+        public Boolean getStatus()
+        {
+            return status;
+        }
+
+    }
+
     public enum PlayerCharacterReportType
     implements Identifiable
     {
@@ -56,7 +74,7 @@ implements java.io.Serializable
 
     }
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private Integer id;
 

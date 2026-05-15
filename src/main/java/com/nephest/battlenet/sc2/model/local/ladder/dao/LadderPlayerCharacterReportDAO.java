@@ -53,16 +53,20 @@ public class LadderPlayerCharacterReportDAO
             + "AND confirmed_cheater_report.status = true "
             + "%1$s";
 
-    private static final String FIND_REPORTS
-        = String.format(FIND_REPORTS_TEMPLATE, "WHERE " + PlayerCharacterReportDAO.ARCHIVED_FILTER);
+    private static final String FIND_REPORTS = String.format
+    (
+        FIND_REPORTS_TEMPLATE,
+        "WHERE " + PlayerCharacterReportDAO.ARCHIVED_FILTER
+        + "AND " + PlayerCharacterReportDAO.STATUS_FILTER
+    );
 
-    private static final String FIND_REPORTS_BY_CHARACTER_IDS =
-        String.format
-        (
-            FIND_REPORTS_TEMPLATE,
-            "WHERE player_character_report.player_character_id IN(:characterIds) "
-            + "AND " + PlayerCharacterReportDAO.ARCHIVED_FILTER
-        );
+    private static final String FIND_REPORTS_BY_CHARACTER_IDS = String.format
+    (
+        FIND_REPORTS_TEMPLATE,
+        "WHERE player_character_report.player_character_id IN(:characterIds) "
+        + "AND " + PlayerCharacterReportDAO.ARCHIVED_FILTER
+        + "AND " + PlayerCharacterReportDAO.STATUS_FILTER
+    );
 
     private static RowMapper<LadderPlayerCharacterReport> STD_MAPPER;
 
@@ -94,16 +98,26 @@ public class LadderPlayerCharacterReportDAO
         return STD_MAPPER;
     }
 
-    public List<LadderPlayerCharacterReport> findAll(Set<Boolean> archivedFilter)
+    public List<LadderPlayerCharacterReport> findAll
+    (
+        Set<Boolean> archivedFilter,
+        Set<PlayerCharacterReport.Status> statusFilter
+    )
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         params = EvidenceDAO.archivedFilterParams(params, archivedFilter);
+        params = EvidenceDAO.statusFilterParams(params, statusFilter);
         return template.query(FIND_REPORTS, params, STD_MAPPER);
     }
 
-    public List<LadderPlayerCharacterReport> findByCharacterIds(Set<Long> characterIds, Set<Boolean> archivedFilter)
+    public List<LadderPlayerCharacterReport> findByCharacterIds
+    (
+        Set<Long> characterIds,
+        Set<Boolean> archivedFilter,
+        Set<PlayerCharacterReport.Status> statusFilter
+    )
     {
         if(characterIds.isEmpty()) return List.of();
 
@@ -112,6 +126,7 @@ public class LadderPlayerCharacterReportDAO
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         params = EvidenceDAO.archivedFilterParams(params, archivedFilter);
+        params = EvidenceDAO.statusFilterParams(params, statusFilter);
         return template.query(FIND_REPORTS_BY_CHARACTER_IDS, params, STD_MAPPER);
     }
 

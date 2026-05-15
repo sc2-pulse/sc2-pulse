@@ -58,6 +58,12 @@ public class PlayerCharacterReportService
         .map(SC2PulseAuthority::getAuthority)
         .collect(Collectors.toSet());
 
+    private static final Map<Boolean, Set<PlayerCharacterReport.Status>> STATUS_FILTERS = Map.of
+    (
+        true, Set.of(),
+        false, Set.of(PlayerCharacterReport.Status.CONFIRMED)
+    );
+
     public static final int EVIDENCE_PER_DAY = 10;
     public static final int CONFIRMED_EVIDENCE_MAX = 3;
 
@@ -197,15 +203,17 @@ public class PlayerCharacterReportService
         return sb.toString();
     }
 
+    public static boolean isSecureRole(Authentication authentication)
+    {
+        return authentication.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(SECURE_ROLE_NAMES::contains);
+    }
+
     public static List<LadderPlayerCharacterReport> clearSensitiveData
     (List<LadderPlayerCharacterReport> reports, Authentication authentication)
     {
-        if
-        (
-            authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(SECURE_ROLE_NAMES::contains)
-        ) return reports;
+        if(isSecureRole(authentication)) return reports;
 
         reports.stream()
             .map(LadderPlayerCharacterReport::getEvidence)
@@ -224,8 +232,13 @@ public class PlayerCharacterReportService
 
     public List<LadderPlayerCharacterReport> findReports()
     {
-        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findAll(Set.of(false));
-        Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll(Set.of(false)).stream()
+        Set<PlayerCharacterReport.Status> statusFilter = STATUS_FILTERS
+            .get(getAuthentication().map(PlayerCharacterReportService::isSecureRole).orElse(false));
+        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO
+            .findAll(Set.of(false), statusFilter);
+        Map<Integer, List<Evidence>> evidences = evidenceDAO
+            .findAll(Set.of(false), statusFilter)
+            .stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
         reports.removeIf(r->!evidences.containsKey(r.getReport().getId()));
         if(reports.isEmpty()) return reports;
@@ -258,9 +271,18 @@ public class PlayerCharacterReportService
     {
         if(characterIds.isEmpty()) return List.of();
 
-        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findByCharacterIds(characterIds, Set.of(false));
+        Set<PlayerCharacterReport.Status> statusFilter = STATUS_FILTERS
+            .get(getAuthentication().map(PlayerCharacterReportService::isSecureRole).orElse(false));
+        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO
+            .findByCharacterIds(characterIds, Set.of(false), statusFilter);
         Map<Integer, List<Evidence>> evidences = evidenceDAO
-            .findByReportIds(Set.of(false), reports.stream().map(r->r.getReport().getId()).collect(Collectors.toSet())).stream()
+            .findByReportIds
+            (
+                Set.of(false),
+                statusFilter,
+                reports.stream().map(r->r.getReport().getId()).collect(Collectors.toSet())
+            )
+            .stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
         reports.removeIf(r->!evidences.containsKey(r.getReport().getId()));
         if(reports.isEmpty()) return reports;

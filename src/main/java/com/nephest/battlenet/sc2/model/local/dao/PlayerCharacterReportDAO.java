@@ -38,6 +38,11 @@ public class PlayerCharacterReportDAO
         "(array_length(:archivedFilter::boolean[], 1) IS NULL "
         + "OR player_character_report.archived = ANY(:archivedFilter::boolean[]))";
 
+    public static final String STATUS_FILTER =
+        "((:confirmedAllowed AND player_character_report.status = true) "
+        + "OR (:deniedAllowed AND player_character_report.status = false) "
+        + "OR (:undecidedAllowed AND player_character_report.status IS NULL))";
+
     private static final String MERGE_QUERY =
         "WITH existing AS ("
             + "SELECT id "
@@ -75,7 +80,10 @@ public class PlayerCharacterReportDAO
         + "SELECT id FROM inserted";
 
     private static final String GET_ALL_QUERY =
-        "SELECT " + STD_SELECT + " FROM player_character_report WHERE " + ARCHIVED_FILTER;
+        "SELECT " + STD_SELECT
+        + "FROM player_character_report "
+        + "WHERE " + ARCHIVED_FILTER
+        + "AND " + STATUS_FILTER;
 
     private static final String UPDATE_STATUS_TAIL =
         "report_status_agg AS ("
@@ -230,9 +238,14 @@ public class PlayerCharacterReportDAO
         return report;
     }
 
-    public List<PlayerCharacterReport> getAll(Set<Boolean> archivedFilter)
+    public List<PlayerCharacterReport> getAll
+    (
+        Set<Boolean> archivedFilter,
+        Set<PlayerCharacterReport.Status> statusFilter
+    )
     {
         MapSqlParameterSource params = EvidenceDAO.archivedFilterParams(archivedFilter);
+        params = EvidenceDAO.statusFilterParams(params, statusFilter);
         return template.query(GET_ALL_QUERY, params, STD_ROW_MAPPER);
     }
 

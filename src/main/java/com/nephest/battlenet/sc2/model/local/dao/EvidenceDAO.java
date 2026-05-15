@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.Evidence;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.sql.Types;
@@ -39,6 +40,11 @@ public class EvidenceDAO
     private static final String ARCHIVED_FILTER =
         "(array_length(:archivedFilter::boolean[], 1) IS NULL "
         + "OR archived = ANY(:archivedFilter::boolean[]))";
+
+    public static final String STATUS_FILTER =
+        "((:confirmedAllowed AND status = true) "
+        + "OR (:deniedAllowed AND status = false) "
+        + "OR (:undecidedAllowed AND status IS NULL))";
 
     public static final String STD_SELECT =
         "evidence.id AS \"evidence.id\", "
@@ -87,17 +93,20 @@ public class EvidenceDAO
         "SELECT " + STD_SELECT
         + "FROM evidence "
         + "WHERE " + ARCHIVED_FILTER
+        + "AND " + STATUS_FILTER
         + "ORDER BY created DESC";
     private static final String GET_BY_ID =
         "SELECT " + STD_SELECT
         + "FROM evidence "
         + "WHERE id = :id "
-        + "AND " + ARCHIVED_FILTER;
+        + "AND " + ARCHIVED_FILTER
+        + "AND " + STATUS_FILTER;
     private static final String GET_BY_REPORT_IDS =
         "SELECT " + STD_SELECT
         + "FROM evidence "
         + "WHERE player_character_report_id IN (:reportIds) "
         + "AND " + ARCHIVED_FILTER
+        + "AND " + STATUS_FILTER
         + "ORDER BY created DESC";
     private static final String UPDATE_STATUS_QUERY =
         "WITH recent_evidence AS "
@@ -221,27 +230,44 @@ public class EvidenceDAO
         );
     }
 
-    public List<Evidence> findAll(Set<Boolean> archivedFilter)
+    public List<Evidence> findAll
+    (
+        Set<Boolean> archivedFilter,
+        Set<PlayerCharacterReport.Status> statusFilter
+    )
     {
         MapSqlParameterSource params = archivedFilterParams(archivedFilter);
+        params = statusFilterParams(params, statusFilter);
         return template.query(GET_ALL_QUERY, params, STD_ROW_MAPPER);
     }
 
-    public Optional<Evidence> findById(Set<Boolean> archivedFilter, int id)
+    public Optional<Evidence> findById
+    (
+        Set<Boolean> archivedFilter,
+        Set<PlayerCharacterReport.Status> statusFilter,
+        int id
+    )
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("id", id);
         params = archivedFilterParams(params, archivedFilter);
+        params = statusFilterParams(params, statusFilter);
         return Optional.ofNullable(template.query(GET_BY_ID, params, STD_EXTRACTOR));
     }
 
-    public List<Evidence> findByReportIds(Set<Boolean> archivedFilter, Set<Integer> reportIds)
+    public List<Evidence> findByReportIds
+    (
+        Set<Boolean> archivedFilter,
+        Set<PlayerCharacterReport.Status> statusFilter,
+        Set<Integer> reportIds
+    )
     {
         if(reportIds.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("reportIds", reportIds);
         params = archivedFilterParams(params, archivedFilter);
+        params = statusFilterParams(params, statusFilter);
         return template.query(GET_BY_REPORT_IDS, params, STD_ROW_MAPPER);
     }
 
@@ -315,6 +341,31 @@ public class EvidenceDAO
             archivedFilter.isEmpty() ? null : archivedFilter.toArray(Boolean[]::new),
             Types.ARRAY
         );
+    }
+
+    public static MapSqlParameterSource statusFilterParams
+    (
+        MapSqlParameterSource params,
+        Set<PlayerCharacterReport.Status> statusFilter
+    )
+    {
+        boolean noFilter = statusFilter.isEmpty();
+        return params
+            .addValue
+            (
+                "confirmedAllowed",
+                noFilter || statusFilter.contains(PlayerCharacterReport.Status.CONFIRMED)
+            )
+            .addValue
+            (
+                "deniedAllowed",
+                noFilter || statusFilter.contains(PlayerCharacterReport.Status.DENIED)
+            )
+            .addValue
+            (
+                "undecidedAllowed",
+                noFilter || statusFilter.contains(PlayerCharacterReport.Status.UNDECIDED)
+            );
     }
 
 }

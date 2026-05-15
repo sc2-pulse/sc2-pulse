@@ -73,6 +73,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -674,11 +675,11 @@ public class PlayerCharacterReportIT
         Evidence expiredUndecidedEvidence = evidenceDAO.create(
             new Evidence(expiredUndecidedReport.getId(), null, localhost, "description asda",
             null, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS), SC2Pulse.offsetDateTime()));
-        assertEquals(8, playerCharacterReportDAO.getAll(Set.of()).size());
-        assertEquals(evidenceCountEnd + 3, evidenceDAO.findAll(Set.of()).size());
+        assertEquals(8, playerCharacterReportDAO.getAll(Set.of(), Set.of()).size());
+        assertEquals(evidenceCountEnd + 3, evidenceDAO.findAll(Set.of(), Set.of()).size());
 
         reportService.update(SC2Pulse.EPOCH_ODT);
-        Set<Integer> visibleEvidenceIds = evidenceDAO.findAll(Set.of(false)).stream()
+        Set<Integer> visibleEvidenceIds = evidenceDAO.findAll(Set.of(false), Set.of()).stream()
             .map(Evidence::getId)
             .collect(Collectors.toSet());
         assertEquals(evidenceCountEnd + 1, visibleEvidenceIds.size());
@@ -686,7 +687,7 @@ public class PlayerCharacterReportIT
         assertFalse(visibleEvidenceIds.contains(expiredUndecidedEvidence.getId()));
         assertTrue(visibleEvidenceIds.contains(expiredConfirmedEvidence.getId()));
 
-        Set<Integer> visibleReportIds = playerCharacterReportDAO.getAll(Set.of(false)).stream()
+        Set<Integer> visibleReportIds = playerCharacterReportDAO.getAll(Set.of(false), Set.of()).stream()
             .map(PlayerCharacterReport::getId)
             .collect(Collectors.toSet());
         assertEquals(6, visibleReportIds.size());
@@ -939,6 +940,7 @@ public class PlayerCharacterReportIT
         Evidence evidence = evidenceDAO.create(new Evidence(
             report.getId(), null, privateIp, "description asda",false,
             SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.UNTIL_ARCHIVED_DAYS) ,SC2Pulse.offsetDateTime()));
+        setReportAndEvidenceStatus(PlayerCharacterReport.Status.CONFIRMED);
 
         LadderPlayerCharacterReport[] reports = getReports();
         Arrays.stream(reports)
@@ -971,6 +973,7 @@ public class PlayerCharacterReportIT
             .andReturn();
 
         evidenceVoteDAO.merge(new EvidenceVote(1, SC2Pulse.offsetDateTime(), 10L, true, SC2Pulse.offsetDateTime()));
+        setReportAndEvidenceStatus(PlayerCharacterReport.Status.CONFIRMED);
         LadderEvidenceVote voteAll = getReports()[0].getEvidence().get(0).getVotes().get(0);
         assertNull(voteAll.getVoterAccount());
         assertNull(voteAll.getVote().getVoterAccountId());
@@ -985,6 +988,46 @@ public class PlayerCharacterReportIT
             .getVotes().get(0);
         assertNull(voteById.getVoterAccount());
         assertNull(voteById.getVote().getVoterAccountId());
+    }
+
+    private void setReportAndEvidenceStatus(PlayerCharacterReport.Status status)
+    {
+        template.update("UPDATE evidence SET status = ?", status.getStatus());
+        template.update("UPDATE player_character_report SET status = ?", status.getStatus());
+    }
+
+    @ParameterizedTest
+    @EnumSource
+    (
+        value = PlayerCharacterReport.Status.class,
+        mode = EnumSource.Mode.EXCLUDE,
+        names = {"CONFIRMED"}
+    )
+    public void whenUserNotInSecureRole_thenOnlyConfirmedReportsAndEvidencesVisible
+    (
+        PlayerCharacterReport.Status status
+    )
+    throws Exception
+    {
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+                .param("playerCharacterId", "1")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence text")
+        )
+            .andExpect(status().isOk());
+        assertEquals(0, getReports().length);
+
+        setReportAndEvidenceStatus(status);
+        assertEquals(0, getReports().length);
+
+        setReportAndEvidenceStatus(PlayerCharacterReport.Status.CONFIRMED);
+        LadderPlayerCharacterReport[] reports = getReports();
+        assertEquals(1, reports.length);
+        assertEquals(1, reports[0].getEvidence().size());
     }
 
     @Test
@@ -1017,6 +1060,7 @@ public class PlayerCharacterReportIT
         )
             .andExpect(status().isOk())
             .andReturn();
+        setReportAndEvidenceStatus(PlayerCharacterReport.Status.CONFIRMED);
 
         verifyLinkedReports
         (
@@ -1154,6 +1198,12 @@ public class PlayerCharacterReportIT
     }
 
     @Test
+    @WithBlizzardMockUser
+    (
+        partition = Partition.GLOBAL,
+        username = BATTLETAG,
+        roles={SC2PulseAuthority.USER, SC2PulseAuthority.MODERATOR}
+    )
     public void whenReportHasDeniedStatusAndNewEvidenceReceived_thenResetReportStatus()
     throws Exception
     {
@@ -1203,6 +1253,12 @@ public class PlayerCharacterReportIT
     }
 
     @Test
+    @WithBlizzardMockUser
+    (
+        partition = Partition.GLOBAL,
+        username = BATTLETAG,
+        roles={SC2PulseAuthority.USER, SC2PulseAuthority.MODERATOR}
+    )
     public void reportArchivedIsTiedToEvidenceArchived()
     throws Exception
     {
