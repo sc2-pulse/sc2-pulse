@@ -227,7 +227,6 @@ public class DiscordBootstrapTest
         (
             List.of(slashCommand),
             List.of(userCommand),
-            List.of(),
             guildEmojiStore,
             guildRoleStore,
             client,

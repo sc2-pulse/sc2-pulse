@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.discord;
 
 import com.nephest.battlenet.sc2.discord.connection.ConnectionMetaData;
 import com.nephest.battlenet.sc2.discord.connection.PulseConnectionParameters;
-import com.nephest.battlenet.sc2.discord.event.AutoComplete;
 import com.nephest.battlenet.sc2.discord.event.SlashCommand;
 import com.nephest.battlenet.sc2.discord.event.UserCommand;
 import com.nephest.battlenet.sc2.web.service.DiscordAPI;
@@ -32,7 +31,6 @@ public class PostInit
     (
         List<SlashCommand> handlers,
         List<UserCommand> userInteractionHandlers,
-        List<AutoComplete> autoCompleteHandlers,
         GuildEmojiStore guildEmojiStore,
         GuildRoleStore guildRoleStore,
         @Value("${com.nephest.battlenet.sc2.discord.bot.guild:}") Long guild,
@@ -44,7 +42,6 @@ public class PostInit
         (
             handlers,
             userInteractionHandlers,
-            autoCompleteHandlers,
             guildEmojiStore,
             guildRoleStore,
             discordAPI.getDiscordClient().getClient(),

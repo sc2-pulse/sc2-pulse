@@ -134,19 +134,6 @@ public class CharacterControllerLegacy
             .findIds(name, caseSensitive, region, seasons, queues));
     }
 
-    @Hidden
-    @GetMapping("/search/{term}/suggestions")
-    public List<String> suggestLegacy(@PathVariable("term") String term)
-    {
-        return searchService.suggestIfQuick(term, CharacterController.SEARCH_SUGGESTIONS_SIZE);
-    }
-
-    @GetMapping("/search/suggestions")
-    public List<String> suggest(@RequestParam("term") String term)
-    {
-        return searchService.suggestIfQuick(term, CharacterController.SEARCH_SUGGESTIONS_SIZE);
-    }
-
     @GetMapping("/{ids}")
     public ResponseEntity<List<PlayerCharacter>> getPlayerCharacters(@PathVariable("ids") Set<Long> ids)
     {

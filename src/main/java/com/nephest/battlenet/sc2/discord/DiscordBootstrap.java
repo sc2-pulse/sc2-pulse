@@ -3,7 +3,6 @@
 
 package com.nephest.battlenet.sc2.discord;
 
-import com.nephest.battlenet.sc2.discord.event.AutoComplete;
 import com.nephest.battlenet.sc2.discord.event.DiscordApplicationCommand;
 import com.nephest.battlenet.sc2.discord.event.NamedCommand;
 import com.nephest.battlenet.sc2.discord.event.SlashCommand;
@@ -21,7 +20,6 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.EmojisUpdateEvent;
 import discord4j.core.event.domain.guild.MemberUpdateEvent;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
-import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.interaction.InteractionCreateEvent;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
@@ -161,7 +159,6 @@ public class DiscordBootstrap
     (
         List<SlashCommand> handlers,
         List<UserCommand> userInteractionHandlers,
-        List<AutoComplete> autoCompleteHandlers,
         GuildEmojiStore guildEmojiStore,
         GuildRoleStore guildRoleStore,
         GatewayDiscordClient client,
@@ -174,7 +171,6 @@ public class DiscordBootstrap
         registerCommands(allHandlers, client, guild);
         registerHandlers(handlers, ChatInputInteractionEvent.class, client);
         registerHandlers(userInteractionHandlers, UserInteractionEvent.class, client);
-        registerAutoCompleteHandlers(autoCompleteHandlers, client);
         client.on(ReconnectEvent.class, (e)->updatePresence(e.getClient())).subscribe();
         updatePresence(client).subscribe();
         client.on(EmojisUpdateEvent.class, guildEmojiStore::removeGuildEmojis).subscribe();
@@ -187,18 +183,6 @@ public class DiscordBootstrap
     private static Mono<Void> updatePresence(GatewayDiscordClient client)
     {
         return client.updatePresence(ClientPresence.online(ClientActivity.watching(SC2_GAME_NAME)));
-    }
-
-    private static void registerAutoCompleteHandlers
-    (Collection<? extends AutoComplete> handlers, GatewayDiscordClient client)
-    {
-        Map<String, AutoComplete> handlerMap = handlers.stream()
-            .collect(Collectors.toMap(NamedCommand::getCommandName, Function.identity()));
-        client.on
-        (
-            ChatInputAutoCompleteEvent.class,
-            e->e.respondWithSuggestions(handlerMap.get(e.getCommandName()).autoComplete(e))
-        ).subscribe();
     }
 
     private static void registerCommands

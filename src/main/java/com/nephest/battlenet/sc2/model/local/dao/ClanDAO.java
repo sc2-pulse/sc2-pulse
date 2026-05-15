@@ -212,13 +212,6 @@ public class ClanDAO
     private static final String FIND_BY_MEMBERS_CURSOR_REVERSED =
         String.format(FIND_BY_MEMBERS_TEMPLATE, "ASC", ">");
 
-    private static final String FIND_TAGS_BY_TAG_LIKE =
-        "SELECT tag "
-        + "FROM clan "
-        + "WHERE LOWER(tag) LIKE LOWER(:tagLike) "
-        + "ORDER BY active_members DESC NULLS LAST "
-        + "LIMIT :limit";
-
     private static final String UPDATE_STATS = "WITH "
         + "character_filter AS "
         + "("
@@ -655,15 +648,6 @@ public class ClanDAO
         if(clan == null) return null;
 
         return createCursorPosition(cursor.getValueFunction().apply(clan), clan.getId());
-    }
-
-    public List<String> findTags(String tagLike, int limit)
-    {
-        tagLike = PostgreSQLUtils.escapeLikePattern(tagLike) + "%";
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("tagLike", tagLike)
-            .addValue("limit", limit);
-        return template.queryForList(FIND_TAGS_BY_TAG_LIKE, params, String.class);
     }
 
     public int updateStats(List<Integer> clans)

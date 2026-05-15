@@ -469,17 +469,6 @@ class ElementUtil
         return elem;
     }
 
-    static createDataList(options)
-    {
-        const dataList = document.createElement("datalist");
-        options.forEach(o=>{
-            const option = document.createElement("option");
-            option.setAttribute("value", o);
-            dataList.appendChild(option);
-        });
-        return dataList;
-    }
-
     static clearInputTimeout(key)
     {
         const timeout = ElementUtil.INPUT_TIMEOUTS.get(key);
@@ -784,7 +773,6 @@ ElementUtil.ELEMENT_TASKS = new Map();
 ElementUtil.DOCUMENT_VISIBILITY_TASKS = new Map();
 ElementUtil.ELEMENT_TASK_QUEUE = new Map();
 ElementUtil.INPUT_TIMEOUTS = new Map();
-ElementUtil.INPUT_TIMESTAMPS = new Map();
 ElementUtil.TITLE_CONSTRUCTORS = new Map();
 ElementUtil.DESCRIPTION_CONSTRUCTORS = new Map();
 ElementUtil.AFTER_CLONE_ELEMENT = new Map([["dynamic-clone-element", ElementUtil.processDynamicClone]]);

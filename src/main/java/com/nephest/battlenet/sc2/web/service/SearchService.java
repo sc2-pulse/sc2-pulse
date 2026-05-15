@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2024 Oleksandr Masniuk
+// Copyright (C) 2020-2026 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -6,10 +6,7 @@ package com.nephest.battlenet.sc2.web.service;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
-import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
-import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
@@ -29,7 +26,6 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -38,11 +34,9 @@ import org.springframework.validation.annotation.Validated;
 public class SearchService
 {
 
-    public static final int MIN_CHARACTER_NAME_LENGTH = 4;
     public static final int MIN_CLAN_TAG_LENGTH = 2;
     public static final String CLAN_START_DELIMITER = "[";
     public static final String CLAN_END_DELIMITER = "]";
-    public static final String CLAN_SEARCH_FORMAT = CLAN_START_DELIMITER + "%1$s" + CLAN_END_DELIMITER;
     public static final String BATTLE_TAG_MARKER = "#";
     public static final String URL_MARKER = "://";
     public static final Pattern STARCRAFT2_COM_PROFILE_URL_PATTERN = Pattern.compile
@@ -54,8 +48,6 @@ public class SearchService
     public static final int ID_SEARCH_MAX_SEASONS = 10;
 
     private final PlayerCharacterDAO playerCharacterDAO;
-    private final AccountDAO accountDAO;
-    private final ClanDAO clanDAO;
     private final LadderCharacterDAO ladderCharacterDAO;
     private final PlayerCharacterLinkDAO playerCharacterLinkDAO;
     private final Map<SocialMedia, ExternalCharacterSearch> externalSearch;
@@ -85,16 +77,12 @@ public class SearchService
     public SearchService
     (
         PlayerCharacterDAO playerCharacterDAO,
-        AccountDAO accountDAO,
-        ClanDAO clanDAO,
         LadderCharacterDAO ladderCharacterDAO,
         PlayerCharacterLinkDAO playerCharacterLinkDAO,
         List<ExternalCharacterSearch> externalSearches
     )
     {
         this.playerCharacterDAO = playerCharacterDAO;
-        this.accountDAO = accountDAO;
-        this.clanDAO = clanDAO;
         this.ladderCharacterDAO = ladderCharacterDAO;
         this.playerCharacterLinkDAO = playerCharacterLinkDAO;
         externalSearch = externalSearches.stream()
@@ -105,41 +93,6 @@ public class SearchService
                 (l, r)->{throw new IllegalStateException("Unexpected merge");},
                 ()->new EnumMap<>(SocialMedia.class)
             ));
-    }
-
-    @Cacheable(cacheNames = "character-search-suggestions")
-    public List<String> suggest(String term, int limit)
-    {
-        switch(SearchType.of(term))
-        {
-            case BATTLE_TAG:
-                return accountDAO.findBattleTags(term, limit);
-            case CLAN:
-                return clanTagsToSearchTerms(clanDAO.findTags(extractClanTag(term), limit));
-            default:
-                return playerCharacterDAO.findNamesWithoutDiscriminator(term, limit);
-        }
-    }
-
-    @Cacheable(cacheNames = "character-search-suggestions")
-    public List<String> suggestIfQuick(String term, int limit)
-    {
-        return isQuickSearch(term) ? suggest(term, limit) : List.of();
-    }
-
-    public boolean isQuickSearch(String term)
-    {
-        if(Account.isFakeBattleTag(term)) return false;
-
-        switch(SearchType.of(term))
-        {
-            case CLAN:
-                return term.length() >= MIN_CLAN_TAG_LENGTH;
-            case BATTLE_TAG:
-                return true;
-            default:
-                return term.length() >= MIN_CHARACTER_NAME_LENGTH;
-        }
     }
 
     public List<Long> findIds
@@ -210,13 +163,6 @@ public class SearchService
         return term.length() >= MIN_CLAN_TAG_LENGTH
             ? term.endsWith(CLAN_END_DELIMITER) ? term.substring(1, term.length() - 1) : term.substring(1)
             : "";
-    }
-
-    public static List<String> clanTagsToSearchTerms(List<String> tags)
-    {
-        return tags.stream()
-            .map(tag->String.format(CLAN_SEARCH_FORMAT, tag))
-            .collect(Collectors.toList());
     }
 
 }

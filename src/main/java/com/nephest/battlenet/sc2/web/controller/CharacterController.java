@@ -54,7 +54,6 @@ public class CharacterController
 {
 
     public static final int PLAYER_CHARACTERS_MAX = 100;
-    public static final int SEARCH_SUGGESTIONS_SIZE = 10;
     public static final int MATCH_PAGE_SIZE_MAX = 100;
     public static final int TEAM_LIMIT = 400;
 
@@ -123,12 +122,6 @@ public class CharacterController
     public List<LadderDistinctCharacter> findCharacters(@RequestParam("query") String query)
     {
         return searchService.findDistinctCharacters(query);
-    }
-
-    @GetMapping("/characters/suggestions")
-    public List<String> getSuggestions(@RequestParam("query") String query)
-    {
-        return searchService.suggestIfQuick(query, SEARCH_SUGGESTIONS_SIZE);
     }
 
     private static HttpStatus getStatus(Collection<? extends ExternalLinkResolveResult> results)

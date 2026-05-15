@@ -447,23 +447,6 @@ public class PlayerCharacterDAO
         + "WHERE (array_length(:seasons::integer[], 1) IS NULL OR team_season = ANY(:seasons)) "
         + "AND (array_length(:queues::smallint[], 1) IS NULL OR team_queue_type = ANY(:queues))";
 
-    private static final String FIND_NAMES_WITHOUT_DISCRIMINATOR_BY_NAME_LIKE =
-        "WITH character_filter AS "
-        + "("
-            + "SELECT player_character.name, MAX(rating_max) AS rating_max "
-            + "FROM player_character "
-            + "INNER JOIN player_character_stats ON player_character.id = player_character_stats.player_character_id "
-            + "WHERE LOWER(name) LIKE LOWER(:nameLike) "
-            + "GROUP BY player_character.name "
-            + "ORDER BY rating_max DESC "
-            + "LIMIT :limit * 3 "
-        + ") "
-        + "SELECT substring(name from '^.*(?=(#))') AS sub_name "
-        + "FROM character_filter "
-        + "GROUP BY sub_name "
-        + "ORDER BY MAX(rating_max) DESC "
-        + "LIMIT :limit";
-
     private static final String FIND_BY_IDS =
         "SELECT " + STD_SELECT
         + "FROM player_character "
@@ -891,15 +874,6 @@ public class PlayerCharacterDAO
             .addValue("updatedMax", updatedMax)
             .addValue("regions", regionIds);
         return template.query(COUNT_BY_UPDATED_MAX, params, DAOUtils.INT_EXTRACTOR);
-    }
-
-    public List<String> findNamesWithoutDiscriminator(String nameLike, int limit)
-    {
-        nameLike = PostgreSQLUtils.escapeLikePattern(nameLike) + "%";
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("nameLike", nameLike)
-            .addValue("limit", limit);
-        return template.queryForList(FIND_NAMES_WITHOUT_DISCRIMINATOR_BY_NAME_LIKE, params, String.class);
     }
 
     public List<Long> findIdsByAccountIds(Set<Long> accountIds)

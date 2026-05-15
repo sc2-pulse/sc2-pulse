@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.web.service.SearchService;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
@@ -41,15 +40,12 @@ public class Summary1v1SlashCommandTest
     @Mock
     private Summary1v1Command cmdd;
 
-    @Mock
-    private SearchService searchService;
-
     private Summary1v1SlashCommand cmd;
 
     @BeforeEach
     public void beforeEach()
     {
-        cmd = new Summary1v1SlashCommand(cmdd, conversionService, searchService);
+        cmd = new Summary1v1SlashCommand(cmdd, conversionService);
     }
 
     @ValueSource(longs = 100L)

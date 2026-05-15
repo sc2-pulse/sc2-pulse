@@ -7,17 +7,12 @@ import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.web.service.SearchService;
-import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.command.ApplicationCommandOption;
 import discord4j.core.object.entity.Message;
-import discord4j.discordjson.json.ApplicationCommandOptionChoiceData;
 import discord4j.discordjson.json.ApplicationCommandOptionData;
 import discord4j.discordjson.json.ImmutableApplicationCommandRequest;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -27,24 +22,21 @@ import reactor.core.publisher.Mono;
 @Component
 @Discord
 public class Summary1v1SlashCommand
-implements SlashCommand, AutoComplete
+implements SlashCommand
 {
 
     private final Summary1v1Command summary1v1Command;
     private final ConversionService conversionService;
-    private final SearchService searchService;
 
     @Autowired
     public Summary1v1SlashCommand
     (
         Summary1v1Command summary1v1Command,
-        @Qualifier("mvcConversionService") ConversionService conversionService,
-        SearchService searchService
+        @Qualifier("mvcConversionService") ConversionService conversionService
     )
     {
         this.summary1v1Command = summary1v1Command;
         this.conversionService = conversionService;
-        this.searchService = searchService;
     }
 
     @Override
@@ -60,7 +52,6 @@ implements SlashCommand, AutoComplete
                 .description("name, btag#123, [clantag], battlenet:://, starcraft2.blizzard.com.")
                 .type(ApplicationCommandOption.Type.STRING.getValue())
                 .required(true)
-                .autocomplete(true)
                 .build())
             .addOption(ApplicationCommandOptionData.builder()
                 .name("region")
@@ -111,20 +102,6 @@ implements SlashCommand, AutoComplete
 
         if(depth < 1 || depth > Summary1v1Command.MAX_LIMITED_DEPTH) depth = Summary1v1Command.MAX_DEPTH;
         return depth;
-    }
-
-    @Override
-    public Iterable<ApplicationCommandOptionChoiceData> autoComplete(ChatInputAutoCompleteEvent evt)
-    {
-        if(!evt.getFocusedOption().getName().equals("name")) evt.respondWithSuggestions(List.of());
-
-        String term = evt.getFocusedOption()
-            .getValue()
-            .map(ApplicationCommandInteractionOptionValue::asString)
-            .orElse("");
-        return searchService.suggestIfQuick(term, AutoComplete.DEFAULT_SUGGESTIONS_SIZE).stream()
-            .map(s->ApplicationCommandOptionChoiceData.builder().name(s).value(s).build())
-            .collect(Collectors.toList());
     }
 
     @Override
