@@ -77,13 +77,6 @@ public class PlayerCharacterReportDAO
     private static final String GET_ALL_QUERY =
         "SELECT " + STD_SELECT + " FROM player_character_report WHERE " + ARCHIVED_FILTER;
 
-    private static final String FIND_BY_ID_CURSOR =
-        "SELECT " + STD_SELECT
-        + "FROM player_character_report "
-        + "WHERE id > :idCursor "
-        + "ORDER BY id ASC "
-        + "LIMIT :limit";
-
     private static final String UPDATE_STATUS_TAIL =
         "report_status_agg AS ("
             + "SELECT player_character_report.id, "
@@ -241,14 +234,6 @@ public class PlayerCharacterReportDAO
     {
         MapSqlParameterSource params = EvidenceDAO.archivedFilterParams(archivedFilter);
         return template.query(GET_ALL_QUERY, params, STD_ROW_MAPPER);
-    }
-
-    public List<PlayerCharacterReport> findByIdCursor(int idCursor, int limit)
-    {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("idCursor", idCursor)
-            .addValue("limit", limit);
-        return template.query(FIND_BY_ID_CURSOR, params, STD_ROW_MAPPER);
     }
 
     public int updateStatus(OffsetDateTime from)

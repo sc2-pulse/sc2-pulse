@@ -93,12 +93,6 @@ public class EvidenceDAO
         + "FROM evidence "
         + "WHERE id = :id "
         + "AND " + ARCHIVED_FILTER;
-    private static final String GET_BY_ID_CURSOR =
-        "SELECT " + STD_SELECT
-        + "FROM evidence "
-        + "WHERE id > :idCursor "
-        + "ORDER BY id ASC "
-        + "LIMIT :limit";
     private static final String GET_BY_REPORT_IDS =
         "SELECT " + STD_SELECT
         + "FROM evidence "
@@ -239,14 +233,6 @@ public class EvidenceDAO
             .addValue("id", id);
         params = archivedFilterParams(params, archivedFilter);
         return Optional.ofNullable(template.query(GET_BY_ID, params, STD_EXTRACTOR));
-    }
-
-    public List<Evidence> findByIdCursor(int idCursor, int limit)
-    {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("idCursor", idCursor)
-            .addValue("limit", limit);
-        return template.query(GET_BY_ID_CURSOR, params, STD_ROW_MAPPER);
     }
 
     public List<Evidence> findByReportIds(Set<Boolean> archivedFilter, Set<Integer> reportIds)
