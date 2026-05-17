@@ -20,7 +20,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.MiscUtil;
@@ -57,9 +56,9 @@ public class Summary1v1Command
         JulianFields.JULIAN_DAY.range().getLargestMinimum() * -1;
     public static final int CONTENT_LENGTH_OFFSET = 250;
     public static final String MESSAGE_WAS_TRIMMED = "*Message has been trimmed*";
-    public static final Map<LadderCharacterDAO.SearchType, Integer> MAX_LINES = Map.of
+    public static final Map<SearchService.SearchType, Integer> MAX_LINES = Map.of
     (
-        LadderCharacterDAO.SearchType.CLAN_TAG, 10
+        SearchService.SearchType.CLAN, 10
     );
     public static final Comparator<TeamHistorySummary<ConvertedTeamHistoryStaticData, ConvertedTeamHistorySummaryData>> SUMMARY_COMPARATOR =
         Comparator.comparing(s->s.summary().ratingLast(), Comparator.reverseOrder());
@@ -208,7 +207,7 @@ public class Summary1v1Command
         @Nullable String additionalDescription
     )
     {
-        LadderCharacterDAO.SearchType searchType = LadderCharacterDAO.SearchType.from(name);
+        SearchService.SearchType searchType = SearchService.SearchType.of(name);
         int maxLines = MAX_LINES.getOrDefault(searchType, DiscordBootstrap.DEFAULT_LINES);
 
         List<LadderTeamMember> characters =
@@ -345,11 +344,11 @@ public class Summary1v1Command
         return sb;
     }
 
-    private static Predicate<LadderDistinctCharacter> generateCharacterFilter(LadderCharacterDAO.SearchType searchType, Region region)
+    private static Predicate<LadderDistinctCharacter> generateCharacterFilter(SearchService.SearchType searchType, Region region)
     {
         Predicate<LadderDistinctCharacter> characterFilter =
             c->region == null || c.getMembers().getCharacter().getRegion() == region;
-        if(searchType != LadderCharacterDAO.SearchType.BATTLE_TAG) characterFilter = characterFilter
+        if(searchType != SearchService.SearchType.BATTLE_TAG) characterFilter = characterFilter
             .and(c->c.getPreviousStats().getRating() != null || c.getCurrentStats().getRating() != null);
         return characterFilter;
     }
