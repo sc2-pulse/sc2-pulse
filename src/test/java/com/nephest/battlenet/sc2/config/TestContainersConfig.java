@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.config;
 
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -20,6 +21,9 @@ import org.testcontainers.utility.MountableFile;
 public class TestContainersConfig
 {
 
+    @Autowired
+    private Network network;
+
     @Bean
     @ServiceConnection
     public PostgreSQLContainer postgreSQLContainer
@@ -30,7 +34,7 @@ public class TestContainersConfig
         return new PostgreSQLContainer(DockerImageName.parse(postgresImageName))
             .withTmpFs(Map.of("/var/lib/postgresql/data", "rw,noexec,nosuid,size=512m"))
             .withInitScript("init-db.sql")
-            .withNetwork(Network.SHARED);
+            .withNetwork(network);
     }
 
     @Bean
@@ -47,7 +51,7 @@ public class TestContainersConfig
                 MountableFile.forClasspathResource("schema-clickhouse.sql"),
                 "/docker-entrypoint-initdb.d/schema.sql"
             )
-            .withNetwork(Network.SHARED);
+            .withNetwork(network);
     }
 
 }

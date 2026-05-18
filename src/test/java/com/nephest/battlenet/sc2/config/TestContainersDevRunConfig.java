@@ -31,6 +31,9 @@ public class TestContainersDevRunConfig
 
     private static final Logger LOG = LoggerFactory.getLogger(TestContainersDevRunConfig.class);
 
+    @Autowired
+    private Network network;
+
     @Bean
     @ServiceConnection
     public PostgreSQLContainer postgreSQLContainer
@@ -41,7 +44,7 @@ public class TestContainersDevRunConfig
     {
         PostgreSQLContainer postgreSQLContainer
             = new PostgreSQLContainer(DockerImageName.parse(postgresImageName))
-            .withNetwork(Network.SHARED)
+            .withNetwork(network)
             .withCopyFileToContainer
             (
                 MountableFile.forClasspathResource("init-db.sql"),
@@ -79,7 +82,7 @@ public class TestContainersDevRunConfig
     {
         ClickHouseContainer clickHouseContainer
             = new ClickHouseContainer(DockerImageName.parse(clickHouseImageName))
-            .withNetwork(Network.SHARED)
+            .withNetwork(network)
             .withCopyFileToContainer
             (
                 MountableFile.forClasspathResource("schema-clickhouse.sql"),

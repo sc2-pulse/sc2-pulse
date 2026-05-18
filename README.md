@@ -89,6 +89,9 @@ To run all the tests execute the following command in a terminal
 mvn verify
 ```
 
+### Common test properties
+`org.testcontainers.network.external.name` external network name
+
 ## Development
 Execute `mvn spring-boot:test-run` command to launch the project in dev mode.
 * Set `spring.profiles.active` app property to `default,dev` + any desired additional profiles.
