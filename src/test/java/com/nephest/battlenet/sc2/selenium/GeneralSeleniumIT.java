@@ -52,6 +52,7 @@ import org.springframework.boot.web.servlet.context.ServletWebServerApplicationC
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.testcontainers.containers.Network;
 import org.testcontainers.selenium.BrowserWebDriverContainer;
 
 @SpringBootTest
@@ -94,14 +95,15 @@ public class GeneralSeleniumIT
         @Autowired ServletWebServerApplicationContext webServerAppCtxt,
         @Value("${org.testcontainers.selenium.image.name}") String seleniumImageName,
         @Value("${org.testcontainers.selenium.headless:#{'true'}}") boolean headless,
-        @Value("${org.testcontainers.host:'host.docker.internal'}") String testContainersHost
+        @Value("${org.testcontainers.host:'host.docker.internal'}") String testContainersHost,
+        @Autowired Network network
     )
     throws Exception
     {
         port = webServerAppCtxt.getWebServer().getPort();
         root = "http://" + testContainersHost + ":" + port;
         BROWSER_CONTAINER
-            = new BrowserWebDriverContainer(seleniumImageName);
+            = new BrowserWebDriverContainer(seleniumImageName).withNetwork(network);
         driver = initDriver(seleniumImageName, headless, testContainersHost, root);
         wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
         js = (JavascriptExecutor) driver;
