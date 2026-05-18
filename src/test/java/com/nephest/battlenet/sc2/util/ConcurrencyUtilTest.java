@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
@@ -74,7 +75,7 @@ class ConcurrencyUtilTest
             ConcurrencyUtil.THREAD_POOL_TASK_EXECUTOR.getThreadNamePrefix()));
         List<Integer> input = IntStream.range(0, 20).boxed().toList();
         int batchSize = 5;
-        List<String> threadNames = new ArrayList<>(4);
+        Collection<String> threadNames = new ConcurrentLinkedQueue<>();
         Function<List<Integer>, Integer> sumTask = batch->
         {
             threadNames.add(Thread.currentThread().getName());
