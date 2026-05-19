@@ -48,7 +48,6 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
@@ -108,9 +107,6 @@ public class DiscordIT
 
     @Autowired
     private AccountDiscordUserDAO accountDiscordUserDAO;
-
-    @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @Autowired
     private DiscordService discordService;
@@ -187,7 +183,6 @@ public class DiscordIT
             BaseLeagueTier.LeagueTierType.FIRST,
             1
         );
-        playerCharacterStatsDAO.mergeCalculate();
         DiscordUser discordUser = new DiscordUser(Snowflake.of(123L), "name", 123);
 
         discordService.linkAccountToNewDiscordUser(2L, discordUser);
@@ -294,7 +289,6 @@ public class DiscordIT
     throws Exception
     {
         accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLE_TAG));
-        playerCharacterStatsDAO.mergeCalculate();
 
         DiscordUser discordUser = new DiscordUser(Snowflake.of(123L), "name", 123);
         discordService.linkAccountToNewDiscordUser(1L, discordUser);

@@ -26,7 +26,6 @@ import com.nephest.battlenet.sc2.model.aligulac.AligulacTest;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
@@ -98,9 +97,6 @@ public class ProPlayerServiceIT
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
 
-    @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
-
     private static Set<SocialMedia> SOCIAL_MEDIA_SERVICES;
 
     @BeforeAll
@@ -126,7 +122,6 @@ public class ProPlayerServiceIT
             TIER_TYPE,
             5
         );
-        playerCharacterStatsDAO.mergeCalculate();
         WebClient revealedWebClient = revealedAPI.getWebClient();
         WebClient aligulacWebClient = aligulacAPI.getWebClient();
         int prevBatchSize = proPlayerService.getAligulacBatchSize();

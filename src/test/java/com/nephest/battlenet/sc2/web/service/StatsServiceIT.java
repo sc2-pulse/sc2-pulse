@@ -120,7 +120,6 @@ public class StatsServiceIT
             null,
             null,
             null,
-            null,
             validator,
             dbExecutorService,
             mock(ClanService.class),

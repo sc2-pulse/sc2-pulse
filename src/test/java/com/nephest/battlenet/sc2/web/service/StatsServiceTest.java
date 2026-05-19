@@ -37,7 +37,6 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
@@ -124,9 +123,6 @@ public class StatsServiceTest
     private LeagueStatsDAO leagueStatsDao;
 
     @Mock
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
-
-    @Mock
     private PopulationStateDAO populationStateDAO;
 
     @Mock
@@ -172,7 +168,6 @@ public class StatsServiceTest
             teamMemberDao,
             queueStatsDAO,
             leagueStatsDao,
-            playerCharacterStatsDAO,
             populationStateDAO,
             varDAO,
             seasonService,

@@ -11,7 +11,6 @@ import com.nephest.battlenet.sc2.model.discord.DiscordIdentity;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
@@ -26,9 +25,6 @@ public class CommonCharacter
 
     @NotNull
     private List<LadderDistinctCharacter> linkedDistinctCharacters;
-
-    @NotNull
-    private List<LadderPlayerCharacterStats> stats;
 
     private LadderProPlayer proPlayer;
 
@@ -51,7 +47,6 @@ public class CommonCharacter
     (
         @NotNull List<LadderTeam> teams,
         @NotNull List<LadderDistinctCharacter> linkedDistinctCharacters,
-        @NotNull List<LadderPlayerCharacterStats> stats,
         LadderProPlayer proPlayer,
         DiscordIdentity discordUser,
         List<LadderMatch> matches,
@@ -61,7 +56,6 @@ public class CommonCharacter
     {
         this.teams = teams;
         this.linkedDistinctCharacters = linkedDistinctCharacters;
-        this.stats = stats;
         this.proPlayer = proPlayer;
         this.discordUser = discordUser;
         this.matches = matches;
@@ -87,16 +81,6 @@ public class CommonCharacter
     public void setLinkedDistinctCharacters(List<LadderDistinctCharacter> linkedDistinctCharacters)
     {
         this.linkedDistinctCharacters = linkedDistinctCharacters;
-    }
-
-    public List<LadderPlayerCharacterStats> getStats()
-    {
-        return stats;
-    }
-
-    public void setStats(List<LadderPlayerCharacterStats> stats)
-    {
-        this.stats = stats;
     }
 
     public LadderProPlayer getProPlayer()

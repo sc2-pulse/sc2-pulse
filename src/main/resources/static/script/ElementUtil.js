@@ -178,62 +178,6 @@ class ElementUtil
         }
     }
 
-    static createPlayerStatsCards(container)
-    {
-        for(const teamFormat of Object.values(TEAM_FORMAT))
-        {
-            for(const teamType of Object.values(TEAM_TYPE))
-            {
-                container.appendChild(ElementUtil.createPlayerStatsCard(teamFormat, teamType));
-            }
-        }
-    }
-
-    static createPlayerStatsCard(teamFormat, teamType)
-    {
-        const card = document.createElement("div");
-        card.classList.add("card", "card-equal", "player-stats-section", "player-stats-dynamic", "mb-3");
-        card.setAttribute("id", "player-stats-" + teamFormat.name + "-" + teamType.name)
-        const cardBody = document.createElement("div");
-        cardBody.classList.add("card-body");
-        card.appendChild(cardBody);
-        const cardHeader = document.createElement("h4");
-        cardHeader.textContent = Util.getTeamFormatAndTeamTypeString(teamFormat, teamType);
-        cardHeader.classList.add("card-title");
-        const table = TableUtil.createTable(["Race", "Best League", "Best MMR", "Total Games", "Last MMR", "Last Games"], true);
-        table.classList.add("player-stats-table");
-        const tableCaption = document.createElement("caption");
-        tableCaption.appendChild(cardHeader);
-        table.querySelector(":scope table").prepend(tableCaption);
-        const tbody = table.getElementsByTagName("tbody")[0];
-        for(const race of Object.values(RACE)) tbody.appendChild(ElementUtil.createPlayerStatsRaceRow(race.name));
-        tbody.appendChild(ElementUtil.createPlayerStatsRaceRow("all"));
-        cardBody.appendChild(table);
-        return card;
-    }
-
-    static createPlayerStatsRaceRow(raceName)
-    {
-        const raceRow = document.createElement("tr");
-        raceRow.classList.add("player-stats-" + raceName, "player-stats-dynamic");
-        const raceRace = TableUtil.createRowTh(raceRow);
-        raceRace.classList.add("player-stats-race", "player-stats-" + raceName + "-race");
-        if(raceName === "all")
-        {
-            raceRace.appendChild(ElementUtil.createNoRaceImage());
-        }
-        else
-        {
-            raceRace.appendChild(ElementUtil.createImage("race/", raceName, "table-image table-image-square"));
-        }
-        raceRow.insertCell().classList.add("player-stats-league", "player-stats-" + raceName + "-league");
-        raceRow.insertCell().classList.add("player-stats-mmr", "player-stats-" + raceName + "-mmr");
-        raceRow.insertCell().classList.add("player-stats-games", "player-stats-" + raceName + "-games");
-        raceRow.insertCell().classList.add("player-stats-mmr", "player-stats-" + raceName + "-mmr-current");
-        raceRow.insertCell().classList.add("player-stats-games", "player-stats-" + raceName + "-games-current");
-        return raceRow;
-    }
-
     static getTabTitle(hash)
     {
         if(hash == null) return "";

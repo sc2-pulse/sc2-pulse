@@ -103,9 +103,6 @@ public class PlayerCharacterReportIT
     private PlayerCharacterReportService reportService;
 
     @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
-
-    @Autowired
     private MatchDAO matchDAO;
 
     @Autowired
@@ -206,7 +203,6 @@ public class PlayerCharacterReportIT
             new MatchParticipant(match.getId(), 5L, BaseMatch.Decision.LOSS)
         ));
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, matchDateTime.minusDays(10));
-        playerCharacterStatsDAO.mergeCalculate();
 
         OffsetDateTime start = SC2Pulse.offsetDateTime();
 
@@ -997,7 +993,6 @@ public class PlayerCharacterReportIT
     {
         //link characters
         template.update("UPDATE player_character SET account_id = 2 WHERE id = 2");
-        playerCharacterStatsDAO.mergeCalculate();
 
         mvc.perform
         (

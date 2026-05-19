@@ -7,7 +7,6 @@ class CharacterUtil
     static setCharacterViewTasks()
     {
         ElementUtil.ELEMENT_TASKS.set("player-stats-characters-tab", e=>CharacterUtil.enqueueUpdateCharacterLinkedCharacters());
-        ElementUtil.ELEMENT_TASKS.set("player-stats-summary-tab", e=>CharacterUtil.enqueueUpdateCharacterStats());
         ElementUtil.ELEMENT_TASKS.set("player-stats-player-tab", e=>CharacterUtil.enqueueUpdateCharacterLinks());
         ElementUtil.ELEMENT_TASKS.set("player-stats-matches-tab", e=>CharacterUtil.enqueueResetNextMatchesView());
         ElementUtil.infiniteScroll(document.querySelector("#player-stats-matches .container-indicator-loading-default"),
@@ -614,104 +613,6 @@ class CharacterUtil
         const additionalContainer = document.querySelector("#player-info-additional-container");
         additionalContainer.querySelectorAll(":scope .player-flag").forEach(f=>f.remove());
         if(member.proNickname) additionalContainer.appendChild(ElementUtil.createProFlag());
-    }
-
-    static resetCharacterStats()
-    {
-        delete Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).stats;
-        for(const statsSection of document.getElementsByClassName("player-stats-dynamic"))
-            statsSection.classList.add("d-none");
-    }
-
-    static enqueueUpdateCharacterStats()
-    {
-        return Session.load(document.querySelector("#player-stats"), n=>CharacterUtil.updateCharacterStats());
-    }
-
-    static updateCharacterStats()
-    {
-        CharacterUtil.resetCharacterStats();
-        const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).members.character.id;
-        return CharacterUtil.updateCharacterStatsModel(id)
-            .then(stats=>{
-                CharacterUtil.updateCharacterStatsView();
-                return {data: stats, status: LOADING_STATUS.COMPLETE};
-            });
-    }
-
-    static getCharacterStats(id)
-    {
-        const request = ROOT_CONTEXT_PATH + "api/character/" + encodeURIComponent(id) + "/stats/full";
-        return Session.beforeRequest()
-            .then(n=>Session.fetch(request))
-            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
-    }
-
-    static updateCharacterStatsModel(id)
-    {
-        return CharacterUtil.getCharacterStats(id)
-            .then(stats=>{
-                Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).stats = stats;
-                return stats;
-            });
-    }
-
-    static updateCharacterStatsView()
-    {
-        for(const statsSection of document.getElementsByClassName("player-stats-dynamic")) statsSection.classList.add("d-none");
-        const searchResult = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).stats;
-        if(!searchResult) return;
-
-        const includePrevious = localStorage.getItem("player-search-stats-include-previous") != "false";
-        const grayOutPrevious = localStorage.getItem("player-search-stats-gray-out-previous") != "false";
-        for(const ladderStats of searchResult)
-        {
-            const stats = ladderStats.stats;
-            const hasCurrentStats = ladderStats.currentStats.rating;
-            const searchStats = includePrevious
-                ? (hasCurrentStats ? ladderStats.currentStats :  ladderStats.previousStats)
-                :  ladderStats.currentStats;
-            const teamFormat = EnumUtil.enumOfId(stats.queueType, TEAM_FORMAT);
-            const teamType = EnumUtil.enumOfId(stats.teamType, TEAM_TYPE);
-            const raceName = stats.race == null ? "all" : EnumUtil.enumOfName(stats.race, RACE).name;
-            const league = EnumUtil.enumOfId(stats.leagueMax, LEAGUE);
-            const card = document.getElementById("player-stats-" + teamFormat.name + "-" + teamType.name);
-            const raceStats = card.getElementsByClassName("player-stats-" + raceName)[0];
-            raceStats.getElementsByClassName("player-stats-" + raceName + "-mmr")[0].textContent = stats.ratingMax;
-            raceStats.getElementsByClassName("player-stats-" + raceName + "-games")[0].textContent = stats.gamesPlayed;
-            CharacterUtil.insertSearchStatsSummary(raceStats.getElementsByClassName("player-stats-" + raceName + "-mmr-current")[0], searchStats.rating, hasCurrentStats, grayOutPrevious);
-            CharacterUtil.insertSearchStatsSummary(raceStats.getElementsByClassName("player-stats-" + raceName + "-games-current")[0], searchStats.gamesPlayed, hasCurrentStats, grayOutPrevious);
-            const leagueStats = raceStats.getElementsByClassName("player-stats-" + raceName + "-league")[0];
-            ElementUtil.removeChildren(leagueStats);
-            leagueStats.appendChild(ElementUtil.createImage("league/", league.name, "table-image table-image-square"));
-            raceStats.classList.remove("d-none");
-            card.classList.remove("d-none");
-        }
-        for(const card of document.querySelectorAll(".player-stats-section:not(.d-none)"))
-        {
-            const table = card.querySelector(".player-stats-table");
-            const visibleRows = table.querySelectorAll("tr.player-stats-dynamic:not(.d-none)");
-            if
-            (
-                visibleRows.length === 2
-                && visibleRows[0].querySelector(".player-stats-games").textContent
-                    == visibleRows[1].querySelector(".player-stats-games").textContent
-            )
-                table.querySelector(".player-stats-all").classList.add("d-none");
-            const gamesCol = table.querySelectorAll("th")[3];
-            const mmrCol = table.querySelectorAll("th")[1];
-            TableUtil.sortTable(table, [mmrCol, gamesCol]);
-        }
-    }
-
-    static insertSearchStatsSummary(elem, data, hasCurrentStats, grayOutPreviousSeason)
-    {
-        if(grayOutPreviousSeason && !hasCurrentStats) {
-            elem.classList.add("text-secondary");
-        } else {
-            elem.classList.remove("text-secondary");
-        }
-        elem.textContent = data;
     }
 
     static enqueueUpdateCharacterMmrHistoryAll()

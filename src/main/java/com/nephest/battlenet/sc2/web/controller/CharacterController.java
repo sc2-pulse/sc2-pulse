@@ -18,7 +18,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
@@ -62,9 +61,6 @@ public class CharacterController
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
-
-    @Autowired
-    private LadderPlayerCharacterStatsDAO ladderPlayerCharacterStatsDAO;
 
     @Autowired
     private LadderSearchDAO ladderSearchDAO;

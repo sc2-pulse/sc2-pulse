@@ -36,7 +36,6 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyId;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -94,9 +93,6 @@ public class ExternalServiceIT
 
     @Autowired
     private PlayerCharacterDAO playerCharacterDAO;
-
-    @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @Autowired
     private PlayerCharacterLinkDAO playerCharacterLinkDAO;
@@ -186,7 +182,6 @@ public class ExternalServiceIT
             TeamLegacyId.trusted("10003"), 1L, 1, 2, 3, 4,
             character2
         );
-        playerCharacterStatsDAO.mergeCalculate();
         expectedResult = new ExternalLinkResolveResult[]
         {
             new ExternalLinkResolveResult

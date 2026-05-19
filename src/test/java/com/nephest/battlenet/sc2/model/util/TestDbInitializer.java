@@ -18,7 +18,6 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
@@ -45,7 +44,6 @@ public class TestDbInitializer
     private final ClanMemberEventDAO clanMemberEventDAO;
     private final LeagueStatsDAO leagueStatsDAO;
     private final QueueStatsDAO queueStatsDAO;
-    private final PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private final SeasonStateDAO seasonStateDAO;
     private final LadderMatchDAO ladderMatchDAO;
     private final MatchParticipantDAO matchParticipantDAO;
@@ -63,7 +61,6 @@ public class TestDbInitializer
         ClanMemberEventDAO clanMemberEventDAO,
         LeagueStatsDAO leagueStatsDAO,
         QueueStatsDAO queueStatsDAO,
-        PlayerCharacterStatsDAO playerCharacterStatsDAO,
         SeasonStateDAO seasonStateDAO,
         LadderMatchDAO ladderMatchDAO,
         MatchParticipantDAO matchParticipantDAO,
@@ -79,7 +76,6 @@ public class TestDbInitializer
         this.clanMemberEventDAO = clanMemberEventDAO;
         this.leagueStatsDAO = leagueStatsDAO;
         this.queueStatsDAO = queueStatsDAO;
-        this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.seasonStateDAO = seasonStateDAO;
         this.ladderMatchDAO = ladderMatchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
@@ -135,7 +131,6 @@ public class TestDbInitializer
         populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         queueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
-        playerCharacterStatsDAO.calculate();
         seasonStateDAO.merge(SeasonGenerator.DEFAULT_SEASON_START.plusMinutes(1),
             SeasonGenerator.DEFAULT_SEASON_ID);
         teamHistoryDAO.trySync();

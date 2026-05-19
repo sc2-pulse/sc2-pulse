@@ -40,8 +40,7 @@ class SC2Restful
                     SC2Restful.afterEnhance(mode);
                     ChartUtil.observeChartables();
                     PaginationUtil.createPaginations();
-                    ElementUtil.createPlayerStatsCards(document.getElementById("player-stats-container"));
-                    HistoryUtil.initActiveTabs();
+HistoryUtil.initActiveTabs();
                     ChartUtil.observeCharts();
                     res();
                 }

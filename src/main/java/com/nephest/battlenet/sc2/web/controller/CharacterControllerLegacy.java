@@ -7,15 +7,10 @@ import static com.nephest.battlenet.sc2.web.service.SearchService.ID_SEARCH_MAX_
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
@@ -24,7 +19,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
@@ -62,9 +56,6 @@ import org.springframework.web.server.ResponseStatusException;
 public class CharacterControllerLegacy
 {
 
-    public static final int SUMMARY_DEPTH_MAX = 120;
-    public static final int SUMMARY_IDS_MAX = 50;
-
     @Autowired
     private LadderSearchDAO ladderSearch;
 
@@ -73,15 +64,6 @@ public class CharacterControllerLegacy
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
-
-    @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
-
-    @Autowired
-    private LadderPlayerCharacterStatsDAO ladderPlayerCharacterStatsDAO;
-
-    @Autowired
-    private PlayerCharacterSummaryDAO playerCharacterSummaryDAO;
 
     @Autowired
     private LadderProPlayerDAO ladderProPlayerDAO;
@@ -166,7 +148,6 @@ public class CharacterControllerLegacy
         (
             ladderSearch.findCharacterTeams(idSet),
             linkedCharacters,
-            ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.findByCharacterIds(idSet).stream().findFirst().orElse(null),
             discordUserDAO
                 .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
@@ -210,7 +191,6 @@ public class CharacterControllerLegacy
         (
             ladderSearch.findCharacterTeams(idSet),
             linkedCharacters,
-            ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.findByCharacterIds(idSet).stream().findFirst().orElse(null),
             discordUserDAO
                 .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
@@ -269,45 +249,6 @@ public class CharacterControllerLegacy
     )
     {
         return ladderSearch.findCharacterTeams(Set.of(id));
-    }
-
-    @GetMapping("/{id}/stats")
-    public List<PlayerCharacterStats> getCharacterStats
-    (
-        @PathVariable("id") long id
-    )
-    {
-        return playerCharacterStatsDAO.findGlobalList(id);
-    }
-
-    @GetMapping("/{id}/stats/full")
-    public ResponseEntity<?> getLadderCharacterStats(@PathVariable("id") long id)
-    {
-        return WebServiceUtil.notFoundIfEmpty(ladderPlayerCharacterStatsDAO.findGlobalList(id));
-    }
-
-    @Hidden
-    @Operation
-    (
-        description = "Max depth is " + SUMMARY_DEPTH_MAX + ", unlimited for single character"
-    )
-    @GetMapping
-    ({
-        "/{ids}/summary/1v1/{depthDays}",
-        "/{ids}/summary/1v1/{depthDays}/{races}"
-    })
-    public List<PlayerCharacterSummary> getCharacterSummaryLegacy
-    (
-        @PathVariable("ids") @Valid @Size(max = SUMMARY_IDS_MAX) Long[] ids,
-        @PathVariable("depthDays") int depth,
-        @PathVariable(name = "races", required = false) Race[] races
-    )
-    {
-        if(ids.length > 1 && depth > SUMMARY_DEPTH_MAX)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Depth is too big, max: " + SUMMARY_DEPTH_MAX);
-        if(races == null) races = Race.EMPTY_RACE_ARRAY;
-
-        return playerCharacterSummaryDAO.find(ids, SC2Pulse.offsetDateTime().minusDays(depth), races);
     }
 
     @Hidden

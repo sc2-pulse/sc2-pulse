@@ -40,7 +40,6 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
@@ -372,7 +371,6 @@ public class StatsService
     private TeamMemberDAO teamMemberDao;
     private QueueStatsDAO queueStatsDAO;
     private LeagueStatsDAO leagueStatsDao;
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private PopulationStateDAO populationStateDAO;
     private VarDAO varDAO;
     private SeasonService seasonService;
@@ -403,7 +401,6 @@ public class StatsService
         TeamMemberDAO teamMemberDao,
         QueueStatsDAO queueStatsDAO,
         LeagueStatsDAO leagueStatsDao,
-        PlayerCharacterStatsDAO playerCharacterStatsDAO,
         PopulationStateDAO populationStateDAO,
         VarDAO varDAO,
         SeasonService seasonService,
@@ -430,7 +427,6 @@ public class StatsService
         this.teamMemberDao = teamMemberDao;
         this.queueStatsDAO = queueStatsDAO;
         this.leagueStatsDao = leagueStatsDao;
-        this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.populationStateDAO = populationStateDAO;
         this.varDAO = varDAO;
         this.seasonService = seasonService;
@@ -521,11 +517,6 @@ public class StatsService
             updateSeason(season, data);
             LOG.info("Updated season {}", season);
         }
-        /*TODO Replace with on the fly aggregations when Clickhouse migration is complete.
-            Currently it's too heavy.
-         */
-        //playerCharacterStatsDAO.mergeCalculate();
-
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.info("Updated all after {} seconds", seconds);
     }
@@ -642,7 +633,6 @@ public class StatsService
         /*TODO Replace with on the fly aggregations when Clickhouse migration is complete.
             Currently it's too heavy.
          */
-        //playerCharacterStatsDAO.mergeCalculate(pendingCharacterIds);
         PlayerCharacter[] characters = pendingCharacters.toArray(PlayerCharacter[]::new);
         eventService.createLadderCharacterActivityEvent(characters);
         LOG.info("Created {} character ladder activity events", characters.length);
