@@ -40,7 +40,7 @@ class SC2Restful
                     SC2Restful.afterEnhance(mode);
                     ChartUtil.observeChartables();
                     PaginationUtil.createPaginations();
-HistoryUtil.initActiveTabs();
+                    HistoryUtil.initActiveTabs();
                     ChartUtil.observeCharts();
                     res();
                 }

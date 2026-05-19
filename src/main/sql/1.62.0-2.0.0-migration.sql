@@ -54,4 +54,4 @@ ORDER BY team_state.timestamp;
 ALTER TABLE evidence ADD COLUMN archived BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE player_character_report ADD COLUMN archived BOOLEAN NOT NULL DEFAULT false;
 
-DROP TABLE IF EXISTS player_character_stats;
+DROP TABLE player_character_stats;

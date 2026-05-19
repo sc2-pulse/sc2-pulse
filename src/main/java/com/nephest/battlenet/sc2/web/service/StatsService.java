@@ -627,12 +627,6 @@ public class StatsService
     {
         if(pendingCharacters.isEmpty()) return;
 
-        Set<Long> pendingCharacterIds = pendingCharacters.stream()
-            .map(PlayerCharacter::getId)
-            .collect(Collectors.toSet());
-        /*TODO Replace with on the fly aggregations when Clickhouse migration is complete.
-            Currently it's too heavy.
-         */
         PlayerCharacter[] characters = pendingCharacters.toArray(PlayerCharacter[]::new);
         eventService.createLadderCharacterActivityEvent(characters);
         LOG.info("Created {} character ladder activity events", characters.length);
