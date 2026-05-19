@@ -679,7 +679,11 @@ public class PlayerCharacterReportIT
         assertEquals(evidenceCountEnd + 3, evidenceDAO.findAll(Set.of(), Set.of()).size());
 
         reportService.update(SC2Pulse.EPOCH_ODT);
-        Set<Integer> visibleEvidenceIds = evidenceDAO.findAll(Set.of(false), Set.of()).stream()
+        LadderPlayerCharacterReport[] reportsFound = getReports();
+        Set<Integer> visibleEvidenceIds = Arrays.stream(reportsFound)
+            .map(LadderPlayerCharacterReport::getEvidence)
+            .flatMap(Collection::stream)
+            .map(LadderEvidence::getEvidence)
             .map(Evidence::getId)
             .collect(Collectors.toSet());
         assertEquals(evidenceCountEnd + 1, visibleEvidenceIds.size());
@@ -687,7 +691,8 @@ public class PlayerCharacterReportIT
         assertFalse(visibleEvidenceIds.contains(expiredUndecidedEvidence.getId()));
         assertTrue(visibleEvidenceIds.contains(expiredConfirmedEvidence.getId()));
 
-        Set<Integer> visibleReportIds = playerCharacterReportDAO.getAll(Set.of(false), Set.of()).stream()
+        Set<Integer> visibleReportIds = Arrays.stream(reportsFound)
+            .map(LadderPlayerCharacterReport::getReport)
             .map(PlayerCharacterReport::getId)
             .collect(Collectors.toSet());
         assertEquals(6, visibleReportIds.size());
