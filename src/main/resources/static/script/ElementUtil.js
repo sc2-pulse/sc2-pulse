@@ -710,6 +710,41 @@ class ElementUtil
         return observer;
     }
 
+    static createSegmentedElementTitle(data, metricName) {
+        let title = data
+            .map(obj => `${obj.name}: ${obj.value} (${obj.percentage.toFixed(1)}%)`)
+            .join(', ');
+        if(metricName != null) title = metricName + ": " + title;
+        return title;
+    }
+
+    static calculateSegmentedElementData(data) {
+        const totalValue = data.reduce((sum, obj) => sum + obj.value, 0);
+        data.forEach(entry => entry.percentage = (entry.value / totalValue) * 100);
+        return {data, totalValue};
+    }
+
+    static createSegmentedBar(data, mainDimension = "width", metricName)
+    {
+        const calculatedData = ElementUtil.calculateSegmentedElementData(data);
+
+        const barWrapper = document.createElement('div');
+        barWrapper.classList.add("bar", "segmented");
+        barWrapper.title = ElementUtil.createSegmentedElementTitle(calculatedData.data, metricName);
+
+        calculatedData.data.forEach(obj => {
+            const segment = document.createElement('div');
+
+            segment.style[mainDimension] = `${obj.percentage}%`;
+            segment.style[mainDimension == "width" ? "height" : "width"] = '100%';
+            segment.style.backgroundColor = obj.color;
+
+            barWrapper.appendChild(segment);
+        });
+
+      return barWrapper;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
