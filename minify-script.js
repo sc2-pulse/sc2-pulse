@@ -15,6 +15,7 @@ const orderedFiles = [
     'TeamLegacyIdEntry.js',
     'TeamLegacyId.js',
     'TeamLegacyUid.js',
+    'CachedLocalStorage.js'
     'Util.js',
     'BootstrapUtil.js',
     'ElementUtil.js',

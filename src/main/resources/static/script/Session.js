@@ -29,6 +29,11 @@ class Session
         return Session.REQUEST_RATE_LIMITER.fetch(url, options);
     }
 
+    static getItem(key)
+    {
+        return Session.CACHED_LOCAL_STORAGE.getItem(key);
+    }
+
     static beforeRequest()
     {
         return Promise.resolve();
@@ -499,6 +504,7 @@ Session.SC2_PULSE_API = new SC2PulseAPI({
     apiVersion: APPLICATION_VERSION,
     errorCodeOnInvalidVersion: Session.INVALID_API_VERSION_CODE
 });
+Session.CACHED_LOCAL_STORAGE = new CachedLocalStorage();
 
 Session.sectionParams = new Map();
 
