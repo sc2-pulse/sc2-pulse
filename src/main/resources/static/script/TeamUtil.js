@@ -301,56 +301,59 @@ class TeamUtil
         }
         return nameContainer;
     }
+    
+    static createNoRaceElem()
+    {
+        const noRaceEntry = document.createElement("span");
+        noRaceEntry.classList.add("race", "none");
+        noRaceEntry.appendChild(ElementUtil.createNoRaceImage());
+        return noRaceEntry;
+    }
 
     static createRacesElem(member)
     {
-        const games = new Map();
-        games.set(RACE.TERRAN, typeof member.terranGamesPlayed === "undefined" ? 0 : member.terranGamesPlayed);
-        games.set(RACE.PROTOSS, typeof member.protossGamesPlayed === "undefined" ? 0 : member.protossGamesPlayed);
-        games.set(RACE.ZERG, typeof member.zergGamesPlayed === "undefined" ? 0 : member.zergGamesPlayed);
-        games.set(RACE.RANDOM, typeof member.randomGamesPlayed === "undefined" ? 0 : member.randomGamesPlayed);
-        let gamesTotal = 0;
-        for(const val of games.values()) gamesTotal += val;
         const racesElem = document.createElement("span");
-        racesElem.classList.add("race-percentage-container", "mr-1", "text-nowrap", "d-inline-block");
-
-        //no favorite race
-        if(gamesTotal == 0)
-        {
-            const percentageEntry = document.createElement("span");
-            percentageEntry.classList.add("race-percentage-entry", "c-divider-slash", "text-secondary");
-            percentageEntry.appendChild(ElementUtil.createNoRaceImage());
-            racesElem.appendChild(percentageEntry);
+        racesElem.classList.add("races", "mr-1", "text-nowrap");
+        if(member.raceGames == null || Object.getOwnPropertyNames(member.raceGames).length == 0) {
+            racesElem.appendChild(TeamUtil.createNoRaceElem());
             return racesElem;
         }
 
-        //races
-        const percentage = new Map();
-        for(const [key, val] of games.entries())
-            if(val != 0) percentage.set(key, Math.round((val / gamesTotal) * 100));
-        const percentageSorted = new Map([...percentage.entries()].sort((a, b)=>b[1] - a[1]));
-        if(percentageSorted.size > 0)
-        {
-            for(const [race, val] of percentageSorted.entries())
-            {
-                if(val == 0) continue;
-                const percentageEntry = document.createElement("span");
-                percentageEntry.classList.add("race-percentage-entry", "c-divider-slash", "text-secondary");
-                percentageEntry.appendChild(ElementUtil.createImage("race/", race.name, "table-image table-image-square"));
-                if(val < 100)
-                {
-                    const racePercent = document.createElement("span");
-                    racePercent.classList.add("race-percentage", "race-percentage-" + race.name, "text-secondary");
-                    racePercent.textContent = val;
-                    percentageEntry.appendChild(racePercent);
-                }
-                racesElem.appendChild(percentageEntry);
-            }
+        const games = new Map(
+            Object.entries(member.raceGames)
+                .filter(([raceFullName, games])=>games > 0)
+                .map(([raceFullName, games])=>[EnumUtil.enumOfFullName(raceFullName, RACE), games])
+        );
+        let gamesTotal = 0;
+        for(const val of games.values()) gamesTotal += val;
+        if(gamesTotal == 0) {
+            racesElem.appendChild(TeamUtil.createNoRaceElem());
+            return racesElem;
         }
-        else
-        {
-            racesElem.appendChild(ElementUtil.createNoRaceImage());
+
+        const favoriteRace = games.entries().next().value[0];
+        const favRaceEntry = document.createElement("span");
+        const favRaceImg = ElementUtil.createImage("race/", favoriteRace.name, "table-image table-image-square");
+        favRaceEntry.classList.add("race", "favorite");
+        favRaceEntry.appendChild(favRaceImg);
+        racesElem.appendChild(favRaceEntry);
+
+        const topPercentage = (games.entries().next().value[1] / gamesTotal) * 100;
+        if(topPercentage <= 75) {
+            const allRaces = ElementUtil.createSegmentedBar(
+                Array.from(
+                    games.entries()
+                        .map(([race, games])=>{return {name: race.name, color: SC2Restful.COLORS.get(race.name), value: games}})
+                ),
+                "height",
+                "Games"
+            );
+            allRaces.classList.add("races");
+            racesElem.title = allRaces.title;
+            favRaceImg.title = allRaces.title;
+            racesElem.appendChild(allRaces);
         }
+
         return racesElem;
     }
 

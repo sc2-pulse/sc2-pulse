@@ -1015,6 +1015,27 @@ th.hoverable span
     content: " | ";
 }
 
+.team-member-info .races:not(.bar)
+{
+    display: inline-flex;
+    height: 2em;
+    width: 1.7em;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 0.2em;
+}
+
+.team-member-info .races.bar.segmented
+{
+    display: inline-flex;
+    flex-direction: column-reverse;
+    width: 100%;
+    max-width: 0.3em;
+    height: 100%;
+    overflow: hidden;
+    gap: 0.1em;
+}
+
 .race-percentage-none
 {
     display: inline-block;
@@ -1785,7 +1806,8 @@ body.modal-open.modal-open-no-popup
     vertical-align: initial;
 }
 
-.stream .team .invisible
+.stream .team .invisible,
+.stream .team .races .races
 {
     display: none !important;
 }
