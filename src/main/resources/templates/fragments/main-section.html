@@ -167,6 +167,31 @@
                     </div>
                 </div>
                 <div class="row mb-3">
+                    <legend class="col-form-label col-sm-2 pt-0">Team UI</legend>
+                    <div>
+                        <div class="form-group col">
+                            <label for="multi-race-main-race-threshold"
+                                   data-feature-timestamp="1779359014000"
+                                   data-feature-timestamp-class="new-content"
+                            >
+                                <span>Multi-race bar<br/>Main race games threshold(max %)</span>
+                                <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
+                                     title="Enables multi-race bar if no more than the specified percentage of games were played on main race. 0: disable, 100: always on."
+                                     data-toggle="tooltip"
+                                />
+                            </label>
+                            <input class="form-control serializable"
+                                   type="number"
+                                   name="multi-race-main-race-threshold"
+                                   id="multi-race-main-race-threshold"
+                                   value="75"
+                                   min="0"
+                                   max="100"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
                     <legend class="col-form-label col-sm-2 pt-0">Cheaters</legend>
                     <div class="col-sm-10">
                         <div class="form-check mb-3">

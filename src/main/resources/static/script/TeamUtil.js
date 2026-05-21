@@ -310,7 +310,7 @@ class TeamUtil
         return noRaceEntry;
     }
 
-    static createRacesElem(member)
+    static createRacesElem(member, multiRaceMainRaceThreshold = Session.getItem("multi-race-main-race-threshold", parseInt) || 75)
     {
         const racesElem = document.createElement("span");
         racesElem.classList.add("races", "mr-1", "text-nowrap");
@@ -339,7 +339,7 @@ class TeamUtil
         racesElem.appendChild(favRaceEntry);
 
         const topPercentage = (games.entries().next().value[1] / gamesTotal) * 100;
-        if(topPercentage <= 75) {
+        if(topPercentage <= multiRaceMainRaceThreshold) {
             const allRaces = ElementUtil.createSegmentedBar(
                 Array.from(
                     games.entries()
