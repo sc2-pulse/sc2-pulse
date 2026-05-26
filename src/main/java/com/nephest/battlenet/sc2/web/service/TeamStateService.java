@@ -4,17 +4,14 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
-import com.nephest.battlenet.sc2.model.local.dao.TeamStateArchiveDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -24,7 +21,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,15 +41,13 @@ public class TeamStateService
 
     private static final Logger LOG = LoggerFactory.getLogger(TeamStateService.class);
 
-    public static final int TEAM_ARCHIVE_BATCH_SIZE = 500;
-    public static final int FINAL_TEAM_STATE_BATCH_SIZE = TEAM_ARCHIVE_BATCH_SIZE;
+    public static final int FINAL_TEAM_STATE_BATCH_SIZE = 500;
     public static final Duration FINAL_TEAM_SNAPSHOT_OFFSET
         = TeamDAO.MIN_DURATION_BETWEEN_SEASONS.dividedBy(2);
 
     private final SeasonDAO seasonDAO;
     private final TeamDAO teamDAO;
     private final TeamStateDAO teamStateDAO;
-    private final TeamStateArchiveDAO teamStateArchiveDAO;
     private final UpdateService updateService;
     private final EventService eventService;
     private final Scheduler defaultScheduler;
@@ -61,8 +55,6 @@ public class TeamStateService
     private int mainLengthDays, secondaryLengthDays;
 
     private final Map<Region, LongVar> lastFinalizedSeason = new EnumMap<>(Region.class);
-    private final Map<Region, LongVar> lastArchiveSeason = new EnumMap<>(Region.class);
-    private InstantVar lastClearInstant;
     private final Sinks.Many<LadderUpdateData> updateEvent = Sinks
         .many().multicast().onBackpressureBuffer(Region.values().length * 4, false);
     private Disposable eventSub;
@@ -73,7 +65,6 @@ public class TeamStateService
         SeasonDAO seasonDAO,
         TeamDAO teamDAO,
         TeamStateDAO teamStateDAO,
-        TeamStateArchiveDAO teamStateArchiveDAO,
         VarDAO varDAO,
         EventService eventService,
         UpdateService updateService,
@@ -86,7 +77,6 @@ public class TeamStateService
         this.seasonDAO = seasonDAO;
         this.teamDAO = teamDAO;
         this.teamStateDAO = teamStateDAO;
-        this.teamStateArchiveDAO = teamStateArchiveDAO;
         this.updateService = updateService;
         this.eventService = eventService;
         this.defaultScheduler = defaultScheduler;
@@ -111,34 +101,11 @@ public class TeamStateService
                     false
                 )
             );
-            lastArchiveSeason.put
-            (
-                region,
-                new LongVar
-                (
-                    varDAO,
-                    region.getId() + ".mmr.history.archive.season",
-                    false
-                )
-            );
         }
-        lastClearInstant = new InstantVar
-        (
-            varDAO,
-            "mmr.history.clear.update.context.timestamp",
-            false
-        );
-
-        Stream.of(lastFinalizedSeason, lastArchiveSeason)
-            .map(Map::values)
-            .flatMap(Collection::stream)
-            .forEach(var->{
-                var.tryLoad();
-                if(var.getValue() == null) var.setValue(0L);
+        lastFinalizedSeason.values().forEach(var->{
+            var.tryLoad();
+            if(var.getValue() == null) var.setValue(0L);
         });
-
-        lastClearInstant.tryLoad();
-        if(lastClearInstant.getValue() == null) lastClearInstant.setValue(Instant.MIN);
     }
 
     protected void subToEvents(Scheduler scheduler)
@@ -168,27 +135,13 @@ public class TeamStateService
 
     protected void reset()
     {
-        Stream.of(lastFinalizedSeason, lastArchiveSeason)
-            .map(Map::values)
-            .flatMap(Collection::stream)
-            .forEach(v->v.setValueAndSave(Long.MIN_VALUE));
-        lastClearInstant.setValueAndSave(Instant.MIN);
+        lastFinalizedSeason.values().forEach(v->v.setValueAndSave(Long.MIN_VALUE));
         subToEvents();
     }
 
     protected Map<Region, LongVar> getLastFinalizedSeasonVars()
     {
         return lastFinalizedSeason;
-    }
-
-    protected Map<Region, LongVar> getLastArchiveSeasonVars()
-    {
-        return lastArchiveSeason;
-    }
-
-    protected InstantVar getLastClearInstantVar()
-    {
-        return lastClearInstant;
     }
 
     public int getMainLengthDays()
@@ -227,7 +180,6 @@ public class TeamStateService
                 Collectors.mapping(entry->entry.getValue().getSeason().getBattlenetId(), Collectors.toSet())
             ));
         takeFinalTeamSnapshots(updates);
-        updateArchive(updates);
         removeExpired();
     }
 
@@ -239,7 +191,6 @@ public class TeamStateService
     )
     {
         updates.forEach((region, seasons) -> {
-            //next after previous archive
             long minSeason = minSeasonFunction.apply(region);
             //not current season
             int maxSeason = seasonDAO.getMaxBattlenetId(region) - 1;
@@ -286,53 +237,12 @@ public class TeamStateService
         LOG.info("Created final team states: {} {}", region, season);
     }
 
-    private void updateArchive(Map<Region, Set<Integer>> updates)
-    {
-        processUpdates
-        (
-            updates,
-            r->lastArchiveSeason.get(r).getValue().intValue() + 1,
-            (region, season)->service.updateArchive(region, season)
-        );
-    }
-
-    @Transactional
-    public void updateArchive(Region region, int season)
-    {
-        List<Long> teamIds = teamDAO.findIds(region, season);
-        if(teamIds.isEmpty())
-        {
-            lastArchiveSeason.get(region).setValueAndSave((long) season);
-            return;
-        }
-
-        for(int i = 0; i < teamIds.size(); )
-        {
-            LOG.trace("Team state archive {} {} progress: {}/{}", region, season, i, teamIds.size());
-            int nextIx = Math.min(i + TEAM_ARCHIVE_BATCH_SIZE, teamIds.size());
-            teamStateArchiveDAO.archive(Set.copyOf(teamIds.subList(i, nextIx)));
-            i = nextIx;
-        }
-        lastArchiveSeason.get(region).setValueAndSave((long) season);
-        LOG.info("Archived team states: {} {}", region, season);
-    }
-
     private int removeExpired()
     {
-        UpdateContext ctx = updateService.getUpdateContext(null);
-        if(ctx == null) return 0;
-
-        Instant currentUpdateContext = ctx.getExternalUpdate();
-        if(currentUpdateContext == null) currentUpdateContext = Instant.MIN;
-        Duration offset = Duration.between(lastClearInstant.getValue(), currentUpdateContext);
-        if(offset.isZero()) return 0;
-
         OffsetDateTime now = SC2Pulse.offsetDateTime();
         int removedMain = teamStateDAO.remove
         (
-            lastClearInstant.getValue() == Instant.MIN
-                ? OffsetDateTime.MIN
-                : now.minusDays(getMainLengthDays()).minus(offset),
+            OffsetDateTime.MIN,
             now.minusDays(getMainLengthDays()),
             true
         );
@@ -340,15 +250,12 @@ public class TeamStateService
 
         int removedSecondary = teamStateDAO.remove
         (
-            lastClearInstant.getValue() == Instant.MIN
-                ? OffsetDateTime.MIN
-                : now.minusDays(getSecondaryLengthDays()).minus(offset),
+            OffsetDateTime.MIN,
             now.minusDays(getSecondaryLengthDays()),
             false
         );
         if(removedSecondary > 0) LOG.info("Removed {} secondary team states", removedSecondary);
 
-        lastClearInstant.setValueAndSave(currentUpdateContext);
         return removedMain + removedSecondary;
     }
 

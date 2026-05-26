@@ -74,19 +74,9 @@ public class TeamStateDAO
         + "WHERE team.id IN(:teamIds)";
 
     public static final String REMOVE_EXPIRED_TEMPLATE = """
-        WITH delete_filter AS
-        (
-            SELECT team_id, timestamp
-            FROM team_state
-            LEFT JOIN team_state_archive USING(team_id, timestamp)
-            WHERE timestamp >= :from AND timestamp < :to
-            %1$s
-            AND team_state_archive.team_id IS NULL
-        )
-            DELETE FROM team_state
-            USING delete_filter
-            WHERE team_state.team_id = delete_filter.team_id
-                AND team_state.timestamp = delete_filter.timestamp
+        DELETE FROM team_state
+        WHERE timestamp >= :from AND timestamp < :to
+        %1$s
         """;
     private static final String REMOVE_EXPIRED_MAIN_QUERY = REMOVE_EXPIRED_TEMPLATE.formatted("");
     private static final String REMOVE_EXPIRED_SECONDARY_QUERY =

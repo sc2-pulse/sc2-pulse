@@ -55,3 +55,7 @@ ALTER TABLE evidence ADD COLUMN archived BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE player_character_report ADD COLUMN archived BOOLEAN NOT NULL DEFAULT false;
 
 DROP TABLE player_character_stats;
+
+DROP TABLE team_state_archive;
+DELETE FROM var WHERE key LIKE '%.mmr.history.archive.season'
+    OR key = 'mmr.history.clear.update.context.timestamp';

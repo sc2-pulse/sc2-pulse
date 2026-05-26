@@ -749,19 +749,6 @@ CREATE TABLE "team_state"
 CREATE INDEX "ix_team_state_timestamp" ON "team_state"("timestamp");
 CREATE INDEX "ix_team_state_secondary_timestamp" ON "team_state"("secondary", "timestamp") WHERE "secondary" = true;
 
-CREATE TABLE team_state_archive
-(
-    "team_id" BIGINT NOT NULL,
-    "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL,
-
-    PRIMARY KEY ("team_id", "timestamp"),
-
-    CONSTRAINT "fk_team_state_archive_team_id_timestamp"
-        FOREIGN KEY ("team_id", "timestamp")
-        REFERENCES "team_state"("team_id", "timestamp")
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 CREATE TABLE "queue_stats"
 (
     "id" BIGSERIAL,
