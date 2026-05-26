@@ -17,7 +17,7 @@ public class LadderEvidence
     @NotNull
     private final List<LadderEvidenceVote> votes;
 
-    private final Account reporterAccount;
+    private Account reporterAccount;
 
     public LadderEvidence(Evidence evidence, List<LadderEvidenceVote> votes, Account reporterAccount)
     {
@@ -39,6 +39,11 @@ public class LadderEvidence
     public Account getReporterAccount()
     {
         return reporterAccount;
+    }
+
+    public void setReporterAccount(Account reporterAccount)
+    {
+        this.reporterAccount = reporterAccount;
     }
 
 }

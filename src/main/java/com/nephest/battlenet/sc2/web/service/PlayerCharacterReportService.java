@@ -218,10 +218,15 @@ public class PlayerCharacterReportService
         reports.stream()
             .map(LadderPlayerCharacterReport::getEvidence)
             .flatMap(Collection::stream)
-            .map(LadderEvidence::getVotes)
-            .flatMap(Collection::stream)
             .forEach(PlayerCharacterReportService::clearSensitiveData);
         return reports;
+    }
+
+    public static void clearSensitiveData(LadderEvidence evidence)
+    {
+        evidence.getEvidence().setReporterAccountId(null);
+        evidence.setReporterAccount(null);
+        evidence.getVotes().forEach(PlayerCharacterReportService::clearSensitiveData);
     }
 
     public static void clearSensitiveData(LadderEvidenceVote vote)

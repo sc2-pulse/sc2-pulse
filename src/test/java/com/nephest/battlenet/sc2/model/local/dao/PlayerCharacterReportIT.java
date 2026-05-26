@@ -979,20 +979,25 @@ public class PlayerCharacterReportIT
 
         evidenceVoteDAO.merge(new EvidenceVote(1, SC2Pulse.offsetDateTime(), 10L, true, SC2Pulse.offsetDateTime()));
         setReportAndEvidenceStatus(PlayerCharacterReport.Status.CONFIRMED);
-        LadderEvidenceVote voteAll = getReports()[0].getEvidence().get(0).getVotes().get(0);
+        LadderEvidence evidenceAll = getReports()[0].getEvidence().get(0);
+        LadderEvidenceVote voteAll = evidenceAll.getVotes().get(0);
         assertNull(voteAll.getVoterAccount());
         assertNull(voteAll.getVote().getVoterAccountId());
+        assertNull(evidenceAll.getReporterAccount());
+        assertNull(evidenceAll.getEvidence().getReporterAccountId());
 
-        LadderEvidenceVote voteById = WebServiceTestUtil.getObject
+        LadderEvidence evidenceById = WebServiceTestUtil.getObject
         (
             mvc, objectMapper, LadderPlayerCharacterReport[].class,
             "/api/character/report/list/5"
         )
             [0]
-            .getEvidence().get(0)
-            .getVotes().get(0);
+            .getEvidence().get(0);
+        LadderEvidenceVote voteById = evidenceById.getVotes().get(0);
         assertNull(voteById.getVoterAccount());
         assertNull(voteById.getVote().getVoterAccountId());
+        assertNull(evidenceById.getReporterAccount());
+        assertNull(evidenceById.getEvidence().getReporterAccountId());
     }
 
     private void setReportAndEvidenceStatus(PlayerCharacterReport.Status status)
