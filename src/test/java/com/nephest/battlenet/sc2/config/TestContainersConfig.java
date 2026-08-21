@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.config;
 
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -13,8 +14,6 @@ import org.springframework.context.annotation.Import;
 import org.testcontainers.clickhouse.ClickHouseContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.utility.MountableFile;
 
 @TestConfiguration(proxyBeanMethods = false)
 @Import({TestContainersCommonConfig.class})
@@ -31,10 +30,9 @@ public class TestContainersConfig
         @Value("${org.testcontainers.postgres.image.name}") String postgresImageName
     )
     {
-        return new PostgreSQLContainer(DockerImageName.parse(postgresImageName))
-            .withTmpFs(Map.of("/var/lib/postgresql/data", "rw,noexec,nosuid,size=512m"))
-            .withInitScript("init-db.sql")
-            .withNetwork(network);
+        return TestContainersUtil
+            .createPostgreSQLContainer(postgresImageName, network)
+            .withTmpFs(Map.of("/var/lib/postgresql/data", "rw,noexec,nosuid,size=512m"));
     }
 
     @Bean
@@ -44,14 +42,9 @@ public class TestContainersConfig
         @Value("${org.testcontainers.clickhouse.image.name}") String clickHouseImageName
     )
     {
-        return new ClickHouseContainer(clickHouseImageName)
-            .withTmpFs(Map.of("/var/lib/clickhouse", "rw,noexec,nosuid,size=512m"))
-            .withCopyFileToContainer
-            (
-                MountableFile.forClasspathResource("schema-clickhouse.sql"),
-                "/docker-entrypoint-initdb.d/schema.sql"
-            )
-            .withNetwork(network);
+        return TestContainersUtil
+            .createClickHouseContainer(clickHouseImageName, network)
+            .withTmpFs(Map.of("/var/lib/clickhouse", "rw,noexec,nosuid,size=512m"));
     }
 
 }

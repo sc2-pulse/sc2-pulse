@@ -21,8 +21,6 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.utility.MountableFile;
 
 @TestConfiguration(proxyBeanMethods = false)
 @Import({TestContainersCommonConfig.class})
@@ -42,19 +40,9 @@ public class TestContainersDevRunConfig
         @Value("${org.testcontainers.dev.postgres.volume.name:#{null}}") String volumeName
     )
     {
-        PostgreSQLContainer postgreSQLContainer
-            = new PostgreSQLContainer(DockerImageName.parse(postgresImageName))
-            .withNetwork(network)
-            .withCopyFileToContainer
-            (
-                MountableFile.forClasspathResource("init-db.sql"),
-                "/docker-entrypoint-initdb.d/init-db.sql"
-            )
-            .withCopyFileToContainer
-            (
-                MountableFile.forClasspathResource("schema-postgres.sql"),
-                "/docker-entrypoint-initdb.d/schema.sql"
-            );
+        PostgreSQLContainer postgreSQLContainer = TestContainersUtil
+            .createPostgreSQLContainer(postgresImageName, network);
+        
         if(volumeName != null)
         {
             LOG.info("Using {} postgres volume", volumeName);
@@ -80,14 +68,8 @@ public class TestContainersDevRunConfig
         @Value("${org.testcontainers.dev.clickhouse.volume.name:#{null}}") String volumeName
     )
     {
-        ClickHouseContainer clickHouseContainer
-            = new ClickHouseContainer(DockerImageName.parse(clickHouseImageName))
-            .withNetwork(network)
-            .withCopyFileToContainer
-            (
-                MountableFile.forClasspathResource("schema-clickhouse.sql"),
-                "/docker-entrypoint-initdb.d/schema.sql"
-            );
+        ClickHouseContainer clickHouseContainer = TestContainersUtil
+            .createClickHouseContainer(clickHouseImageName, network);
         if(volumeName != null)
         {
             LOG.info("Using {} clickhouse volume", volumeName);
