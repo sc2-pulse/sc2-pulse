@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.config;
 
+import java.nio.file.Paths;
+
 import org.testcontainers.clickhouse.ClickHouseContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -31,7 +33,8 @@ public final class TestContainersUtil
                 MountableFile.forClasspathResource("schema-postgres.sql"),
                 "/docker-entrypoint-initdb.d/schema.sql"
             )
-            .withNetwork(network);
+            .withNetwork(network)
+            .withCommand("-c", "max_wal_size=96MB");
     }
 
     public static ClickHouseContainer createClickHouseContainer
@@ -45,6 +48,20 @@ public final class TestContainersUtil
             (
                 MountableFile.forClasspathResource("schema-clickhouse.sql"),
                 "/docker-entrypoint-initdb.d/schema.sql"
+            )
+            .withCopyFileToContainer
+            (
+                MountableFile.forHostPath
+                (
+                    Paths.get
+                    (
+                        System.getProperty("user.dir"),
+                        "containers",
+                        "clickhouse",
+                        "clickhouse.xml"
+                    )
+                ),
+                "/etc/clickhouse-server/config.d/sc2pulse.xml"
             )
             .withNetwork(network);
     }
