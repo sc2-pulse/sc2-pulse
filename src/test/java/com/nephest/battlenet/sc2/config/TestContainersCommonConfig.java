@@ -20,7 +20,7 @@ public class TestContainersCommonConfig
     {
         return new ContainerInfo
         (
-            postgreSQLContainer.getNetworkAliases().get(0),
+            TestContainersUtil.getSanitizedContainerName(postgreSQLContainer),
             postgreSQLContainer.getExposedPorts().get(0)
         );
     }

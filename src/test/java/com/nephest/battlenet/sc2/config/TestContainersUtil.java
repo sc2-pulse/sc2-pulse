@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.config;
 import java.nio.file.Paths;
 
 import org.testcontainers.clickhouse.ClickHouseContainer;
+import org.testcontainers.containers.Container;
 import org.testcontainers.containers.Network;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -68,6 +69,24 @@ public final class TestContainersUtil
             )
             .withNetwork(network)
             .withReuse(reuse);
+    }
+
+    public static String sanitizeContainerName(String name)
+    {
+        if(name.startsWith("/"))
+        {
+            if(name.length() == 1)
+                throw new IllegalArgumentException("Invalid container name: " + name);
+
+            return name.substring(1);
+        } 
+
+        return name;
+    }
+
+    public static String getSanitizedContainerName(Container<?> container)
+    {
+        return sanitizeContainerName(container.getContainerName());
     }
 
 }
