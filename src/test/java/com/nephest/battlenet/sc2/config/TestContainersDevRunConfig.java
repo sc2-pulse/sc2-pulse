@@ -32,6 +32,9 @@ public class TestContainersDevRunConfig
     @Autowired
     private Network network;
 
+    @Value("${org.testcontainers.dev.reuse.enable:false}") 
+    private boolean reuse;
+
     @Bean
     @ServiceConnection
     public PostgreSQLContainer postgreSQLContainer
@@ -41,7 +44,7 @@ public class TestContainersDevRunConfig
     )
     {
         PostgreSQLContainer postgreSQLContainer = TestContainersUtil
-            .createPostgreSQLContainer(postgresImageName, network);
+            .createPostgreSQLContainer(postgresImageName, network, reuse);
         
         if(volumeName != null)
         {
@@ -69,7 +72,7 @@ public class TestContainersDevRunConfig
     )
     {
         ClickHouseContainer clickHouseContainer = TestContainersUtil
-            .createClickHouseContainer(clickHouseImageName, network);
+            .createClickHouseContainer(clickHouseImageName, network, reuse);
         if(volumeName != null)
         {
             LOG.info("Using {} clickhouse volume", volumeName);
@@ -114,8 +117,18 @@ public class TestContainersDevRunConfig
     {
         return args->
         {
-            LOG.info("Setting up test DB");
-            testDbInitializer.setupData();
+            if(testDbInitializer.isTopEntityInitialized())
+            {
+                if(!reuse) throw new IllegalStateException
+                    ("Testcontainers reuse is disabled and DB is not empty");
+                
+                LOG.info("Reusing existing test DB");
+            }
+            else
+            {
+                LOG.info("Setting up test DB");
+                testDbInitializer.setupData();
+            }
         };
     }
 

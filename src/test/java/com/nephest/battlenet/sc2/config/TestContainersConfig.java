@@ -23,6 +23,9 @@ public class TestContainersConfig
     @Autowired
     private Network network;
 
+    @Value("${org.testcontainers.test.reuse.enable:false}") 
+    private boolean reuse;
+
     @Bean
     @ServiceConnection
     public PostgreSQLContainer postgreSQLContainer
@@ -31,7 +34,7 @@ public class TestContainersConfig
     )
     {
         return TestContainersUtil
-            .createPostgreSQLContainer(postgresImageName, network)
+            .createPostgreSQLContainer(postgresImageName, network, reuse)
             .withTmpFs(Map.of("/var/lib/postgresql/data", "rw,noexec,nosuid,size=512m"));
     }
 
@@ -43,7 +46,7 @@ public class TestContainersConfig
     )
     {
         return TestContainersUtil
-            .createClickHouseContainer(clickHouseImageName, network)
+            .createClickHouseContainer(clickHouseImageName, network, reuse)
             .withTmpFs(Map.of("/var/lib/clickhouse", "rw,noexec,nosuid,size=512m"));
     }
 

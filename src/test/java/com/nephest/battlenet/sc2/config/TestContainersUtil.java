@@ -19,7 +19,8 @@ public final class TestContainersUtil
     public static PostgreSQLContainer createPostgreSQLContainer
     (
         String imageName,
-        Network network
+        Network network,
+        boolean reuse
     )
     {
         return new PostgreSQLContainer(DockerImageName.parse(imageName))
@@ -34,13 +35,15 @@ public final class TestContainersUtil
                 "/docker-entrypoint-initdb.d/schema.sql"
             )
             .withNetwork(network)
+            .withReuse(reuse)
             .withCommand("-c", "max_wal_size=96MB");
     }
 
     public static ClickHouseContainer createClickHouseContainer
     (
         String imageName,
-        Network network
+        Network network,
+        boolean reuse
     )
     {
         return new ClickHouseContainer(imageName)
@@ -63,7 +66,8 @@ public final class TestContainersUtil
                 ),
                 "/etc/clickhouse-server/config.d/sc2pulse.xml"
             )
-            .withNetwork(network);
+            .withNetwork(network)
+            .withReuse(reuse);
     }
 
 }

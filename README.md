@@ -91,6 +91,7 @@ mvn verify
 
 ### Common test properties
 `org.testcontainers.network.external.name` external network name
+`org.testcontainers.test.reuse.enable` reuse created devcontainers
 
 ## Development
 Execute `mvn spring-boot:test-run` command to launch the project in dev mode.
@@ -101,6 +102,8 @@ properties: `org.testcontainers.dev.postgres.volume.name=volume-name`,
 `org.testcontainers.dev.clickhouse.volume.name=volume-name`
 * By default, the HTTP server uses a random free port which is displayed in the log. You can use the
 `org.testcontainers.dev.http.server.port` app property to pin the port if needed.
+* You can set `org.testcontainers.dev.reuse.enable` app property to reuse
+devcontainers.
 
 ### Misc
 Use [DB init script](src/main/resources/schema-postgres.sql) to create a fresh DB.
