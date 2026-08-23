@@ -20,6 +20,7 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
@@ -38,6 +39,7 @@ public class TestDbInitializer
 {
 
     private final SeasonGenerator seasonGenerator;
+    private final SeasonDAO seasonDAO;
     private final TeamDAO teamDAO;
     private final ClanDAO clanDAO;
     private final ClanMemberDAO clanMemberDAO;
@@ -55,6 +57,7 @@ public class TestDbInitializer
     public TestDbInitializer
     (
         SeasonGenerator seasonGenerator,
+        SeasonDAO seasonDAO,
         TeamDAO teamDAO,
         ClanDAO clanDAO,
         ClanMemberDAO clanMemberDAO,
@@ -70,6 +73,7 @@ public class TestDbInitializer
     )
     {
         this.seasonGenerator = seasonGenerator;
+        this.seasonDAO = seasonDAO;
         this.teamDAO = teamDAO;
         this.clanDAO = clanDAO;
         this.clanMemberDAO = clanMemberDAO;
@@ -148,6 +152,12 @@ public class TestDbInitializer
                 id, clan.getId(), ClanMemberEvent.EventType.JOIN, SC2Pulse.offsetDateTime()))
             .collect(Collectors.toSet());
         clanMemberEventDAO.merge(cme);
+    }
+
+    public boolean isTopEntityInitialized()
+    {
+        return seasonDAO.find(Region.EU, SeasonGenerator.DEFAULT_SEASON_ID)
+            .isPresent();
     }
 
 }
