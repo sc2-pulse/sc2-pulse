@@ -20,6 +20,7 @@ import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,23 @@ public class JacksonSerializationIT
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Test
+    public void testBigDecimalSerialization()
+    throws JsonProcessingException
+    {
+        BigDecimal src = new BigDecimal("1E+20");
+
+        String str = objectMapper.writeValueAsString(src);
+
+        //plain string, no scientific notation
+        assertEquals("\"100000000000000000000\"", str);
+        assertEquals
+        (
+            0,
+            src.compareTo(objectMapper.readValue(str, BigDecimal.class))
+        );
+    }
 
     @Test
     public void testLadderTeamStateArraySerialization()
