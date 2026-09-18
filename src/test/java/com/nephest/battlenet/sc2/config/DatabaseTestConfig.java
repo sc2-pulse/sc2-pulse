@@ -3,12 +3,12 @@
 
 package com.nephest.battlenet.sc2.config;
 
+import com.nephest.battlenet.RootAutoConfigurationTestConfig;
 import com.nephest.battlenet.sc2.config.data.DataConfig;
 import com.nephest.battlenet.sc2.model.local.DBTestService;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.util.TestDatabaseLifecycleService;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @EnableTransactionManagement
 @EnableBatchProcessing
-@EnableAutoConfiguration
 @ComponentScan
 (
     basePackages = {"com.nephest.battlenet.sc2"},
@@ -30,7 +29,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TestDatabaseLifecycleService.class)
     }
 )
-@Import({CoreTestConfig.class, DataConfig.class, CommonBeanConfig.class})
+@Import
+({
+    RootAutoConfigurationTestConfig.class,
+    CoreTestConfig.class, 
+    DataConfig.class,
+    CommonBeanConfig.class
+})
 public class DatabaseTestConfig
 {
 }

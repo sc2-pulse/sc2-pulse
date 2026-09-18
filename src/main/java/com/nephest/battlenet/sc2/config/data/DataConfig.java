@@ -23,8 +23,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 public class DataConfig
@@ -46,12 +44,6 @@ public class DataConfig
             props.put(CONTAINER_PORT, postgreSQLContainerInfo.port());
         }
         return props;
-    }
-
-    @Bean
-    public PlatformTransactionManager transactionManager(DataSource dataSource)
-    {
-        return new DataSourceTransactionManager(dataSource);
     }
 
     @Bean

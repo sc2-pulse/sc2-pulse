@@ -3,9 +3,9 @@
 
 package com.nephest.battlenet.sc2.config;
 
+import com.nephest.battlenet.RootAutoConfigurationTestConfig;
 import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.Startup;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 @EnableRetry
 @EnableScheduling
-@EnableAutoConfiguration
 @ComponentScan
 (
     basePackages = {"com.nephest.battlenet.sc2"},
@@ -29,6 +28,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ANNOTATION, value = TestConfiguration.class)
     }
 )
-@Import(CoreTestConfig.class)
+@Import({RootAutoConfigurationTestConfig.class, CoreTestConfig.class})
 public class AllTestConfig
 {}

@@ -40,6 +40,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -209,7 +210,7 @@ public class SeasonStructureIT
     {
         assertThrows
         (
-            IllegalArgumentException.class,
+            InvalidDataAccessApiUsageException.class,
             ()->leagueDAO.find(Set.of(), queues, teamType, leagueTypes),
             "Missing seasonIds"
         );
@@ -255,7 +256,7 @@ public class SeasonStructureIT
     {
         assertThrows
         (
-            IllegalArgumentException.class,
+            InvalidDataAccessApiUsageException.class,
             ()->leagueTierDAO.find(Set.of(), EnumSet.of(FIRST)),
             "Missing leagueIds"
         );

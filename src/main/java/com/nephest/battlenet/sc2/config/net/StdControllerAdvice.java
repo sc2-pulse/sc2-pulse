@@ -4,6 +4,8 @@
 package com.nephest.battlenet.sc2.config.net;
 
 import jakarta.validation.ValidationException;
+
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,7 +20,11 @@ public class StdControllerAdvice
 extends ResponseEntityExceptionHandler
 {
 
-    @ExceptionHandler({IllegalArgumentException.class})
+    @ExceptionHandler
+    ({
+        IllegalArgumentException.class,
+        InvalidDataAccessApiUsageException.class
+    })
     protected ResponseEntity<Object> handleBadArgument(RuntimeException ex, WebRequest request)
     {
         String bodyOfResponse = "Invalid argument";
