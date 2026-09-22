@@ -16,10 +16,13 @@ import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.AnonymousDonation;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.Donation;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DonationRepository;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
@@ -29,7 +32,9 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
+import com.nephest.battlenet.sc2.model.navigation.CursorType;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
+import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.web.service.SC2MetaService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
@@ -47,6 +52,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -92,6 +99,34 @@ public class MiscController
 
     @Autowired
     private CommunityService communityService;
+
+    @Autowired
+    private DonationRepository donationRepository;
+
+    @GetMapping("/donations")
+    public CursorNavigableResult<List<AnonymousDonation>> getDonations
+    (
+        @RequestParam(defaultValue = "-created")
+        @AllowedField("created")
+        Sort sort,
+        @CursorType(Donation.class) KeysetScrollPosition cursor,
+        @RequestParam(defaultValue = "50")
+        @Min(1) @Max(100)
+        int limit
+    )
+    {
+        return CursorNavigableResult.wrap
+        (
+            donationRepository.findAllBy
+            (
+                sort,
+                cursor,
+                Limit.of(limit),
+                AnonymousDonation.class
+            ),
+            cursor.isInitial()
+        );
+    }
 
     @GetMapping("/seasons")
     public List<Season> getSeasons

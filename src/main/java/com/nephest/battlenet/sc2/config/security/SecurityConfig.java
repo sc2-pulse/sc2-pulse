@@ -82,6 +82,7 @@ public class SecurityConfig
                 )
                 .invalidSessionStrategy(resetSessionStrategy))
             .csrf(csrf->csrf
+                .ignoringRequestMatchers("/webhooks/**")
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
             .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)

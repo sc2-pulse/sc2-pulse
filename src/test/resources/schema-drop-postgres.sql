@@ -2,6 +2,8 @@ DROP TYPE IF EXISTS "player_character_summary" CASCADE;
 DROP TYPE IF EXISTS "league_tier_type" CASCADE;
 DROP FUNCTION IF EXISTS "get_player_character_summary" CASCADE;
 DROP FUNCTION IF EXISTS "get_top_percentage_league_lotv" CASCADE;
+DROP TABLE IF EXISTS "patreon_donation_state" CASCADE;
+DROP TABLE IF EXISTS "donation" CASCADE;
 DROP TABLE IF EXISTS "patch_release" CASCADE;
 DROP TABLE IF EXISTS "patch" CASCADE;
 DROP TABLE IF EXISTS "notification" CASCADE;
