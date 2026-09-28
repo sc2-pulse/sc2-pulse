@@ -3,17 +3,32 @@
 
 package com.nephest.battlenet.sc2.model;
 
+import org.springframework.data.domain.Sort;
+
 public enum SortingOrder
 {
 
-    ASC("ASC"),
-    DESC("DESC");
+    ASC(Sort.Direction.ASC, "ASC"),
+    DESC(Sort.Direction.DESC, "DESC");
 
+    private final Sort.Direction sortDirection;
     private final String sqlKeyword;
 
-    SortingOrder(String sqlKeyword)
+    SortingOrder(Sort.Direction sortDirection, String sqlKeyword)
     {
+        this.sortDirection = sortDirection;
         this.sqlKeyword = sqlKeyword;
+    }
+
+    public static SortingOrder from(Sort.Direction sortDirection)
+    {
+        return switch (sortDirection)
+        {
+            case ASC -> ASC;
+            case DESC -> DESC;
+            default -> throw new IllegalArgumentException
+            ("Unsupported sort direction: " + sortDirection);
+        };
     }
 
     public String getSqlKeyword()
@@ -24,6 +39,11 @@ public enum SortingOrder
     public SortingOrder reverse()
     {
         return this == ASC ? DESC : ASC;
+    }
+
+    public Sort.Direction toSortDirection()
+    {
+        return this.sortDirection;
     }
 
 }

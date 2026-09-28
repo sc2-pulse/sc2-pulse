@@ -12,13 +12,12 @@ import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
-import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,6 +33,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -153,11 +154,15 @@ public class HtmlUrlParameterRedirectFilterIT
     public void testLadderCursorRedirection
     (
         int count,
-        NavigationDirection direction
+        ScrollPosition.Direction direction
     )
     throws Exception
     {
-        Cursor cursor = new Cursor(LadderSearchDAO.createTeamCursorPosition(1L, 2L), direction);
+        KeysetScrollPosition cursor = ScrollPosition.of
+        (
+            LadderSearchDAO.createTeamCursorPosition(1L, 2L),
+            direction
+        );
         mvc.perform
         (
             get("/").queryParam("type", "ladder")
@@ -174,7 +179,9 @@ public class HtmlUrlParameterRedirectFilterIT
                     Matchers.containsString("type=ladder"),
                     Matchers.containsString
                     (
-                        direction.getRelativePosition() + "="
+                        NavigationDirection.from(direction)
+                                .getRelativePosition()
+                            + "="
                             + mvcConversionService.convert(cursor, String.class)
                     ),
                     Matchers.not(Matchers.containsString("ratingAnchor")),
@@ -193,11 +200,16 @@ public class HtmlUrlParameterRedirectFilterIT
     public void testClanCursorRedirection
     (
         int pageDiff,
-        NavigationDirection direction
+        ScrollPosition.Direction direction
     )
     throws Exception
     {
-        Cursor cursor = new Cursor(ClanDAO.createCursorPosition(1.53D, 2L), direction);
+        KeysetScrollPosition cursor = ScrollPosition.of
+        (
+            Map.of("activeMembersMin", 1.53D, "id", 2L),
+            direction
+        );
+
         mvc.perform
         (
             get("/").queryParam("type", "clan-search")
@@ -214,7 +226,9 @@ public class HtmlUrlParameterRedirectFilterIT
                     Matchers.containsString("type=clan-search"),
                     Matchers.containsString
                     (
-                        direction.getRelativePosition() + "="
+                        NavigationDirection.from(direction)
+                                .getRelativePosition()
+                            + "="
                             + mvcConversionService.convert(cursor, String.class)
                     ),
                     Matchers.not(Matchers.containsString("cursorValue")),

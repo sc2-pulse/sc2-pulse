@@ -6,28 +6,52 @@ package com.nephest.battlenet.sc2.config.convert.jackson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.nephest.battlenet.sc2.config.convert.KeysetScrollPositionKeysToStringConverterTest;
+import com.nephest.battlenet.sc2.extension.ExecutionPhase;
+import com.nephest.battlenet.sc2.extension.WithMockedStatic;
 import com.nephest.battlenet.sc2.model.CursorNavigation;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
-import com.nephest.battlenet.sc2.model.navigation.CursorUtilTest;
-import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.navigation.Position;
 import com.nephest.battlenet.sc2.util.TestUtil;
+import com.nephest.battlenet.sc2.web.service.SpringBeanService;
+import com.nephest.battlenet.sc2.web.service.StringService;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.MockedStatic;
+import org.springframework.data.domain.ScrollPosition;
 
+@WithMockedStatic(value = SpringBeanService.class, phase = ExecutionPhase.CLASS)
+@TestInstance(Lifecycle.PER_CLASS)
 public class CursorNavigationDeserializerSimpleIntegrationTest
 {
 
-    private static final List<Position> POSITIONS =  CursorUtilTest.positionEncodingArguments()
-        .map(a->(Position) a.get()[0])
-        .toList();
-    private static final List<String> TOKENS =  CursorUtilTest.positionEncodingArguments()
-        .map(a->(String) a.get()[1])
-        .toList();
+    private MockedStatic<SpringBeanService> springBeanServiceMock;
+
+    @SuppressWarnings("unchecked")
+    private static final List<Map<String, Object>> POSITIONS
+        = KeysetScrollPositionKeysToStringConverterTest.positionEncodingArguments()
+            .map(a->(Map<String, Object>) a.get()[0])
+            .toList();
+    private static final List<String> TOKENS
+        = KeysetScrollPositionKeysToStringConverterTest
+            .positionEncodingArguments()
+            .map(a->(String) a.get()[1])
+            .toList();
+
+    @BeforeAll
+    public void setUp()
+    {
+        StringService stringService = new StringService(TestUtil.OBJECT_MAPPER);
+        springBeanServiceMock
+            .when(()->SpringBeanService.getBean(StringService.class))
+            .thenReturn(stringService);
+    }
 
     public static Stream<Arguments> testDeserialize()
     {
@@ -39,8 +63,8 @@ public class CursorNavigationDeserializerSimpleIntegrationTest
                     + ", \"before\": \"" + TOKENS.get(0) + "\"}",
                 new CursorNavigation
                 (
-                    new Cursor(POSITIONS.get(0), NavigationDirection.BACKWARD),
-                    new Cursor(POSITIONS.get(1), NavigationDirection.FORWARD)
+                    ScrollPosition.backward(POSITIONS.get(0)),
+                    ScrollPosition.forward(POSITIONS.get(1))
                 )
             ),
             Arguments.of
@@ -50,7 +74,7 @@ public class CursorNavigationDeserializerSimpleIntegrationTest
                 new CursorNavigation
                 (
                     null,
-                    new Cursor(POSITIONS.get(1), NavigationDirection.FORWARD)
+                    ScrollPosition.forward(POSITIONS.get(1))
                 )
             ),
             Arguments.of
@@ -59,7 +83,7 @@ public class CursorNavigationDeserializerSimpleIntegrationTest
                     + ", \"before\": \"" + TOKENS.get(0) + "\"}",
                 new CursorNavigation
                 (
-                    new Cursor(POSITIONS.get(0), NavigationDirection.BACKWARD),
+                    ScrollPosition.backward(POSITIONS.get(0)),
                     null
                 )
             ),

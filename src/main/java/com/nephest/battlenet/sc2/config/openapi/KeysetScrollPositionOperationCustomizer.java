@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 
 @Component
-public class CursorRouterOperationCustomizer
+public class KeysetScrollPositionOperationCustomizer
 implements OperationCustomizer
 {
 

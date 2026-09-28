@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.validation;
 
+import com.nephest.battlenet.sc2.util.MiscUtil;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Arrays;
@@ -15,29 +16,60 @@ implements ConstraintValidator<AllowedField, T>
 
     private List<String> orderedAllowedFields;
     private Set<String> allowedFields;
+    private boolean allowTraversal;
+    private boolean allowDuplicates;
 
-    public abstract String getField(T value);
+    public abstract List<String> getFields(T value);
+    public abstract boolean isTraversable(T value);
 
     @Override
     public void initialize(AllowedField constraintAnnotation)
     {
         this.orderedAllowedFields = Arrays.asList(constraintAnnotation.value());
         this.allowedFields = Set.copyOf(orderedAllowedFields);
+        this.allowTraversal = constraintAnnotation.allowTraversal();
+        this.allowDuplicates = constraintAnnotation.allowDuplicates();
     }
 
     @Override
     public boolean isValid(T value, ConstraintValidatorContext context)
     {
-        String field = getField(value);
-        if(field == null || allowedFields.contains(field)) return true;
+        boolean valid = true;
+        if(!allowTraversal && isTraversable(value))
+        {
+            context
+                .buildConstraintViolationWithTemplate("Field traversal is forbidden")
+                .addConstraintViolation();
+            valid = false;
+        }
 
-        context.disableDefaultConstraintViolation();
-        context.buildConstraintViolationWithTemplate
-        (
-            String.format("Invalid field '%s'. Allowed fields are: %s",
-                field, String.join(", ", orderedAllowedFields))
-        ).addConstraintViolation();
-        return false;
+        List<String> fields = getFields(value);
+        if(valid == true && (fields == null || fields.isEmpty())) return true;
+
+        if(!allowDuplicates && MiscUtil.containsDuplicates(fields))
+        {
+            context.buildConstraintViolationWithTemplate
+            (
+                "Duplicate fields are forbidden"
+            )
+                .addConstraintViolation();
+            valid = false;
+        }
+
+        if(!allowedFields.containsAll(fields))
+        {
+            context.buildConstraintViolationWithTemplate("Invalid fields")
+                .addConstraintViolation();
+            valid = false;
+        }
+
+        if(valid == false)
+        {
+            context.disableDefaultConstraintViolation();
+            return false;
+        }
+
+        return true;
     }
 
 }

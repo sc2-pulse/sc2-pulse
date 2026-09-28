@@ -26,14 +26,8 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
-import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.navigation.Position;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
-import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
-import com.nephest.battlenet.sc2.model.validation.Version;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
 import jakarta.validation.Valid;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -42,6 +36,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,6 +45,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -239,7 +238,7 @@ public class LadderSearchDAO
         + "FROM vals v(queue_type, team_type, region, legacy_id) "
         + "INNER JOIN LATERAL "
         + "( "
-            + "SELECT id " 
+            + "SELECT id "
             + "FROM team "
             + "WHERE (team.queue_type, team.team_type, team.region, team.legacy_id) = "
                 + "(v.queue_type, v.team_type, v.region, v.legacy_id) "
@@ -248,7 +247,7 @@ public class LadderSearchDAO
             + "team.region DESC, "
             + "team.legacy_id DESC, "
             + "team.season DESC "
-            + "LIMIT 1 " 
+            + "LIMIT 1 "
         + ") team_id ON true "
         + "INNER JOIN team ON team_id.id = team.id "
         + "LEFT JOIN population_state ON team.population_state_id = population_state.id "
@@ -305,8 +304,6 @@ public class LadderSearchDAO
     private static RowMapper<LadderTeam> LADDER_TEAM_MAPPER;
     private static ResultSetExtractor<LadderTeam> LADDER_TEAM_EXTRACTOR;
     private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAMS_EXTRACTOR = this::mapTeams;
-
-    public static final long CURSOR_POSITION_VERSION = 1;
 
     private int resultsPerPage = 100;
 
@@ -428,7 +425,7 @@ public class LadderSearchDAO
     {
         this.resultsPerPage = resultsPerPage;
     }
-    
+
     public int getResultsPerPage()
     {
         return resultsPerPage;
@@ -495,15 +492,15 @@ public class LadderSearchDAO
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, teams);
     }
 
-    public CursorNavigableResult<List<LadderTeam>> find
+    public Window<LadderTeam> find
     (
         int season,
         Set<Region> regions,
         Set<League.LeagueType> leagueTypes,
         QueueType queueType,
         TeamType teamType,
-        @Valid @AllowedField("rating") SortParameter sortParameter,
-        @Valid @Version(CURSOR_POSITION_VERSION) Cursor cursor
+        @Valid @AllowedField("rating") Sort sortParameter,
+        KeysetScrollPosition cursor
     )
     {
         int membersPerTeam = queueType.getTeamFormat().getMemberCount(teamType);
@@ -515,48 +512,50 @@ public class LadderSearchDAO
                 .addValue
                 (
                     "ratingCursor",
-                    cursor != null ? cursor.position().anchor().get(0) : null,
+                    cursor != null ? cursor.getKeys().get("rating") : null,
                     Types.BIGINT
                 )
                 .addValue
                 (
                     "idCursor",
-                    cursor != null ? cursor.position().anchor().get(1) : null,
+                    cursor != null ? cursor.getKeys().get("id") : null,
                     Types.BIGINT
                 )
                 .addValue("cheaterReportType", conversionService
                     .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
 
-        NavigationDirection direction = cursor != null
-            ? cursor.direction()
-            : NavigationDirection.FORWARD;
+        ScrollPosition.Direction direction = CursorUtil.getDirection(cursor);
         String q = CursorUtil.formatCursorNavigableQuery
         (
             FIND_TEAM_MEMBERS_CURSOR_FORMAT,
-            sortParameter.order(),
+            sortParameter.iterator().next().getDirection(),
             direction,
             true
         );
         List<LadderTeam> teams = template.query(q, params, LADDER_TEAMS_EXTRACTOR);
-        if(direction == NavigationDirection.BACKWARD) Collections.reverse(teams);
+        if(direction == ScrollPosition.Direction.BACKWARD)
+            Collections.reverse(teams);
 
-        return CursorNavigableResult.wrap
+        return CursorUtil.window
         (
             teams,
-            getResultsPerPage(),
-            cursor == null,
-            LadderSearchDAO::createTeamCursorPosition
+            LadderSearchDAO::createTeamCursorPosition,
+            teams.size() == getResultsPerPage()
         );
     }
 
-    public static Position createTeamCursorPosition(long rating, long id)
+    public static Map<String, Object> createTeamCursorPosition
+    (
+        long rating,
+        long id
+    )
     {
-        return new Position(CURSOR_POSITION_VERSION, List.of(rating, id));
+        return Map.of("rating", rating, "id", id);
     }
 
-    public static Position createTeamCursorPosition(LadderTeam team)
+    public static Map<String, Object> createTeamCursorPosition(LadderTeam team)
     {
-        if(team == null) return null;
+        if(team == null) return Map.of();
 
         return createTeamCursorPosition(team.getRating(), team.getId());
     }

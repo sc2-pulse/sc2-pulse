@@ -30,7 +30,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.service.SC2MetaService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
@@ -48,6 +47,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -152,8 +152,8 @@ public class MiscController
         @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin,
         @RequestParam(name = "ratingMax", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMax,
         @RequestParam(name = "sort", defaultValue = "-viewers", required = false)
-        @AllowedField({"viewers", "rating", "topPercentRegion"})
-        SortParameter sort,
+        @AllowedField(value = {"viewers", "rating", "topPercentRegion"}, allowTraversal=true)
+        Sort sort,
         @RequestParam(name = "limit", required = false) @Min(1) @Valid Integer limit,
         @RequestParam(name = "limitPlayer", required = false) @Min(1) @Valid Integer limitPlayer
     )

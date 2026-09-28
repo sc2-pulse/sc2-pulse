@@ -3,15 +3,12 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
+import com.nephest.battlenet.sc2.web.service.StringService;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -31,6 +28,7 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.Sort;
 
 public class HtmlUrlParameterRedirectFilter
 implements Filter
@@ -41,12 +39,16 @@ implements Filter
 
     public HtmlUrlParameterRedirectFilter
     (
-        ConversionService conversionService,
-        ObjectMapper objectMapper
+        StringService stringService,
+        ConversionService conversionService
     )
     {
         Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>>
-            ladderOverrides = createLadderOverrides(conversionService, objectMapper);
+            ladderOverrides = createLadderOverrides
+            (
+                stringService,
+                conversionService
+            );
         parameterOverrides = Map.of
         (
             "ladder",
@@ -56,7 +58,7 @@ implements Filter
             ladderOverrides,
 
             "clan-search",
-            createClanOverrides(conversionService, objectMapper),
+            createClanOverrides(stringService, conversionService),
 
             "vod-search",
             createVodOverrides(),
@@ -84,19 +86,19 @@ implements Filter
         );
     }
 
-    private static SortingOrder[] convertCountValuesToSortingOrderValues
+    private static Sort.Direction[] convertCountValuesToSortDirectionValues
     (
         String [] countValues
     )
     {
         if(countValues == null) return null;
-        if(countValues.length == 0) return new SortingOrder[0];
+        if(countValues.length == 0) return new Sort.Direction[0];
 
         return Arrays.stream(countValues)
             .filter(Objects::nonNull)
             .map(Integer::parseInt)
-            .map(intVal->intVal > 0 ? SortingOrder.DESC : SortingOrder.ASC)
-            .toArray(SortingOrder[]::new);
+            .map(intVal->intVal > 0 ? Sort.Direction.DESC : Sort.Direction.ASC)
+            .toArray(Sort.Direction[]::new);
     }
 
     private static <T extends Enum<T>> Stream<Map.Entry<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>>> convertEnumBooleanParameters
@@ -123,20 +125,24 @@ implements Filter
 
     private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createLadderOverrides
     (
-        ConversionService conversionService,
-        ObjectMapper objectMapper
+        StringService stringService,
+        ConversionService conversionService
     )
     {
         Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> overrides =
         new HashMap<>(Map.ofEntries(
             overrideName("idAnchor", null),
-            Map.entry("ratingAnchor", params->overrideLadderCursor(params, objectMapper)),
+            Map.entry
+            (
+                "ratingAnchor",
+                params->overrideLadderCursor(params, stringService)
+            ),
             overrideName("page", null),
             Map.entry("count", params->Map.entry(
                 "sort",
-                Arrays.stream(convertCountValuesToSortingOrderValues(params.get("count")))
-                    .map(order->new SortParameter("rating", order))
-                    .map(SortParameter::toPrefixedString)
+                Arrays.stream(convertCountValuesToSortDirectionValues(params.get("count")))
+                    .map(direction->Sort.by(direction, "rating"))
+                    .map(sort->conversionService.convert(sort, String.class))
                     .toArray(String[]::new)
             )),
             overrideName("team-type", "teamType")
@@ -166,7 +172,7 @@ implements Filter
     private static Map.Entry<String, String[]> overrideLadderCursor
     (
         Map<String, String[]> params,
-        ObjectMapper objectMapper
+        StringService stringService
     )
     {
         String ratingAnchor = getLastValue(params.get("ratingAnchor"));
@@ -179,21 +185,20 @@ implements Filter
             Integer.parseInt(count) > 0
                 ? NavigationDirection.FORWARD.getRelativePosition()
                 : NavigationDirection.BACKWARD.getRelativePosition(),
-            new String[]{CursorUtil.encodePosition(
+            new String[]{stringService.encode(
                 LadderSearchDAO.createTeamCursorPosition
                 (
                     Long.parseLong(ratingAnchor),
                     Long.parseLong(idAnchor)
-                ),
-                objectMapper
+                )
             )}
         );
     }
 
     private static Map<String, Function<Map<String, String[]>, Map.Entry<String, String[]>>> createClanOverrides
     (
-        ConversionService conversionService,
-        ObjectMapper objectMapper
+        StringService stringService,
+        ConversionService conversionService
     )
     {
         return Map.ofEntries
@@ -201,7 +206,16 @@ implements Filter
             overrideName("page", null),
             Map.entry("pageDiff", params->overrideClanPageDiff(params, conversionService)),
             overrideName("sortBy", null),
-            Map.entry("cursorValue", params->overrideClanCursor(params, objectMapper)),
+            Map.entry
+            (
+                "cursorValue",
+                params->overrideClanCursor
+                (
+                    params,
+                    stringService,
+                    conversionService
+                )
+            ),
             overrideName("idCursor", null),
             overrideName("minAvgRating", "avgRatingMin"),
             overrideName("maxAvgRating", "avgRatingMax"),
@@ -215,7 +229,8 @@ implements Filter
     private static Map.Entry<String, String[]> overrideClanCursor
     (
         Map<String, String[]> params,
-        ObjectMapper objectMapper
+        StringService stringService,
+        ConversionService conversionService
     )
     {
         String cursorValue = getLastValue(params.get("cursorValue"));
@@ -228,13 +243,13 @@ implements Filter
             Integer.parseInt(pageDiff) > 0
                 ? NavigationDirection.FORWARD.getRelativePosition()
                 : NavigationDirection.BACKWARD.getRelativePosition(),
-            new String[]{CursorUtil.encodePosition(
-                ClanDAO.createCursorPosition
+            new String[]{stringService.encode
+            (
+                Map.of
                 (
-                    Double.parseDouble(cursorValue),
-                    Long.parseLong(idCursor)
-                ),
-                objectMapper
+                    "activeMembersMin", Double.parseDouble(cursorValue),
+                    "id", Long.parseLong(idCursor)
+                )
             )}
         );
     }
@@ -249,7 +264,7 @@ implements Filter
         if(pageDiffs == null || pageDiffs.length == 0) return null;
 
         String[] fields = params.get("sortBy");
-        SortingOrder[] orders = convertCountValuesToSortingOrderValues(pageDiffs);
+        Sort.Direction[] orders = convertCountValuesToSortDirectionValues(pageDiffs);
         String defaultField = Arrays.stream(ClanDAO.Cursor.values())
             .filter(ClanDAO.Cursor::isDefault)
             .map(ClanDAO.Cursor::getField)
@@ -259,17 +274,18 @@ implements Filter
         (
             "sort",
             IntStream.range(0, orders.length)
-                .mapToObj(ix->new SortParameter(
+                .mapToObj(ix->Sort.by
+                (
+                    orders[ix],
                     fields == null || fields.length == 0
                         ? defaultField
                         : conversionService.convert
                             (
                                 fields[Math.min(ix, fields.length - 1)],
                                 ClanDAO.Cursor.class
-                            ).getField(),
-                    orders[ix]
+                            ).getField()
                 ))
-                .map(SortParameter::toPrefixedString)
+                .map(sort->conversionService.convert(sort, String.class))
                 .toArray(String[]::new)
         );
     }

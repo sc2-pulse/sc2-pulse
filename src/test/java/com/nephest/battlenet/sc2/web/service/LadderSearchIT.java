@@ -46,8 +46,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
-import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.time.OffsetDateTime;
@@ -74,6 +72,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
@@ -271,10 +270,10 @@ public class LadderSearchIT
                     "after",
                     mvcConversionService.convert
                     (
-                        new Cursor
+                        ScrollPosition.forward
                         (
-                            LadderSearchDAO.createTeamCursorPosition(afterCursor),
-                            NavigationDirection.FORWARD
+                            LadderSearchDAO
+                                .createTeamCursorPosition(afterCursor)
                         ),
                         String.class
                     )
@@ -311,10 +310,10 @@ public class LadderSearchIT
                     "before",
                     mvcConversionService.convert
                     (
-                        new Cursor
+                        ScrollPosition.backward
                         (
-                            LadderSearchDAO.createTeamCursorPosition(beforeCursor),
-                            NavigationDirection.BACKWARD
+                            LadderSearchDAO
+                                .createTeamCursorPosition(beforeCursor)
                         ),
                         String.class
                     )
@@ -342,10 +341,10 @@ public class LadderSearchIT
                     "after",
                     mvcConversionService.convert
                     (
-                        new Cursor
+                        ScrollPosition.forward
                         (
-                            LadderSearchDAO.createTeamCursorPosition(afterCursor),
-                            NavigationDirection.FORWARD
+                            LadderSearchDAO
+                                .createTeamCursorPosition(afterCursor)
                         ),
                         String.class
                     )
@@ -381,10 +380,10 @@ public class LadderSearchIT
                     "after",
                     mvcConversionService.convert
                     (
-                        new Cursor
+                        ScrollPosition.forward
                         (
-                            LadderSearchDAO.createTeamCursorPosition(afterCursor),
-                            NavigationDirection.FORWARD
+                            LadderSearchDAO
+                                .createTeamCursorPosition(afterCursor)
                         ),
                         String.class
                     )

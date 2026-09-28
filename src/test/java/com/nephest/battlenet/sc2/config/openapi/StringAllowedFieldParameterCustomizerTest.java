@@ -3,7 +3,7 @@
 
 package com.nephest.battlenet.sc2.config.openapi;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.nephest.battlenet.sc2.model.validation.AllowedField;

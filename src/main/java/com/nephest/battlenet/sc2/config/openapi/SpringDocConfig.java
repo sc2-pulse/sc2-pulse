@@ -84,7 +84,7 @@ public class SpringDocConfig
                     navigate it via opaque tokens. Each response contains a `navigation` object with
                     `before` and `after` text fields. Add a parameter to your next
                     request to navigate the result set.
-                    
+
                     For example, to navigate forward, you should add an `after` query parameter
                     and set its value to the text token of the corresponding field of the navigation
                     object from the previous response.
@@ -92,6 +92,9 @@ public class SpringDocConfig
                     Supported formats(asc/desc):
                     * `+name`/`-name`. The plus char is optional.
                     * `name:asc`/`name:desc`
+                    Sort by multiple fields with a comma-separated value, in priority order,
+                    e.g. `sort=param1,param2,param3`. Each field can use either format above.
+                    See specific endpoint docs for allowed values.
                     ## DateTime
                     * ISO-8601 text
                     * Epoch milliseconds

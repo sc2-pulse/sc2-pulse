@@ -15,17 +15,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.Clan;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
-import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -38,6 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
@@ -210,11 +209,10 @@ public class ClanSearchIT
                     "after",
                     mvcConversionService.convert
                     (
-                        new Cursor
-                        (
-                            ClanDAO.createCursorPosition(max + 1, max + 1),
-                            NavigationDirection.FORWARD
-                        ),
+                        ScrollPosition.forward(Map.of(
+                            cursor.getField(), max + 1,
+                            "id", max + 1
+                        )),
                         String.class
                     )
                 )
@@ -223,7 +221,7 @@ public class ClanSearchIT
                     "sort",
                     mvcConversionService.convert
                     (
-                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        Sort.by(Sort.Direction.DESC, cursor.getField()),
                         String.class
                     )
                 )
@@ -244,11 +242,10 @@ public class ClanSearchIT
                     "before",
                     mvcConversionService.convert
                     (
-                        new Cursor
-                        (
-                            ClanDAO.createCursorPosition(min - 1 , min - 1),
-                            NavigationDirection.BACKWARD
-                        ),
+                        ScrollPosition.backward(Map.of(
+                            cursor.getField(), min - 1,
+                            "id", min - 1
+                        )),
                         String.class
                     )
                 )
@@ -257,7 +254,7 @@ public class ClanSearchIT
                     "sort",
                     mvcConversionService.convert
                     (
-                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        Sort.by(Sort.Direction.DESC, cursor.getField()),
                         String.class
                     )
                 )
@@ -278,11 +275,10 @@ public class ClanSearchIT
                     "after",
                     mvcConversionService.convert
                     (
-                        new Cursor
-                        (
-                            ClanDAO.createCursorPosition(max, max),
-                            NavigationDirection.FORWARD
-                        ),
+                        ScrollPosition.forward(Map.of(
+                            cursor.getField(), max,
+                            "id", max
+                        )),
                         String.class
                     )
                 )
@@ -291,7 +287,7 @@ public class ClanSearchIT
                     "sort",
                     mvcConversionService.convert
                     (
-                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        Sort.by(Sort.Direction.DESC, cursor.getField()),
                         String.class
                     )
                 )
@@ -314,11 +310,10 @@ public class ClanSearchIT
                     "after",
                     mvcConversionService.convert
                     (
-                        new Cursor
-                        (
-                            ClanDAO.createCursorPosition(max, max),
-                            NavigationDirection.FORWARD
-                        ),
+                        ScrollPosition.forward(Map.of(
+                            cursor.getField(), max,
+                            "id", max
+                        )),
                         String.class
                     )
                 )
@@ -327,7 +322,7 @@ public class ClanSearchIT
                     "sort",
                     mvcConversionService.convert
                     (
-                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        Sort.by(Sort.Direction.DESC, cursor.getField()),
                         String.class
                     )
                 )
@@ -351,11 +346,10 @@ public class ClanSearchIT
                     "after",
                     mvcConversionService.convert
                     (
-                        new Cursor
-                        (
-                            ClanDAO.createCursorPosition(max, max),
-                            NavigationDirection.FORWARD
-                        ),
+                        ScrollPosition.forward(Map.of(
+                            cursor.getField(), max,
+                            "id", max
+                        )),
                         String.class
                     )
                 )
@@ -364,7 +358,7 @@ public class ClanSearchIT
                     "sort",
                     mvcConversionService.convert
                     (
-                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        Sort.by(Sort.Direction.DESC, cursor.getField()),
                         String.class
                     )
                 )
@@ -389,11 +383,10 @@ public class ClanSearchIT
                     "after",
                     mvcConversionService.convert
                     (
-                        new Cursor
-                        (
-                            ClanDAO.createCursorPosition(max, max),
-                            NavigationDirection.FORWARD
-                        ),
+                        ScrollPosition.forward(Map.of(
+                            cursor.getField(), max,
+                            "id", max
+                        )),
                         String.class
                     )
                 )
@@ -402,7 +395,7 @@ public class ClanSearchIT
                     "sort",
                     mvcConversionService.convert
                     (
-                        new SortParameter(cursor.getField(), SortingOrder.DESC),
+                        Sort.by(Sort.Direction.DESC, cursor.getField()),
                         String.class
                     )
                 )

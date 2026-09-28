@@ -3,9 +3,9 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.web.service.GlobalContext;
+import com.nephest.battlenet.sc2.web.service.StringService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -78,13 +78,14 @@ public class FilterConfig
     public FilterRegistrationBean<HtmlUrlParameterRedirectFilter> anchorParameterRedirectFilter
     (
         @Qualifier("mvcConversionService") ConversionService mvcConversionService,
-        ObjectMapper objectMapper
+        StringService stringService
     )
     {
         FilterRegistrationBean<HtmlUrlParameterRedirectFilter> registrationBean
             = new FilterRegistrationBean<>();
         registrationBean.setFilter(new HtmlUrlParameterRedirectFilter(
-            mvcConversionService, objectMapper));
+            stringService, mvcConversionService
+        ));
         registrationBean.addUrlPatterns
         (
             "/",

@@ -4,25 +4,23 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 
-import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
-import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.navigation.Position;
-import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
-import com.nephest.battlenet.sc2.model.validation.Version;
-import jakarta.validation.Valid;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -142,8 +140,6 @@ public class ClanMemberEventDAO
 
     private static RowMapper<ClanMemberEvent> STD_ROW_MAPPER;
 
-    public static final long CURSOR_POSITION_VERSION = 1L;
-
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
 
@@ -215,16 +211,16 @@ public class ClanMemberEventDAO
         return template.query(FIND_TEMPLATE.formatted("<", "DESC"), params, STD_ROW_MAPPER);
     }
 
-    public CursorNavigableResult<List<ClanMemberEvent>> find
+    public Window<ClanMemberEvent> find
     (
         Set<Long> playerCharacterIds,
         Set<Integer> clanIds,
-        @Valid @Version(CURSOR_POSITION_VERSION) Cursor cursor,
+        KeysetScrollPosition cursor,
         int limit
     )
     {
         if((playerCharacterIds.isEmpty() && clanIds.isEmpty()) || limit < 1)
-            return CursorNavigableResult.emptyList();
+            return CursorUtil.emptyWindow();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", playerCharacterIds.toArray(Long[]::new))
@@ -233,51 +229,57 @@ public class ClanMemberEventDAO
             (
                 "createdCursor",
                 cursor != null
-                    ? OffsetDateTime.parse((String) cursor.position().anchor().get(0))
+                    ? OffsetDateTime
+                        .parse((String) cursor.getKeys().get("created"))
                     : null,
                 Types.TIMESTAMP_WITH_TIMEZONE
             )
             .addValue
             (
                 "playerCharacterIdCursor",
-                cursor != null ? cursor.position().anchor().get(1) : null,
+                cursor != null ? cursor.getKeys().get("characterId") : null,
                 Types.BIGINT
             )
             .addValue("limit", limit);
 
-        NavigationDirection direction = cursor != null
-            ? cursor.direction()
-            : NavigationDirection.FORWARD;
+        ScrollPosition.Direction direction = CursorUtil.getDirection(cursor);
         String q = CursorUtil.formatCursorNavigableQuery
         (
             FIND_TEMPLATE,
-            SortingOrder.DESC,
+            Sort.Direction.DESC,
             direction,
             false
         );
         List<ClanMemberEvent> events = template.query(q, params, STD_ROW_MAPPER);
-        if(direction == NavigationDirection.BACKWARD) Collections.reverse(events);
-        return CursorNavigableResult.wrap
+        if(direction == ScrollPosition.Direction.BACKWARD)
+            Collections.reverse(events);
+        return CursorUtil.window
         (
             events,
-            limit,
-            cursor == null,
-            ClanMemberEventDAO::createCursorPosition
+            ClanMemberEventDAO::createCursorPosition,
+            events.size() == limit
         );
     }
 
-    public static Position createCursorPosition(OffsetDateTime createdCursor, long characterId)
+    public static Map<String, Object> createCursorPosition
+    (
+        OffsetDateTime createdCursor,
+        long characterId
+    )
     {
-        return new Position
+        return Map.of
         (
-            CURSOR_POSITION_VERSION,
-            List.of(createdCursor.toString(), characterId)
+            "created", createdCursor.toString(),
+            "characterId", characterId
         );
     }
 
-    public static Position createCursorPosition(ClanMemberEvent event)
+    public static Map<String, Object> createCursorPosition
+    (
+        ClanMemberEvent event
+    )
     {
-        if(event == null) return null;
+        if(event == null) return Map.of();
 
         return createCursorPosition(event.getCreated(), event.getPlayerCharacterId());
     }

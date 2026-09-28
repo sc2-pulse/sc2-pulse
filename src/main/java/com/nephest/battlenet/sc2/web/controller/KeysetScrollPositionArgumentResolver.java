@@ -3,14 +3,13 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
-import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.navigation.Position;
 import com.nephest.battlenet.sc2.util.SpringUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.nephest.battlenet.sc2.web.service.StringService;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -18,22 +17,22 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 @Component
-public class CursorArgumentResolver
+public class KeysetScrollPositionArgumentResolver
 implements HandlerMethodArgumentResolver
 {
 
-    private final ObjectMapper objectMapper;
+    private final StringService stringService;
 
-    @Autowired
-    public CursorArgumentResolver(ObjectMapper objectMapper)
+    public KeysetScrollPositionArgumentResolver(StringService stringService)
     {
-        this.objectMapper = objectMapper;
+        this.stringService = stringService;
     }
 
     @Override
     public boolean supportsParameter(MethodParameter parameter)
     {
-        return SpringUtil.getClass(parameter).isAssignableFrom(Cursor.class);
+        return SpringUtil.getClass(parameter)
+            .isAssignableFrom(KeysetScrollPosition.class);
     }
 
     @Override
@@ -47,11 +46,15 @@ implements HandlerMethodArgumentResolver
     {
         for(NavigationDirection direction : NavigationDirection.values())
         {
-            String value = webRequest.getParameter(direction.getRelativePosition());
+            String value = webRequest
+                .getParameter(direction.getRelativePosition());
             if(value == null) continue;
 
-            Position position = CursorUtil.decodePosition(value, objectMapper);
-            return new Cursor(position, direction);
+            return ScrollPosition.of
+            (
+                stringService.decode(value, new TypeReference<>(){}),
+                direction.toScrollPositionDirection()
+            );
         }
         return null;
     }

@@ -8,15 +8,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.nephest.battlenet.sc2.model.CursorNavigation;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.ScrollPosition;
 
 public class CursorNavigableResultTest
 {
 
-    private static final Cursor beforeCursor
-        = new Cursor(new Position(1L, List.of("2")), NavigationDirection.BACKWARD);
-    private static final Cursor afterCursor
-        = new Cursor(new Position(2L, List.of("1")), NavigationDirection.FORWARD);
+    private static final KeysetScrollPosition beforeCursor
+        = ScrollPosition.backward(Map.of("id", "2"));
+    private static final KeysetScrollPosition afterCursor
+        = ScrollPosition.forward(Map.of("id", "1"));
 
     @Test
     public void whenEmptyData_thenEmptyNavigation()
@@ -28,7 +31,7 @@ public class CursorNavigableResultTest
                 List.of(),
                 new CursorNavigation(null, null)
             ),
-            CursorNavigableResult.wrap(List.of(), 0, false, p->beforeCursor.position())
+            CursorNavigableResult.wrap(List.of(), 0, false, p->beforeCursor.getKeys())
         );
     }
 
@@ -42,7 +45,7 @@ public class CursorNavigableResultTest
                 List.of(1),
                 new CursorNavigation(null, afterCursor)
             ),
-            CursorNavigableResult.wrap(List.of(1), 1, true, p->afterCursor.position())
+            CursorNavigableResult.wrap(List.of(1), 1, true, p->afterCursor.getKeys())
         );
     }
 
@@ -56,7 +59,7 @@ public class CursorNavigableResultTest
                 List.of(1),
                 new CursorNavigation(null, afterCursor)
             ),
-            CursorNavigableResult.wrap(List.of(1), 1, false, p->afterCursor.position(), false)
+            CursorNavigableResult.wrap(List.of(1), 1, false, p->afterCursor.getKeys(), false)
         );
     }
 
@@ -70,7 +73,7 @@ public class CursorNavigableResultTest
                 List.of(1, 2),
                 new CursorNavigation(beforeCursor, null)
             ),
-            CursorNavigableResult.wrap(List.of(1, 2), 3, false, p->beforeCursor.position())
+            CursorNavigableResult.wrap(List.of(1, 2), 3, false, p->beforeCursor.getKeys())
         );
     }
 
@@ -89,7 +92,7 @@ public class CursorNavigableResultTest
                 List.of(1, 2, 3),
                 3,
                 false,
-                p->p == 1 ? beforeCursor.position() : afterCursor.position()
+                p->p == 1 ? beforeCursor.getKeys() : afterCursor.getKeys()
             )
         );
     }

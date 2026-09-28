@@ -19,11 +19,9 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.validation.NotFakeSc2Name;
-import com.nephest.battlenet.sc2.model.validation.Version;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.service.SearchService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
@@ -39,6 +37,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -148,18 +147,22 @@ public class CharacterController
     (
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "type", required = false, defaultValue = "") Set<BaseMatch.MatchType> types,
-        @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor,
+        KeysetScrollPosition cursor,
         @RequestParam(name = "limit", required = false, defaultValue = "20")
         @Min(1) @Max(MATCH_PAGE_SIZE_MAX)
         int limit
     )
     {
-        return ladderMatchDAO.findMatchesByCharacterIds
+        return CursorNavigableResult.wrap
         (
-            characterIds,
-            cursor,
-            limit,
-            types
+            ladderMatchDAO.findMatchesByCharacterIds
+            (
+                characterIds,
+                cursor,
+                limit,
+                types
+            ),
+            cursor == null
         );
     }
 

@@ -9,14 +9,9 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
-import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.navigation.Position;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
-import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
-import com.nephest.battlenet.sc2.model.validation.Version;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.sql.Types;
@@ -24,6 +19,7 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -31,6 +27,10 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Window;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -273,7 +273,6 @@ public class ClanDAO
     private static RowMapper<Clan> STD_ROW_MAPPER;
     private static ResultSetExtractor<Clan> STD_EXTRACTOR;
     private static Integer[] DEFAULT_STATS_RACES;
-    public static final long CURSOR_POSITION_VERSION = 1;
 
     public enum Cursor
     {
@@ -566,7 +565,7 @@ public class ClanDAO
         return new PagedSearchResult<>(null, (long) PAGE_SIZE, finalPage, clans);
     }
 
-    public CursorNavigableResult<List<Clan>> findByCursor
+    public Window<Clan> findByCursor
     (
         Integer minActiveMembers, Integer maxActiveMembers,
         Double minGamesPerActiveMemberPerDay, Double maxGamesPerActiveMemberPerDay,
@@ -575,10 +574,8 @@ public class ClanDAO
         @Valid
         @NotNull
         @AllowedField({"members", "activeMembers", "gamesPerActiveMemberPerDay", "avgRating"})
-        SortParameter sort,
-        @Valid
-        @Version(CURSOR_POSITION_VERSION)
-        com.nephest.battlenet.sc2.model.navigation.Cursor navigationCursor
+        Sort sort,
+        KeysetScrollPosition navigationCursor
     )
     {
         if
@@ -588,13 +585,15 @@ public class ClanDAO
                 || minAvgRating > maxAvgRating
         ) throw new IllegalArgumentException("Invalid search range. Min values should be less than max values");
 
-        Cursor cursor = Cursor.fromField(sort.field());
+        Cursor cursor = Cursor.fromField(sort.iterator().next().getProperty());
         SqlParameterSource params = new MapSqlParameterSource()
             .addValue
             (
                 "cursor",
                 navigationCursor != null
-                    ? ((Number) navigationCursor.position().anchor().get(0)).doubleValue()
+                    ? ((Number) navigationCursor.getKeys()
+                        .get(cursor.getField()))
+                        .doubleValue()
                     : null,
                 Types.DOUBLE
             )
@@ -602,7 +601,7 @@ public class ClanDAO
             (
                 "idCursor",
                 navigationCursor != null
-                    ? navigationCursor.position().anchor().get(1)
+                    ? navigationCursor.getKeys().get("id")
                     : null,
                 Types.BIGINT
             )
@@ -616,38 +615,43 @@ public class ClanDAO
             .addValue("limit", PAGE_SIZE)
             .addValue("offset", 0);
 
-        NavigationDirection direction = navigationCursor != null
-            ? navigationCursor.direction()
-            : NavigationDirection.FORWARD;
+        ScrollPosition.Direction direction
+            = CursorUtil.getDirection(navigationCursor);
         String q = CursorUtil.formatCursorNavigableQuery
         (
             cursor.queryTemplate,
-            sort.order(),
+            sort.iterator().next().getDirection(),
             direction,
             true,
             String.valueOf(CLAN_STATS_DEPTH_DAYS)
         );
         List<Clan> clans = template.query(q, params, STD_ROW_MAPPER);
-        if(direction == NavigationDirection.BACKWARD) Collections.reverse(clans);
-        return CursorNavigableResult.wrap
+        if(direction == ScrollPosition.Direction.BACKWARD)
+            Collections.reverse(clans);
+        return CursorUtil.window
         (
             clans,
-            PAGE_SIZE,
-            navigationCursor == null,
-            clan->createCursorPosition(clan, cursor)
+            clan->createCursorPosition(clan, cursor),
+            clans.size() == PAGE_SIZE
         );
     }
 
-    public static Position createCursorPosition(Number value, long id)
+    public static Map<String, Object> createCursorPosition
+    (
+        Clan clan,
+        Cursor cursor
+    )
     {
-        return new Position(CURSOR_POSITION_VERSION, List.of(value, id));
-    }
+        if(clan == null) return Map.of();
 
-    public static Position createCursorPosition(Clan clan, Cursor cursor)
-    {
-        if(clan == null) return null;
+        return Map.of
+        (
+            cursor.getField(),
+            cursor.getValueFunction().apply(clan),
 
-        return createCursorPosition(cursor.getValueFunction().apply(clan), clan.getId());
+            "id",
+            clan.getId()
+        );
     }
 
     public int updateStats(List<Integer> clans)

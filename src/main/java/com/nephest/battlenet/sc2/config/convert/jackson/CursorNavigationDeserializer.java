@@ -4,16 +4,16 @@
 package com.nephest.battlenet.sc2.config.convert.jackson;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.nephest.battlenet.sc2.model.CursorNavigation;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
-import com.nephest.battlenet.sc2.model.navigation.CursorUtil;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
-import com.nephest.battlenet.sc2.model.navigation.Position;
+import com.nephest.battlenet.sc2.web.service.SpringBeanService;
+import com.nephest.battlenet.sc2.web.service.StringService;
 import java.io.IOException;
+import org.springframework.data.domain.ScrollPosition;
 
 public class CursorNavigationDeserializer
 extends StdDeserializer<CursorNavigation>
@@ -34,24 +34,24 @@ extends StdDeserializer<CursorNavigation>
         JsonNode node = jsonParser.readValueAsTree();
         if(node == null) return null;
 
-        ObjectMapper objectMapper = (ObjectMapper) deserializationContext.getParser().getCodec();
-        Position beforePosition = CursorUtil.decodePosition
-        (
-            node.get(NavigationDirection.BACKWARD.getRelativePosition()).textValue(),
-            objectMapper
-        );
-        Position afterPosition = CursorUtil.decodePosition
-        (
-            node.get(NavigationDirection.FORWARD.getRelativePosition()).textValue(),
-            objectMapper
-        );
+        StringService strings = SpringBeanService.getBean(StringService.class);
+        String before = node
+            .path(NavigationDirection.BACKWARD.getRelativePosition())
+            .textValue();
+        String after = node
+            .path(NavigationDirection.FORWARD.getRelativePosition())
+            .textValue();
         return new CursorNavigation
         (
-            beforePosition != null
-                ? new Cursor(beforePosition, NavigationDirection.BACKWARD)
+            before != null
+                ? ScrollPosition.backward(strings.decode(
+                        before, new TypeReference<>(){}
+                    ))
                 : null,
-            afterPosition != null
-                ? new Cursor(afterPosition, NavigationDirection.FORWARD)
+            after != null
+                ? ScrollPosition.forward(strings.decode(
+                        after, new TypeReference<>(){}
+                    ))
                 : null
         );
     }

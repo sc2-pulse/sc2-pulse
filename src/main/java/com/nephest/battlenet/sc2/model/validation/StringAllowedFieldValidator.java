@@ -3,14 +3,22 @@
 
 package com.nephest.battlenet.sc2.model.validation;
 
+import java.util.List;
+
 public class StringAllowedFieldValidator
 extends AbstractAllowedFieldValidator<String>
 {
 
     @Override
-    public String getField(String value)
+    public boolean isTraversable(String value)
     {
-        return value;
+        return false;
+    }
+
+    @Override
+    public List<String> getFields(String value)
+    {
+        return value == null ? null : List.of(value);
     }
 
 }

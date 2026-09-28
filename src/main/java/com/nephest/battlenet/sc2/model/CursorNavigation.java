@@ -6,15 +6,17 @@ package com.nephest.battlenet.sc2.model;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nephest.battlenet.sc2.config.convert.jackson.CursorNavigationDeserializer;
-import com.nephest.battlenet.sc2.config.convert.jackson.CursorToPositionStringSerializer;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
+import com.nephest.battlenet.sc2.config.convert.jackson.KeysetScrollPositionKeysToStringSerializer;
 import jakarta.annotation.Nullable;
+import org.springframework.data.domain.KeysetScrollPosition;
 
 @JsonDeserialize(using = CursorNavigationDeserializer.class)
 public record CursorNavigation
 (
-    @Nullable @JsonSerialize(using = CursorToPositionStringSerializer.class) Cursor before,
-    @Nullable @JsonSerialize(using = CursorToPositionStringSerializer.class) Cursor after
+    @Nullable @JsonSerialize(using = KeysetScrollPositionKeysToStringSerializer.class)
+    KeysetScrollPosition before,
+    @Nullable @JsonSerialize(using = KeysetScrollPositionKeysToStringSerializer.class)
+    KeysetScrollPosition after
 )
 {
 

@@ -3,7 +3,6 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
-import static com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO.CURSOR_POSITION_VERSION;
 
 import com.nephest.battlenet.sc2.config.openapi.TeamLegacyUids;
 import com.nephest.battlenet.sc2.model.BaseLeague;
@@ -20,13 +19,10 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamHistorySummary;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import com.nephest.battlenet.sc2.model.validation.UInt32EpochSeconds;
-import com.nephest.battlenet.sc2.model.validation.Version;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroup;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
@@ -43,6 +39,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -159,19 +157,23 @@ public class TeamController
         @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
         @RequestParam(value = "league", defaultValue = "") Set<BaseLeague.LeagueType> leagues,
         @RequestParam(value = "sort", defaultValue = "-rating")
-        @AllowedField("rating") SortParameter sort,
-        @Version(CURSOR_POSITION_VERSION) Cursor cursor
+        @AllowedField("rating") Sort sort,
+        KeysetScrollPosition cursor
     )
     {
-        return ladderSearchDAO.find
+        return CursorNavigableResult.wrap
         (
-            season,
-            regions,
-            leagues,
-            queue,
-            teamType,
-            sort,
-            cursor
+            ladderSearchDAO.find
+            (
+                season,
+                regions,
+                leagues,
+                queue,
+                teamType,
+                sort,
+                cursor
+            ),
+            cursor == null
         );
     }
 

@@ -25,7 +25,6 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
-import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -45,7 +44,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import jakarta.annotation.PostConstruct;
 import java.time.Instant;
@@ -80,6 +78,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
@@ -195,7 +194,7 @@ public class CommunityVideoStreamIT
 
     private void init
     (
-        int count, 
+        int count,
         BiConsumer<PlayerCharacter[], List<PlayerCharacter>> teamCustomizer,
         List<SocialMedia> services
     )
@@ -302,7 +301,7 @@ public class CommunityVideoStreamIT
             )
         };
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
-        
+
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/streams")
@@ -313,10 +312,10 @@ public class CommunityVideoStreamIT
                         ? null
                         : conversionService.convert
                             (
-                                new SortParameter
+                                Sort.by
                                 (
-                                    sorting.getField(),
-                                    SortingOrder.DESC
+                                    Sort.Direction.DESC,
+                                    sorting.getField()
                                 ),
                                 String.class
                             )
@@ -372,9 +371,9 @@ public class CommunityVideoStreamIT
             ), Set.of()));
     }
 
-    @EnumSource(SortingOrder.class)
+    @EnumSource(Sort.Direction.class)
     @ParameterizedTest
-    public void testStreamRatingSorting(SortingOrder order)
+    public void testStreamRatingSorting(Sort.Direction direction)
     throws Exception
     {
         init(4, (c, c1)->{});
@@ -394,10 +393,10 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.RATING.getField(),
-                            order
+                            direction,
+                            CommunityService.StreamSorting.RATING.getField()
                         ),
                         String.class
                     )
@@ -413,7 +412,7 @@ public class CommunityVideoStreamIT
             createIndexedLadderVideoStream(0, null),
             createIndexedLadderVideoStream(3, null)
         ));
-        if(order == SortingOrder.ASC) Collections.reverse(expected);
+        if(direction == Sort.Direction.ASC) Collections.reverse(expected);
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
@@ -421,9 +420,9 @@ public class CommunityVideoStreamIT
             .isEqualTo(new CommunityStreamResult(expected, Set.of()));
     }
 
-    @EnumSource(SortingOrder.class)
+    @EnumSource(Sort.Direction.class)
     @ParameterizedTest
-    public void whenSortingStreamsByRatingEndRatingsAreEqual_thenSortByViewers(SortingOrder order)
+    public void shouldSortStreamsByMultipleFields(Sort.Direction direction)
     throws Exception
     {
         init(2, (c, c1)->{});
@@ -442,11 +441,13 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
-                        (
-                            CommunityService.StreamSorting.RATING.getField(),
-                            order
-                        ),
+                        Sort.by(
+                            Sort.Direction.DESC,
+                            CommunityService.StreamSorting.RATING.getField()
+                        ).and(Sort.by(
+                            direction,
+                            CommunityService.StreamSorting.VIEWERS.getField()
+                        )),
                         String.class
                     )
                 )
@@ -458,7 +459,7 @@ public class CommunityVideoStreamIT
             createIndexedLadderVideoStream(1, null),
             createIndexedLadderVideoStream(0, null)
         ));
-        if(order == SortingOrder.ASC) Collections.reverse(expected);
+        if(direction == Sort.Direction.ASC) Collections.reverse(expected);
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
@@ -466,9 +467,9 @@ public class CommunityVideoStreamIT
             .isEqualTo(new CommunityStreamResult(expected, Set.of()));
     }
 
-    @EnumSource(SortingOrder.class)
+    @EnumSource(Sort.Direction.class)
     @ParameterizedTest
-    public void testStreamRegionalTopPercentSorting(SortingOrder order)
+    public void testStreamRegionalTopPercentSorting(Sort.Direction direction)
     throws Exception
     {
         init(4, (c, c1)->{});
@@ -491,10 +492,11 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.TOP_PERCENT_REGION.getField(),
-                            order
+                            direction,
+                            CommunityService.StreamSorting.TOP_PERCENT_REGION
+                                .getField()
                         ),
                         String.class
                     )
@@ -509,14 +511,14 @@ public class CommunityVideoStreamIT
             createIndexedLadderVideoStream(0, null),
             createIndexedLadderVideoStream(3, null)
         ));
-        if(order == SortingOrder.ASC) Collections.reverse(expected);
+        if(direction == Sort.Direction.ASC) Collections.reverse(expected);
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("streams.proPlayer.proPlayer.version")
             .isEqualTo(new CommunityStreamResult(expected, Set.of()));
     }
-    
+
     @Test
     public void testServiceFilter()
     throws Exception
@@ -627,10 +629,10 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.VIEWERS.getField(),
-                            SortingOrder.DESC
+                            Sort.Direction.DESC,
+                            CommunityService.StreamSorting.VIEWERS.getField()
                         ),
                         String.class
                     )
@@ -668,10 +670,10 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.VIEWERS.getField(),
-                            SortingOrder.DESC
+                            Sort.Direction.DESC,
+                            CommunityService.StreamSorting.VIEWERS.getField()
                         ),
                         String.class
                     )
@@ -742,10 +744,10 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.VIEWERS.getField(),
-                            SortingOrder.DESC
+                            Sort.Direction.DESC,
+                            CommunityService.StreamSorting.VIEWERS.getField()
                         ),
                         String.class
                     )
@@ -811,10 +813,10 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.VIEWERS.getField(),
-                            SortingOrder.DESC
+                            Sort.Direction.DESC,
+                            CommunityService.StreamSorting.VIEWERS.getField()
                         ),
                         String.class
                     )
@@ -852,10 +854,10 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.VIEWERS.getField(),
-                            SortingOrder.DESC
+                            Sort.Direction.DESC,
+                            CommunityService.StreamSorting.VIEWERS.getField()
                         ),
                         String.class
                     )
@@ -901,10 +903,10 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.VIEWERS.getField(),
-                            SortingOrder.DESC
+                            Sort.Direction.DESC,
+                            CommunityService.StreamSorting.VIEWERS.getField()
                         ),
                         String.class
                     )
@@ -960,10 +962,10 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.VIEWERS.getField(),
-                            SortingOrder.DESC
+                            Sort.Direction.DESC,
+                            CommunityService.StreamSorting.VIEWERS.getField()
                         ),
                         String.class
                     )
@@ -1050,10 +1052,10 @@ public class CommunityVideoStreamIT
                     "sort",
                     conversionService.convert
                     (
-                        new SortParameter
+                        Sort.by
                         (
-                            CommunityService.StreamSorting.VIEWERS.getField(),
-                            SortingOrder.DESC
+                            Sort.Direction.DESC,
+                            CommunityService.StreamSorting.VIEWERS.getField()
                         ),
                         String.class
                     )
@@ -1123,7 +1125,7 @@ public class CommunityVideoStreamIT
             .allMatch(s->s.getStream().getService() == SocialMedia.BILIBILI)
         );
     }
-    
+
     @Test
     public void whenPlayerHasMultipleTeams_thenUseMostRecentTeam()
     throws Exception
@@ -1155,7 +1157,7 @@ public class CommunityVideoStreamIT
                 .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
                 .plusSeconds(11)
         );
-        
+
         VideoStream stream = new VideoStreamImpl
         (
             SocialMedia.TWITCH,

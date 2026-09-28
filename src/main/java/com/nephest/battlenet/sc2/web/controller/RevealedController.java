@@ -7,12 +7,10 @@ import static com.nephest.battlenet.sc2.model.BaseTeam.MAX_RATING;
 
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.SocialMedia;
-import com.nephest.battlenet.sc2.model.SortingOrder;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
 import com.nephest.battlenet.sc2.web.service.community.CommunityStreamResult;
@@ -24,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -91,7 +90,7 @@ public class RevealedController
             .getStreams
             (
                 services,
-                new SortParameter(sorting.getField(), SortingOrder.DESC),
+                Sort.by(Sort.Direction.DESC, sorting.getField()),
                 identifiedOnly,
                 races,
                 languages,

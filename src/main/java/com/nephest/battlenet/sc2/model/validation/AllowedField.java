@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 
 @Documented
 @Constraint(validatedBy = {
-    SortParameterAllowedFieldValidator.class,
+    SortAllowedFieldValidator.class,
     StringAllowedFieldValidator.class
 })
 @Target({ElementType.FIELD, ElementType.PARAMETER})
@@ -27,9 +27,9 @@ public @interface AllowedField
 
     Class<? extends Payload>[] payload() default {};
 
-    /**
-     * List of allowed field names.
-     */
     String[] value();
+
+    boolean allowTraversal() default false;
+    boolean allowDuplicates() default false;
 
 }

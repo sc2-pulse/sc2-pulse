@@ -58,8 +58,6 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyIdEntry;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
-import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
 import java.time.Duration;
@@ -79,6 +77,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
@@ -597,7 +596,7 @@ public class MatchIT
                 + "?characterId=" + charKr1.getId()
                 + "&after=" + mvcConversionService.convert
                     (
-                        new Cursor
+                        ScrollPosition.forward
                         (
                             LadderMatchDAO.createCursorPosition
                             (
@@ -606,8 +605,7 @@ public class MatchIT
                                 BaseMatch.MatchType._1V1,
                                 1,
                                 Region.US
-                            ),
-                            NavigationDirection.FORWARD
+                            )
                         ),
                         String.class
                     )
@@ -911,7 +909,7 @@ public class MatchIT
                 + "?characterId=" + charEu1.getId()
                 + "&after=" + mvcConversionService.convert
                 (
-                    new Cursor
+                    ScrollPosition.forward
                     (
                         LadderMatchDAO.createCursorPosition
                         (
@@ -919,8 +917,7 @@ public class MatchIT
                             BaseMatch.MatchType._1V1,
                             1,
                             Region.US
-                        ),
-                        NavigationDirection.FORWARD
+                        )
                     ),
                     String.class
                 )
@@ -981,7 +978,7 @@ public class MatchIT
                 + "?characterId=1"
                 + "&after=" + mvcConversionService.convert
                 (
-                    new Cursor
+                    ScrollPosition.forward
                     (
                         LadderMatchDAO.createCursorPosition
                         (
@@ -989,8 +986,7 @@ public class MatchIT
                             BaseMatch.MatchType._1V1,
                             1,
                             Region.US
-                        ),
-                        NavigationDirection.FORWARD
+                        )
                     ),
                     String.class
                 )

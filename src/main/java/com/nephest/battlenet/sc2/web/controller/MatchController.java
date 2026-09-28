@@ -6,12 +6,11 @@ package com.nephest.battlenet.sc2.web.controller;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
-import com.nephest.battlenet.sc2.model.validation.Version;
 import jakarta.validation.constraints.Min;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,17 +35,21 @@ public class MatchController
         @RequestParam(value = "durationMax", required = false) @Min(0) Integer maxDuration,
         @RequestParam(value = "includeSubOnly", defaultValue = "false") boolean includeSubOnly,
         @RequestParam(value = "mapId", required = false) Integer map,
-        @Version(LadderMatchDAO.CURSOR_POSITION_VERSION) Cursor cursor
+        KeysetScrollPosition cursor
     )
     {
-        return ladderMatchDAO.findTwitchVods
+        return CursorNavigableResult.wrap
         (
-            race, versusRace,
-            minRating, maxRating,
-            minDuration, maxDuration,
-            includeSubOnly,
-            map,
-            cursor
+            ladderMatchDAO.findTwitchVods
+            (
+                race, versusRace,
+                minRating, maxRating,
+                minDuration, maxDuration,
+                includeSubOnly,
+                map,
+                cursor
+            ),
+            cursor == null
         );
     }
 

@@ -9,14 +9,10 @@ import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderClanMemberEventDAO;
-import com.nephest.battlenet.sc2.model.navigation.Cursor;
 import com.nephest.battlenet.sc2.model.validation.AllowedField;
 import com.nephest.battlenet.sc2.model.validation.CursorNavigableResult;
-import com.nephest.battlenet.sc2.model.validation.Version;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import jakarta.validation.constraints.Max;
@@ -24,6 +20,8 @@ import jakarta.validation.constraints.Min;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.KeysetScrollPosition;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -74,17 +72,21 @@ public class ClanController
         int maxAvgRating,
         @RequestParam(value = "sort", defaultValue = "-activeMembers")
         @AllowedField({"members", "activeMembers", "gamesPerActiveMemberPerDay", "avgRating"})
-        SortParameter sort,
-        @Version(ClanDAO.CURSOR_POSITION_VERSION) Cursor cursor
+        Sort sort,
+        KeysetScrollPosition cursor
     )
     {
-        return clanDAO.findByCursor
+        return CursorNavigableResult.wrap
         (
-            minActiveMembers, maxActiveMembers,
-            minGamesPerActiveMemberPerDay, maxGamesPerActiveMemberPerDay,
-            minAvgRating, maxAvgRating,
-            region,
-            sort, cursor
+            clanDAO.findByCursor
+            (
+                minActiveMembers, maxActiveMembers,
+                minGamesPerActiveMemberPerDay, maxGamesPerActiveMemberPerDay,
+                minAvgRating, maxAvgRating,
+                region,
+                sort, cursor
+            ),
+            cursor == null
         );
     }
 
@@ -103,7 +105,7 @@ public class ClanController
         @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds,
         @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds,
         @RequestParam(name = "toonHandle", required = false, defaultValue = "") Set<PlayerCharacterNaturalId> toonHandles,
-        @Version(ClanMemberEventDAO.CURSOR_POSITION_VERSION) Cursor cursor,
+        KeysetScrollPosition cursor,
         @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "")
         @Min(1) @Max(CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
         Integer limit
@@ -114,12 +116,16 @@ public class ClanController
             areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds, toonHandles)
                 .orElse(null)
         );
-        return ladderClanMemberEventDAO.find
+        return CursorNavigableResult.wrap
         (
-            resolver.resolve(characterIds, Set.of(), proPlayerIds, accountIds, toonHandles),
-            clanIds,
-            cursor,
-            limit
+            ladderClanMemberEventDAO.find
+            (
+                resolver.resolve(characterIds, Set.of(), proPlayerIds, accountIds, toonHandles),
+                clanIds,
+                cursor,
+                limit
+            ),
+            cursor == null
         );
     }
 

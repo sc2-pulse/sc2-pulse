@@ -13,11 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class CursorRouterOperationCustomizerTest
+public class KeysetScrollPositionRouterOperationCustomizerTest
 {
 
-    private final CursorRouterOperationCustomizer customizer
-        = new CursorRouterOperationCustomizer();
+    private final KeysetScrollPositionOperationCustomizer customizer
+        = new KeysetScrollPositionOperationCustomizer();
 
     private final Parameter beforeParameter = new Parameter()
         .name(NavigationDirection.BACKWARD.getRelativePosition())

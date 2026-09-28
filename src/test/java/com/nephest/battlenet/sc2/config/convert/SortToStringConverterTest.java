@@ -5,31 +5,32 @@ package com.nephest.battlenet.sc2.config.convert;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.nephest.battlenet.sc2.model.SortingOrder;
-import com.nephest.battlenet.sc2.model.web.SortParameter;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.data.domain.Sort;
 
-public class SortParameterToStringConverterTest
+public class SortToStringConverterTest
 {
 
-    private final SortParameterToStringConverter converter
-        = new SortParameterToStringConverter();
+    private final SortToStringConverter converter
+        = new SortToStringConverter();
 
     public static Stream<Arguments> convertArguments()
     {
         return Stream.of
         (
-            Arguments.of(new SortParameter("field", SortingOrder.ASC), "field"),
-            Arguments.of(new SortParameter("field", SortingOrder.DESC), "-field")
+            Arguments.of(Sort.by(Sort.Direction.ASC, "name"), "name"),
+            Arguments.of(Sort.by(Sort.Direction.DESC, "name"), "-name"),
+
+            Arguments.of(Sort.unsorted(), null)
         );
     }
 
     @MethodSource("convertArguments")
     @ParameterizedTest
-    public void testConvert(SortParameter sort, String expected)
+    public void testConvert(Sort sort, String expected)
     {
         assertEquals(expected, converter.convert(sort));
     }
