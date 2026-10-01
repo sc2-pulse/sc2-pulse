@@ -8,15 +8,19 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.Range;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public class MiscUtilTest
@@ -195,6 +199,29 @@ public class MiscUtilTest
     {
         Long result = MiscUtil.tryParseUnsignedLong(in);
         assertEquals(out, result != null ? Long.toUnsignedString(result) : null);
+    }
+
+    public static Stream<Arguments> testContainsDuplicates()
+    {
+        return Stream.of
+        (
+            Arguments.of(List.of(), false),
+            Arguments.of(List.of("1"), false),
+            Arguments.of(List.of("1", "2"), false),
+
+            Arguments.of(List.of("1", "2", "1", "3"), true)
+        );
+    }
+
+    @MethodSource
+    @ParameterizedTest
+    public void testContainsDuplicates
+    (
+        Collection<Object> collection,
+        boolean expected
+    )
+    {
+        assertEquals(expected, MiscUtil.containsDuplicates(collection));
     }
 
 }

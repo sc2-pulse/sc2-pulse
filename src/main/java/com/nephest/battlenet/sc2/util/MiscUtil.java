@@ -9,8 +9,10 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -242,6 +244,17 @@ public final class MiscUtil
         {
             return null;
         }
+    }
+
+    public static boolean containsDuplicates(Collection<?> collection)
+    {
+        if(collection.size() <= 1) return false;
+
+        Set<Object> set = new HashSet<>(collection.size());
+        for(Object item : collection)
+            if(!set.add(item)) return true;
+
+        return false;
     }
 
 }
