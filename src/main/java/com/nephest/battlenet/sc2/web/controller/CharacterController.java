@@ -162,7 +162,7 @@ public class CharacterController
                 limit,
                 types
             ),
-            cursor == null
+            cursor.isInitial()
         );
     }
 

@@ -49,7 +49,7 @@ public class MatchController
                 map,
                 cursor
             ),
-            cursor == null
+            cursor.isInitial()
         );
     }
 

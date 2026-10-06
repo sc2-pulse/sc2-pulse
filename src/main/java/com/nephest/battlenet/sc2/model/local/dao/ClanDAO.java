@@ -590,7 +590,7 @@ public class ClanDAO
             .addValue
             (
                 "cursor",
-                navigationCursor != null
+                !navigationCursor.isInitial()
                     ? ((Number) navigationCursor.getKeys()
                         .get(cursor.getField()))
                         .doubleValue()
@@ -600,9 +600,7 @@ public class ClanDAO
             .addValue
             (
                 "idCursor",
-                navigationCursor != null
-                    ? navigationCursor.getKeys().get("id")
-                    : null,
+                navigationCursor.getKeys().get("id"),
                 Types.BIGINT
             )
             .addValue("minActiveMembers", minActiveMembers)
@@ -615,18 +613,16 @@ public class ClanDAO
             .addValue("limit", PAGE_SIZE)
             .addValue("offset", 0);
 
-        ScrollPosition.Direction direction
-            = CursorUtil.getDirection(navigationCursor);
         String q = CursorUtil.formatCursorNavigableQuery
         (
             cursor.queryTemplate,
             sort.iterator().next().getDirection(),
-            direction,
+            navigationCursor.getDirection(),
             true,
             String.valueOf(CLAN_STATS_DEPTH_DAYS)
         );
         List<Clan> clans = template.query(q, params, STD_ROW_MAPPER);
-        if(direction == ScrollPosition.Direction.BACKWARD)
+        if(navigationCursor.getDirection() == ScrollPosition.Direction.BACKWARD)
             Collections.reverse(clans);
         return CursorUtil.window
         (

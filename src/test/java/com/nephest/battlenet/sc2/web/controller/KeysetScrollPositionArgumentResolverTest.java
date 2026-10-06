@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -98,7 +97,7 @@ public class KeysetScrollPositionArgumentResolverTest
             .resolveArgument(null, null, nwr, null);
         if(position == null || position.isEmpty())
         {
-            assertNull(result);
+            assertTrue(result.isInitial());
         }
         else
         {

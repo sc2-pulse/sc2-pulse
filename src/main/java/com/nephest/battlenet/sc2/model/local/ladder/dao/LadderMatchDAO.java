@@ -483,18 +483,15 @@ public class LadderMatchDAO
             .addValue("limit", limit);
         addMatchCursorParams(cursor, types, params);
 
-        KeysetScrollPosition.Direction direction = cursor != null
-            ? cursor.getDirection()
-            : KeysetScrollPosition.Direction.FORWARD;
         String q = CursorUtil.formatCursorNavigableQuery
         (
             FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE,
             Sort.Direction.DESC,
-            direction,
+            cursor.getDirection(),
             false
         );
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
-        if(direction == KeysetScrollPosition.Direction.BACKWARD)
+        if(cursor.getDirection() == KeysetScrollPosition.Direction.BACKWARD)
             Collections.reverse(matches);
         return CursorUtil.window
         (
@@ -622,17 +619,15 @@ public class LadderMatchDAO
             EnumSet.of(BaseMatch.MatchType._1V1),
             params
         );
-        KeysetScrollPosition.Direction direction
-            = CursorUtil.getDirection(cursor);
         String q = CursorUtil.formatCursorNavigableQuery
         (
             FIND_TWITCH_VODS_TEMPLATE,
             Sort.Direction.DESC,
-            direction,
+            cursor.getDirection(),
             false
         );
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
-        if(direction == KeysetScrollPosition.Direction.BACKWARD)
+        if(cursor.getDirection() == KeysetScrollPosition.Direction.BACKWARD)
             Collections.reverse(matches);
         return CursorUtil.window
         (
@@ -649,7 +644,7 @@ public class LadderMatchDAO
         MapSqlParameterSource params
     )
     {
-        if(cursor == null)
+        if(cursor.isInitial())
         {
             params.addValue("dateCursor", null, Types.TIMESTAMP_WITH_TIMEZONE)
                 .addValue("typeCursor", null, Types.SMALLINT)

@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.IntFunction;
-import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
@@ -68,16 +67,6 @@ public final class CursorUtil
             orderFirst,
             additionalArguments
         ));
-    }
-
-    public static ScrollPosition.Direction getDirection
-    (
-        KeysetScrollPosition position
-    )
-    {
-        return position != null
-            ? position.getDirection()
-            : ScrollPosition.Direction.FORWARD;
     }
 
     public static <T> IntFunction<ScrollPosition> windowPositionFunction

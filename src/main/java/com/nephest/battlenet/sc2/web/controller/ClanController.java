@@ -86,7 +86,7 @@ public class ClanController
                 region,
                 sort, cursor
             ),
-            cursor == null
+            cursor.isInitial()
         );
     }
 
@@ -125,7 +125,7 @@ public class ClanController
                 cursor,
                 limit
             ),
-            cursor == null
+            cursor.isInitial()
         );
     }
 

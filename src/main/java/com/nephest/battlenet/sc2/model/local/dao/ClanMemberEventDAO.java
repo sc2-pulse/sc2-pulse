@@ -228,7 +228,7 @@ public class ClanMemberEventDAO
             .addValue
             (
                 "createdCursor",
-                cursor != null
+                !cursor.isInitial()
                     ? OffsetDateTime
                         .parse((String) cursor.getKeys().get("created"))
                     : null,
@@ -237,21 +237,20 @@ public class ClanMemberEventDAO
             .addValue
             (
                 "playerCharacterIdCursor",
-                cursor != null ? cursor.getKeys().get("characterId") : null,
+                cursor.getKeys().get("characterId"),
                 Types.BIGINT
             )
             .addValue("limit", limit);
 
-        ScrollPosition.Direction direction = CursorUtil.getDirection(cursor);
         String q = CursorUtil.formatCursorNavigableQuery
         (
             FIND_TEMPLATE,
             Sort.Direction.DESC,
-            direction,
+            cursor.getDirection(),
             false
         );
         List<ClanMemberEvent> events = template.query(q, params, STD_ROW_MAPPER);
-        if(direction == ScrollPosition.Direction.BACKWARD)
+        if(cursor.getDirection() == ScrollPosition.Direction.BACKWARD)
             Collections.reverse(events);
         return CursorUtil.window
         (

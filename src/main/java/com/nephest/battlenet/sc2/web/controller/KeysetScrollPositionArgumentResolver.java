@@ -56,7 +56,7 @@ implements HandlerMethodArgumentResolver
                 direction.toScrollPositionDirection()
             );
         }
-        return null;
+        return ScrollPosition.keyset();
     }
 
 }

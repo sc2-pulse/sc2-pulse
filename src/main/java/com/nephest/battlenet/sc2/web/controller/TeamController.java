@@ -173,7 +173,7 @@ public class TeamController
                 sort,
                 cursor
             ),
-            cursor == null
+            cursor.isInitial()
         );
     }
 

@@ -512,28 +512,27 @@ public class LadderSearchDAO
                 .addValue
                 (
                     "ratingCursor",
-                    cursor != null ? cursor.getKeys().get("rating") : null,
+                    cursor.getKeys().get("rating"),
                     Types.BIGINT
                 )
                 .addValue
                 (
                     "idCursor",
-                    cursor != null ? cursor.getKeys().get("id") : null,
+                    cursor.getKeys().get("id"),
                     Types.BIGINT
                 )
                 .addValue("cheaterReportType", conversionService
                     .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
 
-        ScrollPosition.Direction direction = CursorUtil.getDirection(cursor);
         String q = CursorUtil.formatCursorNavigableQuery
         (
             FIND_TEAM_MEMBERS_CURSOR_FORMAT,
             sortParameter.iterator().next().getDirection(),
-            direction,
+            cursor.getDirection(),
             true
         );
         List<LadderTeam> teams = template.query(q, params, LADDER_TEAMS_EXTRACTOR);
-        if(direction == ScrollPosition.Direction.BACKWARD)
+        if(cursor.getDirection() == ScrollPosition.Direction.BACKWARD)
             Collections.reverse(teams);
 
         return CursorUtil.window
