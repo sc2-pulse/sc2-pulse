@@ -3,13 +3,16 @@
 
 package com.nephest.battlenet.sc2.config.net;
 
+import com.nephest.battlenet.sc2.web.servlet.BodyLimitExceededException;
 import jakarta.validation.ValidationException;
-
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -57,6 +60,39 @@ extends ResponseEntityExceptionHandler
             HttpStatus.CONFLICT,
             request
         );
+    }
+
+    @ExceptionHandler(BodyLimitExceededException.class)
+    protected ResponseEntity<Object> handleBodyLimit
+    (
+        BodyLimitExceededException ex,
+        WebRequest request
+    )
+    {
+        return handleExceptionInternal
+        (
+            ex,
+            "Request body is too large",
+            new HttpHeaders(),
+            HttpStatus.PAYLOAD_TOO_LARGE,
+            request
+        );
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable
+    (
+        HttpMessageNotReadableException ex,
+        HttpHeaders headers,
+        HttpStatusCode status,
+        WebRequest request
+    )
+    {
+        BodyLimitExceededException limitEx = ExceptionUtils
+            .throwableOfType(ex, BodyLimitExceededException.class);
+        if(limitEx != null) return handleBodyLimit(limitEx, request);
+
+        return super.handleHttpMessageNotReadable(ex, headers, status, request);
     }
 
 }
