@@ -12,8 +12,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -65,24 +63,12 @@ extends ServletRequestWrapper
     {
         return new BufferedReader
         (
-            new InputStreamReader(getInputStream(), getCharset())
+            new InputStreamReader
+            (
+                getInputStream(),
+                ServletUtil.getCharset(this)
+            )
         );
-    }
-
-    private Charset getCharset()
-    throws UnsupportedEncodingException
-    {
-        String encoding = getCharacterEncoding();
-        if(encoding == null) return StandardCharsets.ISO_8859_1;
-
-        try
-        {
-            return Charset.forName(encoding);
-        }
-        catch(IllegalArgumentException ex)
-        {
-            throw new UnsupportedEncodingException(encoding);
-        }
     }
 
     private static final class ByteArrayServletInputStream

@@ -10,9 +10,6 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Request wrapper that throws {@link BodyLimitExceededException} when more
@@ -60,26 +57,14 @@ extends HttpServletRequestWrapper
         {
             reader = new BufferedReader
             (
-                new InputStreamReader(getBoundedStream(), getCharset())
+                new InputStreamReader
+                (
+                    getBoundedStream(),
+                    ServletUtil.getCharset(this)
+                )
             );
         }
         return reader;
-    }
-
-    private Charset getCharset()
-    throws UnsupportedEncodingException
-    {
-        String encoding = getCharacterEncoding();
-        if(encoding == null) return StandardCharsets.ISO_8859_1;
-
-        try
-        {
-            return Charset.forName(encoding);
-        }
-        catch(IllegalArgumentException ex)
-        {
-            throw new UnsupportedEncodingException(encoding);
-        }
     }
 
     private BoundedInputStream getBoundedStream()
