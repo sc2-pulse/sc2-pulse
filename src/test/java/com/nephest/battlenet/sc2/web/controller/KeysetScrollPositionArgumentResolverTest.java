@@ -9,17 +9,21 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.convert.KeysetScrollPositionKeysToStringConverterTest;
+import com.nephest.battlenet.sc2.model.navigation.CursorType;
 import com.nephest.battlenet.sc2.model.navigation.NavigationDirection;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import com.nephest.battlenet.sc2.web.service.StringService;
 import java.lang.reflect.Method;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.KeysetScrollPosition;
 import org.springframework.data.domain.ScrollPosition;
@@ -30,10 +34,13 @@ import org.springframework.web.context.request.ServletWebRequest;
 public class KeysetScrollPositionArgumentResolverTest
 {
 
+    private final StringService stringService
+        = new StringService(TestUtil.OBJECT_MAPPER);
     private final KeysetScrollPositionArgumentResolver resolver
         = new KeysetScrollPositionArgumentResolver
         (
-            new StringService(TestUtil.OBJECT_MAPPER)
+            stringService,
+            TestUtil.OBJECT_MAPPER
         );
 
     Method method = KeysetScrollPositionArgumentResolverTest.class
@@ -41,7 +48,9 @@ public class KeysetScrollPositionArgumentResolverTest
         (
             "parameters",
             KeysetScrollPosition.class,
-            String.class
+            String.class,
+            KeysetScrollPosition.class,
+            KeysetScrollPosition.class
         );
 
     public KeysetScrollPositionArgumentResolverTest()
@@ -122,6 +131,93 @@ public class KeysetScrollPositionArgumentResolverTest
         );
     }
 
-    private void parameters(KeysetScrollPosition cursor, String notCursor){}
+    @Test
+    public void whenCursorTypeIsSet_thenConvertKeysToPropertyTypes()
+    {
+        Map<String, Object> keys = new HashMap<>();
+        keys.put("created", "2026-09-16T10:00:00Z");
+        keys.put("id", 1);
+        keys.put("nested.value", 2);
+
+        assertEquals
+        (
+            ScrollPosition.of
+            (
+                Map.of
+                (
+                    "created", OffsetDateTime.parse("2026-09-16T10:00:00Z"),
+                    "id", 1,
+                    "nested.value", 2L
+                ),
+                ScrollPosition.Direction.FORWARD
+            ),
+            resolve(2, keys)
+        );
+    }
+
+    @ValueSource(ints = {0, 3})
+    @ParameterizedTest
+    public void whenCursorTypeIsNotSet_thenDontConvertKeys(int parameterIndex)
+    {
+        Map<String, Object> keys = Map.of("created", "2026-09-16T10:00:00Z");
+        assertEquals
+        (
+            ScrollPosition.of(keys, ScrollPosition.Direction.FORWARD),
+            resolve(parameterIndex, keys)
+        );
+    }
+
+    public static Stream<Arguments> whenCursorKeyIsInvalid_thenThrowException()
+    {
+        return Stream.of
+        (
+            Arguments.of(Map.of("unknown", 1)),
+            Arguments.of(Map.of("created", "invalidDate")),
+            Arguments.of(Map.of("id", "invalidNumber"))
+        );
+    }
+
+    @MethodSource
+    @ParameterizedTest
+    public void whenCursorKeyIsInvalid_thenThrowException
+    (
+        Map<String, Object> keys
+    )
+    {
+        assertThrows(IllegalArgumentException.class, ()->resolve(2, keys));
+    }
+
+    private KeysetScrollPosition resolve
+    (
+        int parameterIndex,
+        Map<String, Object> keys
+    )
+    {
+        return (KeysetScrollPosition) resolver.resolveArgument
+        (
+            new MethodParameter(method, parameterIndex),
+            null,
+            createRequest
+            (
+                ScrollPosition.Direction.FORWARD,
+                stringService.encode(keys)
+            ),
+            null
+        );
+    }
+
+    private void parameters
+    (
+        KeysetScrollPosition cursor,
+        String notCursor,
+        @CursorType(TypedCursor.class) KeysetScrollPosition typedCursor,
+        @CursorType KeysetScrollPosition noTypeCursor
+    ){}
+
+    private record TypedCursor(Integer id, OffsetDateTime created, Nested nested)
+    {}
+
+    private record Nested(Long value)
+    {}
 
 }
