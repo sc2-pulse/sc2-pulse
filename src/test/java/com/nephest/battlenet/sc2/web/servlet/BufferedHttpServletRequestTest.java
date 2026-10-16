@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
-public class BufferedServletRequestTest
+public class BufferedHttpServletRequestTest
 {
 
     private static final String BODY_STRING = "test body";
@@ -30,7 +30,7 @@ public class BufferedServletRequestTest
     {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setContent(BODY);
-        BufferedServletRequest buffered = BufferedServletRequest.from(request);
+        BufferedHttpServletRequest buffered = BufferedHttpServletRequest.from(request);
 
         assertArrayEquals(BODY, buffered.getInputStream().readAllBytes());
         assertArrayEquals(BODY, buffered.getInputStream().readAllBytes());
@@ -43,7 +43,7 @@ public class BufferedServletRequestTest
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setCharacterEncoding("UTF-8");
         request.setContent(BODY);
-        BufferedServletRequest buffered = BufferedServletRequest.from(request);
+        BufferedHttpServletRequest buffered = BufferedHttpServletRequest.from(request);
 
         assertEquals(BODY_STRING, buffered.getReader().readLine());
         assertEquals(BODY_STRING, buffered.getReader().readLine());
@@ -55,16 +55,16 @@ public class BufferedServletRequestTest
     {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setContent(BODY);
-        BufferedServletRequest buffered = BufferedServletRequest.from(request);
+        BufferedHttpServletRequest buffered = BufferedHttpServletRequest.from(request);
 
-        assertSame(buffered, BufferedServletRequest.from(buffered));
+        assertSame(buffered, BufferedHttpServletRequest.from(buffered));
     }
 
     @Test
     public void whenBodyIsEmpty_thenStreamIsFinished()
     throws IOException
     {
-        BufferedServletRequest buffered = BufferedServletRequest.from
+        BufferedHttpServletRequest buffered = BufferedHttpServletRequest.from
             (new MockHttpServletRequest());
 
         assertEquals(0, buffered.getInputStream().readAllBytes().length);
@@ -77,7 +77,7 @@ public class BufferedServletRequestTest
     {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setContent(BODY);
-        ServletInputStream in = BufferedServletRequest.from(request)
+        ServletInputStream in = BufferedHttpServletRequest.from(request)
             .getInputStream();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         boolean[] done = new boolean[1];
@@ -112,7 +112,7 @@ public class BufferedServletRequestTest
     public void whenReadListenerIsSetTwice_thenThrowException()
     throws IOException
     {
-        ServletInputStream in = BufferedServletRequest
+        ServletInputStream in = BufferedHttpServletRequest
             .from(new MockHttpServletRequest())
             .getInputStream();
         ReadListener listener = new ReadListener()

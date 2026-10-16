@@ -5,8 +5,8 @@ package com.nephest.battlenet.sc2.web.servlet;
 
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletRequestWrapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -19,13 +19,13 @@ import java.util.Objects;
  * {@link #getInputStream()} call returns a new stream over the buffered
  * bytes.
  */
-public class BufferedServletRequest
-extends ServletRequestWrapper
+public class BufferedHttpServletRequest
+extends HttpServletRequestWrapper
 {
 
     private final byte[] body;
 
-    private BufferedServletRequest(ServletRequest request, byte[] body)
+    private BufferedHttpServletRequest(HttpServletRequest request, byte[] body)
     {
         super(request);
         this.body = body;
@@ -39,12 +39,12 @@ extends ServletRequestWrapper
      * @return buffered request
      * @throws IOException if the body can't be read
      */
-    public static BufferedServletRequest from(ServletRequest request)
+    public static BufferedHttpServletRequest from(HttpServletRequest request)
     throws IOException
     {
-        if(request instanceof BufferedServletRequest buffered) return buffered;
+        if(request instanceof BufferedHttpServletRequest buffered) return buffered;
 
-        return new BufferedServletRequest
+        return new BufferedHttpServletRequest
         (
             request,
             request.getInputStream().readAllBytes()
