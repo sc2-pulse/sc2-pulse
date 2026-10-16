@@ -22,7 +22,8 @@ import java.util.concurrent.ScheduledExecutorService;
 public final class TestUtil
 {
 
-    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+        .findAndRegisterModules();
     public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     public static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newScheduledThreadPool(4);
 
