@@ -3,11 +3,16 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.web.service.GlobalContext;
 import com.nephest.battlenet.sc2.web.service.StringService;
+import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +21,61 @@ import org.springframework.core.convert.ConversionService;
 @Configuration
 public class FilterConfig
 {
+
+    @Bean
+    @ConditionalOnProperty
+    (
+        name = "com.nephest.battlenet.sc2.donation.webhook.ko-fi."
+            + "verification-token"
+    )
+    public FilterRegistrationBean<KoFiWebhookVerificationFilter>
+    koFiWebhookVerificationFilter
+    (
+        ObjectMapper objectMapper,
+        @Value
+        (
+            "${com.nephest.battlenet.sc2.donation.webhook.ko-fi."
+                + "verification-token}"
+        )
+        String verificationToken
+    )
+    {
+        FilterRegistrationBean<KoFiWebhookVerificationFilter> bean
+            = new FilterRegistrationBean<>();
+        bean.setFilter
+        (
+            new KoFiWebhookVerificationFilter
+            (
+                objectMapper,
+                verificationToken
+            )
+        );
+        bean.addUrlPatterns("/webhooks/ko-fi");
+        bean.setOrder(SecurityProperties.DEFAULT_FILTER_ORDER - 1);
+        return bean;
+    }
+
+    @Bean
+    @ConditionalOnProperty
+    (
+        name = "com.nephest.battlenet.sc2.donation.webhook.patreon.secret"
+    )
+    public FilterRegistrationBean<PatreonWebhookVerificationFilter>
+    patreonWebhookVerificationFilter
+    (
+        @Value("${com.nephest.battlenet.sc2.donation.webhook.patreon.secret}")
+        String secret
+    )
+    {
+        FilterRegistrationBean<PatreonWebhookVerificationFilter> bean
+            = new FilterRegistrationBean<>();
+        bean.setFilter(new PatreonWebhookVerificationFilter(
+            secret.getBytes(StandardCharsets.UTF_8)
+        ));
+        bean.addUrlPatterns("/webhooks/patreon");
+        bean.setOrder(SecurityProperties.DEFAULT_FILTER_ORDER - 1);
+        return bean;
+    }
 
     @Bean
     public FilterRegistrationBean<AverageSessionCacheFilter> sessionWebCacheFilter()

@@ -59,3 +59,33 @@ DROP TABLE player_character_stats;
 DROP TABLE team_state_archive;
 DELETE FROM var WHERE key LIKE '%.mmr.history.archive.season'
     OR key = 'mmr.history.clear.update.context.timestamp';
+
+CREATE TABLE "donation"
+(
+    "id" SERIAL,
+    "platform" TEXT NOT NULL,
+    "donation_id" TEXT NOT NULL,
+    "donor_id" TEXT,
+    "donor_name" TEXT,
+    "money_original_amount" NUMERIC NOT NULL,
+    "money_original_currency" TEXT NOT NULL,
+    "money_target_amount" NUMERIC,
+    "money_target_currency" TEXT NOT NULL,
+    "created" TIMESTAMP WITH TIME ZONE NOT NULL,
+
+    PRIMARY KEY("id"),
+
+    CONSTRAINT "uq_donation_platform_donation_id"
+        UNIQUE("platform", "donation_id")
+);
+CREATE INDEX "ix_donation_created_id" ON "donation"("created", "id");
+
+CREATE TABLE "patreon_donation_state"
+(
+    "member_id" TEXT,
+    "lifetime_amount" NUMERIC NOT NULL,
+    "currency" TEXT NOT NULL,
+    "version" SMALLINT NOT NULL,
+
+    PRIMARY KEY("member_id")
+);

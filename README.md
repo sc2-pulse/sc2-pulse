@@ -70,6 +70,29 @@ These features have no profiles, only app properties are required.
 * aligulac: `com.nephest.battlenet.sc2.api.aligulac.key={api_key}`
 * replaystats: `com.nephest.battlenet.sc2.api.replaystats.key={api_key}`
 
+#### Webhooks
+* donation target currency:
+  `com.nephest.battlenet.sc2.donation.target-currency={currency}`
+* Ko-fi webhook:
+  `com.nephest.battlenet.sc2.donation.webhook.ko-fi.verification-token={token}`
+* Patreon webhook:
+  `com.nephest.battlenet.sc2.donation.webhook.patreon.secret={secret}`
+* Patreon pledge start cutoff, required by the Patreon webhook:
+  `com.nephest.battlenet.sc2.donation.webhook.patreon.pledge-start-cutoff={ISO-8601 offset date time}`.
+  Pledges that started before the cutoff are treated as existing patrons: their
+  first webhook seeds the donation state without recording a donation, because
+  the lifetime amount contains donations made before the integration. Set it to
+  the time the webhook was enabled.
+* Patreon campaign currency, required by the Patreon webhook:
+  `com.nephest.battlenet.sc2.donation.webhook.patreon.campaign-currency={currency}`.
+  Used for robust workflow under any webhooks scopes.
+  Update it at the same time as the Patreon campaign currency, events received
+  in between are recorded with the wrong currency.
+
+The donation target currency is required when either donation webhook verification
+property is configured. The Ko-fi and Patreon properties enable their respective
+`/webhooks/{provider}` endpoints.
+
 ## Podman(rootless)
 The container config is compatible with rootless podman.
 Requirements:
