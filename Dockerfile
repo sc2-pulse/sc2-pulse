@@ -33,7 +33,9 @@ ENV JAVA_TOOL_OPTIONS="${JAVA_BASE_OPTIONS}"
 ENV USER_NAME=sc2pulse
 RUN useradd --system --user-group ${USER_NAME} && \
     mkdir -p ${WORK_DIR}/tmp && \
-    chown ${USER_NAME}:${USER_NAME} ${WORK_DIR}/tmp && \
+    mkdir ${WORK_DIR}/tmp/.resourceCache && \
+    ln -s ${WORK_DIR}/tmp/.resourceCache ${WORK_DIR}/.resourceCache && \
+    chown -R ${USER_NAME}:${USER_NAME} ${WORK_DIR}/tmp && \
     chmod 700 ${WORK_DIR}/tmp
 COPY --from=build --chown=${USER_NAME}:${USER_NAME} /usr/local/src/sc2pulse/target/sc2-webapp.jar /opt/sc2pulse/sc2pulse.jar
 COPY containers/entrypoint.sh /entrypoint.sh
