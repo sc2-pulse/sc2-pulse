@@ -237,6 +237,10 @@ by default.
 * `com.nephest.battlenet.sc2.contacts.twitter`
 * `com.nephest.battlenet.sc2.contacts.github`
 * `com.nephest.battlenet.sc2.donate` HTML text for the "donate" page
+* `com.nephest.battlenet.sc2.ads` JSON array of ads, empty by default. Each ad has a `name`, target `url`,
+`imageFileNames` map(files in `static/icon/sponsor/`) keyed by device type(`DESKTOP`, `MOBILE`), and `isSponsored` flag. An ad without an image for a
+specific device type is not shown on that device. Mobile images must be 320x50px. Example:
+`[{"name":"Ad","url":"https://example.com","imageFileNames":{"DESKTOP":"ad.png","MOBILE":"ad-mobile.png"},"isSponsored":true}]`
 * `security.remember-me.token.key` key for signing remember-me tokens
 * `security.remember-me.token.max-age` Max age(duration) of the cookie, P3650D(~10 years) by default
 ## Contributing

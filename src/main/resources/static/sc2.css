@@ -326,7 +326,7 @@ body.theme-dark .c-empty
     background-color: #22272a;
 }
 
-#dd-desktop-left h2, #sponsor-desktop-right h2
+#dd-desktop-left h2
 {
     font-size: 1.2rem;
     margin-top: 0.5rem;
@@ -352,6 +352,39 @@ body.theme-dark .c-empty
 .sponsor-desktop-side
 {
     width: 100%;
+}
+
+.ad-slot
+{
+    position: relative;
+    padding-top: 1.25rem;
+}
+
+.ad-slot::before
+{
+    content: "Friend: " attr(data-ad-name);
+    position: absolute;
+    top: 0;
+    left: 0;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    color: var(--secondary);
+}
+
+.ad-slot[rel~="sponsored"]::before
+{
+    content: "Sponsor: " attr(data-ad-name);
+}
+
+.ad-slot.mobile img
+{
+    display: block;
+    width: 320px;
+    height: 50px;
 }
 
 .adsbygoogle
@@ -2230,14 +2263,14 @@ a.unstyled, a.unstyled:hover
 
 }
 
-@media (min-width: 1700px) {
+@media (min-width: 1900px) {
     .sponsor-mobile-container
     {
         display: none;
     }
 }
 
-@media (max-width: 1699px) {
+@media (max-width: 1899px) {
     .sponsor-desktop-side-container
     {
         display: none;

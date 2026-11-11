@@ -3,12 +3,21 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.model.ad.AdEntity;
+import com.nephest.battlenet.sc2.model.ad.DeviceType;
 import com.nephest.battlenet.sc2.model.local.CollectionVar;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,8 +47,8 @@ public class SupporterService
     private final List<String> sponsorsT2;
     private final List<String> sponsoredT2Links;
     private final List<String> patrons;
-    private final Map<String, String> sponsoredImageLinks;
-    private final Map<String, String> friendImageLinks;
+    private final List<AdEntity> ads;
+    private final Map<DeviceType, List<AdEntity>> deviceAds;
     private final Object supporterWriteBlock = new Object();
 
     @Autowired @Lazy
@@ -54,9 +63,10 @@ public class SupporterService
         @Value("${com.nephest.battlenet.sc2.sponsor.link:#{''}}") String sponsoredLink,
         @Value("${com.nephest.battlenet.sc2.sponsor.t2:#{''}}") List<String> sponsorsT2,
         @Value("${com.nephest.battlenet.sc2.sponsor.t2.link:#{''}}") List<String> sponsoredT2Links,
-        @Value("#{${com.nephest.battlenet.sc2.sponsor.img:{:}}}") Map<String, String> sponsoredImageLinks,
-        @Value("#{${com.nephest.battlenet.sc2.friend.img:{:}}}") Map<String, String> friendImageLinks
+        @Value("${com.nephest.battlenet.sc2.ads:[]}") String ads,
+        ObjectMapper objectMapper
     )
+    throws JsonProcessingException
     {
         initVars(varDAO);
         this.rng = rng;
@@ -66,8 +76,22 @@ public class SupporterService
         this.sponsoredT2Links = sponsoredT2Links;
         this.patrons = Stream.concat(Stream.of(supporters.getValue(), sponsorsT2).flatMap(Collection::stream), Stream.of(sponsor))
             .collect(Collectors.toCollection(CopyOnWriteArrayList::new));
-        this.sponsoredImageLinks = sponsoredImageLinks;
-        this.friendImageLinks = friendImageLinks;
+        this.ads = Collections.unmodifiableList
+        (
+            objectMapper.readValue(ads, new TypeReference<List<AdEntity>>(){})
+        );
+        this.deviceAds = groupAds(this.ads);
+    }
+
+    private static Map<DeviceType, List<AdEntity>> groupAds(List<AdEntity> ads)
+    {
+        Map<DeviceType, List<AdEntity>> result
+            = new EnumMap<>(DeviceType.class);
+        Arrays.stream(DeviceType.values())
+            .forEach(type->result.put(type, ads.stream()
+                .filter(ad->ad.imageFileNames().get(type) != null)
+                .toList()));
+        return Collections.unmodifiableMap(result);
     }
 
     private void initVars(VarDAO varDAO)
@@ -195,14 +219,30 @@ public class SupporterService
         return sponsoredT2Links;
     }
 
-    public Map<String, String> getSponsoredImageLinks()
+    public List<AdEntity> getAds()
     {
-        return sponsoredImageLinks;
+        return ads;
     }
 
-    public Map<String, String> getFriendImageLinks()
+    /**
+     * @param deviceType target device type
+     * @return ads that have an image for the target device type
+     */
+    public List<AdEntity> getAds(DeviceType deviceType)
     {
-        return friendImageLinks;
+        return deviceAds.get(deviceType);
+    }
+
+    /**
+     * @param deviceType target device type
+     * @return random ad that has an image for the target device type
+     */
+    public Optional<AdEntity> getRandomAd(DeviceType deviceType)
+    {
+        List<AdEntity> typeAds = getAds(deviceType);
+        return typeAds.isEmpty()
+            ? Optional.empty()
+            : Optional.of(typeAds.get(rng.get().nextInt(typeAds.size())));
     }
 
 }

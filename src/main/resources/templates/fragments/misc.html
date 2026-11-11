@@ -39,5 +39,42 @@
         <div class="feature text-secondary">Feature requests</div>
     </div>
 </a>
+<a th:fragment="ad (ad, deviceType)"
+   th:with="adLabel=${(ad.isSponsored() ? 'Sponsor: ' : 'Friend: ') + ad.name()}"
+   th:href="${ad.url()}"
+   target="_blank"
+   th:rel="${ad.isSponsored() ? 'noopener sponsored' : 'noopener'}"
+   th:title="${adLabel}"
+   th:data-ad-name="${ad.name()}"
+   class="ad-slot text-break d-inline-block mb-3 mx-2"
+>
+    <img th:src="@{|/static/icon/sponsor/${ad.imageFileNames.get(deviceType)}|}" th:alt="${adLabel}">
+</a>
+<th:block th:fragment="ad-mobile"
+          th:with="mobileAd=${showAds == true
+            ? @supporterService.getRandomAd(T(com.nephest.battlenet.sc2.model.ad.DeviceType).MOBILE).orElse(null)
+            : null},
+            mobileAdType=${T(com.nephest.battlenet.sc2.model.ad.DeviceType).MOBILE}"
+>
+    <div th:if="${mobileAd != null}" class="sponsor-mobile-container no-popup-hide">
+        <a th:with="adLabel=${(mobileAd.isSponsored() ? 'Sponsor: ' : 'Friend: ') + mobileAd.name()}"
+           th:href="${mobileAd.url()}"
+           target="_blank"
+           th:rel="${mobileAd.isSponsored() ? 'noopener nofollow sponsored' : 'noopener nofollow'}"
+           th:title="${adLabel}"
+           th:data-ad-name="${mobileAd.name()}"
+           class="ad-slot mobile d-inline-block"
+        >
+            <img th:src="@{|/static/icon/sponsor/${mobileAd.imageFileNames.get(mobileAdType)}|}"
+                 th:alt="${adLabel}"
+                 width="320"
+                 height="50">
+        </a>
+    </div>
+</th:block>
+<th:block th:fragment="header">
+    <h1 class="text-dark no-popup-hide mt-3"><a th:href="@{/}"><img width="32" height="32" th:src="@{/static/icon/misc/pulse.svg}" class="mr-1" alt="Pulse"/><span> SC2 Pulse</span></a></h1>
+    <th:block th:replace="~{fragments/misc :: ad-mobile}"></th:block>
+</th:block>
 </body>
 </html>

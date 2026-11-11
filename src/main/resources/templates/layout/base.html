@@ -46,7 +46,9 @@
     <link rel="icon" type="image/svg+xml" th:href="@{/static/icon/misc/pulse.svg}" />
 </head>
 <body th:class="|theme-${theme}|">
-    <div class="d-flex">
+    <div class="d-flex"
+         th:with="desktopDeviceType=${T(com.nephest.battlenet.sc2.model.ad.DeviceType).DESKTOP},
+            desktopAds=${@supporterService.getAds(desktopDeviceType)}">
     <div id="section-side-left" class="section-side">
         <div class="sponsor-desktop-side-container" th:if="${showAds == true}">
             <div id="dd-desktop-left" class="dd-block sponsor-desktop-side">
@@ -122,17 +124,10 @@
              th:if="${@supporterService.getSponsoredLink() != null}"
              th:utext="${@supporterService.getSponsoredLink()}">
         </div>
-        <div class="container sponsor-mobile-container"
-             th:if="${(not @supporterService.getSponsoredImageLinks().isEmpty() or not @supporterService.getFriendImageLinks().isEmpty()) and showAds == true}">
-            <th:block th:each="sponsorRightEntry : ${@supporterService.getSponsoredImageLinks().entrySet()}">
-                <a th:href="${sponsorRightEntry.getValue()}" target="_blank" rel="noopener sponsored" class="text-break d-inline-block mb-3 mr-3">
-                    <img th:src="@{|/static/icon/sponsor/${sponsorRightEntry.getKey()}|}" th:alt="${sponsorRightEntry.getValue()}">
-                </a>
-            </th:block>
-            <th:block th:each="friendRightEntry : ${@supporterService.getFriendImageLinks().entrySet()}">
-                <a th:href="${friendRightEntry.getValue()}" target="_blank" rel="noopener" class="text-break d-inline-block mb-3">
-                    <img th:src="@{|/static/icon/sponsor/${friendRightEntry.getKey()}|}" th:alt="${friendRightEntry.getValue()}">
-                </a>
+        <div class="container sponsor-mobile-container all"
+             th:if="${showAds == true and not desktopAds.isEmpty()}">
+            <th:block th:each="ad : ${desktopAds}">
+                <a th:replace="~{fragments/misc :: ad(${ad}, ${desktopDeviceType})}"></a>
             </th:block>
         </div>
         <div class="container mb-3 text-secondary"
@@ -157,27 +152,13 @@
     <div id="section-side-right" class="section-side">
         <div id="sponsor-desktop-right-container"
              class="sponsor-desktop-side-container"
-             th:if="${(not @supporterService.getSponsoredImageLinks().isEmpty() or not @supporterService.getFriendImageLinks().isEmpty()) and showAds == true}">
-            <div id="sponsor-desktop-right" class="dd-block sponsor-desktop-side"
+             th:if="${showAds == true and not desktopAds.isEmpty()}">
+            <div id="sponsor-desktop-right" class="dd-block sponsor-desktop-side pt-2"
             >
-                <section th:if="${not @supporterService.getSponsoredImageLinks().isEmpty()}">
-                    <h2 class="mb-3 text-break">Sponsors</h2>
-                    <th:block th:each="sponsorRightEntry : ${@supporterService.getSponsoredImageLinks().entrySet()}">
-                        <a th:href="${sponsorRightEntry.getValue()}" target="_blank" rel="noopener sponsored" class="text-break d-inline-block mb-3">
-                            <img th:src="@{|/static/icon/sponsor/${sponsorRightEntry.getKey()}|}" th:alt="${sponsorRightEntry.getValue()}">
-                        </a>
-                        <br/>
-                    </th:block>
-                </section>
-                <section th:if="${not @supporterService.getFriendImageLinks().isEmpty()}">
-                    <h2 class="mb-3 text-break">Friends</h2>
-                    <th:block th:each="friendRightEntry : ${@supporterService.getFriendImageLinks().entrySet()}">
-                        <a th:href="${friendRightEntry.getValue()}" target="_blank" rel="noopener" class="text-break d-inline-block mb-3">
-                            <img th:src="@{|/static/icon/sponsor/${friendRightEntry.getKey()}|}" th:alt="${friendRightEntry.getValue()}">
-                        </a>
-                        <br/>
-                    </th:block>
-                </section>
+                <th:block th:each="ad : ${desktopAds}">
+                    <a th:replace="~{fragments/misc :: ad(${ad}, ${desktopDeviceType})}"></a>
+                    <br/>
+                </th:block>
             </div>
         </div>
     </div>

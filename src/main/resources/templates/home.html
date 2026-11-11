@@ -89,6 +89,7 @@
                 </ul>
             </nav>
             <h1 class="text-dark no-popup-hide"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}" class="mr-1"  alt="Pulse"/><span> SC2 Pulse</span></a></h1>
+            <th:block th:replace="~{fragments/misc :: ad-mobile}"></th:block>
             <aside class="no-popup-hide" th:if="${@varService.getMessage('message.global') != null}" th:utext="${@varService.getMessage('message.global')}"></aside>
             <div class="c-divider-hr no-popup-hide"></div>
         </header>

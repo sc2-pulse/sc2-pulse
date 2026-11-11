@@ -11,7 +11,7 @@
 </head>
 <body>
 <div id="settings">
-    <h1 class="text-dark no-popup-hide mt-3"><a th:href="@{/}"><img width="32" height="32" th:src="@{/static/icon/misc/pulse.svg}" class="mr-1" alt="Pulse"/><span> SC2 Pulse</span></a></h1>
+    <th:block th:replace="~{fragments/misc :: header}"></th:block>
     <section>
         <h2>Advanced account settings</h2>
         <dl class="dl-gap-05">

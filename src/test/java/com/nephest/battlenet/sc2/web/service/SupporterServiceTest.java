@@ -8,9 +8,9 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +38,13 @@ public class SupporterServiceTest
         "5, 0, 'name1, name2, name3, name4'"
     })
     @ParameterizedTest
-    public void testGetRandomSupporters(int count, int subListIx, String expectedResult)
+    public void testGetRandomSupporters
+    (
+        int count,
+        int subListIx,
+        String expectedResult
+    )
+    throws Exception
     {
         when(varDAO.find(argThat(s->s.equals("supporters") || s.equals("donors"))))
             .thenReturn(Optional.of("name1,name2,name3,name4"));
@@ -47,7 +53,7 @@ public class SupporterServiceTest
         SupporterService supporterService = new SupporterService
         (
             varDAO, ()->rng,
-            "", "", List.of(), List.of(), Map.of(), Map.of()
+            "", "", List.of(), List.of(), "[]", new ObjectMapper()
         );
         supporterService.setSupporterService(supporterService);
 
