@@ -14,14 +14,12 @@ public class InstallationDataTest
 {
 
     @Test
-    @SuppressWarnings("deprecation")
     public void testApplicationInfoDataConstructor()
     {
         ApplicationInfoData infoData = ApplicationInfoData.builder()
             .name("name")
             .description("desc")
             .id("123")
-            .summary("ignored")
             .botPublic(false)
             .botRequireCodeGrant(false)
             .verifyKey("key")

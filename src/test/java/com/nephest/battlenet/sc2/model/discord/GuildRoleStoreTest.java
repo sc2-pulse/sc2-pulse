@@ -23,6 +23,7 @@ import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Role;
 import discord4j.discordjson.json.ImmutableRoleData;
+import discord4j.discordjson.json.RoleColorData;
 import discord4j.discordjson.json.RoleData;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
@@ -120,11 +121,13 @@ public class GuildRoleStoreTest
         assertEquals(99, ratingRangeEntry.getKey().getMaximum()); //max value is excluded
     }
 
+    @SuppressWarnings("deprecation")
     public static ImmutableRoleData.Builder roleBuilder()
     {
         return RoleData.builder()
             .flags(1)
-            .color(1)
+            .color(1) //deprecated, but still required by the builder
+            .colors(RoleColorData.builder().primaryColor(1).build())
             .hoist(true)
             .permissions(1L)
             .mentionable(true)
