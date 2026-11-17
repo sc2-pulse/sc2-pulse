@@ -6,41 +6,34 @@ package com.nephest.battlenet.sc2.extension;
 import com.nephest.battlenet.sc2.model.util.TestDatabaseLifecycleService;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+/**
+ * <p>
+ * Resets the DB after a test class or method, depending on the
+ * {@link AutoConfigureDatabase.ExecutionPhase}. The DB is initialized by
+ * containers on launch, so there is no need to initialize it before tests.
+ * This guarantees that each test has a properly initialized empty DB even
+ * before the Spring context is loaded.
+ * </p>
+ */
 public class DatabaseLifecycleExtension
-implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback
+implements AfterAllCallback, AfterEachCallback
 {
-
-    @Override
-    public void beforeAll(ExtensionContext context)
-    {
-        if(getPhase(context) == AutoConfigureDatabase.ExecutionPhase.CLASS)
-            getService(context).initDb();
-    }
 
     @Override
     public void afterAll(ExtensionContext context)
     {
         if(getPhase(context) == AutoConfigureDatabase.ExecutionPhase.CLASS)
-            getService(context).clearDb();
-    }
-
-    @Override
-    public void beforeEach(ExtensionContext context)
-    {
-        if(getPhase(context) == AutoConfigureDatabase.ExecutionPhase.METHOD)
-            getService(context).initDb();
+            getService(context).resetDb();
     }
 
     @Override
     public void afterEach(ExtensionContext context)
     {
         if(getPhase(context) == AutoConfigureDatabase.ExecutionPhase.METHOD)
-            getService(context).clearDb();
+            getService(context).resetDb();
     }
 
     private AutoConfigureDatabase.ExecutionPhase getPhase(ExtensionContext context)

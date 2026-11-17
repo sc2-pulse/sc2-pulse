@@ -125,12 +125,11 @@ public class TeamStateServiceIT
     {
         try
         {
-            lifecycleService.initDb();
             teamStateService.reset();
         }
         finally
         {
-            lifecycleService.clearDb();
+            lifecycleService.resetDb();
         }
     }
 

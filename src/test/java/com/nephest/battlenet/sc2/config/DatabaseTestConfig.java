@@ -12,10 +12,12 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @EnableTransactionManagement
+@EnableRetry
 @EnableBatchProcessing
 @ComponentScan
 (
