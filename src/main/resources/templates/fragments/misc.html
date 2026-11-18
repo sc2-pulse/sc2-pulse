@@ -45,8 +45,8 @@
    target="_blank"
    th:rel="${ad.isSponsored() ? 'noopener sponsored' : 'noopener'}"
    th:title="${adLabel}"
-   th:data-ad-name="${ad.name()}"
-   class="ad-slot text-break d-inline-block mb-3 mx-2"
+   th:data-banner-name="${ad.name()}"
+   class="banner text-break d-inline-block mb-3 mx-2"
 >
     <img th:src="@{|/static/icon/sponsor/${ad.imageFileNames.get(deviceType)}|}" th:alt="${adLabel}">
 </a>
@@ -62,8 +62,8 @@
            target="_blank"
            th:rel="${mobileAd.isSponsored() ? 'noopener nofollow sponsored' : 'noopener nofollow'}"
            th:title="${adLabel}"
-           th:data-ad-name="${mobileAd.name()}"
-           class="ad-slot mobile d-inline-block"
+           th:data-banner-name="${mobileAd.name()}"
+           class="banner mobile d-inline-block"
         >
             <img th:src="@{|/static/icon/sponsor/${mobileAd.imageFileNames.get(mobileAdType)}|}"
                  th:alt="${adLabel}"

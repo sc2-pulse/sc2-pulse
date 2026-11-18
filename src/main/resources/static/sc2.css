@@ -354,15 +354,15 @@ body.theme-dark .c-empty
     width: 100%;
 }
 
-.ad-slot
+.banner
 {
     position: relative;
     padding-top: 1.25rem;
 }
 
-.ad-slot::before
+.banner::before
 {
-    content: "Friend: " attr(data-ad-name);
+    content: "Friend: " attr(data-banner-name);
     position: absolute;
     top: 0;
     left: 0;
@@ -375,12 +375,12 @@ body.theme-dark .c-empty
     color: var(--secondary);
 }
 
-.ad-slot[rel~="sponsored"]::before
+.banner[rel~="sponsored"]::before
 {
-    content: "Sponsor: " attr(data-ad-name);
+    content: "Sponsor: " attr(data-banner-name);
 }
 
-.ad-slot.mobile img
+.banner.mobile img
 {
     display: block;
     width: 320px;
