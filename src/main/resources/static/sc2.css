@@ -366,7 +366,9 @@ body.theme-dark .c-empty
     position: absolute;
     top: 0;
     left: 0;
+    right: 0;
     max-width: 100%;
+    text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
