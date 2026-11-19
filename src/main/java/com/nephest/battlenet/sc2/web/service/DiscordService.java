@@ -303,7 +303,7 @@ public class DiscordService
         List<PlayerCharacter> characters = playerCharacterDAO.findByAccountId(accountId);
         if(characters.isEmpty()) return Optional.empty();
 
-        int curSeason = seasonDAO.getMaxBattlenetId();
+        int curSeason = seasonDAO.getMaxPulseSeasonId();
         Set<Integer> seasons = IntStream
             .rangeClosed(curSeason - MAIN_TEAM_SEASON_DEPTH + 1, curSeason)
             .boxed()

@@ -341,7 +341,7 @@ public class AlternativeLadderService
         return data.entrySet().stream()
             .flatMap(e->blizzardDAO.findLegacyLadderIds
             (
-                season.getBattlenetId(),
+                season.getPulseSeasonId(),
                 new Region[]{season.getRegion()},
                 new QueueType[]{e.getKey()},
                 e.getValue().toArray(BaseLeague.LeagueType[]::new),
@@ -400,7 +400,7 @@ public class AlternativeLadderService
         if(leagueTypes == null) leagueTypes = LadderUpdateContext.ALL_LEAGUES;
         int divisionCount = divisionDao.getDivisionCount
         (
-            season.getBattlenetId(),
+            season.getPulseSeasonId(),
             season.getRegion(),
             leagueTypes.toArray(BaseLeague.LeagueType[]::new),
             QueueType.LOTV_1V1,
@@ -418,7 +418,8 @@ public class AlternativeLadderService
 
     public List<Future<Void>> discoverSeason(Season season, boolean web)
     {
-        long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion())
+        long lastDivision = divisionDao
+            .findLastDivision(season.getPulseSeasonId() - 1, season.getRegion())
             .orElse(ladderDiscoveryStartIds.get(season.getRegion())) + 1;
         return discoverSeason(season, lastDivision, web, null, true);
     }
@@ -426,9 +427,13 @@ public class AlternativeLadderService
     private long getLastDivision(Season season)
     {
         return divisionDao
-            .findLastDivision(season.getBattlenetId(), season.getRegion())
+            .findLastDivision(season.getPulseSeasonId(), season.getRegion())
             .orElseGet(()->divisionDao
-                .findLastDivision(season.getBattlenetId() - 1, season.getRegion())
+                .findLastDivision
+                (
+                    season.getPulseSeasonId() - 1,
+                    season.getRegion()
+                )
                 .orElse(ladderDiscoveryStartIds.get(season.getRegion()))) + 1;
     }
 
@@ -559,7 +564,7 @@ public class AlternativeLadderService
                     new Team
                     (
                         null,
-                        season.getBattlenetId(), season.getRegion(),
+                        season.getPulseSeasonId(), season.getRegion(),
                         baseLeague, null,
                         teamDao.legacyIdOf(baseLeague, bTeam), division.getId(),
                         bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints(),
@@ -735,7 +740,14 @@ public class AlternativeLadderService
     (Season season, BaseLeague bLeague, long battlenetId)
     {
         return divisionDao
-            .findDivision(season.getBattlenetId(), season.getRegion(), bLeague.getQueueType(), bLeague.getTeamType(), battlenetId)
+            .findDivision
+            (
+                season.getPulseSeasonId(),
+                season.getRegion(),
+                bLeague.getQueueType(),
+                bLeague.getTeamType(),
+                battlenetId
+            )
             .orElseGet(()-> createDivision(season, bLeague, battlenetId));
     }
 
@@ -749,8 +761,15 @@ public class AlternativeLadderService
     @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
     public LeagueTier createLeagueTier(Season season, BaseLeague bLeague)
     {
-        return leagueTierDao.findByLadder(
-            season.getBattlenetId(), season.getRegion(), bLeague.getType(), bLeague.getQueueType(), bLeague.getTeamType(), ALTERNATIVE_TIER)
+        return leagueTierDao.findByLadder
+        (
+            season.getPulseSeasonId(),
+            season.getRegion(),
+            bLeague.getType(),
+            bLeague.getQueueType(),
+            bLeague.getTeamType(),
+            ALTERNATIVE_TIER
+        )
             .orElseGet(()->{
                 League league = leagueDao
                     .merge(new League(null, season.getId(), bLeague.getType(), bLeague.getQueueType(), bLeague.getTeamType()));

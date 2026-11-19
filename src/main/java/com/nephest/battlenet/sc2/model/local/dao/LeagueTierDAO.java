@@ -90,7 +90,7 @@ public class LeagueTierDAO
         "SELECT " + STD_SELECT + " FROM league_tier "
         + "INNER JOIN league ON league_tier.league_id = league.id "
         + "INNER JOIN season ON league.season_id = season.id "
-        + "WHERE season.battlenet_id = :season "
+        + "WHERE season.pulse_season_id = :season "
         + "AND season.region = :region "
         + "AND league.type = :leagueType "
         + "AND league.queue_type = :queueType "

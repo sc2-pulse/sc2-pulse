@@ -154,7 +154,7 @@ implements java.io.Serializable
         return new Team
         (
             null,
-            season.getBattlenetId(),
+            season.getPulseSeasonId(),
             season.getRegion(),
             league,
             tier.getType(),

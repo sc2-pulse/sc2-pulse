@@ -15,18 +15,48 @@ extends BaseSeason
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
     private Integer id;
 
     @NotNull
     private Integer battlenetId;
 
+    /**
+     * Canonical season key for (year, number), see pulse_season table. It's
+     * equal to battlenetId in most cases, but region-local Blizzard ids can
+     * differ, e.g. CN. Null until the season is persisted.
+     */
+    private Integer pulseSeasonId;
+
     @NotNull
     private Region region;
 
     public Season(){}
 
+    public Season
+    (
+        Integer id,
+        Integer battlenetId,
+        Integer pulseSeasonId,
+        Region region,
+        Integer year,
+        Integer number,
+        OffsetDateTime start,
+        OffsetDateTime end
+    )
+    {
+        super(year, number, start, end);
+        this.id = id;
+        this.battlenetId = battlenetId;
+        this.pulseSeasonId = pulseSeasonId;
+        this.region = region;
+    }
+
+    /**
+     * Creates a season with an unresolved pulse season id. The id is resolved
+     * when the season is persisted.
+     */
     public Season
     (
         Integer id,
@@ -38,10 +68,7 @@ implements java.io.Serializable
         OffsetDateTime end
     )
     {
-        super(year, number, start, end);
-        this.id = id;
-        this.battlenetId = battlenetId;
-        this.region = region;
+        this(id, battlenetId, null, region, year, number, start, end);
     }
 
     public static Season of(BlizzardSeason season, Region region)
@@ -104,6 +131,16 @@ implements java.io.Serializable
     public Integer getBattlenetId()
     {
         return battlenetId;
+    }
+
+    public void setPulseSeasonId(Integer pulseSeasonId)
+    {
+        this.pulseSeasonId = pulseSeasonId;
+    }
+
+    public Integer getPulseSeasonId()
+    {
+        return pulseSeasonId;
     }
 
     public void setRegion(Region region)

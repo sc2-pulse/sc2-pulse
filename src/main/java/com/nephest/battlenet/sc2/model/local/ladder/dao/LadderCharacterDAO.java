@@ -489,7 +489,7 @@ public class LadderCharacterDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("name", name)
             .addValue("likeName", likeName)
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
@@ -504,7 +504,7 @@ public class LadderCharacterDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("battleTag", battleTag)
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
@@ -515,7 +515,7 @@ public class LadderCharacterDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("accountId", accountId)
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
@@ -530,7 +530,7 @@ public class LadderCharacterDAO
             .addValue("region", Integer.parseInt(split[split.length - 3]))
             .addValue("realm", Integer.parseInt(split[split.length - 2]))
             .addValue("battlenetId", Long.parseLong(split[split.length - 1]))
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
@@ -541,7 +541,7 @@ public class LadderCharacterDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterId", playerCharacterId)
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
@@ -554,7 +554,7 @@ public class LadderCharacterDAO
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", playerCharacterIds)
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
@@ -567,7 +567,7 @@ public class LadderCharacterDAO
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("clanTag", clanTag)
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
@@ -580,7 +580,7 @@ public class LadderCharacterDAO
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("accountId", accountId)
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
@@ -591,7 +591,7 @@ public class LadderCharacterDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterId", playerCharacterId)
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))
@@ -604,7 +604,7 @@ public class LadderCharacterDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("accountId", accountId)
-            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("season", seasonDAO.getMaxPulseSeasonId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))

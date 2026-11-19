@@ -185,11 +185,11 @@ public class LadderSearchIT
         );
 
         //a bunch of empty seasons for season finder testing
-        seasonDAO.merge(new Season(null, 10, Region.EU, 2020, 1,
+        seasonDAO.merge(new Season(null, 10, Region.EU, 2023, 1,
             DEFAULT_SEASON_START.plusMonths(3), DEFAULT_SEASON_END.plusMonths(3)));
-        seasonDAO.merge(new Season(null, 11, Region.US, 2020, 2,
+        seasonDAO.merge(new Season(null, 11, Region.US, 2023, 2,
             DEFAULT_SEASON_START.plusMonths(4), DEFAULT_SEASON_END.plusMonths(4)));
-        seasonDAO.merge(new Season(null, 11, Region.EU, 2020, 2,
+        seasonDAO.merge(new Season(null, 11, Region.EU, 2023, 2,
             DEFAULT_SEASON_START.plusMonths(4), DEFAULT_SEASON_END.plusMonths(4)));
 
         //a team with OLD players, should not be included in the queue_stats player_base.
@@ -791,13 +791,13 @@ public class LadderSearchIT
         assertEquals(DEFAULT_SEASON_END.plusMonths(2), seasons.get(2).getEnd());
 
         assertEquals(10, seasons.get(1).getBattlenetId());
-        assertEquals(2020, seasons.get(1).getYear());
+        assertEquals(2023, seasons.get(1).getYear());
         assertEquals(1, seasons.get(1).getNumber());
         assertEquals(DEFAULT_SEASON_START.plusMonths(3), seasons.get(1).getStart());
         assertEquals(DEFAULT_SEASON_END.plusMonths(3), seasons.get(1).getEnd());
 
         assertEquals(11, seasons.get(0).getBattlenetId());
-        assertEquals(2020, seasons.get(0).getYear());
+        assertEquals(2023, seasons.get(0).getYear());
         assertEquals(2, seasons.get(0).getNumber());
         assertEquals(DEFAULT_SEASON_START.plusMonths(4), seasons.get(0).getStart());
         assertEquals(DEFAULT_SEASON_END.plusMonths(4), seasons.get(0).getEnd());

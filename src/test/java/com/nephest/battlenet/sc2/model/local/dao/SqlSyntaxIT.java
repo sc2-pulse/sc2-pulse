@@ -124,15 +124,23 @@ public class SqlSyntaxIT
         Region region = Region.EU;
         Season s1 = seasonDAO.merge(new Season(null, 40, region, 2020, 1,
             SC2Pulse.offsetDateTime(2020, 1, 1), SC2Pulse.offsetDateTime(2020, 2, 1)));
-        Season s2 = seasonDAO.merge(new Season(null, 40, region, 2019, 2, 
-            SC2Pulse.offsetDateTime(2019, 2, 1), SC2Pulse.offsetDateTime(2019, 3, 1)));
+        Season s2 = seasonDAO.merge(new Season
+        (
+            null, 40, region, 2020, 1,
+            SC2Pulse.offsetDateTime(2020, 1, 2),
+            SC2Pulse.offsetDateTime(2020, 2, 2)
+        ));
         assertEquals(s1.getId(), s2.getId());
         List<Season> seasons = seasonDAO.findListByRegion(region);
         assertEquals(1, seasons.size());
         Season season = seasons.get(0);
         assertEquals(40, season.getBattlenetId());
-        assertEquals(2019, season.getYear());
-        assertEquals(2, season.getNumber());
+        assertEquals(2020, season.getYear());
+        assertEquals(1, season.getNumber());
+        assertTrue(SC2Pulse.offsetDateTime(2020, 1, 2)
+            .isEqual(season.getStart()));
+        assertTrue(SC2Pulse.offsetDateTime(2020, 2, 2)
+            .isEqual(season.getEnd()));
         Season s3 = seasonDAO.merge(new Season(null, 39, region, 2019, 1,
             SC2Pulse.offsetDateTime(2019, 1, 1), SC2Pulse.offsetDateTime(2019, 2, 1)));
         assertEquals(s1, seasonDAO.findLast().orElseThrow());

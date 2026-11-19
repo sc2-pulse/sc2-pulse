@@ -61,7 +61,7 @@ public class SeasonCacheFilterTest
         List<Season> seasons =
             List.of(new Season(1, 1, Region.EU, 2020, 11,
                 SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(1)));
-        when(seasonDAO.findListByBattlenetId(any())).thenReturn(seasons);
+        when(seasonDAO.findListByPulseSeasonId(any())).thenReturn(seasons);
 
         filter.doFilter(null, response, filterChain);
         NoCacheFilter.NO_CACHE_HEADERS.forEach((key, value)->verify(response).setHeader(key, value));
@@ -76,7 +76,7 @@ public class SeasonCacheFilterTest
                 SC2Pulse.offsetDateTime().minusMonths(2),
                 SC2Pulse.offsetDateTime().minusMonths(1)))
             .collect(Collectors.toList());
-        when(seasonDAO.findListByBattlenetId(any())).thenReturn(seasons);
+        when(seasonDAO.findListByPulseSeasonId(any())).thenReturn(seasons);
 
         filter.doFilter(null, response, filterChain);
         NoCacheFilter.NO_CACHE_HEADERS.forEach((key, value)->verify(response).setHeader(key, value));
@@ -92,7 +92,7 @@ public class SeasonCacheFilterTest
             .map(r->new Season(null, 1, r, 2020, 1, start, start.plusMonths(10)))
             .collect(Collectors.toList());
         seasons.set(0, new Season(null, 1, Region.US, 2020, 1, start, end));
-        when(seasonDAO.findListByBattlenetId(any())).thenReturn(seasons);
+        when(seasonDAO.findListByPulseSeasonId(any())).thenReturn(seasons);
 
         filter.doFilter(null, response, filterChain);
 

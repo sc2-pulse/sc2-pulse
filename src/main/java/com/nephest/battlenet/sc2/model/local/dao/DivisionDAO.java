@@ -65,7 +65,7 @@ public class DivisionDAO
         + "INNER JOIN league_tier ON division.league_tier_id=league_tier.id "
         + "INNER JOIN league ON league_tier.league_id=league.id "
         + "INNER JOIN season ON league.season_id=season.id "
-        + "WHERE season.battlenet_id=:seasonBattlenetId AND season.region=:region "
+        + "WHERE season.pulse_season_id=:season AND season.region=:region "
         + "AND league.type=:leagueType AND league.queue_type=:queueType AND league.team_type=:teamType "
         + "AND COALESCE(league_tier.type, -1)=COALESCE(:tierType::smallint, -1)";
 
@@ -101,7 +101,7 @@ public class DivisionDAO
         + "INNER JOIN league ON league_tier.league_id = league.id "
         + "INNER JOIN season ON league.season_id = season.id "
         + "WHERE "
-        + "season.battlenet_id=:season "
+        + "season.pulse_season_id=:season "
         + "AND season.region=:region "
         + "AND league.type IN (:leagues) "
         + "AND league.queue_type IN (:queueTypes) "
@@ -114,7 +114,7 @@ public class DivisionDAO
         + "INNER JOIN league ON league_tier.league_id = league.id "
         + "INNER JOIN season ON league.season_id = season.id "
         + "WHERE "
-        + "season.battlenet_id=:season "
+        + "season.pulse_season_id=:season "
         + "AND season.region=:region ";
 
     private static final String FIND_LAST_DIVISION_BATTLENET_ID_BY_LADDER =
@@ -129,7 +129,7 @@ public class DivisionDAO
         + "INNER JOIN league ON league_tier.league_id = league.id "
         + "INNER JOIN season ON league.season_id = season.id "
         + "WHERE "
-        + "season.battlenet_id=:season "
+        + "season.pulse_season_id=:season "
         + "AND season.region=:region "
         + "AND league.queue_type = :queueType "
         + "AND league.team_type = :teamType "
@@ -141,7 +141,7 @@ public class DivisionDAO
         + "INNER JOIN league ON league_tier.league_id = league.id "
         + "INNER JOIN season ON league.season_id = season.id "
         + "WHERE "
-        + "season.battlenet_id=:season "
+        + "season.pulse_season_id=:season "
         + "AND season.region=:region "
         + "AND league.type IN (:leagues) "
         + "AND league.queue_type = :queueType "
@@ -222,7 +222,7 @@ public class DivisionDAO
         (
             FIND_LIST_BY_LADDER,
             new MapSqlParameterSource()
-                .addValue("seasonBattlenetId", season)
+                .addValue("season", season)
                 .addValue("region", conversionService.convert(region, Integer.class))
                 .addValue("leagueType", conversionService.convert(leagueType, Integer.class))
                 .addValue("queueType", conversionService.convert(queueType, Integer.class))

@@ -142,7 +142,7 @@ public class MapStatsFilmFrameDAO
             + "cross_tier\n"
             + "FROM stats_group\n"
             + "INNER JOIN season ON stats_group.region = season.region\n"
-                + "AND stats_group.season = season.battlenet_id\n"
+                + "AND stats_group.season = season.pulse_season_id\n"
             + "INNER JOIN league ON league.season_id = season.id\n"
                 + "AND stats_group.league = league.type\n"
                 + "AND league.queue_type = :queueType\n"

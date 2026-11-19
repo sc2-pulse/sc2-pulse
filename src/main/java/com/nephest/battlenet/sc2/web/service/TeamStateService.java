@@ -177,7 +177,11 @@ public class TeamStateService
             .collect(Collectors.groupingBy(
                 Map.Entry::getKey,
                 ()->new EnumMap<>(Region.class),
-                Collectors.mapping(entry->entry.getValue().getSeason().getBattlenetId(), Collectors.toSet())
+                Collectors.mapping
+                (
+                    entry->entry.getValue().getSeason().getPulseSeasonId(),
+                    Collectors.toSet()
+                )
             ));
         takeFinalTeamSnapshots(updates);
         removeExpired();
@@ -193,7 +197,7 @@ public class TeamStateService
         updates.forEach((region, seasons) -> {
             long minSeason = minSeasonFunction.apply(region);
             //not current season
-            int maxSeason = seasonDAO.getMaxBattlenetId(region) - 1;
+            int maxSeason = seasonDAO.getMaxPulseSeasonId(region) - 1;
             seasons.stream()
                 //update only previous seasons that have ended already
                 .map(season->season - 1)

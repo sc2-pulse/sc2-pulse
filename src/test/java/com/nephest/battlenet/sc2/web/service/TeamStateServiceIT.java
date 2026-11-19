@@ -147,6 +147,7 @@ public class TeamStateServiceIT
                     (
                         null,
                         season,
+                        season,
                         Region.EU,
                         2020,
                         1,

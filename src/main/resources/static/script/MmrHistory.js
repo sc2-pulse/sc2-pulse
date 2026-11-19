@@ -354,7 +354,7 @@ class MmrHistory
     {
         return Promise.all([
             Session.SC2_PULSE_API.getTeamHistorySummaries({legacyUids, from, to, summaryColumns}),
-            Session.SC2_PULSE_API.getTeams({legacyUids, fromSeason: Session.currentSeasons[0].battlenetId})
+            Session.SC2_PULSE_API.getTeams({legacyUids, fromSeason: Session.currentSeasons[0].pulseSeasonId})
         ])
             .then(summaryBatch=>{
                 const summary = summaryBatch[0];

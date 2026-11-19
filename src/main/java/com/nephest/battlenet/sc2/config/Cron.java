@@ -83,7 +83,11 @@ public class Cron
     @Scheduled(cron="0 59 * * * *")
     public void updateSeasonState()
     {
-        seasonStateDAO.merge(SC2Pulse.offsetDateTime(), seasonDAO.getMaxBattlenetId());
+        seasonStateDAO.merge
+        (
+            SC2Pulse.offsetDateTime(),
+            seasonDAO.getMaxPulseSeasonId()
+        );
     }
 
     @Scheduled(cron="0 0/10 * * * *")

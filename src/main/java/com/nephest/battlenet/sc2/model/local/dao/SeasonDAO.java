@@ -22,6 +22,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class SeasonDAO
@@ -29,24 +30,37 @@ public class SeasonDAO
     public static final String STD_SELECT =
         "season.id AS \"season.id\","
         + "season.battlenet_id AS \"season.battlenet_id\","
+        + "season.pulse_season_id AS \"season.pulse_season_id\","
         + "season.region AS \"season.region\","
         + "season.year AS \"season.year\","
         + "season.number AS \"season.number\","
         + "season.\"start\" AS \"season.start\", "
         + "season.\"end\" AS \"season.end\" ";
 
-    private static final String CREATE_QUERY = "INSERT INTO season "
-        + "(battlenet_id, region, year, number, \"start\", \"end\") "
-        + "VALUES (:battlenetId, :region, :year, :number, :start, :end)";
+    private static final String COLUMNS =
+        "battlenet_id, pulse_season_id, region, year, number, "
+        + "\"start\", \"end\"";
+    private static final String PARAMETERS =
+        ":battlenetId, :pulseSeasonId, :region, :year, :number, :start, :end";
 
+    private static final String CREATE_QUERY = "INSERT INTO season "
+        + "(" + COLUMNS + ") "
+        + "VALUES (" + PARAMETERS + ")";
+
+    /*
+        pulse_season_id is an identity of the season, it's set only when
+        inserting a new season. Year and number updates of an existing season
+        are rejected by fk_season_pulse_season_id_year_number.
+     */
     private static final String MERGE_QUERY =
         "WITH "
-        + "vals AS (VALUES(:battlenetId, :region, :year, :number, :start, :end)), "
+        + "vals AS (VALUES(" + PARAMETERS + ")), "
         + "selected AS "
         + "("
             + "SELECT id, region, battlenet_id "
             + "FROM season "
-            + "INNER JOIN vals v(battlenet_id, region, year, number, \"start\", \"end\") USING (region, battlenet_id) "
+            + "INNER JOIN vals v(" + COLUMNS + ") "
+                + "USING (region, battlenet_id) "
         + "), "
         + "updated AS "
         + "("
@@ -56,7 +70,8 @@ public class SeasonDAO
             + "\"start\" = v.start, "
             + "\"end\" = v.end "
             + "FROM selected "
-            + "INNER JOIN vals v(battlenet_id, region, year, number, \"start\", \"end\") USING (region, battlenet_id) "
+            + "INNER JOIN vals v(" + COLUMNS + ") "
+                + "USING (region, battlenet_id) "
             + "WHERE season.id = selected.id "
             + "AND"
             + "("
@@ -69,7 +84,7 @@ public class SeasonDAO
         + "inserted AS "
         + "("
             + "INSERT INTO season "
-            + "(battlenet_id, region, year, number, \"start\", \"end\") "
+            + "(" + COLUMNS + ") "
             + "SELECT * FROM vals "
             + "WHERE NOT EXISTS (SELECT 1 FROM selected) "
             + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
@@ -96,44 +111,57 @@ public class SeasonDAO
             AND battlenet_id = :battlenetId;
         """.formatted(STD_SELECT);
 
+    private static final String FIND_BY_REGION_AND_PULSE_SEASON_ID =
+        """
+            SELECT %1$s
+            FROM season
+            WHERE region = :region
+            AND pulse_season_id = :pulseSeasonId;
+        """.formatted(STD_SELECT);
+
     private static final String FIND_LIST_BY_REGION = "SELECT "
         + STD_SELECT
         + "FROM season "
         + "WHERE region=:region "
-        + "ORDER BY battlenet_id DESC";
+        + "ORDER BY pulse_season_id DESC";
 
-    private static final String FIND_LIST_BY_BATTLENET_ID =
+    private static final String FIND_LIST_BY_PULSE_SEASON_ID =
         "SELECT " + STD_SELECT
         + "FROM season "
-        + "WHERE :battlenetId IS NULL OR season.battlenet_id = :battlenetId "
-        + "ORDER BY battlenet_id DESC, region DESC";
+        + "WHERE :pulseSeasonId IS NULL "
+        + "OR season.pulse_season_id = :pulseSeasonId "
+        + "ORDER BY pulse_season_id DESC, region DESC";
 
-    private static final String FIND_LIST_BY_FIRST_BATTELENET_ID =
-        "SELECT DISTINCT ON (battlenet_id) "
+    private static final String FIND_LIST_BY_FIRST_PULSE_SEASON_ID =
+        "SELECT DISTINCT ON (pulse_season_id) "
         + STD_SELECT
         + "FROM season "
-        + "ORDER BY battlenet_id DESC, region DESC";
+        + "ORDER BY pulse_season_id DESC, region DESC";
 
     private static final String FIND_LAST =
         "SELECT " + STD_SELECT
         + "FROM season "
-        + "ORDER BY battlenet_id DESC, region DESC "
+        + "ORDER BY pulse_season_id DESC, region DESC "
         + "LIMIT 1";
 
-    private static final String FIND_MAX_BATTLENET_ID_QUERY =
-        "SELECT MAX(battlenet_id) FROM season";
+    private static final String FIND_MAX_PULSE_SEASON_ID_QUERY =
+        "SELECT MAX(pulse_season_id) FROM season";
+
+    private static final String FIND_MAX_PULSE_SEASON_ID_BY_REGION_QUERY =
+        FIND_MAX_PULSE_SEASON_ID_QUERY + " WHERE region = :region";
 
     private static final String FIND_MAX_BATTLENET_ID_BY_REGION_QUERY =
-        FIND_MAX_BATTLENET_ID_QUERY + " WHERE region = :region";
+        "SELECT MAX(battlenet_id) FROM season WHERE region = :region";
 
     private static final String FIND_LAST_IN_ALL_REGIONS =
         "SELECT DISTINCT ON (region) "
         + STD_SELECT
         + "FROM season "
-        + "ORDER BY region DESC, battlenet_id DESC ";
+        + "ORDER BY region DESC, pulse_season_id DESC ";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
+    private final PulseSeasonDAO pulseSeasonDAO;
 
     private static RowMapper<Season> STD_ROW_MAPPER;
     private static ResultSetExtractor<Season> STD_EXTRACTOR;
@@ -142,11 +170,14 @@ public class SeasonDAO
     public SeasonDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+        @Qualifier("sc2StatsConversionService")
+        ConversionService conversionService,
+        PulseSeasonDAO pulseSeasonDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
+        this.pulseSeasonDAO = pulseSeasonDAO;
         initMappers(conversionService);
     }
 
@@ -157,6 +188,7 @@ public class SeasonDAO
         (
             rs.getInt("season.id"),
             rs.getInt("season.battlenet_id"),
+            rs.getInt("season.pulse_season_id"),
             conversionService.convert(rs.getInt("season.region"), Region.class),
             rs.getInt("season.year"),
             rs.getInt("season.number"),
@@ -176,8 +208,17 @@ public class SeasonDAO
         return STD_EXTRACTOR;
     }
 
+    /**
+     * Creates a new season. Its pulse season id is always resolved from
+     * year and number, the original value is ignored.
+     *
+     * @param season new season
+     * @return created season
+     */
+    @Transactional
     public Season create(Season season)
     {
+        season.setPulseSeasonId(mergePulseSeason(season));
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(season);
         template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
@@ -185,17 +226,42 @@ public class SeasonDAO
         return season;
     }
 
+    /**
+     * Updates an existing season or creates a new one. Its pulse season id is
+     * always resolved from year and number, the original value is ignored.
+     * Year and number of an existing season can't be changed because they
+     * must match its pulse season, which is enforced by the DB.
+     *
+     * @param season season to merge
+     * @return merged season with id and pulse season id
+     * @throws org.springframework.dao.DataIntegrityViolationException if year
+     * or number of an existing season is changed
+     */
+    @Transactional
     public Season merge(Season season)
     {
+        season.setPulseSeasonId(mergePulseSeason(season));
         MapSqlParameterSource params = createParameterSource(season);
         season.setId(template.query(MERGE_QUERY, params, DAOUtils.INT_EXTRACTOR));
         return season;
+    }
+
+    private int mergePulseSeason(Season season)
+    {
+        return pulseSeasonDAO.merge
+        (
+            season.getYear(),
+            season.getNumber(),
+            season.getBattlenetId()
+        )
+            .getId();
     }
 
     private MapSqlParameterSource createParameterSource(Season season)
     {
         return new MapSqlParameterSource()
             .addValue("battlenetId", season.getBattlenetId())
+            .addValue("pulseSeasonId", season.getPulseSeasonId())
             .addValue("region", conversionService.convert(season.getRegion(), Integer.class))
             .addValue("year", season.getYear())
             .addValue("number", season.getNumber())
@@ -218,6 +284,23 @@ public class SeasonDAO
             FIND_BY_REGION_AND_BATTLENET_ID, params, STD_EXTRACTOR));
     }
 
+    public Optional<Season> findByPulseSeasonId
+    (
+        Region region,
+        int pulseSeasonId
+    )
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue
+            (
+                "region",
+                conversionService.convert(region, Integer.class)
+            )
+            .addValue("pulseSeasonId", pulseSeasonId);
+        return Optional.ofNullable(template.query(
+            FIND_BY_REGION_AND_PULSE_SEASON_ID, params, STD_EXTRACTOR));
+    }
+
     public List<Season> findListByRegion(Region region)
     {
         MapSqlParameterSource params
@@ -225,9 +308,10 @@ public class SeasonDAO
         return template.query(FIND_LIST_BY_REGION, params, STD_ROW_MAPPER);
     }
 
-    public List<Season> findListByFirstBattlenetId()
+    public List<Season> findListByFirstPulseSeasonId()
     {
-        return template.query(FIND_LIST_BY_FIRST_BATTELENET_ID, STD_ROW_MAPPER);
+        return template
+            .query(FIND_LIST_BY_FIRST_PULSE_SEASON_ID, STD_ROW_MAPPER);
     }
 
     public Optional<Season> findLast()
@@ -240,26 +324,60 @@ public class SeasonDAO
         return template.query(FIND_LAST_IN_ALL_REGIONS, STD_ROW_MAPPER);
     }
 
+    /**
+     * @return distinct pulse season ids of last seasons in all regions
+     */
     public List<Integer> getLastInAllRegions()
     {
         return findLastInAllRegions().stream()
-            .map(Season::getBattlenetId)
+            .map(Season::getPulseSeasonId)
             .distinct()
             .collect(Collectors.toList());
     }
 
-    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
-    public List<Season> findListByBattlenetId(@Nullable Integer battlenetId)
+    @Cacheable
+    (
+        cacheNames = "fqdn-ladder-scan",
+        keyGenerator = "fqdnSimpleKeyGenerator"
+    )
+    public List<Season> findListByPulseSeasonId(@Nullable Integer pulseSeasonId)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("battlenetId", battlenetId, Types.INTEGER);
-        return template.query(FIND_LIST_BY_BATTLENET_ID, params, STD_ROW_MAPPER);
+            .addValue("pulseSeasonId", pulseSeasonId, Types.INTEGER);
+        return template
+            .query(FIND_LIST_BY_PULSE_SEASON_ID, params, STD_ROW_MAPPER);
     }
 
-    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
-    public Integer getMaxBattlenetId()
+    @Cacheable
+    (
+        cacheNames = "fqdn-ladder-scan",
+        keyGenerator = "fqdnSimpleKeyGenerator"
+    )
+    public Integer getMaxPulseSeasonId()
     {
-        return template.query(FIND_MAX_BATTLENET_ID_QUERY, DAOUtils.INT_EXTRACTOR);
+        return template
+            .query(FIND_MAX_PULSE_SEASON_ID_QUERY, DAOUtils.INT_EXTRACTOR);
+    }
+
+    @Cacheable
+    (
+        cacheNames = "fqdn-ladder-scan",
+        keyGenerator = "fqdnSimpleKeyGenerator"
+    )
+    public Integer getMaxPulseSeasonId(Region region)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue
+            (
+                "region",
+                conversionService.convert(region, Integer.class)
+            );
+        return template.query
+        (
+            FIND_MAX_PULSE_SEASON_ID_BY_REGION_QUERY,
+            params,
+            DAOUtils.INT_EXTRACTOR
+        );
     }
 
     @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")

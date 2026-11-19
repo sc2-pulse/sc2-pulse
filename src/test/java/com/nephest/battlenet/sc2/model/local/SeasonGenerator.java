@@ -266,7 +266,7 @@ public class SeasonGenerator
             }
             Team newTeam = Team.joined
             (
-                null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
+                null, season.getPulseSeasonId(), season.getRegion(), league, tier.getType(),
                 teamDAO.legacyIdOf(league, bTeam), division.getId(),
                 (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3,
                 season.getStart()
@@ -325,7 +325,7 @@ public class SeasonGenerator
     {
         Team newTeam = Team.joined
         (
-            null, season.getBattlenetId(), season.getRegion(), league, tierType,
+            null, season.getPulseSeasonId(), season.getRegion(), league, tierType,
             legacyId, division.getId(),
             rating, wins, losses, ties, points,
             SC2Pulse.offsetDateTime()
@@ -480,6 +480,7 @@ public class SeasonGenerator
         (
             1,
             DEFAULT_SEASON_ID,
+            DEFAULT_SEASON_ID,
             DEFAULT_SEASON_REGION,
             DEFAULT_SEASON_YEAR,
             DEFAULT_SEASON_NUMBER,
@@ -575,7 +576,8 @@ public class SeasonGenerator
             "team_member",
             "account",
             "player_character",
-            "league_stats"
+            "league_stats",
+            "pulse_season"
         );
     }
 

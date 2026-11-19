@@ -507,11 +507,19 @@ public class StatsService
         return forcedAlternativeUpdateInstants;
     }
 
+    /**
+     * @deprecated unused. It treats pulse season ids as region-local Blizzard
+     * season ids, which is wrong for regions with offset season ids, e.g. CN.
+     */
+    @Deprecated(forRemoval = true)
     @CacheEvict(cacheNames="fqdn-ladder-scan", allEntries=true)
     public void updateAll(Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data)
     {
         long start = System.currentTimeMillis();
-        int lastSeasonIx = api.getLastSeason(Region.EU, seasonDao.getMaxBattlenetId()).block().getId() + 1;
+        int lastSeasonIx = api
+            .getLastSeason(Region.EU, seasonDao.getMaxPulseSeasonId())
+            .block()
+            .getId() + 1;
         for(int season = BlizzardSC2API.FIRST_SEASON; season < lastSeasonIx; season++)
         {
             updateSeason(season, data);
@@ -547,6 +555,11 @@ public class StatsService
         return ctx;
     }
 
+    /**
+     * @param seasonId region-local Blizzard season id
+     * @param region region
+     * @param ids ladder ids
+     */
     public void updateLadders(int seasonId, Region region, Long[] ids)
     {
         Season season = seasonService.merge(Season.of(api.getSeason(region, seasonId).block(), region));
@@ -568,6 +581,10 @@ public class StatsService
         updateTeams(bLadder, season, league, tier, division);
     }
 
+    /**
+     * @deprecated used only by deprecated {@link #updateAll(Map)}
+     */
+    @Deprecated(forRemoval = true)
     private void updateSeason
     (
         int seasonId,
@@ -645,6 +662,10 @@ public class StatsService
         for(Integer seasonId : seasons) teamDao.updateRanks(seasonId);
     }
 
+    /**
+     * @deprecated used only by deprecated {@link #updateAll(Map)}
+     */
+    @Deprecated(forRemoval = true)
     private void updateSeason
     (
         Region region,
@@ -680,8 +701,8 @@ public class StatsService
                 region,
                 updateOrAlternativeUpdate(bSeason, season, entry.getValue(), true)
             );
-            seasons.add(season.getBattlenetId());
-            LOG.debug("Updated leagues: {} {}", season.getBattlenetId(), region);
+            seasons.add(season.getPulseSeasonId());
+            LOG.debug("Updated leagues: {} {}", season.getPulseSeasonId(), region);
         }
         pendingLadderData.getStatsUpdates().addAll(seasons);
         return ctx;
@@ -696,7 +717,7 @@ public class StatsService
     )
     {
         LOG.trace("updateOrAlternativeUpdate({}, {}, {})", season, data, currentSeason);
-        fastTeamDAO.load(season.getRegion(), season.getBattlenetId());
+        fastTeamDAO.load(season.getRegion(), season.getPulseSeasonId());
         LOG.debug("Loaded teams into FastTeamDAO for {}", season);
         if(!isAlternativeUpdate(season.getRegion(), currentSeason))
         {
@@ -856,8 +877,14 @@ public class StatsService
             Alternative ladder update doesn't have tier info, so it creates divisions with the default tier.
             Find such divisions and update their tier.
          */
-        Division division = divisionDao.findDivision(
-            season.getBattlenetId(), season.getRegion(), league.getQueueType(), league.getTeamType(), bDivision.getLadderId())
+        Division division = divisionDao.findDivision
+        (
+            season.getPulseSeasonId(),
+            season.getRegion(),
+            league.getQueueType(),
+            league.getTeamType(),
+            bDivision.getLadderId()
+        )
             .orElseGet(()->Division.of(tier, bDivision));
         division.setTierId(tier.getId());
 
@@ -877,8 +904,9 @@ public class StatsService
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members = new ArrayList<>(bTeams.length * memberCount);
         List<ClanMemberEventData> clans = new ArrayList<>();
-        Integer curSeason = seasonDao.getMaxBattlenetId(season.getRegion()) == null
-            ? 0 : seasonDao.getMaxBattlenetId(season.getRegion());
+        Integer maxPulseSeasonId =
+            seasonDao.getMaxPulseSeasonId(season.getRegion());
+        Integer curSeason = maxPulseSeasonId == null ? 0 : maxPulseSeasonId;
         List<Tuple2<Team, BlizzardTeam>> validTeams = Arrays.stream(bTeams)
             .filter(teamValidationPredicate.and(t->isValidTeam(t, memberCount)))
             .map(bTeam->Tuples.of(Team.of(season, league, tier, division, bTeam, teamDao), bTeam))
@@ -892,7 +920,7 @@ public class StatsService
             .forEach(t->{
                 extractTeamMembers(
                     ladder, t.getT2().getMembers(), members, clans, season, t.getT1());
-                if(season.getBattlenetId().equals(curSeason))
+                if(season.getPulseSeasonId().equals(curSeason))
                     pendingLadderData.getTeams().add(t.getT1().getId());
             });
         saveMembersConcurrently(members);
@@ -1257,7 +1285,7 @@ public class StatsService
                         (
                             leagueTierDao.findByLadder
                             (
-                                season.getBattlenetId(), season.getRegion(),
+                                season.getPulseSeasonId(), season.getRegion(),
                                 leagueType, queueType, teamType, tierType
                             ).isEmpty()
                         )

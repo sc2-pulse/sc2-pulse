@@ -40,7 +40,7 @@ public class LadderMapStatsDAO
         + LeagueDAO.STD_SELECT
         + "FROM season "
         + "INNER JOIN league ON season.id = league.season_id "
-        + "WHERE season.battlenet_id = :seasonId "
+        + "WHERE season.pulse_season_id = :seasonId "
         + "AND "
         + "( "
             + "array_length(:regions::smallint[], 1) IS NULL "

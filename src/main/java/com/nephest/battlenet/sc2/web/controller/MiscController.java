@@ -136,7 +136,7 @@ public class MiscController
         Integer season
     )
     {
-        return seasonDAO.findListByBattlenetId(season);
+        return seasonDAO.findListByPulseSeasonId(season);
     }
 
     @GetMapping("/patches")

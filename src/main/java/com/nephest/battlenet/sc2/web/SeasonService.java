@@ -49,6 +49,7 @@ public class SeasonService
             return seasonDAO.merge(season);
 
         if(season.getId() == null) season.setId(existing.getId());
+        season.setPulseSeasonId(existing.getPulseSeasonId());
         return season;
     }
 

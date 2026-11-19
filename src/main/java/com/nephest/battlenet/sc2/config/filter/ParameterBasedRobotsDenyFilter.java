@@ -44,7 +44,7 @@ implements Filter
         if(seasonStr == null) return false;
 
         int season = Integer.parseInt(seasonStr);
-        return season < seasonDAO.getMaxBattlenetId();
+        return season < seasonDAO.getMaxPulseSeasonId();
     }
 
     private boolean hasDeprecatedParams(ServletRequest req)

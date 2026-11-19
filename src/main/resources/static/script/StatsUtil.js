@@ -442,7 +442,7 @@ class StatsUtil
         }
         if(Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current.length > 0 )
         {
-            const season = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current[0].season.battlenetId;
+            const season = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current[0].season.pulseSeasonId;
             document.querySelectorAll("#stats-race .season-current").forEach(s=>s.textContent = "s" + season)
         }
         document.querySelectorAll('[id^="games-played-race-league"] .header .main')
@@ -480,7 +480,7 @@ class StatsUtil
         );
         if(Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current.length > 0 )
         {
-            const season = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current[0].season.battlenetId;
+            const season = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current[0].season.pulseSeasonId;
             document.querySelectorAll("#stats-league .season-current").forEach(s=>s.textContent = "s" + season)
         }
     }
@@ -593,7 +593,7 @@ class StatsUtil
         for(const [seasonId, seasonStats] of Object.entries(stats))
         {
             dailyStats[seasonId] = {};
-            const season = Session.currentSeasons.filter(s=>s.battlenetId == seasonId)[0];
+            const season = Session.currentSeasons.filter(s=>s.pulseSeasonId == seasonId)[0];
             for(const [key, val] of Object.entries(seasonStats))
             {
                 dailyStats[seasonId][key] = val == null ? null : val / season.daysProgress;

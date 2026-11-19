@@ -42,6 +42,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTestUtil;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
@@ -59,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -157,6 +159,16 @@ public class BlizzardPrivacyServiceTest
             r.run();
             return null;
         }).when(executor).execute(any(Runnable.class));
+        lenient().when(seasonDAO.findByPulseSeasonId(any(), anyInt()))
+            .then(i->Optional.of(new Season
+            (
+                null,
+                i.<Integer>getArgument(1),
+                i.<Integer>getArgument(1),
+                i.<Region>getArgument(0),
+                2020, 1,
+                null, null
+            )));
         globalContext = new GlobalContext(Set.of(Region.EU, Region.US, Region.KR));
         privacyService = new BlizzardPrivacyService
         (
@@ -203,7 +215,7 @@ public class BlizzardPrivacyServiceTest
         assertNull(privacyService.getSeasonToUpdate());
 
         //there are seasons in the db, current season update is prioritized
-        when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 2);
+        when(seasonDAO.getMaxPulseSeasonId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 2);
         assertEquals(BlizzardSC2API.FIRST_SEASON + 2, privacyService.getSeasonToUpdate());
 
         privacyService.updateOldSeasons();
@@ -337,7 +349,7 @@ public class BlizzardPrivacyServiceTest
     @ParameterizedTest
     public void testUpdateAlternativeLadder(boolean charUpdated)
     {
-        when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON);
+        when(seasonDAO.getMaxPulseSeasonId()).thenReturn(BlizzardSC2API.FIRST_SEASON);
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(true);
         BlizzardProfileLadder ladder = new BlizzardProfileLadder
         (
@@ -416,7 +428,7 @@ public class BlizzardPrivacyServiceTest
     @ParameterizedTest
     public void testUpdateLadder(boolean updated)
     {
-        when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
+        when(seasonDAO.getMaxPulseSeasonId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
         when(statsService.isAlternativeUpdate(any(), eq(true))).thenReturn(!updated);
         when(statsService.isAlternativeUpdate(any(), eq(false))).thenReturn(false);
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
@@ -444,7 +456,7 @@ public class BlizzardPrivacyServiceTest
     @ParameterizedTest
     public void testUpdateCurrentLadder(boolean charUpdated)
     {
-        when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
+        when(seasonDAO.getMaxPulseSeasonId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
         if(charUpdated) when(playerCharacterDAO.updateAccountsAndCharacters(any()))
@@ -478,9 +490,42 @@ public class BlizzardPrivacyServiceTest
     }
 
     @Test
+    public void whenBattlenetIdDiffers_thenUseItAndSkipMissingSeasons()
+    {
+        int pulseSeasonId = BlizzardSC2API.FIRST_SEASON + 1;
+        int euBattlenetId = pulseSeasonId - 9;
+        when(seasonDAO.getMaxPulseSeasonId()).thenReturn(pulseSeasonId);
+        when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
+        when(seasonDAO.findByPulseSeasonId(Region.EU, pulseSeasonId))
+            .thenReturn(Optional.of(new Season
+            (
+                null,
+                euBattlenetId,
+                pulseSeasonId,
+                Region.EU,
+                2020, 1,
+                null, null
+            )));
+        when(seasonDAO.findByPulseSeasonId(Region.US, pulseSeasonId))
+            .thenReturn(Optional.empty());
+        when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt()))
+            .thenReturn(new BlizzardSeason());
+        stubLadderApi();
+
+        privacyService.updateOldSeasons();
+
+        verify(sc2WebServiceUtil)
+            .getExternalOrExistingSeason(Region.EU, euBattlenetId);
+        verify(sc2WebServiceUtil)
+            .getExternalOrExistingSeason(Region.KR, pulseSeasonId);
+        verify(sc2WebServiceUtil, never())
+            .getExternalOrExistingSeason(eq(Region.US), anyInt());
+    }
+
+    @Test
     public void whenAlreadyUpdatingOldData_thenDoNothing()
     {
-        when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
+        when(seasonDAO.getMaxPulseSeasonId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
 

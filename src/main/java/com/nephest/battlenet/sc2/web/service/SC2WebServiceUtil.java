@@ -60,12 +60,42 @@ public class SC2WebServiceUtil
         return new BlizzardSeason(s.getBattlenetId(), s.getYear(), s.getNumber(), s.getStart(), s.getEnd());
     }
 
+    /**
+     * Finds the current, last, or existing season of the region, starting
+     * from the max Blizzard season id of the region.
+     *
+     * @param region region
+     * @return current, last, or existing season
+     */
+    public BlizzardSeason getCurrentOrLastOrExistingRegionSeason(Region region)
+    {
+        return getCurrentOrLastOrExistingSeason
+        (
+            region,
+            seasonDAO.getMaxBattlenetId(region)
+        );
+    }
+
+    /**
+     * @deprecated use {@link #getCurrentOrLastOrExistingRegionSeason(Region)}
+     * instead. {@code global = true} treats pulse season ids as region-local
+     * Blizzard season ids, which is wrong for regions with offset season ids,
+     * e.g. CN.
+     */
+    @Deprecated(forRemoval = true)
     public BlizzardSeason getCurrentOrLastOrExistingSeason(Region region, boolean global)
     {
-        int maxId = global ? seasonDAO.getMaxBattlenetId() : seasonDAO.getMaxBattlenetId(region);
+        int maxId = global
+            ? seasonDAO.getMaxPulseSeasonId()
+            : seasonDAO.getMaxBattlenetId(region);
         return getCurrentOrLastOrExistingSeason(region, maxId);
     }
 
+    /**
+     * @deprecated unused. It treats pulse season ids as region-local Blizzard
+     * season ids, which is wrong for regions with offset season ids, e.g. CN.
+     */
+    @Deprecated(forRemoval = true)
     public BlizzardSeason getCurrentOrLastOrExistingSeason(Region region)
     {
         return getCurrentOrLastOrExistingSeason(region, true);

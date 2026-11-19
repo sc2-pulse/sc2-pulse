@@ -1383,7 +1383,7 @@ class ChartUtil
     {
         const position = ChartUtil.getSeasonAnnotationPosition(ChartUtil.CHARTS.get(config.chartable));
         for(const season of seasons) {
-            const name = season.battlenetId.toString();
+            const name = season.pulseSeasonId.toString();
             annotations[name] = {
                 type: "line",
                 xMin: season.start.valueOf(),

@@ -6,11 +6,13 @@ package com.nephest.battlenet.sc2.web.service;
 import static com.nephest.battlenet.sc2.web.service.MapService.FILM_FRAME_DURATION;
 
 import com.nephest.battlenet.sc2.model.blizzard.Blizzard;
+import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -42,6 +44,7 @@ public class MapStatsFilmTestService
     private final MatchDAO matchDAO;
     private final PopulationStateDAO populationStateDAO;
     private final LeagueStatsDAO leagueStatsDAO;
+    private final SeasonDAO seasonDAO;
     private final SeasonGenerator seasonGenerator;
     private final EventService eventService;
     private final MapService mapService;
@@ -57,6 +60,7 @@ public class MapStatsFilmTestService
         MatchDAO matchDAO,
         PopulationStateDAO populationStateDAO,
         LeagueStatsDAO leagueStatsDAO,
+        SeasonDAO seasonDAO,
         SeasonGenerator seasonGenerator,
         EventService eventService,
         MapService mapService,
@@ -70,6 +74,7 @@ public class MapStatsFilmTestService
         this.matchDAO = matchDAO;
         this.populationStateDAO = populationStateDAO;
         this.leagueStatsDAO = leagueStatsDAO;
+        this.seasonDAO = seasonDAO;
         this.seasonGenerator = seasonGenerator;
         this.eventService = eventService;
         this.mapService = mapService;
@@ -83,10 +88,17 @@ public class MapStatsFilmTestService
         OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
         Instant mucInstant = startFrom.plusDays(1).toInstant();
         seasonGenerator.generateDefaultSeason(1200, true);
-        statsService.createLeaguesAndTiers(SeasonGenerator.defaultSeason());
-        leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
-        populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
-        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
+        //pulse season id can differ from the default id
+        Season season = seasonDAO.find
+        (
+            SeasonGenerator.DEFAULT_SEASON_REGION,
+            SeasonGenerator.DEFAULT_SEASON_ID
+        ).orElseThrow();
+        int pulseSeasonId = season.getPulseSeasonId();
+        statsService.createLeaguesAndTiers(season);
+        leagueStatsDAO.calculateForSeason(pulseSeasonId);
+        populationStateDAO.takeSnapshot(Set.of(pulseSeasonId));
+        teamDAO.updateRanks(pulseSeasonId);
         List<Long> teamIds = matchGenerator.apply(startFrom);
         jdbcTemplate.update("DELETE FROM team_state");
 
@@ -95,7 +107,7 @@ public class MapStatsFilmTestService
         teamStateDAO.takeSnapshot(teamIds, startFrom);
         seasonGenerator.takeTeamSnapshot(teamIds, startFrom, FRAME_OFFSET, 1);
         seasonGenerator.takeTeamSnapshot(teamIds, startFrom, FRAME_OFFSET, 2);
-        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startFrom);
+        matchParticipantDAO.identify(pulseSeasonId, startFrom);
         matchDAO.updateDuration(startFrom);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(
             Map.of(), new UpdateContext(mucInstant, mucInstant)));

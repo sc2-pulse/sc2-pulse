@@ -44,7 +44,7 @@ public class SeasonController
     @GetMapping("/list/all")
     public List<Season> getAllSeasonsLegacy(@RequestParam(name = "season", required = false) Integer season)
     {
-        return seasonDAO.findListByBattlenetId(season);
+        return seasonDAO.findListByPulseSeasonId(season);
     }
 
     /*TODO

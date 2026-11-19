@@ -71,7 +71,7 @@ public class SC2MapDAO
             + "FROM map_stats "
             + "INNER JOIN league ON map_stats.league_id = league.id "
             + "INNER JOIN season ON league.season_id = season.id "
-            + "WHERE season.battlenet_id = :seasonId "
+            + "WHERE season.pulse_season_id = :seasonId "
             + "AND "
             + "( "
                 + "array_length(:regions::smallint[], 1) IS NULL "
@@ -152,7 +152,7 @@ public class SC2MapDAO
     {
         return find
         (
-            seasonDAO.getMaxBattlenetId(),
+            seasonDAO.getMaxPulseSeasonId(),
             List.of(Region.values()),
             List.of(BaseLeague.LeagueType.values()),
             QueueType.LOTV_1V1,

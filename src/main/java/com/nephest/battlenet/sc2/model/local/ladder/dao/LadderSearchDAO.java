@@ -562,7 +562,7 @@ public class LadderSearchDAO
     @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
     public List<Season> findSeasonList()
     {
-        return seasonDAO.findListByFirstBattlenetId();
+        return seasonDAO.findListByFirstPulseSeasonId();
     }
 
     public List<LadderTeam> findCharacterTeams

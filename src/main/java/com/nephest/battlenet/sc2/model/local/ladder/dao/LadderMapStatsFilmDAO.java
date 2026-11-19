@@ -89,7 +89,8 @@ public class LadderMapStatsFilmDAO
             .collect(Collectors.toMap(MapStatsFilmSpec::getId, Function.identity()));
         if(specs.isEmpty()) return LadderMapStatsFilm.EMPTY;
 
-        Map<Integer, Season> seasons = seasonDAO.findListByBattlenetId(season).stream()
+        Map<Integer, Season> seasons = seasonDAO.findListByPulseSeasonId(season)
+            .stream()
             .filter(s->regions.contains(s.getRegion()))
             .collect(Collectors.toMap(Season::getId, Function.identity()));
         if(seasons.isEmpty()) return LadderMapStatsFilm.EMPTY;

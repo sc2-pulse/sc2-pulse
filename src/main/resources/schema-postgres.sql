@@ -548,12 +548,27 @@ CREATE TABLE "clan_member_event"
 
 CREATE INDEX "ix_clan_member_event_clan" ON "clan_member_event"("clan_id", "created", "player_character_id");
 
+CREATE TABLE "pulse_season"
+(
+    "id" SMALLINT NOT NULL,
+    "year" SMALLINT NOT NULL,
+    "number" SMALLINT NOT NULL,
+
+    PRIMARY KEY ("id"),
+
+    CONSTRAINT "uq_pulse_season_year_number"
+        UNIQUE ("year", "number"),
+    CONSTRAINT "uq_pulse_season_id_year_number"
+        UNIQUE ("id", "year", "number")
+);
+
 CREATE TABLE "season"
 (
 
     "id" SERIAL,
     "region" SMALLINT NOT NULL,
     "battlenet_id" SMALLINT NOT NULL,
+    "pulse_season_id" SMALLINT NOT NULL,
     "year" SMALLINT NOT NULL,
     "number" SMALLINT NOT NULL,
     "start" TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -561,8 +576,15 @@ CREATE TABLE "season"
 
     PRIMARY KEY ("id"),
 
+    CONSTRAINT "fk_season_pulse_season_id_year_number"
+        FOREIGN KEY ("pulse_season_id", "year", "number")
+        REFERENCES "pulse_season"("id", "year", "number")
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+
     CONSTRAINT "uq_season_region_battlenet_id"
-        UNIQUE ("region", "battlenet_id")
+        UNIQUE ("region", "battlenet_id"),
+    CONSTRAINT "uq_season_region_pulse_season_id"
+        UNIQUE ("region", "pulse_season_id")
 );
 
 CREATE TABLE "league"
@@ -1383,7 +1405,7 @@ WITH team_filter AS
     (season.end + INTERVAL ''7 days'')::timestamp AS "timestamp"
     FROM team
     INNER JOIN team_member ON team.id = team_member.team_id
-    INNER JOIN season ON team.region = season.region AND team.season = season.battlenet_id
+    INNER JOIN season ON team.region = season.region AND team.season = season.pulse_season_id
     WHERE player_character_id = ANY(character_ids)
     AND team.queue_type = 201
     AND substring(team.legacy_id, char_length(team.legacy_id))::smallint = ANY(races)

@@ -257,7 +257,7 @@ public class BlizzardPrivacyService
         if(season == null) return;
 
         LOG.debug("Updating old names and BattleTags for season {}", season);
-        boolean current = seasonDAO.getMaxBattlenetId().equals(season);
+        boolean current = seasonDAO.getMaxPulseSeasonId().equals(season);
 
         List<Future<Void>> dbTasks = new ArrayList<>();
         for(Region region : globalContext.getActiveRegions())
@@ -311,9 +311,22 @@ public class BlizzardPrivacyService
         if(accounts > 0 || characters > 0) LOG.info("Anonymized {} accounts and {} characters", accounts, characters);
     }
 
+    /**
+     * @param region region
+     * @param seasonId pulse season id
+     * @param currentSeason current season flag
+     */
     protected void update(Region region, int seasonId, boolean currentSeason)
     {
-        BlizzardSeason bSeason = sc2WebServiceUtil.getExternalOrExistingSeason(region, seasonId);
+        Season season = seasonDAO.findByPulseSeasonId(region, seasonId)
+            .orElse(null);
+        if(season == null)
+        {
+            LOG.warn("Season {} not found in {}, skipping", seasonId, region);
+            return;
+        }
+        BlizzardSeason bSeason = sc2WebServiceUtil
+            .getExternalOrExistingSeason(region, season.getBattlenetId());
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, UPDATE_DATA), currentSeason);
         api.getLadders(ladderIds, -1, Map.of(), REQUEST_LIMIT_PRIORITY_NAME)
@@ -377,7 +390,13 @@ public class BlizzardPrivacyService
 
     private void alternativeUpdate(Region region, int seasonId)
     {
-        Season season = new Season(null, seasonId, region, null, null, null, null);
+        Season season = seasonDAO.findByPulseSeasonId(region, seasonId)
+            .orElse(null);
+        if(season == null)
+        {
+            LOG.warn("Season {} not found in {}, skipping", seasonId, region);
+            return;
+        }
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladderIds = alternativeLadderService
             .getExistingLadderIds(season, UPDATE_DATA);
         api.getProfileLadders
@@ -433,7 +452,7 @@ public class BlizzardPrivacyService
 
     protected Integer getSeasonToUpdate()
     {
-        Integer lastSeason = seasonDAO.getMaxBattlenetId();
+        Integer lastSeason = seasonDAO.getMaxPulseSeasonId();
         if(lastSeason == null || lastSeason < BlizzardSC2API.FIRST_SEASON) return null;
 
         long secondsBetweenCurrentSeasonUpdates = OLD_LADDER_DATA_TTL.toSeconds() / CURRENT_SEASON_UPDATES_PER_PERIOD;

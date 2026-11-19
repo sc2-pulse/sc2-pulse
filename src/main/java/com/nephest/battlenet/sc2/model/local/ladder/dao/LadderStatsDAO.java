@@ -62,7 +62,7 @@ public class LadderStatsDAO
         + "AND league.team_type=:teamType ";
 
     private static final String LADDER_SEARCH_STATS_SEASON_QUERY = LADDER_SEARCH_STATS_QUERY
-        + "AND season.battlenet_id = :seasonId "
+        + "AND season.pulse_season_id = :seasonId "
         + "ORDER BY season.region, league.type";
 
     private static final String FIND_LEAGUE_TIER_BOUNDS_QUERY =
@@ -76,7 +76,7 @@ public class LadderStatsDAO
         + "INNER JOIN season ON league.season_id=season.id "
 
         + "WHERE "
-        + "season.battlenet_id=:seasonId "
+        + "season.pulse_season_id=:seasonId "
         + "AND "
         + "( "
             + "array_length(:regions::smallint[], 1) IS NULL "
@@ -108,7 +108,11 @@ public class LadderStatsDAO
                 League league = LeagueDAO.getStdRowMapper().mapRow(rs, num);
                 LeagueStats leagueStats = LeagueStatsDAO.STD_ROW_MAPPER.mapRow(rs, num);
                 Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>> regionResults =
-                    result.computeIfAbsent(season.getBattlenetId(), (reg)->new EnumMap<>(Region.class));
+                    result.computeIfAbsent
+                    (
+                        season.getPulseSeasonId(),
+                        (reg)->new EnumMap<>(Region.class)
+                    );
                 Map<BaseLeague.LeagueType, LadderSearchStatsResult> leagueResults =
                     regionResults.computeIfAbsent(season.getRegion(), (reg)->new EnumMap<>(BaseLeague.LeagueType.class));
                 leagueResults.put(league.getType(), new LadderSearchStatsResult(season, league, leagueStats));

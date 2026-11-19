@@ -25,12 +25,14 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTest;
 import com.nephest.battlenet.sc2.model.local.MapStatsFilm;
 import com.nephest.battlenet.sc2.model.local.MapStatsFilmSpec;
 import com.nephest.battlenet.sc2.model.local.MapStatsFrame;
+import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmSpecDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PulseSeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStatsFilm;
@@ -93,6 +95,9 @@ public class MapStatsFilmIT
     private MapStatsFilmSpecDAO mapStatsFilmSpecDAO;
 
     @Autowired
+    private PulseSeasonDAO pulseSeasonDAO;
+
+    @Autowired
     private SeasonGenerator seasonGenerator;
 
     @Autowired
@@ -138,10 +143,16 @@ public class MapStatsFilmIT
     private ResultActions getStandardFilm()
     throws Exception
     {
+        return getFilm(SeasonGenerator.DEFAULT_SEASON_ID);
+    }
+
+    private ResultActions getFilm(int season)
+    throws Exception
+    {
         return mvc.perform
         (
             get("/api/stats/balance-reports")
-                .queryParam("season", String.valueOf(SeasonGenerator.DEFAULT_SEASON_ID))
+                .queryParam("season", String.valueOf(season))
                 .queryParam
                 (
                     "queue",
@@ -170,6 +181,15 @@ public class MapStatsFilmIT
     public void testMapFilmStats()
     throws Exception
     {
+        //the default season reuses this pulse season, ids differ
+        int pulseSeasonId = pulseSeasonDAO.merge
+        (
+            SeasonGenerator.DEFAULT_SEASON_YEAR,
+            SeasonGenerator.DEFAULT_SEASON_NUMBER,
+            SeasonGenerator.DEFAULT_SEASON_ID + 1
+        ).getId();
+        Season expectedSeason = SeasonGenerator.defaultSeason();
+        expectedSeason.setPulseSeasonId(pulseSeasonId);
 
         OffsetDateTime[] odts = new OffsetDateTime[1];
         List<Long> teamIds = List.of(38L, 39L);
@@ -224,7 +244,7 @@ public class MapStatsFilmIT
 
         LadderMapStatsFilm ladderMapStatsFilm1 = objectMapper.readValue
         (
-            getStandardFilm()
+            getFilm(pulseSeasonId)
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(),
             LadderMapStatsFilm.class
@@ -235,7 +255,7 @@ public class MapStatsFilmIT
             .usingRecursiveComparison()
             .isEqualTo(new LadderMapStatsFilm(
                 Map.of(1, SeasonGenerator.defaultMap()),
-                Map.of(1, SeasonGenerator.defaultSeason()),
+                Map.of(1, expectedSeason),
                 Map.of(1, SeasonGenerator.defaultLeague()),
                 Map.of(1, SeasonGenerator.defaultTier()),
                 specsMap,
@@ -273,7 +293,7 @@ public class MapStatsFilmIT
         jdbcTemplate.update("DELETE FROM team_state WHERE timestamp >= ? ", startFrom2);
         teamStateDAO.takeSnapshot(teamIds, startFrom2);
         seasonGenerator.takeTeamSnapshot(teamIds, startFrom2, FRAME_OFFSET, 1);
-        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startFrom2);
+        matchParticipantDAO.identify(pulseSeasonId, startFrom2);
         matchDAO.updateDuration(startFrom2);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(
             Map.of(), new UpdateContext(mucInstant2, mucInstant2)));
@@ -281,7 +301,7 @@ public class MapStatsFilmIT
         updateContexts.clear();
         LadderMapStatsFilm ladderMapStatsFilm2 = objectMapper.readValue
         (
-            getStandardFilm()
+            getFilm(pulseSeasonId)
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(),
             LadderMapStatsFilm.class
@@ -292,7 +312,7 @@ public class MapStatsFilmIT
             .usingRecursiveComparison()
             .isEqualTo(new LadderMapStatsFilm(
                 Map.of(1, SeasonGenerator.defaultMap()),
-                Map.of(1, SeasonGenerator.defaultSeason()),
+                Map.of(1, expectedSeason),
                 Map.of(1, SeasonGenerator.defaultLeague()),
                 Map.of(1, SeasonGenerator.defaultTier()),
                 specsMap,

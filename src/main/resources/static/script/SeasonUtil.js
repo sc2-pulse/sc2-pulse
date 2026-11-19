@@ -14,7 +14,7 @@ class SeasonUtil
     {
         const seasonEnd = season.end;
         const endDate = seasonEnd.getTime() - Date.now() > 0 ? new Date() : seasonEnd;
-        return `${season.year} season ${season.number} (${season.battlenetId}) (${Util.MONTH_DATE_FORMAT.format(endDate)})`;
+        return `${season.year} season ${season.number} (${season.pulseSeasonId}) (${Util.MONTH_DATE_FORMAT.format(endDate)})`;
     }
 
     static getSeasons()
@@ -33,7 +33,7 @@ class SeasonUtil
         const regionMap = Util.groupBy(seasons, s=>s.region);
         Session.currentSeasons = Array.from(regionMap.values()).reduce((max, cur)=>max.length > cur.length ? max : cur);
         const seasonMap = new Map();
-        Array.from(regionMap.entries()).forEach(e=>seasonMap.set(e[0], Util.groupBy(e[1], s=>s.battlenetId)));
+        Array.from(regionMap.entries()).forEach(e=>seasonMap.set(e[0], Util.groupBy(e[1], s=>s.pulseSeasonId)));
         Session.currentSeasonsMap = seasonMap;
         Session.currentSeasonsIdMap = Array.from(seasonMap.values()).reduce((max, cur)=>max.size > cur.size ? max : cur);
         for(const season of seasons) SeasonUtil.updateSeasonMeta(season);
@@ -45,10 +45,10 @@ class SeasonUtil
                 const option = document.createElement("option");
                 option.setAttribute("label", season.descriptiveName);
                 option.textContent = season.descriptiveName;
-                option.setAttribute("value", season.battlenetId);
+                option.setAttribute("value", season.pulseSeasonId);
                 seasonPicker.appendChild(option);
             }
-            seasonPicker.value = Session.currentSeasons[0].battlenetId;
+            seasonPicker.value = Session.currentSeasons[0].pulseSeasonId;
         }
     }
 
@@ -167,7 +167,7 @@ class SeasonUtil
         const stDev = Util.stDev(seasonDurations, true) * -1;
         return new Set(seasons
             .filter(season=>season.durationProgress - meanDuration < stDev)
-            .map(season=>season.battlenetId));
+            .map(season=>season.pulseSeasonId));
     }
 
     static isAbnormalSeason(season)

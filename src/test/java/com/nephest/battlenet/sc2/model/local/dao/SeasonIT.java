@@ -78,7 +78,7 @@ public class SeasonIT
     @Test
     public void testFindByLastBattlenetId()
     {
-        List<Season> seasons = seasonDAO.findListByBattlenetId(1);
+        List<Season> seasons = seasonDAO.findListByPulseSeasonId(1);
         assertEquals(Region.values().length, seasons.size());
         assertTrue(seasons.stream().allMatch(s->s.getBattlenetId() == 1));
     }
@@ -86,7 +86,7 @@ public class SeasonIT
     @Test
     public void testFindAllSeasons()
     {
-        List<Season> seasons = seasonDAO.findListByBattlenetId(null);
+        List<Season> seasons = seasonDAO.findListByPulseSeasonId(null);
         assertEquals(Region.values().length + 1, seasons.size());
         verifySeason(seasons.get(0), Region.EU, 2);
         Arrays.stream(Region.values())

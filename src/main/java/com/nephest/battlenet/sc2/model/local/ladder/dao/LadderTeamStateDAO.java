@@ -35,7 +35,7 @@ public class LadderTeamStateDAO
         + PopulationStateDAO.TEAM_DATA_SELECT + ", "
         + "league_tier.type AS \"league_tier.type\", "
         + LeagueDAO.SHORT_SELECT + ", "
-        + "season.battlenet_id as \"season.battlenet_id\" "
+        + "season.pulse_season_id as \"season.pulse_season_id\" "
         + "FROM team_filter "
         + "INNER JOIN team_state ON team_filter.id = team_state.team_id "
         + "LEFT JOIN population_state "
@@ -131,7 +131,7 @@ public class LadderTeamStateDAO
                 BaseLeagueTier.LeagueTierType.class
             ),
             LeagueDAO.getShortRowMapper().mapRow(rs, 0),
-            rs.getInt("season.battlenet_id"),
+            rs.getInt("season.pulse_season_id"),
             PopulationStateDAO.TEAM_DATA_ROW_MAPPER.mapRow(rs, 0)
         );
 

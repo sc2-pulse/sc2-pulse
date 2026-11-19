@@ -92,7 +92,7 @@ public class MapStatsDAO
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
                 + "AND match_participant.player_character_id = matchup_league_filter.player_character_id "
             + "INNER JOIN team ON match_participant.team_id = team.id "
-            + "INNER JOIN season ON team.season = season.battlenet_id "
+            + "INNER JOIN season ON team.season = season.pulse_season_id "
                 + "AND team.region = season.region "
             + "INNER JOIN league ON season.id = league.season_id "
                 + "AND league.queue_type = team.queue_type "

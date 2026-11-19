@@ -52,7 +52,8 @@ implements Filter
 
     private String getCacheHeader()
     {
-        List<Season> currentSeasons = seasonDAO.findListByBattlenetId(seasonDAO.getMaxBattlenetId());
+        List<Season> currentSeasons = seasonDAO
+            .findListByPulseSeasonId(seasonDAO.getMaxPulseSeasonId());
         String cacheHeader;
         if(currentSeasons.size() >= activeRegions.size())
         {

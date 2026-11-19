@@ -68,7 +68,7 @@ public class LadderMatchDAO
         + TeamStateDAO.STD_SELECT + ", "
         + "league_tier.type AS \"league_tier.type\", "
         + LeagueDAO.STD_SELECT + ", "
-        + "season.battlenet_id as \"season.battlenet_id\", "
+        + "season.pulse_season_id as \"season.pulse_season_id\", "
         + "NULL as \"race\", "
         + AccountDAO.STD_SELECT + ", "
         + PlayerCharacterDAO.STD_SELECT + ", "

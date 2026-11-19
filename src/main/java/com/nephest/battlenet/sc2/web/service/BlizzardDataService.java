@@ -58,7 +58,7 @@ public class BlizzardDataService
             .map(PlayerCharacter::getId)
             .forEach(id->playerCharacterDAO.updateAnonymousFlag(id, false));
 
-        Integer curSeason = seasonDAO.getMaxBattlenetId();
+        Integer curSeason = seasonDAO.getMaxPulseSeasonId();
         Set<AccountCharacterData> importedData = characters
             .stream()
             .map(c->new AccountCharacterData(account, c, true, curSeason))
