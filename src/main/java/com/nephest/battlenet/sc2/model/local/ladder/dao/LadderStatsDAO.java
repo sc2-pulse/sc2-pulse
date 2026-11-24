@@ -168,7 +168,7 @@ public class LadderStatsDAO
         this.seasonDAO = seasonDAO;
     }
 
-    @Cacheable(cacheNames="fqdn-ladder-scan", condition="#a0 eq #root.target.seasonDAO.maxBattlenetId")
+    @Cacheable(cacheNames="fqdn-ladder-scan", condition="#a0 eq #root.target.seasonDAO.maxPulseSeasonId")
     public Map<Region, Map<BaseLeague.LeagueType, Map<BaseLeagueTier.LeagueTierType, Integer[]>>> findLeagueBounds
     (
         int season,
