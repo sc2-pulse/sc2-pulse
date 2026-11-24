@@ -74,6 +74,8 @@ class SC2PulseAPI {
     getSeasons({season}={}) {
         const params = new URLSearchParams();
         if(season != null) params.append("season", season);
+        //seasons are cached for a long time, avoid using data from previous versions
+        if(this.#apiVersion != null) params.append("v", this.#apiVersion);
         const request = this.#baseUrl + "/seasons" + SC2PulseAPI.#createParameterString(params);
 
         return this.#fetch(request);
