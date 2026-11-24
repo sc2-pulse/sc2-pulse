@@ -76,6 +76,7 @@ public class MatchService
     private final SeasonDAO seasonDAO;
     private final SC2MapDAO mapDAO;
     private final AlternativeLadderService alternativeLadderService;
+    private final SC2ArcadeLadderService sc2ArcadeLadderService;
     private final EventService eventService;
     private final UpdateService updateService;
     private final GlobalContext globalContext;
@@ -100,6 +101,7 @@ public class MatchService
         SC2MapDAO mapDAO,
         VarDAO varDAO,
         AlternativeLadderService alternativeLadderService,
+        SC2ArcadeLadderService sc2ArcadeLadderService,
         UpdateService updateService,
         EventService eventService,
         Validator validator,
@@ -113,6 +115,7 @@ public class MatchService
         this.seasonDAO = seasonDAO;
         this.mapDAO = mapDAO;
         this.alternativeLadderService = alternativeLadderService;
+        this.sc2ArcadeLadderService = sc2ArcadeLadderService;
         this.eventService = eventService;
         this.updateService = updateService;
         this.globalContext = globalContext;
@@ -235,6 +238,12 @@ public class MatchService
         if(webRegions.getValue().remove(region)) webRegions.save();
     }
 
+    //there is no ranked match history in the SC2Arcade API
+    private boolean isSupported(Region region)
+    {
+        return !sc2ArcadeLadderService.isArcadeRegion(region);
+    }
+
     public Set<Region> getWebRegions()
     {
         return Collections.unmodifiableSet(webRegions.getValue());
@@ -274,6 +283,7 @@ public class MatchService
     {
         return Flux.fromIterable(data.getData())
             .flatMapIterable(PendingLadderData::getCharacters)
+            .filter(character->isSupported(character.getRegion()))
             .map(character->pendingCharacters.get(character.getRegion()).getValue().add(character))
             .filter(Boolean::booleanValue)
             .collectList()
@@ -304,6 +314,7 @@ public class MatchService
             ()->
             {
                 Map<Region, Set<PlayerCharacter>> copy = pendingCharacters.entrySet().stream()
+                    .filter(e->isSupported(e.getKey()))
                     .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         e-> Set.copyOf(e.getValue().getValue())
@@ -354,7 +365,9 @@ public class MatchService
                 if(api.isAutoForceRegion() && matchCount < 1)
                 {
                     LOG.warn("No matches found in {} regions", pendingCharacters.keySet());
-                    for(Region region : pendingCharacters.keySet()) api.setForceRegion(region);
+                    pendingCharacters.keySet().stream()
+                        .filter(this::isSupported)
+                        .forEach(api::setForceRegion);
                 }
             }
         );
@@ -377,6 +390,7 @@ public class MatchService
     {
         List<PlayerCharacterNaturalId> chars = failedCharacters.stream()
             .flatMap(Collection::stream)
+            .filter(character->isSupported(character.getRegion()))
             .limit(FAILED_MATCHES_MAX)
             .distinct()
             .collect(Collectors.toList());

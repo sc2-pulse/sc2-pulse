@@ -24,6 +24,7 @@ public class StatusService
     private final BlizzardSC2API api;
     private final StatsService statsService;
     private final AlternativeLadderService alternativeLadderService;
+    private final SC2ArcadeLadderService sc2ArcadeLadderService;
     private final MatchService matchService;
     private final PostgreSQLUtils postgreSQLUtils;
     private final ClickHouseUtil clickHouseUtil;
@@ -39,6 +40,7 @@ public class StatusService
         BlizzardSC2API api,
         StatsService statsService,
         AlternativeLadderService alternativeLadderService,
+        SC2ArcadeLadderService sc2ArcadeLadderService,
         MatchService matchService,
         PostgreSQLUtils postgreSQLUtils,
         ClickHouseUtil clickHouseUtil,
@@ -49,6 +51,7 @@ public class StatusService
         this.api = api;
         this.statsService = statsService;
         this.alternativeLadderService = alternativeLadderService;
+        this.sc2ArcadeLadderService = sc2ArcadeLadderService;
         this.matchService = matchService;
         this.postgreSQLUtils = postgreSQLUtils;
         this.clickHouseUtil = clickHouseUtil;
@@ -71,6 +74,7 @@ public class StatusService
             Region region = entry.getKey();
             Status status = entry.getValue();
 
+            updateSC2ArcadeLadderFlag(region, status);
             updatePartialFlag(region, status);
             updateRedirectedFlag(region, status);
             updatePrioritizedFlag(region, status);
@@ -81,9 +85,17 @@ public class StatusService
         }
     }
 
+    private boolean updateSC2ArcadeLadderFlag(Region region, Status status)
+    {
+        return sc2ArcadeLadderService.isArcadeRegion(region)
+            ? status.getFlags().add(Status.Flag.ARCADE)
+            : status.getFlags().remove(Status.Flag.ARCADE);
+    }
+
     private boolean updatePartialFlag(Region region, Status status)
     {
         return statsService.isAlternativeUpdate(region, true)
+            && !sc2ArcadeLadderService.isArcadeRegion(region)
             ? status.getFlags().add(Status.Flag.PARTIAL)
             : status.getFlags().remove(Status.Flag.PARTIAL);
     }

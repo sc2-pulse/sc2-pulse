@@ -22,6 +22,13 @@ public class Status
         OPERATIONAL("operational", "Fully operational.", Level.SUCCESS),
         PARTIAL("partial", "No BattleTags, league tiers, and clan names. "
             + "Simplified races in team formats.", Level.WARNING),
+        ARCADE
+        (
+            "arcade",
+            "No new BattleTags and clan names. Arranged team and archon "
+            + "ladders are not updated.",
+            Level.WARNING
+        ),
         REDIRECTED("redirected", "May be slower in some cases. Arbitrary data may be missing.", Level.WARNING),
         PRIORITIZED
         (

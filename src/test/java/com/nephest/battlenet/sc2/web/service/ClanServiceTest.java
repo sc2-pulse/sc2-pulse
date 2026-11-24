@@ -71,6 +71,9 @@ public class ClanServiceTest
     private AlternativeLadderService alternativeLadderService;
 
     @Mock
+    private SC2ArcadeLadderService sc2ArcadeLadderService;
+
+    @Mock
     private VarDAO varDAO;
 
     @Mock
@@ -108,6 +111,7 @@ public class ClanServiceTest
             api,
             eventService,
             alternativeLadderService,
+            sc2ArcadeLadderService,
             executor,
             executor
         );
@@ -208,8 +212,17 @@ public class ClanServiceTest
                 inactiveMembers.get(2)
             )
         );
-        when(clanMemberDAO.getInactiveCount(any())).thenReturn(inactiveMembers.size());
-        when(playerCharacterDAO.findInactiveClanMembers(any(), eq(Long.MAX_VALUE), eq(inactiveMembers.size())))
+        Set<Region> arcadeRegions = Set.of(Region.KR);
+        when(sc2ArcadeLadderService.getRegions()).thenReturn(arcadeRegions);
+        when(clanMemberDAO.getInactiveCount(any(), eq(arcadeRegions)))
+            .thenReturn(inactiveMembers.size());
+        when(playerCharacterDAO.findInactiveClanMembers
+        (
+            any(),
+            eq(Long.MAX_VALUE),
+            eq(arcadeRegions),
+            eq(inactiveMembers.size())
+        ))
             .thenReturn(inactiveMembers);
         when(api.getLegacyProfiles(inactiveMembers, false)).thenReturn(apiData);
         when(clanDAO.merge(any())).thenAnswer(inv->{
@@ -254,7 +267,7 @@ public class ClanServiceTest
     public void whenNoInactiveClanMembers_thenDontUpdateVars()
     {
         Instant beforeUpdate = SC2Pulse.instant().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME);
-        when(clanMemberDAO.getInactiveCount(any())).thenReturn(0);
+        when(clanMemberDAO.getInactiveCount(any(), any())).thenReturn(0);
         clanService.getInactiveClanMembersCursor().setValue(33L);
         clanService.getInactiveClanMembersUpdated().setValue(beforeUpdate);
 
@@ -268,7 +281,7 @@ public class ClanServiceTest
     public void whenEmptyInactiveClanMemberBatch_thenResetIdCursor()
     {
         Instant beforeUpdate = SC2Pulse.instant().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME);
-        when(clanMemberDAO.getInactiveCount(any())).thenReturn(2);
+        when(clanMemberDAO.getInactiveCount(any(), any())).thenReturn(2);
         clanService.getInactiveClanMembersCursor().setValue(33L);
         clanService.getInactiveClanMembersUpdated().setValue(beforeUpdate);
 

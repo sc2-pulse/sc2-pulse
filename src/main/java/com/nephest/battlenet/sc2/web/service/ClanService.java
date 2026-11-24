@@ -71,6 +71,7 @@ public class ClanService
     private final ClanMemberEventDAO clanMemberEventDAO;
     private final BlizzardSC2API api;
     private final AlternativeLadderService alternativeLadderService;
+    private final SC2ArcadeLadderService sc2ArcadeLadderService;
     private final ExecutorService dbExecutorService;
     private final ExecutorService webExecutorService;
 
@@ -104,6 +105,7 @@ public class ClanService
         @Autowired(required = false) BlizzardSC2API api,
         EventService eventService,
         @Lazy AlternativeLadderService alternativeLadderService,
+        SC2ArcadeLadderService sc2ArcadeLadderService,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         @Qualifier("webExecutorService") ExecutorService webExecutorService
     )
@@ -114,6 +116,7 @@ public class ClanService
         this.clanMemberEventDAO = clanMemberEventDAO;
         this.api = api;
         this.alternativeLadderService = alternativeLadderService;
+        this.sc2ArcadeLadderService = sc2ArcadeLadderService;
         this.dbExecutorService = dbExecutorService;
         this.webExecutorService = webExecutorService;
         init(varDAO);
@@ -275,10 +278,12 @@ public class ClanService
         clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
     }
 
+    //there are no clans in the SC2Arcade ladder API, so its regions are skipped
     private int getInactiveClanMembersBatchSize()
     {
         OffsetDateTime inactiveTo = SC2Pulse.offsetDateTime().minus(CLAN_MEMBER_INACTIVE_AFTER);
-        int inactiveMembersTotal = clanMemberDAO.getInactiveCount(inactiveTo);
+        int inactiveMembersTotal = clanMemberDAO
+            .getInactiveCount(inactiveTo, sc2ArcadeLadderService.getRegions());
         if(inactiveMembersTotal < 1) return 0;
 
         Duration durationPerClanMember = CLAN_MEMBER_UPDATE_FRAME.dividedBy(inactiveMembersTotal);
@@ -359,6 +364,7 @@ public class ClanService
         (
             inactiveTo,
             inactiveClanMembersCursor.getValue(),
+            sc2ArcadeLadderService.getRegions(),
             batchSize
         );
         if(inactiveMembers.isEmpty())

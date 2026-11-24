@@ -463,6 +463,11 @@ public class PlayerCharacterDAO
         + "INNER JOIN player_character ON clan_member.player_character_id = player_character.id "
         + "WHERE clan_member.updated < :to "
         + "AND clan_member.player_character_id < :idCursor "
+        + "AND "
+        + "("
+            + "array_length(:excludedRegions::smallint[], 1) IS NULL "
+            + "OR player_character.region != ALL(:excludedRegions)"
+        + ") "
         + "ORDER BY clan_member.player_character_id DESC "
         + "LIMIT :limit";
 
@@ -853,12 +858,19 @@ public class PlayerCharacterDAO
     (
         OffsetDateTime to,
         Long idCursor,
+        Set<Region> excludedRegions,
         int limit
     )
     {
+        Integer[] excludedRegionIds = excludedRegions.isEmpty()
+            ? null
+            : excludedRegions.stream()
+                .map(r->conversionService.convert(r, Integer.class))
+                .toArray(Integer[]::new);
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("to", to)
             .addValue("idCursor", idCursor)
+            .addValue("excludedRegions", excludedRegionIds)
             .addValue("limit", limit);
         return template.query(FIND_INACTIVE_CLAN_MEMBERS, params, STD_ROW_MAPPER);
     }

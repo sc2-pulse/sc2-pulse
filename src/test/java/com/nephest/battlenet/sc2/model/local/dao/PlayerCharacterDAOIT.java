@@ -217,24 +217,31 @@ public class PlayerCharacterDAOIT
         OffsetDateTime now = SC2Pulse.offsetDateTime();
 
         List<PlayerCharacter> cms1 = playerCharacterDAO
-            .findInactiveClanMembers(now, Long.MAX_VALUE, 2);
+            .findInactiveClanMembers(now, Long.MAX_VALUE, Set.of(), 2);
         assertEquals(2, cms1.size());
         assertEquals(char4, cms1.get(0));
         assertEquals(char3, cms1.get(1));
 
         List<PlayerCharacter> cms2 = playerCharacterDAO
-            .findInactiveClanMembers(now, char3.getId(), 1);
+            .findInactiveClanMembers(now, char3.getId(), Set.of(), 1);
         assertEquals(1, cms2.size());
         assertEquals(char2, cms2.get(0));
 
         List<PlayerCharacter> cms3 = playerCharacterDAO
-            .findInactiveClanMembers(now, char2.getId(), 100);
+            .findInactiveClanMembers(now, char2.getId(), Set.of(), 100);
         assertEquals(1, cms3.size());
         assertEquals(char1, cms3.get(0));
 
         List<PlayerCharacter> cms4 = playerCharacterDAO
-            .findInactiveClanMembers(now, char1.getId(), 100);
+            .findInactiveClanMembers(now, char1.getId(), Set.of(), 100);
         assertTrue(cms4.isEmpty());
+
+        assertEquals(4, playerCharacterDAO.findInactiveClanMembers(
+            now, Long.MAX_VALUE, Set.of(Region.CN), 100).size());
+        assertTrue(playerCharacterDAO.findInactiveClanMembers(
+            now, Long.MAX_VALUE, Set.of(Region.CN, char1.getRegion()), 100)
+            .stream()
+            .noneMatch(c->c.getRegion() == char1.getRegion()));
     }
 
     @Test
@@ -249,7 +256,7 @@ public class PlayerCharacterDAOIT
         clanMemberDAO.merge(Set.of(new ClanMember(char1.getId(), clan1.getId())));
 
         List<PlayerCharacter> cms1 = playerCharacterDAO
-            .findInactiveClanMembers(start, Long.MAX_VALUE, 100);
+            .findInactiveClanMembers(start, Long.MAX_VALUE, Set.of(), 100);
         assertTrue(cms1.isEmpty());
     }
 

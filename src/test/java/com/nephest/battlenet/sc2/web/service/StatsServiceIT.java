@@ -45,11 +45,14 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.FastTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigInteger;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -100,6 +103,7 @@ public class StatsServiceIT
         fastTeamDAO = mock(FastTeamDAO.class);
         statsService = new StatsService
         (
+            null,
             null,
             null,
             mock(SeasonDAO.class),
@@ -254,6 +258,61 @@ public class StatsServiceIT
             .andExpect(status().isOk())
             .andReturn();
         for(Region region : Region.values()) assertFalse(realStatsService.isPartialUpdate2(region));
+    }
+
+
+    @Test
+    @WithBlizzardMockUser
+    (
+        partition = Partition.GLOBAL,
+        username = "user",
+        roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN}
+    )
+    public void testSC2ArcadeLadderRegion
+    (
+        @Autowired SC2ArcadeLadderService sc2ArcadeLadderService,
+        @Autowired StatusService statusService,
+        @Autowired VarDAO varDAO
+    )
+    throws Exception
+    {
+        String path = "/admin/ladder/sc2arcade/region/EU";
+        assertEquals(Set.of(Region.CN), sc2ArcadeLadderService.getRegions());
+
+        mvc.perform(post(path).with(csrf())).andExpect(status().isOk());
+        assertEquals(Set.of(Region.EU, Region.CN),
+            sc2ArcadeLadderService.getRegions());
+        assertEquals
+        (
+            Set.of(Region.EU, Region.CN),
+            WebServiceUtil.loadRegionSetVar
+            (
+                varDAO,
+                "ladder.sc2arcade.regions",
+                "Stored regions: {}"
+            )
+                .getValue()
+        );
+        assertEquals(Set.of(Region.EU), getArcadeFlags(statusService));
+
+        mvc.perform(delete(path).with(csrf())).andExpect(status().isOk());
+        assertEquals(Set.of(Region.CN), sc2ArcadeLadderService.getRegions());
+
+        //required
+        mvc.perform(delete("/admin/ladder/sc2arcade/region/CN").with(csrf()))
+            .andExpect(status().isBadRequest());
+        assertEquals(Set.of(Region.CN), sc2ArcadeLadderService.getRegions());
+        assertEquals(Set.of(), getArcadeFlags(statusService));
+    }
+
+    private static Set<Region> getArcadeFlags(StatusService statusService)
+    {
+        statusService.update();
+        return statusService.getStatusMap().entrySet().stream()
+            .filter(e->e.getValue().getFlags()
+                .contains(Status.Flag.ARCADE))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toSet());
     }
 
 }

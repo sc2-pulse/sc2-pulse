@@ -49,6 +49,8 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.model.local.inner.TeamHistoryDAO;
+import com.nephest.battlenet.sc2.model.sc2arcade.SC2ArcadeLadderQueuePair;
+import com.nephest.battlenet.sc2.model.sc2arcade.SC2ArcadeLadderTierThreshold;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.LogUtil;
@@ -67,6 +69,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -357,6 +360,7 @@ public class StatsService
         new ArrayList<>();
 
     private AlternativeLadderService alternativeLadderService;
+    private SC2ArcadeLadderService sc2ArcadeLadderService;
     private BlizzardSC2API api;
     private SeasonDAO seasonDao;
     private LeagueDAO leagueDao;
@@ -387,6 +391,7 @@ public class StatsService
     public StatsService
     (
         AlternativeLadderService alternativeLadderService,
+        SC2ArcadeLadderService sc2ArcadeLadderService,
         BlizzardSC2API api,
         SeasonDAO seasonDao,
         LeagueDAO leagueDao,
@@ -413,6 +418,7 @@ public class StatsService
     )
     {
         this.alternativeLadderService = alternativeLadderService;
+        this.sc2ArcadeLadderService = sc2ArcadeLadderService;
         this.api = api;
         this.seasonDao = seasonDao;
         this.leagueDao = leagueDao;
@@ -538,16 +544,20 @@ public class StatsService
     {
         LOG.trace("updateCurrent({}, {})", data, allStats);
         Instant start = SC2Pulse.instant();
+        Set<Region> arcadeRegions = data.keySet().stream()
+            .filter(sc2ArcadeLadderService::isArcadeRegion)
+            .collect(Collectors.toSet());
         LOG.trace("Getting current seasons for {}", data.keySet());
         Map<Region, BlizzardSeason> seasons = data.keySet().stream()
+            .filter(region->!arcadeRegions.contains(region))
             .collect(Collectors.toMap(
                 Function.identity(),
                 region->sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, false)
             ));
         LOG.trace("Got current seasons {}", seasons);
-        checkStaleData(seasons);
-        Map<Region, LadderUpdateTaskContext<Void>> ctx
-            = updateCurrentSeason(data, seasons, allStats);
+        if(!seasons.isEmpty()) checkStaleData(seasons);
+        Map<Region, LadderUpdateTaskContext<Void>> ctx =
+            updateCurrentSeason(data, seasons, arcadeRegions, allStats);
         pendingContexts.add(ctx);
 
         Duration duration = Duration.between(start, SC2Pulse.instant());
@@ -607,10 +617,19 @@ public class StatsService
     {
         PendingLadderData pending = copyAndClearPendingData();
         PendingLadderData altPending = alternativeLadderService.copyAndClearPendingData();
+        PendingLadderData arcadePending =
+            sc2ArcadeLadderService.copyAndClearPendingData();
         List<Map<Region, LadderUpdateTaskContext<Void>>> contexts = List.copyOf(pendingContexts);
         pendingContexts.clear();
         return dbExecutorService.submit(()->
-            statsService.afterCurrentSeasonUpdate(allStats, pending, altPending, contexts), null);
+            statsService.afterCurrentSeasonUpdate
+            (
+                allStats,
+                pending,
+                altPending,
+                arcadePending,
+                contexts
+            ), null);
     }
 
     public void afterCurrentSeasonUpdate
@@ -618,6 +637,7 @@ public class StatsService
         boolean allStats,
         PendingLadderData pending,
         PendingLadderData altPending,
+        PendingLadderData arcadePending,
         List<Map<Region, LadderUpdateTaskContext<Void>>> contexts
     )
     {
@@ -625,9 +645,10 @@ public class StatsService
         takePopulationSnapshot(pending.getStatsUpdates());
         process(pending);
         process(altPending);
+        process(arcadePending);
         teamHistorySyncTask.runIfAvailable().block();
         eventService.createLadderUpdateEvent(new LadderUpdateData(
-            allStats, List.of(pending, altPending), contexts));
+            allStats, List.of(pending, altPending, arcadePending), contexts));
     }
 
     private void process(PendingLadderData pending)
@@ -683,6 +704,7 @@ public class StatsService
     (
         Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data,
         Map<Region, BlizzardSeason> blizzardSeasons,
+        Set<Region> arcadeRegions,
         boolean allStats
     )
     {
@@ -692,14 +714,24 @@ public class StatsService
         for(Map.Entry<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> entry : data.entrySet())
         {
             Region region = entry.getKey();
+            boolean isArcadeRegion = arcadeRegions.contains(region);
             BlizzardSeason bSeason = blizzardSeasons.get(region);
-            Season season = seasonService.merge(Season.of(bSeason, region));
+            Season season = seasonService.merge(isArcadeRegion
+                ? getCurrentSC2ArcadeLadderSeason(region)
+                : Season.of(bSeason, region));
             LOG.debug("Using season {} for current season update for {}", season, entry.getKey());
             createLeaguesAndTiers(season);
             ctx.put
             (
                 region,
-                updateOrAlternativeUpdate(bSeason, season, entry.getValue(), true)
+                updateOrAlternativeUpdate
+                (
+                    bSeason,
+                    season,
+                    entry.getValue(),
+                    true,
+                    isArcadeRegion
+                )
             );
             seasons.add(season.getPulseSeasonId());
             LOG.debug("Updated leagues: {} {}", season.getPulseSeasonId(), region);
@@ -708,18 +740,34 @@ public class StatsService
         return ctx;
     }
 
+    private Season getCurrentSC2ArcadeLadderSeason(Region region)
+    {
+        sc2ArcadeLadderService.checkCoverage(region);
+        return sc2ArcadeLadderService.getCurrentSeason(region);
+    }
+
     private LadderUpdateTaskContext<Void> updateOrAlternativeUpdate
     (
         BlizzardSeason bSeason,
         Season season,
         Map<QueueType, Set<BaseLeague.LeagueType>> data,
-        boolean currentSeason
+        boolean currentSeason,
+        boolean isArcadeRegion
     )
     {
         LOG.trace("updateOrAlternativeUpdate({}, {}, {})", season, data, currentSeason);
         fastTeamDAO.load(season.getRegion(), season.getPulseSeasonId());
         LOG.debug("Loaded teams into FastTeamDAO for {}", season);
-        if(!isAlternativeUpdate(season.getRegion(), currentSeason))
+        if(isArcadeRegion)
+        {
+            return update
+            (
+                season, data, true,
+                ctx->sc2ArcadeLadderService
+                    .updateSeason(ctx.getSeason(), ctx.getData())
+            );
+        }
+        else if(!isAlternativeUpdate(season.getRegion(), currentSeason))
         {
             return update
             (
@@ -1039,6 +1087,12 @@ public class StatsService
         List<Future<Void>> tasks = new ArrayList<>(regions.size());
         for(Region region : Region.values())
         {
+            if(sc2ArcadeLadderService.isArcadeRegion(region))
+            {
+                updateSC2ArcadeLadderStructure(region).ifPresent(tasks::add);
+                continue;
+            }
+
             BlizzardSeason bSeason = sc2WebServiceUtil
                 .getCurrentOrLastOrExistingSeason(region, false);
             List<Tuple2<BlizzardLeague, Region>> bLeagues = api
@@ -1060,6 +1114,29 @@ public class StatsService
         }
 
         return tasks;
+    }
+
+    private Optional<Future<Void>> updateSC2ArcadeLadderStructure(Region region)
+    {
+        try
+        {
+            Season arcadeSeason =
+                sc2ArcadeLadderService.getCurrentSeason(region);
+            Map<SC2ArcadeLadderQueuePair, List<SC2ArcadeLadderTierThreshold>>
+                thresholds = sc2ArcadeLadderService.getTierThresholds(arcadeSeason);
+            return Optional.of(dbExecutorService.submit(()->{
+                Season season = seasonService.merge(arcadeSeason);
+                createLeaguesAndTiers(season);
+                sc2ArcadeLadderService.saveTierThresholds(season, thresholds);
+                LOG.info("Updated SC2Arcade ladder structure for {}", season);
+            }, null));
+        }
+        catch(RuntimeException ex)
+        {
+            //errors of this API must not affect other regions
+            LOG.error(ex.getMessage(), ex);
+            return Optional.empty();
+        }
     }
 
     protected List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> getLadderIds

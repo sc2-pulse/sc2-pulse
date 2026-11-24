@@ -184,7 +184,11 @@ public class ClanMemberIT
         );
 
         OffsetDateTime expiredOdt = SC2Pulse.offsetDateTime().minus(ClanMemberDAO.TTL);
-        assertEquals(1, clanMemberDAO.getInactiveCount(expiredOdt));
+        assertEquals(1, clanMemberDAO.getInactiveCount(expiredOdt, Set.of()));
+        assertEquals(1, clanMemberDAO.getInactiveCount(expiredOdt,
+            Set.of(Region.CN)));
+        assertEquals(0, clanMemberDAO.getInactiveCount(expiredOdt,
+            Set.of(char1.getRegion(), Region.CN)));
         assertIterableEquals(List.of(char1.getId()), clanMemberDAO.removeExpired());
         assertTrue(clanMemberDAO.find(Set.of(char1.getId())).isEmpty());
         assertFalse(clanMemberDAO.find(Set.of(char2.getId())).isEmpty());

@@ -94,6 +94,7 @@ public class BlizzardPrivacyService
     private final BlizzardSC2API api;
     private final StatsService statsService;
     private final AlternativeLadderService alternativeLadderService;
+    private final SC2ArcadeLadderService sc2ArcadeLadderService;
     private final SeasonDAO seasonDAO;
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
@@ -123,6 +124,7 @@ public class BlizzardPrivacyService
         BlizzardSC2API api,
         StatsService statsService,
         AlternativeLadderService alternativeLadderService,
+        SC2ArcadeLadderService sc2ArcadeLadderService,
         SeasonDAO seasonDAO,
         VarDAO varDAO,
         AccountDAO accountDAO,
@@ -140,6 +142,7 @@ public class BlizzardPrivacyService
         this.api = api;
         this.statsService = statsService;
         this.alternativeLadderService = alternativeLadderService;
+        this.sc2ArcadeLadderService = sc2ArcadeLadderService;
         this.seasonDAO = seasonDAO;
         this.accountDAO = accountDAO;
         this.playerCharacterDAO = playerCharacterDAO;
@@ -262,7 +265,23 @@ public class BlizzardPrivacyService
         List<Future<Void>> dbTasks = new ArrayList<>();
         for(Region region : globalContext.getActiveRegions())
         {
-            if(!statsService.isAlternativeUpdate(region, current))
+            if(sc2ArcadeLadderService.isArcadeRegion(region))
+            {
+                //only the current season is cached by the ladder crawler
+                if(!current)
+                {
+                    LOG.debug
+                    (
+                        "Skipped old season {} of arcade region {}",
+                        season, region
+                    );
+                    continue;
+                }
+
+                dbTasks.add(webExecutorService
+                    .submit(()->sc2ArcadeLadderUpdate(region, season), null));
+            }
+            else if(!statsService.isAlternativeUpdate(region, current))
             {
                 dbTasks.add(webExecutorService.submit(()->update(region, season, current), null));
             }
@@ -412,6 +431,34 @@ public class BlizzardPrivacyService
             .blockLast();
     }
 
+    /*
+        This data is already loaded by the ladder crawler, so there are no API
+        requests here. There are no BattleTags and clans.
+     */
+    private void sc2ArcadeLadderUpdate(Region region, int seasonId)
+    {
+        Set<PlayerCharacter> characters =
+            sc2ArcadeLadderService.getCachedCharacters(region, seasonId);
+        if(characters.isEmpty())
+        {
+            LOG.warn
+            (
+                "No cached SC2Arcade ladder characters: {} {}, skipping",
+                region, seasonId
+            );
+            return;
+        }
+
+        Flux.fromIterable(characters)
+            .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
+            .flatMap(batch->WebServiceUtil.getOnErrorLogAndSkipMono(
+                Mono.fromCallable(()->
+                    playerCharacterDAO.updateCharacters(Set.copyOf(batch)))
+                    .subscribeOn(secondaryDbScheduler)))
+            .doOnNext(batch->LOG.debug("Updated {} characters", batch.size()))
+            .blockLast();
+    }
+
     private Stream<Tuple2<ClanMemberEventData, PlayerCharacter>> extractAlternativePrivateInfo
     (Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladder)
     {
@@ -510,14 +557,7 @@ public class BlizzardPrivacyService
                 .collect(Collectors.groupingBy(PlayerCharacter::getRegion))
                 .entrySet()
         )
-            .flatMap(entry->api.getLegacyProfiles
-            (
-                entry.getValue(),
-                alternativeLadderService.isProfileLadderWebRegion(entry.getKey())
-                    || alternativeLadderService.isDiscoveryWebRegion(entry.getKey())
-            ))
-            .filter(c->legacyProfilePredicate.test(c.getT1()))
-            .map(this::extractCharacter)
+            .flatMap(entry->getCharacters(entry.getKey(), entry.getValue()))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
             .forEach(l->{
@@ -527,6 +567,22 @@ public class BlizzardPrivacyService
             });
         lastUpdatedCharacterInstant.setValueAndSave(SC2Pulse.instant());
         lastUpdatedCharacterId.setValueAndSave(batch.get(batch.size() - 1).getId());
+    }
+
+    private Flux<PlayerCharacter> getCharacters
+    (
+        Region region,
+        List<PlayerCharacter> characters
+    )
+    {
+        if(sc2ArcadeLadderService.isArcadeRegion(region))
+            return sc2ArcadeLadderService.getCharacters(region, characters);
+
+        boolean web = alternativeLadderService.isProfileLadderWebRegion(region)
+            || alternativeLadderService.isDiscoveryWebRegion(region);
+        return api.getLegacyProfiles(characters, web)
+            .filter(c->legacyProfilePredicate.test(c.getT1()))
+            .map(this::extractCharacter);
     }
 
     private void resetCharacterUpdateVars()

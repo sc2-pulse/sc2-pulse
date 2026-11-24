@@ -78,6 +78,9 @@ public class StatsServiceTest
     private AlternativeLadderService alternativeLadderService;
 
     @Mock
+    private SC2ArcadeLadderService sc2ArcadeLadderService;
+
+    @Mock
     private BlizzardSC2API api;
 
     @Mock
@@ -154,6 +157,7 @@ public class StatsServiceTest
         ss = new StatsService
         (
             alternativeLadderService,
+            sc2ArcadeLadderService,
             api,
             seasonDao,
             leagueDao,

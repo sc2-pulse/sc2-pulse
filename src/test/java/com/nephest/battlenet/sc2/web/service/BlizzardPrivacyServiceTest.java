@@ -102,6 +102,9 @@ public class BlizzardPrivacyServiceTest
     private AlternativeLadderService alternativeLadderService;
 
     @Mock
+    private SC2ArcadeLadderService sc2ArcadeLadderService;
+
+    @Mock
     private SeasonDAO seasonDAO;
 
     @Mock
@@ -175,6 +178,7 @@ public class BlizzardPrivacyServiceTest
             api,
             statsService,
             alternativeLadderService,
+            sc2ArcadeLadderService,
             seasonDAO,
             varDAO,
             accountDAO,
@@ -197,6 +201,7 @@ public class BlizzardPrivacyServiceTest
             api,
             statsService,
             alternativeLadderService,
+            sc2ArcadeLadderService,
             seasonDAO,
             varDAO,
             accountDAO,
@@ -329,6 +334,7 @@ public class BlizzardPrivacyServiceTest
             api,
             statsService,
             alternativeLadderService,
+            sc2ArcadeLadderService,
             seasonDAO,
             varDAO,
             accountDAO,
@@ -596,6 +602,29 @@ public class BlizzardPrivacyServiceTest
                 Tuples.of(new BlizzardLeague(), Region.EU, new BlizzardLeagueTier(), new BlizzardTierDivision())
             )
         );
+    }
+
+
+    @Test
+    public void whenOldSeasonOfArcadeRegion_thenSkipRegion()
+    {
+        when(sc2ArcadeLadderService.isArcadeRegion(any()))
+            .thenAnswer(i->i.getArgument(0) == Region.KR);
+        when(seasonDAO.getMaxPulseSeasonId())
+            .thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
+        when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt()))
+            .thenReturn(new BlizzardSeason());
+        stubLadderApi();
+        privacyService.getLastUpdatedCurrentSeasonInstantVar()
+            .setValue(SC2Pulse.instant());
+
+        privacyService.updateOldSeasons();
+        verify(api, times(globalContext.getActiveRegions().size() - 1))
+            .getLadders(any(), eq(-1L), any(), eq(REQUEST_LIMIT_PRIORITY_NAME));
+        verify(sc2WebServiceUtil, never())
+            .getExternalOrExistingSeason(eq(Region.KR), anyInt());
+        verify(sc2ArcadeLadderService, never())
+            .getCachedCharacters(any(), anyInt());
     }
 
 }

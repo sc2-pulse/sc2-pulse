@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -69,7 +71,18 @@ public class ClanMemberDAO
         + "WHERE clan_id IN (:clanIds)";
 
     private static final String COUNT_INACTIVE =
-        "SELECT COUNT(*) FROM clan_member WHERE updated < :to";
+        """
+        SELECT COUNT(*)
+        FROM clan_member
+        INNER JOIN player_character
+            ON clan_member.player_character_id = player_character.id
+        WHERE clan_member.updated < :to
+        AND
+        (
+            array_length(:excludedRegions::smallint[], 1) IS NULL
+            OR player_character.region != ALL(:excludedRegions)
+        )
+        """;
 
     private static final String REMOVE_EXPIRED =
         "DELETE "
@@ -88,14 +101,18 @@ public class ClanMemberDAO
         DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
 
     private final NamedParameterJdbcTemplate template;
+    private final ConversionService conversionService;
 
     @Autowired
     public ClanMemberDAO
     (
-        @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
+        @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
+        @Qualifier("sc2StatsConversionService")
+        ConversionService conversionService
     )
     {
-       this.template = template;
+        this.template = template;
+        this.conversionService = conversionService;
     }
 
     public NamedParameterJdbcTemplate getTemplate()
@@ -151,10 +168,21 @@ public class ClanMemberDAO
         return template.queryForList(REMOVE_EXPIRED, Map.of(), Long.class);
     }
 
-    public int getInactiveCount(OffsetDateTime to)
+    public int getInactiveCount
+    (
+        OffsetDateTime to,
+        Set<Region> excludedRegions
+    )
     {
+        Integer[] excludedRegionIds = excludedRegions.isEmpty()
+            ? null
+            : excludedRegions.stream()
+                .map(region->
+                    conversionService.convert(region, Integer.class))
+                .toArray(Integer[]::new);
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("to", to);
+            .addValue("to", to)
+            .addValue("excludedRegions", excludedRegionIds);
         return getTemplate().queryForObject(COUNT_INACTIVE, params, Integer.class);
     }
 
