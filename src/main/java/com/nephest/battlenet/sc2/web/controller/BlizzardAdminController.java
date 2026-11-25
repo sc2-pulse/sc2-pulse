@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeLadderService;
+import com.nephest.battlenet.sc2.web.service.SC2ArcadeMatchService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +43,9 @@ public class BlizzardAdminController
 
     @Autowired
     private SC2ArcadeLadderService sc2ArcadeLadderService;
+
+    @Autowired
+    private SC2ArcadeMatchService sc2ArcadeMatchService;
 
     @Autowired
     private MatchService matchService;
@@ -124,6 +128,20 @@ public class BlizzardAdminController
     (@PathVariable("region") Region region)
     {
         sc2ArcadeLadderService.removeRegion(region);
+    }
+
+    @PostMapping("/match/sc2arcade/region/{region}")
+    public void addSC2ArcadeMatchRegion
+    (@PathVariable("region") Region region)
+    {
+        sc2ArcadeMatchService.addRegion(region);
+    }
+
+    @DeleteMapping("/match/sc2arcade/region/{region}")
+    public void removeSC2ArcadeMatchRegion
+    (@PathVariable("region") Region region)
+    {
+        sc2ArcadeMatchService.removeRegion(region);
     }
 
     @PostMapping("/blizzard/api/match/web/region/{region}")

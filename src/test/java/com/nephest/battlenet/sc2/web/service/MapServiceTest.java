@@ -5,11 +5,15 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static com.nephest.battlenet.sc2.service.EventService.DEFAULT_FAILURE_HANDLER;
 import static com.nephest.battlenet.sc2.web.service.MapService.MAP_STATS_SKIP_NEW_SEASON_FRAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.model.Region;
@@ -22,6 +26,8 @@ import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsFilmDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -142,6 +148,57 @@ public class MapServiceTest
         {
             sub.dispose();
         }
+    }
+
+    @Test
+    public void whenSkippingYoungSeasonMatches_thenNeverMoveInstantBack()
+    {
+        verifyEarlierRangeIsIgnored(
+            MAP_STATS_SKIP_NEW_SEASON_FRAME.minusDays(1));
+    }
+
+    @Test
+    public void whenMatchesAreAlreadyCounted_thenDontCountThemAgain()
+    {
+        verifyEarlierRangeIsIgnored(
+            MAP_STATS_SKIP_NEW_SEASON_FRAME.plusDays(1));
+    }
+
+    private void verifyEarlierRangeIsIgnored(Duration seasonAge)
+    {
+        //lenient because the range is checked before the season
+        lenient().when(seasonDAO.findLast())
+            .thenReturn(Optional.of(createSeason(seasonAge)));
+        Instant updateInstant = SC2Pulse.instant();
+        Instant initialMapStatsInstant = updateInstant
+            .minus(Duration.ofHours(1));
+        mapService.getMapStatsInstant().setValue(initialMapStatsInstant);
+
+        assertNull(mapService.update(createMatchUpdateContext(updateInstant)));
+        assertEquals
+        (
+            initialMapStatsInstant,
+            mapService.getMapStatsInstant().getValue()
+        );
+        verifyNoInteractions(mapStatsDAO);
+    }
+
+    private static Season createSeason(Duration seasonAge)
+    {
+        OffsetDateTime seasonStart = SC2Pulse.offsetDateTime()
+            .minus(seasonAge);
+        return new Season
+        (
+            1, 1, Region.EU, 2020, 1,
+            seasonStart, seasonStart.plusDays(60)
+        );
+    }
+
+    private static MatchUpdateContext createMatchUpdateContext
+    (Instant updateInstant)
+    {
+        return new MatchUpdateContext(
+            Map.of(), new UpdateContext(updateInstant, updateInstant));
     }
 
 }

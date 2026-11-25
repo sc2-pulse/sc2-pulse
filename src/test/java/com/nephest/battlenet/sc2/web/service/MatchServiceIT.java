@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.extension.AutoConfigureDatabase;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTest;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.util.Set;
@@ -137,6 +138,55 @@ public class MatchServiceIT
             .andReturn();
 
         assertEquals(Set.of(Region.EU), matchService.getWebRegions());
+    }
+
+    @Test
+    @WithBlizzardMockUser
+    (
+        partition = Partition.GLOBAL,
+        username = "user",
+        roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN}
+    )
+    public void testSC2ArcadeRegion
+    (
+        @Autowired WebApplicationContext webApplicationContext,
+        @Autowired SC2ArcadeMatchService sc2ArcadeMatchService,
+        @Autowired SC2ArcadeLadderService sc2ArcadeLadderService,
+        @Autowired VarDAO varDAO
+    )
+    throws Exception
+    {
+        MockMvc mvc = MockMvcBuilders
+            .webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
+            .build();
+        String path = "/admin/match/sc2arcade/region/EU";
+        Set<Region> ladderRegions = sc2ArcadeLadderService.getRegions();
+        assertEquals(Set.of(Region.CN), sc2ArcadeMatchService.getRegions());
+
+        mvc.perform(post(path).with(csrf())).andExpect(status().isOk());
+        assertEquals(Set.of(Region.EU, Region.CN),
+            sc2ArcadeMatchService.getRegions());
+        assertEquals
+        (
+            Set.of(Region.EU, Region.CN),
+            WebServiceUtil.loadRegionSetVar
+            (
+                varDAO,
+                "match.sc2arcade.regions",
+                "Stored regions: {}"
+            )
+                .getValue()
+        );
+        assertEquals(ladderRegions, sc2ArcadeLadderService.getRegions());
+
+        mvc.perform(delete(path).with(csrf())).andExpect(status().isOk());
+        assertEquals(Set.of(Region.CN), sc2ArcadeMatchService.getRegions());
+
+        //required
+        mvc.perform(delete("/admin/match/sc2arcade/region/CN").with(csrf()))
+            .andExpect(status().isBadRequest());
+        assertEquals(Set.of(Region.CN), sc2ArcadeMatchService.getRegions());
     }
 
 }

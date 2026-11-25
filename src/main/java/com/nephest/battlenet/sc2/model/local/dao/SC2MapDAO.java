@@ -4,12 +4,14 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderUtil;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -90,6 +92,14 @@ public class SC2MapDAO
         + "INNER JOIN map ON map_filter.map_id = map.id "
         + "ORDER BY id";
 
+    private static final String FIND_BY_MATCH_QUERY =
+        "SELECT DISTINCT " + STD_SELECT
+        + "FROM match "
+        + "INNER JOIN map ON match.map_id = map.id "
+        + "WHERE match.date >= :minMatchDate "
+        + "AND match.type = :matchType "
+        + MatchDAO.MATCH_REGION_FILTER;
+
     public static final RowMapper<SC2Map> STD_ROW_MAPPER = (rs, i)->new SC2Map
     (
         rs.getInt("map.id"),
@@ -145,6 +155,30 @@ public class SC2MapDAO
         MapSqlParameterSource params = LadderUtil
             .createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType);
         return template.query(FIND_BY_LADDER_QUERY, params, STD_ROW_MAPPER);
+    }
+
+    /**
+     * @param matchType match type
+     * @param minMatchDate min match date
+     * @param regions match regions, all regions if it's empty
+     * @return maps of found matches
+     */
+    public List<SC2Map> find
+    (
+        BaseMatch.MatchType matchType,
+        OffsetDateTime minMatchDate,
+        Set<Region> regions
+    )
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue
+            (
+                "matchType",
+                conversionService.convert(matchType, Integer.class)
+            )
+            .addValue("minMatchDate", minMatchDate)
+            .addValue("regions", DAOUtils.toIds(regions, conversionService));
+        return template.query(FIND_BY_MATCH_QUERY, params, STD_ROW_MAPPER);
     }
 
     @Cacheable("var-strings")

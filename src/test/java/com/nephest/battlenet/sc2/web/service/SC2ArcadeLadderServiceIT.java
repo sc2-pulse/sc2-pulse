@@ -87,13 +87,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.scheduler.Scheduler;
 
 @SpringBootTest(classes = AllTestConfig.class)
-@TestPropertySource
-(
-    locations = "classpath:application.properties",
-    properties =
-        "com.nephest.battlenet.sc2.api.sc2arcade-ladder"
-            + ".requests-per-second=1000"
-)
+@TestPropertySource("classpath:application.properties")
 @AutoConfigureDatabase
 public class SC2ArcadeLadderServiceIT
 {

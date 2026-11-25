@@ -125,7 +125,7 @@ public class TestDbInitializer
         (
             BaseMatch.MatchType._1V1,
             1, 280, new long[]{1}, new long[]{280},
-            startDateTime, Region.EU, 1, 28,
+            startDateTime, Region.EU, 28,
             matchCount
         );
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startDateTime.minusYears(1));

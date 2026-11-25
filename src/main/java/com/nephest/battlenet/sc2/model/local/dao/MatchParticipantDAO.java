@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
@@ -87,6 +88,7 @@ public class MatchParticipantDAO
             + "FROM match "
             + "WHERE match.type = %1$s "
             + "AND \"date\"  >= :point "
+            + MatchDAO.MATCH_REGION_FILTER
         + "), "
         + "result_filter AS "
         + "( "
@@ -123,6 +125,7 @@ public class MatchParticipantDAO
             + "( "
                 + "max_ladder_update.duration IS NULL "
                 + "OR team_state.timestamp - match.date <= max_ladder_update.duration "
+                + "OR team.region = ANY(:arcadeLadderRegions::smallint[]) "
             +") "
         + ") ";
     
@@ -180,6 +183,7 @@ public class MatchParticipantDAO
             + "FROM match "
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "WHERE match.date >= :from "
+            + MatchDAO.MATCH_REGION_FILTER
             + "ORDER BY match_participant.player_character_id, match.date"
         + "), "
         + "match_participant_filter_prev AS "
@@ -197,6 +201,7 @@ public class MatchParticipantDAO
             + "SELECT id "
             + "FROM match "
             + "WHERE date >= :from "
+            + MatchDAO.MATCH_REGION_FILTER
 
             + "UNION "
 
@@ -365,9 +370,34 @@ public class MatchParticipantDAO
 
     public int identify(int season, OffsetDateTime from)
     {
+        return identify(season, from, Set.of(), Set.of());
+    }
+
+    /**
+     * @param season pulse season id
+     * @param from min match date
+     * @param regions match regions, all regions if it's empty
+     * @param arcadeLadderRegions max ladder update duration is ignored in these
+     * regions
+     * @return number of identified participants
+     */
+    public int identify
+    (
+        int season,
+        OffsetDateTime from,
+        Set<Region> regions,
+        Set<Region> arcadeLadderRegions
+    )
+    {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("season", season)
-            .addValue("point", from);
+            .addValue("point", from)
+            .addValue("regions", DAOUtils.toIds(regions, conversionService))
+            .addValue
+            (
+                "arcadeLadderRegions",
+                DAOUtils.toIds(arcadeLadderRegions, conversionService)
+            );
         int identified = 0;
         for(String q : IDENTIFY_PARTICIPANT_QUERIES) identified += template.update(q, params);
         return identified;
@@ -375,8 +405,23 @@ public class MatchParticipantDAO
 
     public int calculateRatingDifference(OffsetDateTime from)
     {
+        return calculateRatingDifference(from, Set.of());
+    }
+
+    /**
+     * @param from min match date
+     * @param regions match regions, all regions if it's empty
+     * @return number of updated participants
+     */
+    public int calculateRatingDifference
+    (
+        OffsetDateTime from,
+        Set<Region> regions
+    )
+    {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("from", from)
+            .addValue("regions", DAOUtils.toIds(regions, conversionService))
             .addValue("win", conversionService.convert(BaseMatch.Decision.WIN, Integer.class))
             .addValue("loss", conversionService.convert(BaseMatch.Decision.LOSS, Integer.class));
         return template.update(UPDATE_RATING_CHANGE, params);

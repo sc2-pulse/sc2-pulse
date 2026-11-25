@@ -8,6 +8,7 @@ import static com.nephest.battlenet.sc2.model.Race.ZERG;
 import static com.nephest.battlenet.sc2.web.service.MapService.FILM_FRAME_DURATION;
 import static com.nephest.battlenet.sc2.web.service.MapStatsFilmTestService.FRAME_NUMBER;
 import static com.nephest.battlenet.sc2.web.service.MapStatsFilmTestService.FRAME_OFFSET;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -203,7 +204,7 @@ public class MapStatsFilmIT
                 new long[]{38L}, new long[]{39L},
                 startFrom,
                 Region.EU,
-                1, 1, 1, 1, 1
+                1, 1, 1, 1
             );
             seasonGenerator.createMatches
             (
@@ -213,7 +214,7 @@ public class MapStatsFilmIT
                 new long[]{39L}, new long[]{38L},
                 startFrom.plusSeconds(MatchDAO.DURATION_OFFSET + FRAME_OFFSET),
                 Region.EU,
-                1, 1, 1, 1, 1
+                1, 1, 1, 1
             );
             seasonGenerator.createMatches
             (
@@ -222,7 +223,7 @@ public class MapStatsFilmIT
                 new long[]{38L}, new long[]{39L},
                 startFrom.plusSeconds(MatchDAO.DURATION_OFFSET * 2 + FRAME_OFFSET * 2),
                 Region.EU,
-                1, 1, 1, 1, 1
+                1, 1, 1, 1
             );
             return teamIds;
         });
@@ -271,7 +272,7 @@ public class MapStatsFilmIT
 
         //add new stats
         OffsetDateTime startFrom2 = startFrom.plusMonths(1);
-        Instant mucInstant2 = startFrom2.plusDays(1).toInstant();
+        Instant mucInstant2 = startFrom2.plusDays(2).toInstant();
         seasonGenerator.createMatches
         (
             BaseMatch.MatchType._1V1,
@@ -279,7 +280,7 @@ public class MapStatsFilmIT
             new long[]{38L}, new long[]{39L},
             startFrom2,
             Region.EU,
-            1, 1, 1, 1, 1
+            1, 1, 1, 1
         );
         seasonGenerator.createMatches
         (
@@ -288,13 +289,42 @@ public class MapStatsFilmIT
             new long[]{39L}, new long[]{38L},
             startFrom2.plusSeconds(MatchDAO.DURATION_OFFSET + FRAME_OFFSET),
             Region.EU,
-            1, 1, 1, 1, 1
+            1, 1, 1, 1
         );
         jdbcTemplate.update("DELETE FROM team_state WHERE timestamp >= ? ", startFrom2);
         teamStateDAO.takeSnapshot(teamIds, startFrom2);
         seasonGenerator.takeTeamSnapshot(teamIds, startFrom2, FRAME_OFFSET, 1);
         matchParticipantDAO.identify(pulseSeasonId, startFrom2);
         matchDAO.updateDuration(startFrom2);
+        //the matches are too recent to be counted
+        Instant recentMatchUpdateInstant = startFrom2
+            .plus(MapService.MAP_STATS_DELAY)
+            .minusSeconds(1)
+            .toInstant();
+        eventService.createMatchUpdateEvent(new MatchUpdateContext
+        (
+            Map.of(),
+            new UpdateContext
+            (
+                recentMatchUpdateInstant,
+                recentMatchUpdateInstant
+            )
+        ));
+        assertNotNull(updateContexts.poll(5, TimeUnit.SECONDS));
+        LadderMapStatsFilm recentMatchFilm = objectMapper.readValue
+        (
+            getFilm(pulseSeasonId)
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(),
+            LadderMapStatsFilm.class
+        );
+        recentMatchFilm.getFrames().sort(Comparator.comparing(
+            MapStatsFrame::getNumber,
+            Comparator.nullsLast(Comparator.naturalOrder())));
+        Assertions.assertThat(recentMatchFilm)
+            .usingRecursiveComparison()
+            .isEqualTo(ladderMapStatsFilm1);
+
         eventService.createMatchUpdateEvent(new MatchUpdateContext(
             Map.of(), new UpdateContext(mucInstant2, mucInstant2)));
         updateContexts.poll(5, TimeUnit.SECONDS);
@@ -341,7 +371,7 @@ public class MapStatsFilmIT
             populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
             teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
             OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
-            Instant mucInstant = startFrom.plusDays(1).toInstant();
+            Instant mucInstant = startFrom.plusDays(2).toInstant();
             seasonGenerator.createMatches
             (
                 BaseMatch.MatchType._1V1,
@@ -349,7 +379,7 @@ public class MapStatsFilmIT
                 new long[]{8L, 9L}, new long[]{10L},
                 startFrom,
                 Region.EU,
-                1, 1, 1, 1, 1
+                1, 1, 1, 1
             );
             seasonGenerator.createMatches
             (
@@ -358,7 +388,7 @@ public class MapStatsFilmIT
                 new long[]{8L, 9L}, new long[]{10L},
                 startFrom.plusSeconds(MatchDAO.DURATION_OFFSET + frameOffset),
                 Region.EU,
-                1, 1, 1, 1, 1
+                1, 1, 1, 1
             );
             List<Long> teamIds = List.of(9L, 10L);
             jdbcTemplate.update("DELETE FROM team_state WHERE timestamp >= ? ", startFrom);

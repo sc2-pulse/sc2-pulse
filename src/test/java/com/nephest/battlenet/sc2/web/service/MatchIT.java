@@ -733,7 +733,7 @@ public class MatchIT
             BaseMatch.MatchType._4V4,
             1L, 2L,
             new long[]{1, 2, 3, 4}, new long[]{5, 6, 7, 8},
-            now, Region.EU, 10, 1,
+            now, Region.EU, 1,
             8
         );
 
@@ -949,7 +949,7 @@ public class MatchIT
             BaseMatch.MatchType._4V4,
             1L, 2L,
             new long[]{1, 2, 3, 4}, new long[]{5, 6, 7, 8},
-            now, Region.EU, 10, 1,
+            now, Region.EU, 1,
             10,
             120, 80, //5
             115, 85, //null, identical values
@@ -1040,7 +1040,7 @@ public class MatchIT
             new long[]{1L}, new long[]{2L},
             odt,
             Region.EU,
-            1, 1, 1, 1, 1
+            1, 1, 1, 1
         );
         ladderUpdateDAO.create(Set.of(
             new LadderUpdate

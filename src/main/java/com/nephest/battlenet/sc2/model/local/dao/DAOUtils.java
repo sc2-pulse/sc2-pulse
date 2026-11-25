@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.Identifiable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -157,6 +158,18 @@ public final class DAOUtils
             if(!result) LOG.debug("{}", errors);
             return result;
         };
+    }
+
+    public static Integer[] toIds
+    (
+        Collection<? extends Identifiable> identifiables,
+        ConversionService conversionService
+    )
+    {
+        return identifiables.stream()
+            .map(identifiable->conversionService
+                .convert(identifiable, Integer.class))
+            .toArray(Integer[]::new);
     }
 
     public static Integer getInteger(ResultSet rs, String param)

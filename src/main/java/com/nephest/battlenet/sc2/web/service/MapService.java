@@ -20,7 +20,6 @@ import com.nephest.battlenet.sc2.model.local.MatchUp;
 import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmFrameDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmSpecDAO;
-import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStatsFilm;
@@ -47,6 +46,10 @@ public class MapService
 {
 
     public static final Duration MAP_STATS_DEFAULT_UPDATE_FRAME = Duration.ofMinutes(60);
+    /**
+     * Stats are counted only once, so wait for late matches.
+     */
+    public static final Duration MAP_STATS_DELAY = Duration.ofHours(24);
     public static final Duration MAP_STATS_SKIP_NEW_SEASON_FRAME = Duration.ofDays(8);
 
     public static final Set<MatchUp> MATCH_UPS = Set.of
@@ -91,11 +94,9 @@ public class MapService
         this.mapStatsFilmFrameDAO = mapStatsFilmFrameDAO;
         this.ladderMapStatsFilmDAO = ladderMapStatsFilmDAO;
         mapStatsInstant = new InstantVar(varDAO, "ladder.stats.map.timestamp", false);
-        Instant defaultMapStatsInstant = SC2Pulse.instant().minusSeconds
-        (
-            MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 60
-            + MAP_STATS_DEFAULT_UPDATE_FRAME.toSeconds()
-        );
+        Instant defaultMapStatsInstant = SC2Pulse.instant()
+            .minus(MAP_STATS_DELAY)
+            .minus(MAP_STATS_DEFAULT_UPDATE_FRAME);
         mapStatsInstant.tryLoad(defaultMapStatsInstant);
         subscribeToEvents(eventService);
     }
@@ -139,7 +140,7 @@ public class MapService
     public OffsetDateTime getMapStatsEnd(UpdateContext matchUpdateContext)
     {
         return OffsetDateTime.ofInstant(matchUpdateContext.getExternalUpdate(), ZoneOffset.systemDefault())
-            .minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES);
+            .minus(MAP_STATS_DELAY);
     }
 
     public boolean seasonIsTooYoung()
@@ -158,6 +159,9 @@ public class MapService
     public UpdateContext update(MatchUpdateContext updateContext)
     {
         OffsetDateTime to = getMapStatsEnd(updateContext.getUpdateContext());
+        OffsetDateTime from = getMapStatsStart();
+        if(from.isAfter(to)) return null;
+
         //skipping because the ladder is very volatile(top% leagues) at the beginning of the new season
         if(seasonIsTooYoung())
         {
@@ -165,8 +169,6 @@ public class MapService
             return null;
         }
 
-        OffsetDateTime from = getMapStatsStart();
-        if(from.isAfter(to)) return null;
         /*
             Map stats are incremental stats, preemptively update the var to prevent double
             calculation in exceptional cases. Some stats may be lost this way, but this

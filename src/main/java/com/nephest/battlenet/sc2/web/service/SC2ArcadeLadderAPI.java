@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.sc2arcade.SC2ArcadeLadderCharacter;
 import com.nephest.battlenet.sc2.model.sc2arcade.SC2ArcadeLadderCoverage;
 import com.nephest.battlenet.sc2.model.sc2arcade.SC2ArcadeLadderDivision;
+import com.nephest.battlenet.sc2.model.sc2arcade.SC2ArcadeLadderGamePage;
 import com.nephest.battlenet.sc2.model.sc2arcade.SC2ArcadeLadderPage;
 import com.nephest.battlenet.sc2.model.sc2arcade.SC2ArcadeLadderQueue;
 import com.nephest.battlenet.sc2.model.sc2arcade.SC2ArcadeLadderQueuePair;
@@ -23,6 +24,7 @@ import com.nephest.battlenet.sc2.web.util.RateLimitRefreshConfig;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -33,6 +35,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
@@ -388,6 +391,43 @@ extends BaseAPI
             season
         )
             .map(SC2ArcadeLadderPage::items);
+    }
+
+    /**
+     * Games in order of their end time. A game can be published hours after its
+     * end.
+     *
+     * @param region region
+     * @param from min end time, inclusive
+     * @param to max end time
+     * @param cursor {@link SC2ArcadeLadderGamePage#navigation()} of the
+     * previous page, null for the first page
+     * @return games of all types
+     */
+    public Mono<SC2ArcadeLadderGamePage> getGames
+    (
+        Region region,
+        Instant from,
+        Instant to,
+        @Nullable String cursor
+    )
+    {
+        ParameterizedTypeReference<SC2ArcadeLadderGamePage> type =
+            new ParameterizedTypeReference<>(){};
+        String uri = REGION_PATH
+            + "/games?order=ended&direction=asc&from={from}&to={to}"
+            + LIMIT_PARAMETER;
+        return cursor == null
+            ? get(type, uri, region.name(), from, to)
+            : get
+            (
+                type,
+                uri + CURSOR_PARAMETER,
+                region.name(),
+                from,
+                to,
+                cursor
+            );
     }
 
 }

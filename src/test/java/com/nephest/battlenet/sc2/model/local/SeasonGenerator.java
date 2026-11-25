@@ -390,7 +390,6 @@ public class SeasonGenerator
         long[] characterIds2,
         OffsetDateTime date,
         Region region,
-        Integer duration,
         Integer division,
         int count,
         int... rating
@@ -404,7 +403,6 @@ public class SeasonGenerator
                 characterIds1, characterIds2,
                 date.minusSeconds(i),
                 region,
-                duration + i,
                 division,
                 rating.length > 0 ? rating[i * 2] : 1, rating.length > 0 ? rating[i * 2 + 1] : 1
             );
@@ -419,7 +417,6 @@ public class SeasonGenerator
         long[] characterIds2,
         OffsetDateTime date,
         Region region,
-        Integer duration,
         Integer division,
         int rating1, int rating2
     )
@@ -429,7 +426,7 @@ public class SeasonGenerator
             new TeamState(teamId2, date, division, 1, rating2)
         ));
         SC2Map map = mapDAO.merge(Set.of(new SC2Map(null, "map"))).iterator().next();
-        Match match = matchDAO.merge(Set.of(new Match(null, date, matchType, map.getId(), region, duration)))
+        Match match = matchDAO.merge(Set.of(new Match(null, date, matchType, map.getId(), region)))
             .iterator().next();
         for(long charId : characterIds1)
             matchParticipantDAO.merge(Set.of(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.WIN)));
@@ -452,7 +449,7 @@ public class SeasonGenerator
             new long[]{id1}, new long[]{id2},
             odt,
             Region.EU,
-            1, 1, 1, 1, 1
+            1, 1, 1, 1
         );
         createMatches
         (
@@ -461,7 +458,7 @@ public class SeasonGenerator
             new long[]{id1}, new long[]{id2},
             odt.plusSeconds(MatchDAO.DURATION_OFFSET + offset),
             Region.EU,
-            1, 1, 1, 1, 1
+            1, 1, 1, 1
         );
     }
 

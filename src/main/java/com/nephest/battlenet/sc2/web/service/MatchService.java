@@ -77,6 +77,7 @@ public class MatchService
     private final SC2MapDAO mapDAO;
     private final AlternativeLadderService alternativeLadderService;
     private final SC2ArcadeLadderService sc2ArcadeLadderService;
+    private final SC2ArcadeMatchService sc2ArcadeMatchService;
     private final EventService eventService;
     private final UpdateService updateService;
     private final GlobalContext globalContext;
@@ -102,6 +103,7 @@ public class MatchService
         VarDAO varDAO,
         AlternativeLadderService alternativeLadderService,
         SC2ArcadeLadderService sc2ArcadeLadderService,
+        SC2ArcadeMatchService sc2ArcadeMatchService,
         UpdateService updateService,
         EventService eventService,
         Validator validator,
@@ -116,6 +118,7 @@ public class MatchService
         this.mapDAO = mapDAO;
         this.alternativeLadderService = alternativeLadderService;
         this.sc2ArcadeLadderService = sc2ArcadeLadderService;
+        this.sc2ArcadeMatchService = sc2ArcadeMatchService;
         this.eventService = eventService;
         this.updateService = updateService;
         this.globalContext = globalContext;
@@ -238,10 +241,10 @@ public class MatchService
         if(webRegions.getValue().remove(region)) webRegions.save();
     }
 
-    //there is no ranked match history in the SC2Arcade API
-    private boolean isSupported(Region region)
+    //other regions use SC2ArcadeMatchService
+    private boolean isBlizzardMatchRegion(Region region)
     {
-        return !sc2ArcadeLadderService.isArcadeRegion(region);
+        return !sc2ArcadeMatchService.isArcadeRegion(region);
     }
 
     public Set<Region> getWebRegions()
@@ -254,9 +257,13 @@ public class MatchService
         return copyAndClearPendingCharacters()
             .flatMap(pendingCharacters->{
                 setRequestLimitPriority(pendingCharacters);
-                return update(pendingCharacters)
-                    .doOnSuccess(v->eventService.createMatchUpdateEvent(new MatchUpdateContext(pendingCharacters, getUpdateContext())));
-            });
+                //meta and stats must use the same context
+                UpdateContext currentUpdateContext = getUpdateContext();
+                return update(pendingCharacters, currentUpdateContext)
+                    .doOnNext(characters->eventService.createMatchUpdateEvent(
+                        new MatchUpdateContext(characters, currentUpdateContext)));
+            })
+            .then();
     }
 
     private void setRequestLimitPriority(Map<Region, Set<PlayerCharacter>> characters)
@@ -283,7 +290,7 @@ public class MatchService
     {
         return Flux.fromIterable(data.getData())
             .flatMapIterable(PendingLadderData::getCharacters)
-            .filter(character->isSupported(character.getRegion()))
+            .filter(character->isBlizzardMatchRegion(character.getRegion()))
             .map(character->pendingCharacters.get(character.getRegion()).getValue().add(character))
             .filter(Boolean::booleanValue)
             .collectList()
@@ -314,7 +321,7 @@ public class MatchService
             ()->
             {
                 Map<Region, Set<PlayerCharacter>> copy = pendingCharacters.entrySet().stream()
-                    .filter(e->isSupported(e.getKey()))
+                    .filter(e->isBlizzardMatchRegion(e.getKey()))
                     .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         e-> Set.copyOf(e.getValue().getValue())
@@ -346,28 +353,57 @@ public class MatchService
                 );
     }
 
-    private Mono<Void> update(Map<Region, Set<PlayerCharacter>> pendingCharacters)
+    private Mono<Map<Region, Set<PlayerCharacter>>> update
+    (
+        Map<Region, Set<PlayerCharacter>> pendingCharacters,
+        UpdateContext currentUpdateContext
+    )
     {
         return saveMatches(pendingCharacters)
             .reduce(0, Integer::sum)
             .doOnSuccess(count->LOG.info("Saved {} matches for {}", count, pendingCharacters.keySet()))
-            .flatMap(this::postUpdate);
+            .flatMap(blizzardMatchCount->sc2ArcadeMatchService.update()
+                .map(arcadeCharacters->mergeCharacters(
+                    pendingCharacters, arcadeCharacters))
+                .flatMap(characters->postUpdate(
+                    blizzardMatchCount, currentUpdateContext)
+                    .thenReturn(characters)));
     }
 
-    private Mono<Void> postUpdate(int matchCount)
+    //regions have only one match source
+    private static Map<Region, Set<PlayerCharacter>> mergeCharacters
+    (
+        Map<Region, Set<PlayerCharacter>> blizzardCharacters,
+        Map<Region, Set<PlayerCharacter>> arcadeCharacters
+    )
+    {
+        Map<Region, Set<PlayerCharacter>> result =
+            new EnumMap<>(Region.class);
+        result.putAll(blizzardCharacters);
+        result.putAll(arcadeCharacters);
+        return result;
+    }
+
+    private Mono<Void> postUpdate
+    (
+        int blizzardMatchCount,
+        UpdateContext currentUpdateContext
+    )
     {
         return WebServiceUtil.blockingRunnable
         (
             ()->
             {
                 matchDAO.removeExpired();
-                matchService.updateMeta(getUpdateContext());
-                if(api.isAutoForceRegion() && matchCount < 1)
+                matchService.updateMeta(currentUpdateContext);
+                if(api.isAutoForceRegion() && blizzardMatchCount < 1)
                 {
-                    LOG.warn("No matches found in {} regions", pendingCharacters.keySet());
-                    pendingCharacters.keySet().stream()
-                        .filter(this::isSupported)
-                        .forEach(api::setForceRegion);
+                    Set<Region> blizzardMatchRegions = pendingCharacters.keySet()
+                        .stream()
+                        .filter(this::isBlizzardMatchRegion)
+                        .collect(Collectors.toSet());
+                    LOG.warn("No matches found in {} regions", blizzardMatchRegions);
+                    blizzardMatchRegions.forEach(api::setForceRegion);
                 }
             }
         );
@@ -390,7 +426,7 @@ public class MatchService
     {
         List<PlayerCharacterNaturalId> chars = failedCharacters.stream()
             .flatMap(Collection::stream)
-            .filter(character->isSupported(character.getRegion()))
+            .filter(character->isBlizzardMatchRegion(character.getRegion()))
             .limit(FAILED_MATCHES_MAX)
             .distinct()
             .collect(Collectors.toList());
@@ -463,47 +499,95 @@ public class MatchService
         return matches.size();
     }
 
-    private void identify(UpdateContext updateContext)
+    private void identify
+    (
+        OffsetDateTime minMatchDate,
+        Set<Region> regions
+    )
     {
         for(Integer season : seasonDAO.getLastInAllRegions())
         {
             int identified = matchParticipantDAO.identify
             (
                 season,
-                calculateRetroactiveDateTime(updateContext)
+                minMatchDate,
+                regions,
+                sc2ArcadeLadderService.getRegions()
             );
-            LOG.info("Identified {} matches", identified);
+            LOG.info("Identified {} matches, {}", identified, regions);
         }
     }
 
-    private void calculateRatingDifference(UpdateContext updateContext)
+    private void calculateRatingDifference
+    (
+        OffsetDateTime minMatchDate,
+        Set<Region> regions
+    )
     {
         int count = matchParticipantDAO
-            .calculateRatingDifference(calculateRetroactiveDateTime(updateContext));
-        LOG.info("Calculated rating difference of {} match participants", count);
+            .calculateRatingDifference(minMatchDate, regions);
+        LOG.info
+        (
+            "Calculated rating difference of {} match participants, {}",
+            count, regions
+        );
     }
 
-    private void calculateDuration(UpdateContext updateContext)
+    private void calculateDuration
+    (
+        OffsetDateTime minMatchDate,
+        Set<Region> regions
+    )
     {
-        int updated = matchDAO.updateDuration(calculateRetroactiveDateTime(updateContext));
-        LOG.debug("Calculated duration of {} matches", updated);
+        int updated = matchDAO.updateDuration(minMatchDate, regions);
+        LOG.debug("Calculated duration of {} matches, {}", updated, regions);
     }
 
     /*
         Matches are fetched retroactively, some of them can happen before the lastUpdated instant.
         Try to catch these matches by moving the start instant back in time.
      */
-    private static OffsetDateTime calculateRetroactiveDateTime(UpdateContext updateContext)
+    private static OffsetDateTime calculateRetroactiveDateTime
+    (
+        UpdateContext updateContext,
+        Duration lookback
+    )
     {
-        return OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault())
-            .minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES);
+        return SC2Pulse.offsetDateTime(OffsetDateTime.ofInstant
+        (
+            updateContext.getExternalUpdate(),
+            ZoneOffset.systemDefault()
+        ))
+            .minus(lookback);
     }
 
     public void updateMeta(UpdateContext updateContext)
     {
-        identify(updateContext);
-        calculateRatingDifference(updateContext);
-        calculateDuration(updateContext);
+        Set<Region> arcadeMatchRegions = sc2ArcadeMatchService.getRegions();
+        Set<Region> blizzardMatchRegions = Arrays.stream(Region.values())
+            .filter(region->!arcadeMatchRegions.contains(region))
+            .collect(Collectors.toSet());
+        //empty regions mean all regions in the DAO layer
+        if(!blizzardMatchRegions.isEmpty())
+        {
+            OffsetDateTime minMatchDate = calculateRetroactiveDateTime
+            (
+                updateContext,
+                Duration.ofMinutes(
+                    MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES)
+            );
+            identify(minMatchDate, blizzardMatchRegions);
+            calculateRatingDifference(minMatchDate, blizzardMatchRegions);
+            //the duration of arcade matches is measured, keep it
+            calculateDuration(minMatchDate, blizzardMatchRegions);
+        }
+        if(!arcadeMatchRegions.isEmpty())
+        {
+            OffsetDateTime minMatchDate = calculateRetroactiveDateTime(
+                updateContext, SC2ArcadeMatchService.MATCH_LOOKBACK);
+            identify(minMatchDate, arcadeMatchRegions);
+            calculateRatingDifference(minMatchDate, arcadeMatchRegions);
+        }
     }
 
 }

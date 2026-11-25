@@ -86,7 +86,7 @@ public class MapStatsFilmTestService
     throws InterruptedException
     {
         OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
-        Instant mucInstant = startFrom.plusDays(1).toInstant();
+        Instant mucInstant = startFrom.plusDays(2).toInstant();
         seasonGenerator.generateDefaultSeason(1200, true);
         //pulse season id can differ from the default id
         Season season = seasonDAO.find

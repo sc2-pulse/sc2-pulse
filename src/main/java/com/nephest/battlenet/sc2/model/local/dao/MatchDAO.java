@@ -49,14 +49,25 @@ extends StandardDAO
         + "match.region AS \"match.region\", "
         + "match.updated AS \"match.updated\", "
         + "match.duration AS \"match.duration\" ";
+    /**
+     * Requires the {@code regions} array parameter, an empty array matches all
+     * regions.
+     */
+    public static final String MATCH_REGION_FILTER =
+        "AND "
+        + "( "
+            + "array_length(:regions::smallint[], 1) IS NULL "
+            + "OR match.region = ANY(:regions::smallint[]) "
+        + ") ";
     private static final String MERGE_QUERY =
         "WITH "
         + "vals AS (VALUES :matchUids), "
         + "updated AS "
         + "("
             + "UPDATE match "
-            + "SET updated = NOW() "
-            + "FROM vals v (date, type, map_id, region)"
+            + "SET updated = NOW(), "
+            + "duration = COALESCE(v.duration::smallint, match.duration) "
+            + "FROM vals v (date, type, map_id, region, duration) "
             + "WHERE match.date = v.date "
             + "AND match.type = v.type "
             + "AND match.map_id = v.map_id "
@@ -65,8 +76,9 @@ extends StandardDAO
         + "), "
         + "missing AS "
         + "("
-            + "SELECT v.date, v.type, v.map_id, v.region "
-            + "FROM vals v (date, type, map_id, region) "
+            + "SELECT v.date, v.type, v.map_id, v.region, "
+            + "v.duration::smallint "
+            + "FROM vals v (date, type, map_id, region, duration) "
             + "LEFT JOIN updated ON v.date = updated.\"match.date\"  "
             + "AND v.type = updated.\"match.type\" "
             + "AND v.map_id = updated.\"match.map_id\" "
@@ -75,10 +87,11 @@ extends StandardDAO
         + "), "
         + "inserted AS "
         + "("
-            + "INSERT INTO match (date, type, map_id, region) "
+            + "INSERT INTO match (date, type, map_id, region, duration) "
             + "SELECT * FROM missing "
             + "ON CONFLICT(date, type, map_id, region) DO UPDATE "
-            + "SET updated = NOW() "
+            + "SET updated = NOW(), "
+            + "duration = COALESCE(excluded.duration, match.duration) "
             + "RETURNING " + STD_SELECT
         + ") "
         + "SELECT * FROM updated "
@@ -101,6 +114,7 @@ extends StandardDAO
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "WHERE match.date >= :fromHistory "
             + "AND type IN (:types) "
+            + MATCH_REGION_FILTER
         + ") "
         + "INSERT INTO tmp_match_participant_date(player_character_id, date) "
         + "SELECT player_character_id, date "
@@ -128,6 +142,7 @@ extends StandardDAO
             + ") prev_match ON true "
             + "WHERE match.date >= :from "
             + "AND match.type IN(:types) "
+            + MATCH_REGION_FILTER
             + "GROUP BY match.id "
         + ") "
         + "UPDATE match "
@@ -265,6 +280,12 @@ extends StandardDAO
             .addValue("updated", match.getUpdated());
     }
 
+    /**
+     * Null durations don't overwrite existing durations.
+     *
+     * @param matches matches to merge
+     * @return matches with ids
+     */
     public Set<Match> merge(Set<Match> matches)
     {
         if(matches.isEmpty()) return matches;
@@ -274,7 +295,8 @@ extends StandardDAO
                 match.getDate(),
                 conversionService.convert(match.getType(), Integer.class),
                 match.getMapId(),
-                conversionService.convert(match.getRegion(), Integer.class)
+                conversionService.convert(match.getRegion(), Integer.class),
+                match.getDuration()
             })
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -286,10 +308,16 @@ extends StandardDAO
     }
 
     @Transactional
-    public int updateDuration(OffsetDateTime from, List<BaseMatch.MatchType> types)
+    public int updateDuration
+    (
+        OffsetDateTime from,
+        List<BaseMatch.MatchType> types,
+        Set<Region> regions
+    )
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("from", from)
+            .addValue("regions", DAOUtils.toIds(regions, conversionService))
             .addValue("fromHistory", from.minusSeconds(DURATION_MAX))
             .addValue("types", types.stream()
                 .map(t->conversionService.convert(t, Integer.class))
@@ -302,7 +330,18 @@ extends StandardDAO
     @Transactional
     public int updateDuration(OffsetDateTime from)
     {
-        return updateDuration(from, DEFAULT_DURATION_MATCH_TYPES);
+        return updateDuration(from, Set.of());
+    }
+
+    /**
+     * @param from min match date
+     * @param regions match regions, all regions if it's empty
+     * @return number of updated matches
+     */
+    @Transactional
+    public int updateDuration(OffsetDateTime from, Set<Region> regions)
+    {
+        return updateDuration(from, DEFAULT_DURATION_MATCH_TYPES, regions);
     }
 
     public int updateTwitchVodStats(OffsetDateTime from)
