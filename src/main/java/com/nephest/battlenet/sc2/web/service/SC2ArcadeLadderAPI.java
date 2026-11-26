@@ -77,7 +77,7 @@ extends BaseAPI
         @Value("${com.nephest.battlenet.sc2.api.sc2arcade-ladder.url:"
             + "https://s2-svc-ladder.wan.talv.space}") String baseUrl,
         @Value("${com.nephest.battlenet.sc2.api.sc2arcade-ladder"
-            + ".requests-per-second:3}") int requestsPerSecond
+            + ".requests-per-second:4}") int requestsPerSecond
     )
     {
         this.rateLimiter = new ReactorRateLimiter(new RateLimitRefreshConfig(

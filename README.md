@@ -232,7 +232,7 @@ limiter. False by default.
 * `com.nephest.battlenet.sc2.privacy.character.profile.update` update characters directly from their bnet profiles. True
 by default.
 * `com.nephest.battlenet.sc2.api.sc2arcade-ladder.url` base URL of the SC2Arcade ladder API.
-* `com.nephest.battlenet.sc2.api.sc2arcade-ladder.requests-per-second` max requests per second for all regions combined, 3 by
+* `com.nephest.battlenet.sc2.api.sc2arcade-ladder.requests-per-second` max requests per second for all regions combined, 4 by
 default.
 * `com.nephest.battlenet.sc2.contacts.email`
 * `com.nephest.battlenet.sc2.contacts.discord.server`
